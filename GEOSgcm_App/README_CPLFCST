@@ -1,0 +1,15 @@
+
+
+discover18 /discover/nobackup/projects/gmao/m2oasf/build/geos-s2s/GEOSodas/src/GMAO_Shared/GEOS_Util/post ) ll *CPL*
+-rwxr-xr-x 1 jmarshak g0609 50952 Apr 14 10:28 gcmpost_CPLFCSTfull.script*
+-rwxr-xr-x 1 jmarshak g0609 51057 Apr 14 10:29 gcmpost_CPLFCSTpart.script*
+-rw-r--r-- 1 jmarshak g0609  1849 Mar 10 11:07 plot_CPLFCST.rc
+discover18 /discover/nobackup/projects/gmao/m2oasf/build/geos-s2s/GEOSodas/src/GMAO_Shared/GEOS_Util/post )
+
+discover18 /discover/nobackup/projects/gmao/m2oasf/build/yuri-S2S-2_1_UNSTABLE/GEOSodas/src/Applications/GEOSgcm_App ) ll *CPL*
+-rwxr-xr-x 1 jmarshak g0609  6101 May 25 14:44 gcm_archive_CPLFCST.j*
+-rwxr-xr-x 1 jmarshak g0609 96534 May 30 16:39 gcm_CPLFCST360S2S_setup*
+-rwxr-xr-x 1 jmarshak g0609  1483 Nov  2  2016 gcm_post_full_CPLFCST.j*
+-rwxr-xr-x 1 jmarshak g0609  1493 Nov  2  2016 gcm_post_part_CPLFCST.j*
+-rwxr-xr-x 1 jmarshak g0609 23977 May 30 16:42 gcm_run_CPLFCST360S2S.j*
+discover18 /discover/nobackup/projects/gmao/m2oasf/build/yuri-S2S-2_1_UNSTABLE/GEOSodas/src/Applications/GEOSgcm_App ) 

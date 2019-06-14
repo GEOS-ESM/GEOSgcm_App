@@ -1,0 +1,143 @@
+discover15 geos-s2s/pert> make cal_norm4rst_savebv
+ifort -c  -I /discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/Linux/include/netcdf cal_norm4rst_savebv.f90
+cal_norm4rst_savebv.f90(52): (col. 8) remark: LOOP WAS VECTORIZED.
+cal_norm4rst_savebv.f90(52): (col. 8) remark: LOOP WAS VECTORIZED.
+cal_norm4rst_savebv.f90(52): (col. 8) remark: LOOP WAS VECTORIZED.
+cal_norm4rst_savebv.f90(55): (col. 3) remark: LOOP WAS VECTORIZED.
+cal_norm4rst_savebv.f90(83): (col. 3) remark: LOOP WAS VECTORIZED.
+cal_norm4rst_savebv.f90(84): (col. 3) remark: LOOP WAS VECTORIZED.
+ifort  cal_norm4rst_savebv.o -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lnetcdf -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lhdf5_hl -lhdf5 -lz -lm -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lmfhdf -ldf -lsz -ljpeg -lm -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lmfhdf -ldf -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lcurl -lrt -lm -lz -lm -o cal_norm4rst_savebv.exe
+
+discover15 geos-s2s/pert> make perturb_aogcm
+ifort -traceback -convert big_endian -O2 perturb_aogcm.f90 modules.f90 -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lnetcdf -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lhdf5_hl -lhdf5 -lz -lm -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lmfhdf -ldf -lsz -ljpeg -lm -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lmfhdf -ldf -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lcurl -lrt -lm -lz -lm -I /discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/Linux/include/netcdf -o perturb_aogcm.exe
+perturb_aogcm.f90(740): (col. 5) remark: LOOP WAS VECTORIZED.
+perturb_aogcm.f90(741): (col. 5) remark: LOOP WAS VECTORIZED.
+perturb_aogcm.f90(745): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(745): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(746): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(746): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(750): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(750): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(754): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(754): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(757): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(757): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(758): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(758): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(759): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(759): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(760): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(760): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(763): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(763): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(764): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(764): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(765): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(765): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(766): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(766): (col. 63) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(768): (col. 33) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(768): (col. 45) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(769): (col. 34) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(769): (col. 47) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(770): (col. 34) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(770): (col. 47) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(771): (col. 34) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(771): (col. 47) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(341): (col. 5) remark: LOOP WAS VECTORIZED.
+perturb_aogcm.f90(342): (col. 50) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(342): (col. 62) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(343): (col. 51) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(343): (col. 64) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(344): (col. 51) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(344): (col. 64) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(345): (col. 51) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(345): (col. 64) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(350): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(350): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(351): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(351): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(352): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(352): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(353): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(353): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(354): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(354): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(355): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(355): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(356): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(356): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(357): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(357): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(360): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(360): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(361): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(361): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(362): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(362): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(363): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(363): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(364): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(364): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(365): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(365): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(366): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(366): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(367): (col. 11) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(367): (col. 65) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(676): (col. 5) remark: LOOP WAS VECTORIZED.
+perturb_aogcm.f90(677): (col. 32) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(677): (col. 44) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(678): (col. 33) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(678): (col. 46) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(679): (col. 33) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(679): (col. 46) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(680): (col. 33) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(680): (col. 46) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(900): (col. 30) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(900): (col. 43) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(901): (col. 30) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(901): (col. 43) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(902): (col. 30) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(902): (col. 43) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(904): (col. 5) remark: LOOP WAS VECTORIZED.
+perturb_aogcm.f90(905): (col. 29) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(905): (col. 41) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(906): (col. 30) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(906): (col. 43) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(907): (col. 30) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(907): (col. 43) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(908): (col. 30) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(908): (col. 43) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(432): (col. 5) remark: LOOP WAS VECTORIZED.
+perturb_aogcm.f90(433): (col. 52) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(433): (col. 64) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(434): (col. 53) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(434): (col. 66) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(435): (col. 53) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(435): (col. 66) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(436): (col. 53) remark: PARTIAL LOOP WAS VECTORIZED.
+perturb_aogcm.f90(436): (col. 66) remark: PARTIAL LOOP WAS VECTORIZED.
+modules.f90(105): (col. 8) remark: LOOP WAS VECTORIZED.
+modules.f90(142): (col. 5) remark: LOOP WAS VECTORIZED.
+discover15 geos-s2s/pert> make_pert_rst.sh 20170829 1
+Currently Loaded Modulefiles:
+  1) comp/intel-11.0.083   2) mpi/impi-3.2.2.006    3) lib/mkl-10.0.3.020    4) tool/tview-8.2.0.1
+Currently Loaded Modulefiles:
+  1) comp/intel-11.0.083   2) mpi/impi-4.1.2.040    3) lib/mkl-10.0.3.020
+DATES BEFORE AND AFTER: 20170823 20170828
+SAVE CURRENT ANALYSIS RESTARTS in cdata
+SAVE PREVIOUS FORECAST RESTARTS in ndata
+SAVE CURRENT ANALYSIS RESTARTS in pdata
+SAVE CURRENT ANALYSIS RESTARTS in ndata as templates
+SAVE CURRENT ANALYSIS RESTARTS in pdata as templates
+RESCALE RESTARTS IN ndata and pdata
+ Dimentions          720         410          40
+ Variable: 
+ temp                                                                           
+                      
+ Norm:   0.1780945    
+ Rescaling factor:   0.2695198    
+PERTURB RESTARTS IN ndata and pdata
+PERTURBATION COMPLETED
+discover15 geos-s2s/pert> cat $GEOSS2S/runx/2017/aug29/OutData/perts/perturb.out20170828

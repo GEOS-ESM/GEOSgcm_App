@@ -1,0 +1,35 @@
+SA, Jul 2016.
+----------------
+
+1. Verify that we are able to read and reproduce values in the 
+   verify_gmi_v8.1.txt from RSS for daily data.
+
+   --> DONE!
+       Note that in verify_gmi_v8.1.txt, time array as an extra coloumn and its values are incorrect.
+
+       python test_sa.py > verified.txt
+       verified.txt matches "gmi Daily Data File F35_20140519v8.1.gz" in verify_gmi_v8.1.txt
+       -- test_sa.py is a simple extension of example_usage.py from RSS.
+
+2. Plot the verified fields - and compare to those from RSS; colormaps (scales- slightly) are different.
+   See: plot_test_sa.py
+
+3. RSS GMI L2 SST download from:
+	http://www.remss.com/missions/gmi
+        ftp://ftp.remss.com/gmi/
+-------------------------------------------
+RSS provided utils for reading:
+	bytemaps.py
+	example_usage.py
+	gmi_averaged_v8.py
+	gmi_daily_v8.py		---> We use this file (daily data)
+-------------------------------------------
+RSS stuff, that's of use:
+**********
+	
+ftp://ftp.remss.com/gmi/support_v08.1/verify/
+http://images.remss.com/gmi/gmi_data_daily.html
+http://images.remss.com/sst/sst_data_daily.html
+
+http://images.remss.com/cyclone/cyclone.html?year=2015&storm=patricia
+-------------------------------------------

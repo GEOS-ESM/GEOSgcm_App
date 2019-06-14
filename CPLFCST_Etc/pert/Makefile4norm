@@ -1,0 +1,22 @@
+LIB_NETCDF      = -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lnetcdf -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lhdf5_hl -lhdf5 -lz -lm -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lmfhdf -ldf -lsz -ljpeg -lm -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lmfhdf -ldf -L/discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/x86_64-unknown-linux-gnu/ifort/Linux/lib -lcurl -lrt -lm -lz -lm
+INC_NETCDF      = /discover/nobackup/projects/gmao/share/dao_ops/Baselibs/v3.2.0_build3/Linux/include/netcdf
+F90_COMPILE	= ifort
+
+.SUFFIXES: .o .f90  
+
+
+.f90.o:
+	$(F90_COMPILE) -c  -I $(INC_NETCDF) $<
+
+cal_norm: cal_norm.o
+	$(F90_COMPILE) $(F90FLAGS) cal_norm.o $(LIB_NETCDF) -o cal_norm.exe
+cal_norm_savebv: cal_norm_savebv.o
+	$(F90_COMPILE) $(F90FLAGS) cal_norm_savebv.o $(LIB_NETCDF) -o cal_norm_savebv.exe
+cal_norm4rst: cal_norm4rst.o
+	$(F90_COMPILE) $(F90FLAGS) cal_norm4rst.o $(LIB_NETCDF) -o cal_norm4rst.exe
+cal_norm4rst_savebv: cal_norm4rst_savebv.o
+	$(F90_COMPILE) $(F90FLAGS) cal_norm4rst_savebv.o $(LIB_NETCDF) -o cal_norm4rst_savebv.exe
+solar_rst:
+	$(F90_COMPILE) solar24to25u-1deg.F90 -o solar24to25u-1deg.exe
+solar_rst_2deg:
+	$(F90_COMPILE) solar24to25u-2deg.F90 -o solar24to25u-2deg.exe

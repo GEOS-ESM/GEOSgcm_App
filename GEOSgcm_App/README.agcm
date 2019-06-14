@@ -1,0 +1,223 @@
+
+This file contains information on checking-out, building, and running the GMAO GEOS-5 AGCM.
+
+MODEL_TAG   :  Fortuna-2_5_p1
+MODEL_MODULE:  Fortuna
+        Date:  04Oct2011
+
+
+#######################################################################
+#                             NEW FEATURES
+#           (For additional information, see the AGCM ChangeLog)
+#######################################################################
+
+NEW FEATURES from Fortuna-2_2
+-----------------------------
+a) Added options for running with GOCART/CMIP aerosol emission files.
+b) Added plot.rc to control monthly mean plotting options.
+c) Added option to run PERPETUAL cases (perpetual year, perpetual month, perpetual day).
+
+NEW FEATURES from Fortuna-2_1
+-----------------------------
+a) Changed default behavior of HISTORY attribute:  duration.  The NEW default is:  duration = frequency
+   This means that the default behavior will produce 1 time-record per file.
+   This creates a more robust environment (using gcm_setup) for the post-processing to correctly compute monthly means.
+   Choosing durations other than the output frequency can create problems for the monthly mean scripts.
+
+
+#######################################################################
+#                      Basic Build and Run Procedures
+#######################################################################
+
+1) Checking out and building the GMAO GEOS-5 AGCM from CVS
+----------------------------------------------------------
+
+Set Environment Variables:
+--------------------------
+setenv CVS_RSH ssh
+setenv CVSROOT :ext:$LOGNAME@progressdirect:/cvsroot/esma
+
+Create a directory in your scratch area with the name of the model tag:
+
+eg) mkdir  /discover/nobackup/$LOGNAME/MODEL_TAG
+       cd  /discover/nobackup/$LOGNAME/MODEL_TAG
+
+
+Within that directory, use the cvs "co" command to check-out the model with the syntax:
+
+cvs co -r  MODEL_TAG  MODEL_MODULE
+
+
+This will create a directory tree containing the GEOS-5 AGCM.
+Go to the model's source directory and issue the commands:
+
+cd /discover/nobackup/$LOGNAME/MODEL_TAG/GEOSagcm/src
+source g5_modules
+gmake install
+
+
+This "source" command will install the proper operating system modules and libraries for compilation.
+The  "gmake"  command will perform the model build.
+
+
+When completed, a model executable (GEOSgcm.x) will be created.
+A copy can be found in:
+
+... /MODEL_TAG/GEOSagcm/src/Applications/GEOSgcm_App
+
+
+2) Running the GMAO GEOS-5 AGCM
+-------------------------------
+
+Go to the GCM applications directory:
+
+cd ... /MODEL_TAG/GEOSagcm/src/Applications/GEOSgcm_App
+
+Type the command:  gcm_setup
+
+You will be prompted to answer a few questions:
+
+a) Enter the Experiment ID:
+b) Enter a 1-line Experiment Description:
+c) Enter the Model Horizontal Resolution:
+d) Enter the Model Vertical   Resolution:
+e) Option to run Coupled Ocean/Atmosphere:
+f1) Option to run GOCART:
+f2) If GOCART, Choose Emission Files:
+g) Enter the AERO_PROVIDER:
+h) Enter the Desired HISTORY File to use:
+i) Enter the Desired Location for HOME Directory:
+j) Enter the Desired Location for EXPERIMENT Directory:
+k) Enter the BUILD   Location:
+l) Enter your GROUP ID:
+
+   Details:
+   --------
+a) The Experiment ID should be an easily identifiable name representing each individual experiment
+   you create.  One possibility is your initials followed by a 3-digit number: eg) abc001
+b) The Experiment Description should be a concise statement describing the relevant nature of your experiment.
+c) Model Horizontal Resolution Options:
+       72  46   (~ 4 -deg)
+      144  91   (~ 2 -deg)
+      288 181   (~ 1 -deg)
+      576 361   (~1/2-deg)
+     1152 721   (~1/4-deg)
+d) Model Vertical Resolution Options:
+       72
+e) Coupled Ocean/Atmosphere Options:
+       NO
+f1) GOCART Options:
+       YES, NO (Default)
+f2) GOCART Emission File Options:
+       CMIP, MERRA2, NR, PIESA (Default), OPS
+g) The AERO PROVIDER describes the Chemistry Component to be used for Radiatively Active Aerosols.
+   PCHEM is the default used for most AMIP-style Climate Runs.
+h) The default HISTORY.rc will be included in the TAG.  Users can replace this with their own HISTORY.rc
+i) The HOME directory will contain your run scripts and primary resource (rc) files.
+j) The EXPERIMENT directory will contain your restarts and model output.
+   The HOME and EXPERIMENT directories can be the same, eg) /discover/nobackup/$LOGNAME/abc001
+k) The BUILD directory to locate GEOSgcm.x in addition to various model utilities.
+l) Your GROUP ID is your charge code used for NCCS accounting.
+
+
+3) The GEOS-5 AGCM HOME Directory
+---------------------------------
+Within the HOME directory you will find the gcm run and regression scripts, and the primary resource files:
+
+scripts
+-------
+   gcm_run.j      (For Forecasts and AMIP-Style Climate Runs)
+   gcm_regress.j  (For developer's regression testing)
+
+resource files
+--------------
+   CAP.rc
+   AGCM.rc
+   HISTORY.rc
+
+
+4) The GEOS-5 AGCM EXPERIMENT Directory
+---------------------------------------
+Within the EXPERIMENT directory you will find the model executable and four additional directories for use in post-processing,
+plotting, and archiving:
+
+executable
+----------
+   GEOSgcm.x
+
+directories
+-----------
+   RC       (contains additional resource files, primarily for GOCART Chemistry)
+   post     (contains gcm_post.j           to run post-processing jobs)
+   plot     (contains gcm_plot.j plot.rc   to run plotting        jobs)
+   archive  (contains gcm_archive.j        to run archiving       jobs)
+
+Within this EXPERIMENT directory the user must provide a set of initial conditions for the model.
+The complete set includes:
+
+Critical Restarts
+-----------------
+              cap_restart  (ascii file containing Date and Time:  YYYYMMDD HHMMSS)
+      fvcore_internal_rst
+       moist_internal_rst
+       catch_internal_rst
+        lake_internal_rst
+     landice_internal_rst
+   saltwater_internal_rst
+
+Boot-strapable Restarts
+-----------------------
+       pchem_internal_rst
+       solar_internal_rst
+       irrad_internal_rst
+        turb_internal_rst
+     saltwater_import_rst
+          surf_import_rst
+          turb_import_rst
+         moist_import_rst
+
+
+Notice that these restart filenames are generic in the sense that they do not contain date and time information.
+The date and time information is simply kept in the ascii file:  cap_restart
+This generic naming is essential for proper use of the run scripts.
+
+Creating and/or Regridding Restarts
+-----------------------------------
+A simple utility exists which will create the critical restarts needed starting from the MERRA Re-Analysis.
+The utility "regrid" can be found in your build under:
+
+.../src/GMAO_Shared/GEOS_Util/post
+
+To create restarts from MERRA, simply type:
+
+regrid   -nymd  YYYYMMDD  
+         -im    IM        
+         -jm    JM        
+         -out   DIRECTORY 
+ 
+     where:  YYYYMMDD  is the desired Date from the MERRA Re-Analysis
+                   IM  is the desired Zonal      Dimension for ReGridding
+                   JM  is the desired Meridional Dimension for ReGridding
+             DIRECTORY is the full pathname of the desired OUTPUT location
+ 
+The utility will fetch the restarts from the MERRA Re-Analysis and properly regrid them to the user-supplied
+resolution IM,JM.  The resulting restarts will be placed in the user-supplied output directory.
+
+An alternative method for creating restarts is to regrid them from an existing set at another resolution.
+To do this, the "regrid" utility may again be used:
+
+regrid   -rc    REGRIDRC  
+         -out   DIRECTORY 
+ 
+     where:     REGRIDRC  is the full pathname of a user-defined regrid.rc file
+                DIRECTORY is the full pathname of the desired OUTPUT location
+
+The regrid.rc file contains all the necessary information needed to properly regrid a set of restarts.
+A template for this file can be found under:
+
+.../src/GMAO_Shared/GEOS_Util/post
+
+The user simply needs to fill in the full pathname locations and resolution of the existing restart files, and the
+desired output resolution.  In addition, the Boundary Condition Tag needs to be identified.  This tag will generally be
+the one associated with the latest Boundary Condition version (Fortuna-2_1) or the one associated with MERRA (Fortuna-1_4).
+

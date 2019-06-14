@@ -1,0 +1,64 @@
+#######################################################################
+#                 Create History List for Output
+#######################################################################
+ 
+EXPID:  @EXPID
+EXPDSC: @EXPDSC
+ 
+COLLECTIONS: 'traj.lcv'
+#            'ptrj.prs'
+             'mtrj.lcv'
+             ::
+
+  traj.lcv.format:     'CFIO' ,
+  traj.lcv.template:   '%y4%m2%d2_%h2%n2z.nc4',
+  traj.lcv.frequency:  001500 ,
+  traj.lcv.duration:   001500 ,
+  traj.lcv.mode:       'instantaneous',
+  traj.lcv.resolution: 90 540,
+  traj.lcv.fields: 'FRLAND', 'SURFACE'    , 'FRLAND'   , 
+                   'FROCEAN'  , 'SURFACE'    , 'FROCEAN'  ,
+                   'PHIS'     , 'AGCM'       , 'PHIS'     ,
+                   'SGH'      , 'AGCM'       , 'HS_STDV'  ,
+                   'DELP'     , 'DYN'        , 'DP'       ,
+                   'U_DGRID'  , 'DYN'        , 'U'        ,
+                   'V_DGRID'  , 'DYN'        , 'V'        ,
+                   'TH'       , 'DYN'        , 'PT'       ,
+                   'Q'        , 'MOIST'      , 'QV'       ,
+                   'QITOT'    , 'AGCM'       , 'QI'       ,
+                   'QLTOT'    , 'AGCM'       , 'QL'       ,
+                   'O3PPMV'   , 'CHEMISTRY'  , 'O3'       ,
+                   ::
+
+  ptrj.prs.format:     'CFIO' ,
+  ptrj.prs.template:   '%y4%m2%d2_%h2%n2z.nc4',
+  ptrj.prs.frequency:  001500 ,
+  ptrj.prs.duration:   001500 ,
+  ptrj.prs.mode:       'instantaneous',
+  ptrj.prs.resolution: 288 181,
+  ptrj.prs.fields:     'CKSODT'   , 'TURBULENCE'    , 'cah'       ,
+                       'CKVODT'   , 'TURBULENCE'    , 'cam'       ,
+                       'AKSODT'   , 'TURBULENCE'    , 'cch'       ,
+                       'AKVODT'   , 'TURBULENCE'    , 'ccm'       ,
+#                       'AKQODT'   , 'TURBULENCE'    , 'akqodt'    ,
+#                       'CKQODT'   , 'TURBULENCE'    , 'ckqodt'    ,
+                       ::
+
+  mtrj.lcv.format:      'CFIO' ,
+  mtrj.lcv.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
+  mtrj.lcv.ref_date:    >>>IOBTRJD<<< ,
+  mtrj.lcv.ref_time:    >>>IOBTRJT<<< ,
+  mtrj.lcv.end_date:    >>>IOETRJD<<< ,
+  mtrj.lcv.end_time:    >>>IOETRJT<<< ,
+  mtrj.lcv.frequency:   001500 ,
+  mtrj.lcv.duration:    001500 ,
+  mtrj.lcv.mode:        'instantaneous',
+  mtrj.lcv.resolution:  90 540,
+  mtrj.lcv.fields:      'TH_moist'   , 'MOIST'  , 'PTM'      ,
+                        'Q_moist'    , 'MOIST'  , 'QVM'      ,
+                        'KCBL_moist' , 'MOIST'  , 'KCBL'     ,
+                        'TS_moist'   , 'MOIST'  , 'TS'       ,
+                        'ctop_moist' , 'MOIST'  , 'CTOP'     ,
+                        ::
+
+

@@ -1,0 +1,116 @@
+Cookbook for setting up ODAS Experiments
+##############################################
+
+To UPDATE to Latest Tag from Yuri
+
+1. Update to Yuri's Latest
+   cd /gpfsm/dnb42/projects/p17/rkovach/geos5/sandbox/yuri-S2S-2_1_UNSTABLE/GEOSodas/src
+   cvs -nq upd 
+   cvs upd -r yuri-S2S-2_1_UNSTABLE 
+
+2. Build
+   cd GEOSodas/src/
+   source g5_modules
+   gmake -j install 
+
+3. Build ODAS
+   cd Applications
+   gmake install
+
+4. Setup
+   cd Applications/GEOSgcm_App/
+   gcm_setup
+
+5. cd to your experiment directory
+   cp /gpfsm/dnb42/projects/p17/rkovach/geos5/sandbox/yuri-S2S-2_1_UNSTABLE/GEOSodas/src/Applications/UMD_Etc/UMD_rc/setup_post.csh .
+   run setup_post.csh
+   
+6. Get restarts
+   cp -r /gpfsm/dnb42/projects/p17/bzhao/geos5/exp/restart/rk035/
+
+
+#################################################################
+DEFAULT PARAMETERS
+#################################################################
+gcm_run.j
+#########
+007: #SBATCH --time=12:00:00
+008: #SBATCH --ntasks=1200
+009: #SBATCH --ntasks-per-node=24
+010: #SBATCH --job-name=EXPID
+011: #SBATCH --qos=ocndev
+012: #SBATCH -A g0609
+013: #SBATCH -o EXPID.o%j
+014: #SBATCH -e EXPID.e%j
+
+196: /bin/ln -s /discover/nobackup/yvikhlia/coupled/Forcings/a360x181_o720x410/D
+C0360xPC0181_TM0720xTM0410-Pfafstetter.til tile_hist_360x180.data
+197: /bin/ln -s /discover/nobackup/yvikhlia/coupled/Forcings/a720x361_o720x410/D
+C0720xPC0361_TM0720xTM0410-Pfafstetter.til tile_hist_720x361.data
+/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/pr
+ecip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
+
+408: $GEOSBIN/binarytile.x tile_hist_360x180.data tile_hist_360x180.bin
+409: $GEOSBIN/binarytile.x tile_hist_720x361.data tile_hist_720x361.bin
+
+438: #$RUN_CMD $NPES ./GEOSgcm.x
+439: $EXPDIR/ocean_das/UMD_Etc/scripts/oda_run.j $NX $NY
+
+527: set dsets="ocean_month ocean_daily"
+
+
+AGCM.rc
+#######
+        NY: 120
+	OGCM_NX: 120
+	CICE_NPROCS: 1200
+
+	REPLAY_FILE: /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA2_MEANS/ana/Y%y4/M%m2/
+	MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4
+	#REPLAY_FILE: /gpfsm/dnb42/projects/p17/gvernier/SAND_BOXES/MERRA2/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc
+	REPLAY_MODE: Intermittent
+
+        PRECIP_FILE: ExtData/PCP/d5_merra/Y%y4/M%m2/d5_merra.tavg1_2d_lfo_Nx_cor
+r.%y4%m2%d2_%h230z.nc
+
+        LTS_LOW:18.5
+
+diag_table
+##########
+	Many changes
+
+input.nml
+#########
+  	# Turn off ocean convection
+ 	&ocean_convect_nml
+       	use_this_module=.false.
+       	convect_full_scalar=.true.      
+       	convect_full_vector=.false.
+
+  	# Turn on Nudging to SST
+ 	&ocean_sponges_tracer_nml
+       	use_this_module=.true.
+       	damp_coeff_3d=.true.
+
+  	# Put lid on ocean for SSH
+ 	&ocean_sbc_nml
+      	zero_net_water_restore=.true.
+      	zero_net_water_coupler=.true.
+
+ 	&ocean_increment_tracer_nml
+       	use_this_module=.true.
+       	days_to_increment = 0
+       	secs_to_increment = 64800
+
+   	&ocean_model_nml
+        layout = 120,10,
+
+        &ocean_sbc_nml
+        rotate_winds=.false.
+
+CAP.rc
+######
+JOB_SGMT:     00000005 000000
+NUM_SGMT:     5
+HEARTBEAT_DT: 450
+

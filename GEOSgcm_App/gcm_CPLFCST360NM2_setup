@@ -1,0 +1,2783 @@
+#!/bin/tcsh -f
+
+#######################################################################
+#                            Define Colors
+#         Note:  For No Colors, set C1 and C2 to NONE 
+#######################################################################
+
+set BLACK   = "\033[30m"
+set RED     = "\033[31m"
+set GREEN   = "\033[32m"
+set YELLOW  = "\033[33m"
+set BLUE    = "\033[34m"
+set MAGENTA = "\033[35m"
+set CYAN    = "\033[36m"
+set WHITE   = "\033[37m"
+set RESET   = "\033[0m"
+set BOLD    = "\033[1m"
+set COLORS  = `echo $BLACK $RED $GREEN $YELLOW $BLUE $MAGENTA $CYAN $WHITE $RESET`
+
+if( -e $HOME/.GCMSETUP ) then
+     set GCMSETUPinfo = `cat $HOME/.GCMSETUP`
+     set C1 = $GCMSETUPinfo[1]
+     set C2 = $GCMSETUPinfo[2]
+else
+     set C1 = $RED
+     set C2 = $BLUE
+endif
+     set CN = $RESET
+
+#######################################################################
+#        Set Directory Locations specific to coupled forecast 
+#######################################################################
+set FCSTBLD = '/discover/nobackup/projects/gmao/m2oasf/build/geos-s2s/GEOSodas/src'
+set SUBSEASONAL = @FCSTSUBX
+set QUEUENAME = @FCSTQUEUENAME
+set ARCHBASEN = @FCSTARCHIVE
+set FCSTBASE = "$GEOSS2S"
+set setupFNM = "gcm_CPLFCST360NM2_setup"
+set fcstsegm=00000045
+if ($SUBSEASONAL == TRUE) then
+   set maxmonths=3
+   set ARCHBASE = "/archive/u/$LOGNAME/${ARCHBASEN}/subseasonal"
+else
+   set maxmonths=10
+   set ARCHBASE = "/archive/u/$LOGNAME/${ARCHBASEN}/seasonal"
+endif
+
+#######################################################################
+#                     Build Directory Locations
+#######################################################################
+
+# Set Current Working Path to gcm_setup
+# -------------------------------------
+set GCMSETUP = `which $0`
+set root = `echo $GCMSETUP | cut -d / -f1`
+if($root == . ) set GCMSETUP = `echo $cwd`/gcm_setup
+set root = `echo $GCMSETUP | cut -b1`
+if( "$root" != "/" ) set GCMSETUP = `echo $cwd`/$GCMSETUP
+# Overwrite GCMSETUP for coupled forecast and define the coupled forecast (seasonal/subseasonal)
+# -------------------------------------
+set GCMSETUP = "${FCSTBLD}/Applications/GEOSgcm_App/${setupFNM}"
+
+# Set Default GEOS Build Directory
+# --------------------------------
+@ n = 1
+set root = `echo $GCMSETUP | cut -d / -f$n`
+while( .$root == . )
+@ n = $n + 1
+set root = `echo $GCMSETUP | cut -d / -f$n`
+end
+
+set GEOSDEF = ''
+while( $root != 'src' )
+set GEOSDEF = `echo ${GEOSDEF}/${root}`
+@ n = $n + 1
+set root = `echo $GCMSETUP | cut -d / -f$n`
+end
+
+
+# Set Applications Directory
+# --------------------------
+@ n = 1
+set root = `echo $GCMSETUP | cut -d / -f$n`
+while( .$root == . )
+@ n = $n + 1
+set root = `echo $GCMSETUP | cut -d / -f$n`
+end
+
+set APPDIR = ''
+#while( $root != 'gcm_CPLFCST_setup' )
+while( $root != ${setupFNM} )
+set APPDIR = `echo ${APPDIR}/${root}`
+@ n = $n + 1
+set root = `echo $GCMSETUP | cut -d / -f$n`
+end
+
+#######################################################################
+#                   Test for Command Line Flags
+#######################################################################
+
+# Set default behavior of switches
+set NOCVS = TRUE
+set GPU   = FALSE
+set ENSM = @FCSTMEMBER
+
+while ( $#argv > 0 )
+   set arg = $argv[1]
+   shift argv
+   switch ( $arg )
+      # Set 1 digit ensemble member number
+      case -[Ee][1-9]:
+         set ENSM = `echo $arg | cut -c3-4`
+         breaksw
+
+      # Set 2 digit ensemble member number
+      case -[Ee][1-9][0-9]:
+         set ENSM = `echo $arg | cut -c3-4`
+         breaksw
+
+      # Set our colors
+      case -[Cc]:
+      case --[Cc][Oo][Ll][Oo][Rr]:
+         goto SETCOLOR
+
+      # Run the gpu code
+      case -[Gg]:
+      case --[Gg][Pp][Uu]:
+
+         # If we get here, the environment is (probably) right for GPUs
+         set GPU = TRUE
+         breaksw
+
+      # Do not archive the source
+      case --nocvs:
+         set NOCVS = TRUE
+         breaksw
+
+      # Here any string not above will trigger USAGE
+      case -[Hh]:
+      case --[Hh][Ee][Ll][Pp]:
+      default:
+         goto USAGE
+   endsw
+end
+
+#######################################################################
+#           CVS: Use CVS functionality only at NCCS or NAS
+#######################################################################
+
+setenv NODE `uname -n`
+setenv SITE `$GEOSDEF/src/g5_modules site`
+
+if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
+   set NOCVS = TRUE
+   echo "SCRIPTS NOCVS VALUE1= ${NOCVS}"
+endif
+
+#######################################################################
+#           CVS: Test for Environment Variable
+#######################################################################
+
+if ( $?ESMA_NOCVS ) then
+   set NOCVS = TRUE
+   echo "SCRIPTS NOCVS VALUE2= ${NOCVS}"
+endif
+# FOR COUPLED WE WANT NOCVS=TRUE JM
+set NOCVS = TRUE
+#######################################################################
+#           CVS: Test if we are on a compute node
+#######################################################################
+
+if ( $NOCVS != "TRUE" ) then
+
+if ( $SITE == 'NCCS' ) then
+   if ( ($NODE =~ borg*) || ($NODE =~ warp*) ) then
+      goto ONCOMPUTE
+   endif
+   
+else if ( $SITE == 'NAS' ) then
+   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || ($NODE =~ maia*) ) then
+      goto ONCOMPUTE
+   endif
+endif
+
+endif
+
+#######################################################################
+#                 Test for Compiler and MPI Setup
+#######################################################################
+
+set BASEDIR = `$GEOSDEF/src/g5_modules basedir`
+
+if ( `echo $BASEDIR | grep -i ifort` != '') then
+   set COMPILER = ifort
+else if ( `echo $BASEDIR | grep -i pgfortran` != '') then
+   set COMPILER = pgfortran
+else
+   # Assume default is ifort in case of older baselibs
+   set COMPILER = ifort 
+endif
+
+     if ( `echo $BASEDIR | grep -i mvapich2` != '') then
+   set MPI = mvapich2
+else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
+   set MPI = openmpi
+else if ( `echo $BASEDIR | grep -i impi`     != '') then
+   set MPI = intelmpi
+else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
+   set MPI = intelmpi
+else if ( `echo $BASEDIR | grep -i mpt`      != '') then
+   set MPI = mpt
+else
+   # Assume default is Intel MPI in case of older baselibs
+   set MPI = intelmpi 
+endif
+
+#######################################################################
+#                   Set up RUN_CMD for MPI Stack
+#######################################################################
+
+if ( $MPI == mvapich2 ) then
+   setenv RUN_CMD 'mpirun_rsh -export -hostfile $PBS_NODEFILE -np ' # mpi run for MVAPICH2
+else if ( $MPI == openmpi ) then
+   if ( $SITE == 'NCCS' && $COMPILER == 'pgfortran') then
+      setenv RUN_CMD 'mpirun -bind-to core --mca btl ^openib --mca btl_tcp_if_include ib0 -np '   # mpi run for OpenMPI 
+   else
+      setenv RUN_CMD 'mpirun -bind-to core -np '   # mpi run for OpenMPI 
+   endif
+else if ( $MPI == intelmpi ) then
+   setenv RUN_CMD 'mpirun -np '                 # mpi run for Intel MPI
+else if ( $MPI == mpt ) then
+   setenv RUN_CMD 'mpiexec_mpt -np '            # mpi run for MPT
+endif
+
+#######################################################################
+#               Enter Experiment Specific Run Parameters
+# For coupled forecast interactive mode is either turned OFF or DISABLED STOPPED HERE ON SEP 26
+#######################################################################
+
+echo
+echo "Enter the ${C1}Experiment ID${CN}:"
+set ICDATE = @FCSTIC
+set EXPYR = `echo $ICDATE | cut -c1-4`
+set EXPMO = `echo $ICDATE | cut -c5-6`
+set EXPDD = `echo $ICDATE | cut -c7-8`
+if ($EXPMO == '01') set EXPID='jan'$EXPDD
+if ($EXPMO == '02') set EXPID='feb'$EXPDD
+if ($EXPMO == '03') set EXPID='mar'$EXPDD
+if ($EXPMO == '04') set EXPID='apr'$EXPDD
+if ($EXPMO == '05') set EXPID='may'$EXPDD
+if ($EXPMO == '06') set EXPID='jun'$EXPDD
+if ($EXPMO == '07') set EXPID='jul'$EXPDD
+if ($EXPMO == '08') set EXPID='aug'$EXPDD
+if ($EXPMO == '09') set EXPID='sep'$EXPDD
+if ($EXPMO == '10') set EXPID='oct'$EXPDD
+if ($EXPMO == '11') set EXPID='nov'$EXPDD
+if ($EXPMO == '12') set EXPID='dec'$EXPDD
+echo "ENTERED $EXPID FOR $EXPYR"
+echo
+echo "SETTING END DATES"
+echo "FOR 45-DAY SUB-SEASONAL: max months= 3"
+echo "FOR  9- MONTHS-SEASONAL: max months= 9"
+@ ENDM2 = $EXPMO + $maxmonths 
+@ ENDY2 = $EXPYR
+if ($ENDM2 > 12) then
+  @ ENDM2 = $ENDM2 - 12
+  @ ENDY2 = $EXPYR + 1
+endif
+if ($ENDM2 < 10) then
+  set END_DATE2 = "${ENDY2}0${ENDM2}01 210000"
+else
+  set END_DATE2 = "${ENDY2}${ENDM2}01 210000"
+endif
+
+echo "END DATE BEFORE ${END_DATE2}"
+echo
+
+DESC:
+echo "Enter a 1-line ${C1}Experiment Description${CN}:"
+set EXPTMP = @FCSTXX
+if( $#EXPTMP == 0 ) goto DESC
+set EXPDSC =  $EXPTMP[1]
+foreach WORD ($EXPTMP)
+if( $WORD !=  $EXPDSC ) set EXPDSC = `echo ${EXPDSC}_${WORD}`
+end
+echo "ENTERED $EXPDSC"
+echo
+
+GEOSTAG:
+set GEOSTAG = `cat $APPDIR/.AGCM_VERSION`
+#echo "${C1}CVS BASE Source Tag${CN} used for Experiment: ${C2}${GEOSTAG}${CN}"
+
+#######################################################################
+#            Test to see if you want to CLONE old experiment
+#######################################################################
+
+# Check for CLONE
+# ---------------
+ASKCLONE:
+echo "Do you wish to ${C1}CLONE${CN} an old experiment? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+set   KLONE  = "NO"
+if( .$KLONE == . ) then
+   set   KLONE  = FALSE
+else
+   set   KLONE  = `echo   $KLONE | tr "[:lower:]" "[:upper:]"`
+   if(  $KLONE == "Y"     | \
+        $KLONE == "YES"   | \
+        $KLONE == "T"     | \
+        $KLONE == "TRUE"  ) set KLONE = TRUE
+   if(  $KLONE == "N"     | \
+        $KLONE == "NO"    | \
+        $KLONE == "F"     | \
+        $KLONE == "FALSE" ) set KLONE = FALSE
+
+   if( $KLONE != "TRUE" & $KLONE != "FALSE" ) then
+      echo
+      echo "${C1}CLONE${CN} must be set equal to ${C2}TRUE${CN} or ${C2}FALSE${CN}!"
+      goto ASKCLONE
+   else if ( $KLONE == "TRUE" ) then
+      goto DOCLONE
+   endif
+endif
+echo "ENTERED $KLONE"
+
+#######################################################################
+#          Continue to enter in experiment parameters 
+#######################################################################
+
+HRCODE:
+echo "Enter the ${C1}Atmospheric Horizontal Resolution${CN} code:"
+echo "-----------------------------------------------------------"
+echo "     Lat/Lon                     Cubed-Sphere"
+echo "-----------------------------------------------------------"
+echo "   ${C2}b --  2  deg  ${CN}              ${C2}c48  --  2   deg ${CN}"
+echo "   ${C2}c --  1  deg  ${CN}              ${C2}c90  --  1   deg ${CN}"
+echo "   ${C2}d -- 1/2 deg  ${CN}              ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
+echo "   ${C2}e -- 1/4 deg (${C1}35-km${C2})        c360 -- 1/4  deg (${C1}28-km${C2}) ${CN} "
+echo "   ${C2}                            c720 -- 1/8  deg (${C1}14-km${C2}) ${CN}"
+echo "   ${C2}                            c1440 - 1/16 deg (${C1} 7-km${C2}) ${CN}"
+echo " "
+set HRCODE = `echo c180`
+set HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
+
+if( $HRCODE != 'a'     & \
+    $HRCODE != 'b'     & \
+    $HRCODE != 'c'     & \
+    $HRCODE != 'd'     & \
+    $HRCODE != 'e'     & \
+    $HRCODE != 'c12'   & \
+    $HRCODE != 'c24'   & \
+    $HRCODE != 'c48'   & \
+    $HRCODE != 'c90'   & \
+    $HRCODE != 'c180'  & \
+    $HRCODE != 'c360'  & \
+    $HRCODE != 'c720'  & \
+    $HRCODE != 'c1440' ) goto HRCODE
+
+if( $HRCODE == 'c12'   | \
+    $HRCODE == 'c24'   | \
+    $HRCODE == 'c48'   | \
+    $HRCODE == 'c90'   | \
+    $HRCODE == 'c180'  | \
+    $HRCODE == 'c360'  | \
+    $HRCODE == 'c720'  | \
+    $HRCODE == 'c1440' ) then
+     set Resolution = $HRCODE
+else
+     if( $HRCODE == 'a' ) set Resolution = `echo   72  46`
+     if( $HRCODE == 'b' ) set Resolution = `echo  144  91`
+     if( $HRCODE == 'c' ) set Resolution = `echo  288 181`
+     if( $HRCODE == 'd' ) set Resolution = `echo  576 361`
+     if( $HRCODE == 'e' ) set Resolution = `echo 1152 721`
+endif
+echo "ENTERED $HRCODE"
+echo
+
+if( $#Resolution == 2 ) then
+   set AGCM_IM = $Resolution[1]
+   set AGCM_JM = $Resolution[2]
+   set CUBED   = FALSE
+   set DYCORE  = FV
+else
+   set CUBED   = TRUE
+   set DYCORE  = FV3
+   if (`echo $Resolution[1] | cut -b1` == "c" ) then
+        set  AGCM_IM = $Resolution[1]
+   else
+        set  AGCM_IM = "c$Resolution[1]"
+   endif
+endif
+
+
+echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 72)"
+set   AGCM_LM = 72
+if( .$AGCM_LM == . ) then
+  set AGCM_LM = 72
+endif
+echo "ENTERED $AGCM_LM"
+echo
+
+#######################################################################
+#                         Check for COUPLED Ocean
+#######################################################################
+
+OGCM:
+echo "Do you wish to run the ${C1}COUPLED${CN} Ocean/Sea-Ice Model? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+set   OGCM  = "YES"
+if( .$OGCM == . ) then
+set   OGCM  = FALSE
+else
+set   OGCM  = `echo   $OGCM | tr "[:lower:]" "[:upper:]"`
+if(  $OGCM == "Y"     | \
+     $OGCM == "YES"   | \
+     $OGCM == "T"     | \
+     $OGCM == "TRUE"  ) set OGCM = TRUE
+if(  $OGCM == "N"     | \
+     $OGCM == "NO"    | \
+     $OGCM == "F"     | \
+     $OGCM == "FALSE" ) set OGCM = FALSE
+
+if( $OGCM != TRUE & $OGCM != FALSE ) then
+echo
+echo "${C1}COUPLED${CN} must be set equal to TRUE or FALSE!"
+goto  OGCM
+else
+echo
+endif
+endif
+echo "ENTERED $OGCM"
+echo
+
+if( $OGCM == TRUE ) then
+
+    set COUPLED   = ""
+    set FORCAST   = ""
+    set OGRIDTYP  = "TM"
+    set DATAOCEAN = "#DELETE"
+    
+
+    # Coupled Ocean Resolution
+    # ------------------------
+    CORSLV:
+    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default: 360 200)"
+    set Resolution = `echo 720 410`
+    set num = $#Resolution
+    if( $num == 2 ) then
+        set OGCM_IM = $Resolution[1]
+        set OGCM_JM = $Resolution[2]
+    else
+        if( $num == 0 ) then
+             set OGCM_IM = 360
+             set OGCM_JM = 200
+        else 
+             goto CORSLV
+        endif
+    endif
+    set IMO = ${OGCM_IM}
+    set JMO = ${OGCM_JM}
+    if( $IMO < 10   ) set IMO = 000$IMO
+    if( $IMO < 100  ) set IMO =  00$IMO
+    if( $IMO < 1000 ) set IMO =   0$IMO
+    if( $JMO < 10   ) set JMO = 000$JMO
+    if( $JMO < 100  ) set JMO =  00$JMO
+    if( $JMO < 1000 ) set JMO =   0$JMO
+    set OCEANtag = TM${IMO}xPE${JMO}
+    set BCSTAG   = Ganymed-4_0_Reynolds
+    set SSTNAME  = "#DELETE"
+    set SSTFILE  = "#DELETE"
+    set ICEFILE  = "#DELETE"
+    set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+    set OSTIA    = "#DELETE"
+
+    echo "Enter the Ocean Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 50)"
+    set   OGCM_LM = 40
+    if( .$OGCM_LM == . ) then
+	set   OGCM_LM = 50
+    endif
+    echo "ENTERED $OGCM_LM"
+    echo
+
+    set OGCM_GRIDSPEC = tripolar_${OGCM_IM}x${OGCM_JM}.ascii
+    set OGCM_NX = 36
+    set OGCM_NY = 10
+    @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
+
+else
+
+    # OGCM = FALSE (Data Ocean Resolution)
+    # ------------------------------------
+    DORSLV:
+	echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds) Default"
+    echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)"
+    echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
+    set   HRCODE = `echo $<`
+    if( .$HRCODE == . ) set HRCODE = o1
+    set   HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
+
+    if( $HRCODE != 'o1' & \
+        $HRCODE != 'o2' & \
+        $HRCODE != 'o3' ) goto DORSLV
+    if( $HRCODE == 'o1' ) then
+	set Resolution = `echo  360  180`
+        set OGCM_IM  = $Resolution[1]
+        set OGCM_JM  = $Resolution[2]
+        set BCSTAG   = Ganymed-4_0_Reynolds
+        set SSTNAME  = SST
+        set SSTFILE  = dataoceanfile_MERRA_sst_1971-current.${OGCM_IM}x${OGCM_JM}.LE
+        set ICEFILE  = dataoceanfile_MERRA_fraci_1971-current.${OGCM_IM}x${OGCM_JM}.LE
+        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+        set OSTIA    = "#DELETE"
+    endif
+    if( $HRCODE == 'o2' ) then
+        set Resolution = `echo 1440 720`
+        set OGCM_IM  = $Resolution[1]
+        set OGCM_JM  = $Resolution[2]
+        set BCSTAG   = Ganymed-4_0_MERRA-2
+        set SSTNAME  = MERRA2
+        set SSTFILE  = dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set ICEFILE  = dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+        set OSTIA    = ""
+    endif
+    if( $HRCODE == 'o3' ) then
+             set Resolution = `echo 2880 1440`
+             set OGCM_IM  = $Resolution[1]
+             set OGCM_JM  = $Resolution[2]
+             set BCSTAG   = Ganymed-4_0_Ostia
+             set SSTNAME  = OSTIA_REYNOLDS
+             set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+             set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+             set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+             set OSTIA    = ""
+    endif
+
+    set IMO = ${OGCM_IM}
+    set JMO = ${OGCM_JM}
+
+    if( $IMO < 10   ) set IMO = 000$IMO
+    if( $IMO < 100  ) set IMO =  00$IMO
+    if( $IMO < 1000 ) set IMO =   0$IMO
+    if( $JMO < 10   ) set JMO = 000$JMO
+    if( $JMO < 100  ) set JMO =  00$JMO
+    if( $JMO < 1000 ) set JMO =   0$JMO
+
+    set DATAOCEAN = ""
+    set OGCM_LM   =  34
+    set COUPLED   = "#DELETE"
+    set OGRIDTYP  = "DE"
+    set OCEANtag  =  DE${IMO}xPE${JMO}
+
+    set OGCM_NX       = ""
+    set OGCM_NY       = ""
+    set OGCM_GRIDSPEC = ""
+    set OGCM_NPROCS   = ""
+
+endif
+
+# Set DEFAULT SHMEM Parameter
+# ---------------------------
+     set USE_SHMEM = 0
+
+# Set IAU-Forcing and Bias Correction OFF
+# ---------------------------------------
+     set FORCEDAS = "#"
+     set FORCEGCM = "#"
+
+# Set Default Convert Parameters
+# ------------------------------
+     set CNV_NX = 2
+     set CNV_NY = 24     # Best set to number of cores per node
+
+# Set Default Readers and Writers
+# -------------------------------
+     set NUM_READERS = 1
+     set NUM_WRITERS = 1
+
+# Default Run Parameters
+# ----------------------
+if( $AGCM_IM ==  "c12" ) then
+     set       DT = 900
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 12
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 2
+     set       NY = `expr $NX \* 6`
+     set   HYDROSTATIC = TRUE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set JOB_SGMT = 00000015
+     set NUM_SGMT = 20
+     set ATMOStag = CF0012x6C
+     set POST_NDS = 4
+endif
+if( $AGCM_IM ==  "72" ) then
+     set       DT = 900
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set  CHEM_DT = $DT
+     set JOB_SGMT = 00000015
+     set NUM_SGMT = 20
+     if( $OGCM == TRUE ) then
+          set  NX = $OGCM_NX
+          set  NY = $OGCM_NY
+     set OCEAN_DT = $DT
+     else
+          set  NX = 4
+          set  NY = 12
+     set OCEAN_DT = $IRRAD_DT
+     endif
+     set ATMOStag = DC0072xPC0046
+     set POST_NDS = 4
+endif
+if( $AGCM_IM ==  "c24" ) then
+     set       DT = 900
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 24
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 4
+     set       NY = `expr $NX \* 6`
+     set   HYDROSTATIC = TRUE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set JOB_SGMT = 00000015
+     set NUM_SGMT = 20
+     set ATMOStag = CF0024x6C
+     set POST_NDS = 4
+endif
+if( $AGCM_IM ==  "144" ) then
+     set       DT = 900
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set  CHEM_DT = $DT
+     set JOB_SGMT = 00000015
+     set NUM_SGMT = 20
+     if( $OGCM == TRUE ) then
+          set  NX = $OGCM_NX
+          set  NY = $OGCM_NY
+     set OCEAN_DT = $DT
+     else
+          set  NX = 4
+          set  NY = 12
+     set OCEAN_DT = $IRRAD_DT
+     endif
+     set ATMOStag = DC0144xPC0091
+     set POST_NDS = 4
+endif
+if( $AGCM_IM ==  "c48" ) then
+     set       DT = 900
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 48
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 4
+     set       NY = `expr $NX \* 6`
+     set   HYDROSTATIC = TRUE
+     set HIST_IM  = 180
+     set HIST_JM  =  91
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set JOB_SGMT = 00000015
+     set NUM_SGMT = 20
+     set ATMOStag = CF0048x6C
+     set POST_NDS = 4
+endif
+if( $AGCM_IM ==  "288" ) then
+     set       DT = 900
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set  CHEM_DT = $DT
+     set JOB_SGMT = 00000008
+     set NUM_SGMT = 5
+     if( $OGCM == TRUE ) then
+          set  NX = $OGCM_NX
+          set  NY = $OGCM_NY
+     set OCEAN_DT = $DT
+     else
+          set  NX = 8
+          set  NY = 12
+     set OCEAN_DT = $IRRAD_DT
+     endif
+     set ATMOStag = DC0288xPC0181
+     set POST_NDS = 8
+endif
+if( $AGCM_IM ==  "c90" ) then
+     set       DT = 900
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     if ( $OGCM == TRUE ) then
+        set OCEAN_DT = $DT
+     else
+        set OCEAN_DT = $IRRAD_DT
+     endif
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 90
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 12
+     set       NY = `expr $NX \* 5`
+     set HYDROSTATIC = TRUE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set JOB_SGMT = ${fcstsegm}
+     set NUM_SGMT = 1
+     set ATMOStag = CF0090x6C
+     set POST_NDS = 8
+endif
+if( $AGCM_IM ==  "576" ) then
+     set       DT = 450
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set  CHEM_DT = $DT
+     set JOB_SGMT = 00000016
+     set NUM_SGMT = 1
+     if( $OGCM == TRUE ) then
+          set  NX = $OGCM_NX
+          set  NY = $OGCM_NY
+     set OCEAN_DT = $DT
+     else
+          set  NX = 12
+          set  NY = 32
+     set OCEAN_DT = $IRRAD_DT
+     endif
+     set ATMOStag = DC0576xPC0361
+     set POST_NDS = 8
+endif
+if( $AGCM_IM ==  "c180" ) then
+     set       DT = 450
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     if ( $OGCM == TRUE ) then
+        set OCEAN_DT = $DT
+     else
+        set OCEAN_DT = $IRRAD_DT
+     endif
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 180
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 12
+     set       NY = 30
+     set HYDROSTATIC = TRUE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 2
+     set JOB_SGMT = ${fcstsegm}
+     set NUM_SGMT = 1
+     set ATMOStag = CF0180x6C
+     set POST_NDS = 8
+endif
+if( $AGCM_IM == "1152" ) then
+     set       DT = 450
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set  CHEM_DT = $DT
+     set JOB_SGMT = 00000005
+     set NUM_SGMT = 1
+     set NUM_READERS = 4
+     if( $OGCM == TRUE ) then
+          set  NX = $OGCM_NX
+          set  NY = $OGCM_NY
+     set OCEAN_DT = $DT
+     else
+          set  NX = 24
+          set  NY = 32
+     set OCEAN_DT = $IRRAD_DT
+     endif
+     set ATMOStag = DC1152xPC0721
+     set   CNV_NX = 4
+     set POST_NDS = 12
+endif
+if( $AGCM_IM == "c360" ) then
+     set       DT = 450
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 360
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 12 
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = TRUE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 4
+     set JOB_SGMT = 00000005
+     set NUM_SGMT = 1
+     set ATMOStag = CF0360x6C
+     set   CNV_NX = 4
+     set POST_NDS = 12
+endif
+if( $AGCM_IM == "c500" ) then
+     set       DT = 450
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 500
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 12
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = TRUE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 4
+     set JOB_SGMT = 00000005
+     set NUM_SGMT = 1
+     set ATMOStag = CF0500x6C
+     set   CNV_NX = 8
+     set POST_NDS = 12
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c720" ) then
+     set       DT = 450
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 720
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 16
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = TRUE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000005
+     set NUM_SGMT = 1
+     set ATMOStag = CF0720x6C
+     set   CNV_NX = 8
+     set POST_NDS = 16
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c1440" ) then
+     set       DT = 450
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 1440
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 30 
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = FALSE
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOStag = CF1440x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+
+set IS_FCST = 0
+if($CUBED == "TRUE") then
+    set FVCUBED         = ""
+    set FVLATLON        = "#DELETE"
+    set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
+    set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+    set BCSRES          = "${ATMOStag}_${OCEANtag}"
+    set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}'
+    set TILEDATA        = "${ATMOStag}_${OCEANtag}_Pfafstetter.til"
+    set TILEBIN         = "${ATMOStag}_${OCEANtag}_Pfafstetter.TIL"
+    if( $HIST_IM >= $OGCM_IM ) then
+         set INTERPOLATE_SST = 1
+    else
+         set INTERPOLATE_SST = 0
+    endif
+else
+    set FVLATLON        = ""
+    set FVCUBED         = "#DELETE"
+    set AGCM_GRIDNAME   = "PC${AGCM_IM}x${AGCM_JM}-DC"
+    set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+    set BCSRES          = "${ATMOStag}_${OCEANtag}"
+    set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}_${DATELINE}'
+    set TILEDATA        = "${ATMOStag}_${OCEANtag}_Pfafstetter.til"
+    set TILEBIN         = "${ATMOStag}_${OCEANtag}_Pfafstetter.TIL"
+    set HIST_IM         = "$AGCM_IM"
+    set HIST_JM         = "$AGCM_JM"
+    if( $AGCM_IM >= $OGCM_IM ) then
+         set INTERPOLATE_SST = 1
+    else
+         set INTERPOLATE_SST = 0
+    endif
+endif
+
+
+set BEG_DATE =  '18910301 000000'
+set END_DATE =  "${END_DATE2}"
+set JOB_SGMT = "$JOB_SGMT 000000"
+ 
+#######################################################################
+#           Check for land surface and runoff routing  models         #
+#######################################################################
+
+# Check for Catche-Carbon
+# -----------------------
+CATCHCN:
+echo "Enter the choice of ${C1} Land Surface Model${CN}: use ${C2}1${CN} (Default: Catchment Model), ${C2}2${CN} (CatchmentCN Model)"
+set   LSM  = 1
+if( .$LSM == . ) then
+set   LSM  = 1
+endif
+
+if( $LSM != 1 & $LSM != 2 ) then
+echo
+echo "${C1} Land Surface Model${CN} must be set equal to ${C2}1{CN} or ${C2}2${CN}!"
+goto CATCHCN
+else
+echo
+endif
+endif
+
+if( $LSM == 1 ) then
+    set LSM_CHOICE = 1
+else
+    set LSM_CHOICE = 2
+endif
+echo "QUESTION: ENTERED $LSM => LSM_CHOICE = ${LSM_CHOICE}"
+echo
+
+# Check for Runoff Routing Model
+# ------------------------------
+RRM:
+echo "Do you wish to run ${C1} the Runoff Routing Model${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+set   RUNRRM  = 'YES'
+if( .$RUNRRM == . ) then
+set   RUNRRM  = FALSE
+else
+set   RUNRRM  = `echo   $RUNRRM | tr "[:lower:]" "[:upper:]"`
+if(  $RUNRRM == "Y"     | \
+     $RUNRRM == "YES"   | \
+     $RUNRRM == "T"     | \
+     $RUNRRM == "TRUE"  ) set RUNRRM = TRUE
+if(  $RUNRRM == "N"     | \
+     $RUNRRM == "NO"    | \
+     $RUNRRM == "F"     | \
+     $RUNRRM == "FALSE" ) set RUNRRM = FALSE
+
+if( $RUNRRM != TRUE & $RUNRRM != FALSE ) then
+echo
+echo "${C1} the Runoff Routing Model${CN} must be set equal to ${C2}TRUE${CN} or ${C2}FALSE${CN}!"
+goto RRM
+else
+echo
+endif
+endif
+
+if( $RUNRRM == TRUE ) then
+    set RUN_ROUTE = 1
+else
+    set RUN_ROUTE = 0
+endif
+
+#######################################################################
+#                   Check for AEROSOL/Chemistry Models
+#######################################################################
+
+# Check for GOCART
+# ----------------
+GOCART:
+echo "Do you wish to run ${C1}GOCART${CN} with ${C2}Actual${CN} or ${C2}Climatological${CN} Aerosols? (Enter: ${C2}A${CN} (Default) or ${C2}C${CN})"
+set   GOKART  = 'C'
+if( .$GOKART == . ) set  GOKART  = A
+set   GOKART  = `echo   $GOKART | tr "[:lower:]" "[:upper:]"`
+if(  $GOKART != 'A'   & $GOKART != 'C' ) then
+      echo
+      echo "${C1}GOCART${CN} must be set equal to ${C2}A${CN} or ${C2}C${CN}!"
+      goto GOCART
+else
+      echo
+endif
+
+if(  $GOKART == "A" ) set GOKART = TRUE    # Use Actual         Aerosols
+if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
+
+
+if( $GOKART == TRUE ) then
+
+set GOCART          = ""
+set GOCART_INTERNAL = "GOCART_INTERNAL"
+set HIST_GOCART     = ""
+
+# Emission Files
+# --------------
+EMISSIONS:
+     set   EMISSIONS = ''
+     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}MERRA2${CN} (Default), ${C2}PIESA${CN}, ${C2}CMIP${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN} or ${C2}OPS${CN}:"
+     set   EMISSIONS = 'MERRA2'
+     if( .$EMISSIONS == . ) then
+     set   EMISSIONS = MERRA2
+     else
+     set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
+     if(  $EMISSIONS != CMIP & $EMISSIONS != MERRA2 & $EMISSIONS != NR &  $EMISSIONS != MERRA2-DD & $EMISSIONS != PIESA & $EMISSIONS != OPS ) then
+     echo
+     echo "${C1}Emission Files${CN} must be equal to:  ${C2}CMIP${CN}, ${C2}MERRA2${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN}, ${C2}PIESA${CN}, or ${C2}OPS${CN}!"
+     goto EMISSIONS
+     else
+     echo
+     endif
+     endif
+     if(  $EMISSIONS == OPS ) set EMISSIONS = ''
+
+# AERO Provider
+# -------------
+     set AERO_PROVIDER = GOCART
+#AERO:
+#echo "Enter the ${C1}AERO_PROVIDER${CN}: ${C2}GOCART${CN} (Default) or ${C2}GOCART.data${CN}:"
+#      set AERO_PROVIDER  = $<
+#         if( .$AERO_PROVIDER == . ) then
+#          set  AERO_PROVIDER = GOCART
+#      else
+#         if(  $AERO_PROVIDER != GOCART.data & $AERO_PROVIDER != GOCART ) then
+#            echo
+#            echo "${C1}AERO_PROVIDER${CN} must be equal to ${C2}GOCART${CN} or ${C2}GOCART.data${CN}!"
+#            goto AERO
+#         else
+#            echo
+#         endif
+#      endif
+
+else
+
+# GOKART = FALSE
+# --------------
+set  AERO_PROVIDER   = GOCART.data
+set  EMISSIONS       = ""
+set  GOCART          = "#"
+set  HIST_GOCART     = "#DELETE"
+
+endif
+
+# RATS Provider
+# -------------
+set  RATS_PROVIDER   = PCHEM
+
+#######################################################################
+#                  Architecture Specific Variables
+#######################################################################
+
+@ NPES = $NX * $NY
+@ CNV_NPES = $CNV_NX * $CNV_NY
+# Here we need to convert POST_NDS to total tasks. Using 16 cores
+# per task as a good default
+@ POST_NPES = $POST_NDS * 16
+
+setenv ARCH `   uname`
+setenv SITE `$GEOSDEF/src/g5_modules site`
+
+              setenv     RUN_N  `echo $EXPID | cut -b1-11`_`echo $EXPYR `R`echo $ENSM`   # RUN      Job Name
+              setenv     RUN_FN `echo $EXPID | cut -b1-11`_FCST                          # Forecast Job Name
+              setenv    POST_N  `echo $EXPID | cut -b1-10`_`echo $EXPYR `P`echo $ENSM`   # POST     Job Name
+              setenv    PLOT_N  `echo $EXPID | cut -b1-11`_PLT                           # PLOT     Job Name
+              setenv    MOVE_N  `echo $EXPID | cut -b1-11`_MOVE                          # MOVE     Job Name
+              setenv ARCHIVE_N  `echo $EXPID | cut -b1-11`_`echo $EXPYR `A`echo $ENSM`   # ARCHIVE  Job Name
+              setenv ARCHIVE_D  `echo $ARCHBASE/Y$EXPYR/$EXPID/ens$ENSM`                 # ARCHIVE  Path Name
+              setenv REGRESS_N  `echo $EXPID | cut -b1-10`_RGRS                          # REGRESS  Job Name
+              setenv CONVERT_N  `echo $EXPID | cut -b1-11`_CNV                           # CONVERT  Job Name
+
+# Default converter time
+              setenv CONVERT_T  "0:15:00"                                              # Wallclock Time   for gcm_convert.j
+
+if( $SITE == 'NAS' ) then
+              setenv BATCH_GROUP "PBS -W group_list="                                  # PBS Syntax for GROUP
+              setenv     RUN_FT "6:00:00"                                              # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "8:00:00"                                              # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "8:00:00"                                              # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "8:00:00"                                              # Wallclock Time   for gcm_archive.j
+              if( $GPU == "TRUE" ) then
+                 @ NCUS = $NPES / 16
+                 setenv     RUN_Q  "PBS -q gpu_k40"                                    # batch queue name for gcm_run.j
+                 setenv     RUN_P  "PBS -l select=${NCUS}:ncpus=16:mpiprocs=16:model=san_gpu" # PE Configuration for gcm_run.j
+                 setenv    RUN_FP  "PBS -l select=24:ncpus=16:mpiprocs=16:model=san_gpu"  # PE Configuration for gcm_forecast.j
+              else
+                 @ NCUS = $NPES / 24
+                 setenv     RUN_Q  "PBS -q normal"                                        # batch queue name for gcm_run.j
+                 setenv     RUN_P  "PBS -l select=${NCUS}:ncpus=24:mpiprocs=24:model=has" # PE Configuration for gcm_run.j
+                 setenv    RUN_FP  "PBS -l select=24:ncpus=24:mpiprocs=24:model=has"      # PE Configuration for gcm_forecast.j
+              endif
+              setenv    POST_Q  "PBS -q normal"                                            # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "PBS -q normal"                                            # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "PBS -q normal"                                            # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "PBS -q normal"                                            # batch queue name for gcm_archive.j
+              setenv    POST_P  "PBS -l select=${POST_NDS}:ncpus=24:mpiprocs=24:model=has" # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "PBS -l select=2:ncpus=24:mpiprocs=24:model=has"           # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "PBS -l select=1:ncpus=24:mpiprocs=24:model=has"           # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=24:mpiprocs=24:model=has"   # PE Configuration for gcm_convert.j
+              setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/Ganymed-4_0/$BCSTAG # location of     Boundary Conditions
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              else
+                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              endif
+              setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
+              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
+else if( $SITE == 'NCCS' ) then
+              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
+              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
+              if( $GPU == "TRUE" ) then
+                 setenv  RUN_Q  "SBATCH --constraint=k40"                              # batch queue name for gcm_run.j
+              else
+                 setenv  RUN_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_run.j
+              endif
+              if ($QUEUENAME == 's2s') then
+                 set RUN_SP = "SBATCH --partition=preops"
+                 set RUN_SN = "SBATCH --qos=s2s"
+              else if( $QUEUENAME == 'gmaofcst' ) then
+                 set RUN_SP = "SBATCH --ntasks-per-node=24"
+                 set RUN_SN = "SBATCH --qos=gmaofcst"
+              else
+                 set RUN_SP = "SBATCH --ntasks-per-node=27"
+                 set RUN_SN = "SBATCH --qos=high"
+              endif
+              setenv    RUN_P   "SBATCH --ntasks=${NPES}"                              # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "SBATCH --ntasks=\&NPES"                               # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "SBATCH --partition=datamove"                          # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "SBATCH --partition=datamove"                          # batch queue name for gcm_archive.j
+              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
+              setenv BCSDIR     /discover/nobackup/ltakacs/bcs/Ganymed-4_0/$BCSTAG     # location of     Boundary Conditions
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+                   setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+              else
+                   setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+              endif
+              setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
+              setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
+else if( $SITE == 'JIBB' ) then
+              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
+              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
+              setenv     RUN_Q  "SBATCH --partition=general"                           # batch queue name for gcm_run.j
+              setenv     RUN_P  "SBATCH --ntasks=${NPES}"                              # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "SBATCH --ntasks=\&NPES"                               # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  "SBATCH --partition=general"                           # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "SBATCH --partition=general"                           # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "SBATCH --partition=general"                           # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "SBATCH --partition=general"                           # batch queue name for gcm_archive.j
+              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
+              setenv BCSDIR     /jibb/nobackup/gmaosi/ModelData/bcs/Ganymed-4_0/$BCSTAG # location of     Boundary Conditions
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+                   setenv SSTDIR     /jibb/nobackup/gmaosi/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              else
+                   setenv SSTDIR     /jibb/nobackup/gmaosi/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              endif
+              setenv CHMDIR     /jibb/nobackup/gmaosi/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /jibb/nobackup/$LOGNAME                                # user work directory
+              setenv COUPLEDIR  /jibb/nobackup/gmaosi/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
+else
+# These are defaults for the desktop
+              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
+              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
+              setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
+              setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
+              setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
+              setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  NULL                                                   # batch queue name for gcm_archive.j
+              setenv    POST_P  NULL                                                   # PE Configuration for gcm_run.j
+              setenv    PLOT_P  NULL                                                   # PE Configuration for gcm_post.j
+              setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
+              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/Ganymed-4_0/$BCSTAG         # location of     Boundary Conditions
+              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+              setenv RUN_CMD    'mpirun -oversubscribe -np '                           # mpi run for DESKTOP
+              if( $CUBED == "TRUE" ) then
+                 set NX = 1
+                 set NY = 6
+              else
+                 set NX = 2
+                 set NY = 4
+              endif
+              set CNV_NX = ${NX}
+              set CNV_NY = ${NY}
+endif
+
+
+#######################################################################
+#                    Create Desired HISTORY template
+#         Note: Default HISTORY will be kept in $HOME/.HISTORYrc
+#######################################################################
+
+    set check =  FALSE
+while( $check == FALSE )
+  if( -e $HOME/.HISTORYrc ) then
+            set HISTORYrc = `cat $HOME/.HISTORYrc`
+  else
+            set HISTORYrc = Current
+          echo $HISTORYrc > $HOME/.HISTORYrc
+  endif
+
+  echo "Enter the tag or directory (/filename) of the ${C1}HISTORY.AGCM.rc.tmpl${CN} to use"
+  echo "(To use ${C1}HISTORY.AGCM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
+  echo "-------------------------------------------------------------------------"
+  echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
+  set   NUHISTORY  = "Current"
+  if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
+  #if( -e $APPDIR/HISTORY.rc.hold ) /bin/mv -f $APPDIR/HISTORY.rc.hold $APPDIR/HISTORY.rc.tmpl
+  #if( -e $APPDIR/HISTORY.rc.tmpl ) /bin/mv -f $APPDIR/HISTORY.rc.tmpl $APPDIR/HISTORY.rc.hold
+
+  if( "$HISTORYrc" == "Current" ) then
+            set check = TRUE
+            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
+            echo $HISTORYrc >                 $HOME/.HISTORYrc
+            #/bin/cp -f $APPDIR/HISTORY.AGCM.rc.tmpl $APPDIR/HISTORY.rc.tmpl
+  endif
+
+  if( "$HISTORYrc" != "Current" ) then
+       if( -f $HISTORYrc ) then
+            set check = TRUE
+            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
+            echo $HISTORYrc >                 $HOME/.HISTORYrc
+            /bin/cp -f $HISTORYrc $APPDIR/HISTORY.rc.tmp1
+
+            set  EXPID_old = `grep  "EXPID:" $APPDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set EXPDSC_old = `grep "EXPDSC:" $APPDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+
+            /bin/rm -f command
+            set  string = "EXPID:"
+            echo cat $APPDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $APPDIR/HISTORY.rc.tmpl > command
+            chmod +x   command
+                     ./command
+            /bin/rm -f command
+            /bin/mv -f $APPDIR/HISTORY.rc.tmpl $APPDIR/HISTORY.rc.tmp1
+                   cat $APPDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $APPDIR/HISTORY.rc.tmpl
+            /bin/rm -f $APPDIR/HISTORY.rc.tmp1
+
+       else if( -e $HISTORYrc/HISTORY.AGCM.rc.tmpl ) then
+            set check = TRUE
+            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
+            echo $HISTORYrc >                 $HOME/.HISTORYrc
+            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $APPDIR/HISTORY.rc.tmpl
+       else
+           cvs upd -r $HISTORYrc -p $APPDIR/HISTORY.AGCM.rc.tmpl > $APPDIR/HISTORY.rc.tmpl
+           if( $status != 0 ) then
+            echo " "
+            echo "\!\! ERROR in using $HISTORYrc as a cvs tag or directory/filename. \!\!"
+            echo "\!\! Please check cvs connectivity or $HISTORYrc syntax. \!\!"
+            echo " "
+           else
+            set check = TRUE
+            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
+            echo $HISTORYrc >                 $HOME/.HISTORYrc
+           endif
+       endif
+  endif
+end
+
+#######################################################################
+#                 Create Paths for HOME and EXP Directories
+#         Note: Default Path will be kept in $HOME/.HOMDIRroot
+#######################################################################
+
+# HOME Directory (for scripts and RC files)
+# -----------------------------------------
+    set check =  FALSE
+while( $check == FALSE )
+  if( -e $HOME/.HOMDIRroot ) then
+         set HOMDIRroot = `cat $HOME/.HOMDIRroot`
+  else
+         set HOMDIRroot = $HOME/geos5
+  endif
+
+  setenv HOMDIR_def $HOMDIRroot/$EXPID
+  echo " "
+  echo "Enter Desired Location for the ${C1}HOME${CN} Directory (to contain scripts and RC files)"
+  echo "Hit ENTER to use Default Location:"
+  echo "----------------------------------"
+  echo "Default:  ${C2}${HOMDIR_def}${CN}"
+  set   NUHOMDIR  = "$FCSTBASE/runh/$EXPYR/$EXPID"
+  if( .$NUHOMDIR != . ) then
+       setenv HOMDIR     $NUHOMDIR/ens$ENSM
+       setenv HOMDIR_def $NUHOMDIR/ens$ENSM
+  else
+       setenv HOMDIR  $HOMDIR_def
+  endif
+  
+  if( "$EXPID" != `basename $NUHOMDIR` ) then
+       echo "\!\! The ${C1}HOME${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
+       echo " "
+  else
+      set check = TRUE
+  endif
+end
+echo "mkdir -p $HOMDIR"
+mkdir -p $HOMDIR
+
+
+# EXP Directory (for Output Data and Restarts)
+# --------------------------------------------
+    set check =  FALSE
+while( $check == FALSE )
+  if( -e $HOME/.EXPDIRroot ) then
+         set EXPDIRroot = `cat $HOME/.EXPDIRroot`
+  else
+         set EXPDIRroot = $WRKDIR
+  endif
+  setenv EXPDIR_def $EXPDIRroot/$EXPID
+  echo ""
+  echo "Enter Desired Location for the ${C1}EXPERIMENT${CN} Directory (to contain model output and restart files)"
+  echo "Hit ENTER to use Default Location:"
+  echo "----------------------------------"
+  echo "Default:  ${C2}${EXPDIR_def}${CN}"
+  set   NUEXPDIR  = "$FCSTBASE/runx/$EXPYR/$EXPID"
+  if( .$NUEXPDIR != . ) then
+       setenv EXPDIR     $NUEXPDIR/ens$ENSM
+       setenv EXPDIR_def $NUEXPDIR/ens$ENSM
+  else
+       setenv EXPDIR  $EXPDIR_def
+  endif
+  
+  if( "$EXPID" != `basename $NUEXPDIR` ) then
+       echo "\!\! The ${C1}EXPERIMENT${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
+       echo " "
+  else
+      set check = TRUE
+  endif
+end
+echo "mkdir -p $EXPDIR"
+mkdir -p $EXPDIR
+
+
+
+# Build HOME Root Directory
+# -------------------------
+@ n = 1
+set root = `echo $HOMDIR | cut -d / -f$n`
+while( .$root == . )
+@ n = $n + 1
+set root = `echo $HOMDIR | cut -d / -f$n`
+end
+
+set HOMDIRroot = ''
+while( $root != $EXPID )
+set HOMDIRroot = `echo ${HOMDIRroot}/${root}`
+@ n = $n + 1
+set root = `echo $HOMDIR | cut -d / -f$n`
+end
+if( -e $HOME/.HOMDIRroot ) /bin/rm $HOME/.HOMDIRroot
+echo $HOMDIRroot > $HOME/.HOMDIRroot
+
+
+# Build EXP Root Directory
+# ------------------------
+@ n = 1
+set root = `echo $EXPDIR | cut -d / -f$n`
+while( .$root == . )
+@ n = $n + 1
+set root = `echo $EXPDIR | cut -d / -f$n`
+end
+
+set EXPDIRroot = ''
+while( $root != $EXPID )
+set EXPDIRroot = `echo ${EXPDIRroot}/${root}`
+@ n = $n + 1
+set root = `echo $EXPDIR | cut -d / -f$n`
+end
+if( -e $HOME/.EXPDIRroot ) /bin/rm $HOME/.EXPDIRroot
+echo $EXPDIRroot > $HOME/.EXPDIRroot
+
+# Set CNVDIR alias
+# ----------------
+
+setenv CNVDIR $EXPDIR/convert
+
+#######################################################################
+#                       Locate Build Directory  
+#######################################################################
+
+# GEOSagcm Build Directory
+# ------------------------
+  echo "Enter Location for ${C1}Build${CN} directory containing:  src/ Linux/ etc..."
+  echo "Hit ENTER to use Default Location:"
+  echo "----------------------------------"
+  echo "Default:  ${C2}${GEOSDEF}${CN}"
+
+  set     GEOSDIR  = $GEOSDEF
+  set   NUGEOSDIR  = $GEOSDEF
+  if( .$NUGEOSDIR != . ) then
+       set GEOSDIR = $NUGEOSDIR
+  endif
+  
+    set check =  FALSE
+GEOSDIR:
+while( $check == FALSE )
+
+  if(! (-e $GEOSDIR/Linux || -e $GEOSDIR/Darwin) ) then
+       echo " "
+       echo "\!\! ${C1}WARNING${CN} \!\!"
+       echo "\!\! This Sandbox has not been built"
+       echo "\!\! Please enter a valid location for the ${C1}GEOSagcm Build${CN}"
+       echo "\!\! or ... "
+       echo "\!\! Enter ${C1}C${CN} to continue without a Build"
+       echo " "
+
+       set        NUGEOSDIR  = $<
+       if(      .$NUGEOSDIR == . ) then
+              set   GEOSDIR  = $GEOSDEF
+
+       else if( .$NUGEOSDIR == .C | .$NUGEOSDIR == .c ) then
+                set GEOSDIR  = $GEOSDEF
+                set check    = TRUE
+       else
+                set GEOSDIR = $NUGEOSDIR
+       endif
+
+       goto GEOSDIR
+  else
+       set check = TRUE
+  endif
+end
+
+setenv GEOSSRC  ${GEOSDIR}/src
+setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
+setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
+setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+
+#######################################################################
+#                    Check for Group ID Sponsor Code
+#         Note: Default GROUP will be kept in $HOME/.GROUProot
+#######################################################################
+
+       set GROUPS    = `groups`
+if( -e $HOME/.GROUProot ) then
+       set GROUProot = `cat $HOME/.GROUProot`
+else
+       set GROUProot = $GROUPS[1]
+endif
+
+echo " "
+echo "Current GROUPS: ${GROUPS}"
+echo "Enter your ${C1}GROUP ID${CN} for Current EXP: (Default: ${C2}${GROUProot}${CN})"
+echo "-----------------------------------"
+set   NUGROUP  = "g0609"
+if( .$NUGROUP != . ) then
+     setenv GROUP $NUGROUP
+else
+     setenv GROUP $GROUProot
+endif
+
+if( -e $HOME/.GROUProot ) /bin/rm $HOME/.GROUProot
+echo $GROUP > $HOME/.GROUProot
+
+#######################################################################
+#      Copy Model Executable and RC Files to Experiment Directory
+#######################################################################
+
+  mkdir -p                                                  $EXPDIR/RC
+  rsync -ax                  $GEOSDIR/$ARCH/etc/*.rc        $EXPDIR/RC
+  if( .$EMISSIONS != . ) then
+                     /bin/cp $GEOSDIR/$ARCH/etc/$EMISSIONS/*.rc $EXPDIR/RC
+  else
+    set EMISSIONS = g5chem
+  endif
+
+  if ( -e $GEOSDIR/$ARCH/bin/GEOSgcm.x ) rsync -avx $GEOSDIR/$ARCH/bin/GEOSgcm.x $EXPDIR
+
+#######################################################################
+#                      Create SETENV Commands
+#######################################################################
+
+/bin/rm -f $HOMDIR/SETENV.commands
+
+if( $MPI == openmpi ) then
+
+# This turns off an annoying warning when running
+# Open MPI on a system where TMPDIRs are on a networked
+# file system
+
+cat > $HOMDIR/SETENV.commands << EOF
+   setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+EOF
+
+# The below settings seem to be recommended for hybrid
+# systems using MVAPICH2 but could change
+
+else if( $MPI == mvapich2 ) then
+
+if( $GPU == "TRUE" ) then
+cat > $HOMDIR/SETENV.commands << EOF
+   setenv MV2_ON_DEMAND_THRESHOLD 8192
+   setenv MV2_USE_SHMEM_ALLREDUCE 0
+   setenv MV2_USE_SHMEM_COLL      0
+   setenv MV2_ENABLE_AFFINITY     0
+   setenv MV2_RNDV_PROTOCOL       RPUT
+   setenv MV2_USE_RDMA_ONE_SIDED  1
+EOF
+
+else
+
+cat > $HOMDIR/SETENV.commands << EOF
+   setenv MV2_ON_DEMAND_THRESHOLD 8192
+   setenv MV2_USE_SHMEM_ALLREDUCE 0
+   setenv MV2_USE_SHMEM_COLL      0
+   setenv MV2_USE_UD_HYBRID       0
+EOF
+
+endif # if GPU and mvapich2
+
+else if( $MPI == mpt ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+
+   setenv MPI_COLL_REPRODUCIBLE
+   setenv SLURM_DISTRIBUTION block
+
+   # For some reason, PMI_RANK is randomly set and interferes
+   # with binarytile.x and other executables.
+   unsetenv PMI_RANK
+
+EOF
+
+else if( $MPI == intelmpi ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_DAPL_UD enable
+EOF
+
+endif # if mpi
+
+#######################################################################
+#                      Create GPU Hyper-Q Commands
+#######################################################################
+
+/bin/rm -f $HOMDIR/GPUSTART.commands
+/bin/rm -f $HOMDIR/GPUEND.commands
+
+if ( $GPU == "TRUE" ) then
+
+cat > $HOMDIR/GPUSTART.commands << _EOF_
+
+# Set up the MPS Server on Each GPU Node
+# --------------------------------------
+_EOF_
+
+if ( $SITE == 'NCCS' ) then
+
+cat >> $HOMDIR/GPUSTART.commands << _EOF1_
+
+setenv GPU_NODELIST \`scontrol show hostnames\` 
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID 
+
+_EOF1_
+
+else if ( $SITE == 'NAS' ) then
+
+cat >> $HOMDIR/GPUSTART.commands << _EOF1_
+
+setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\` 
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID 
+
+_EOF1_
+
+endif # if site
+
+cat >> $HOMDIR/GPUSTART.commands << _EOF2_
+setenv CUDA_VISIBLE_DEVICES 0 
+setenv CUDA_MPS_CLIENT 1 
+setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0 
+setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0 
+ 
+foreach node (\$GPU_NODELIST) 
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
+end 
+ 
+sleep 3 
+ 
+foreach node (\$GPU_NODELIST) 
+   echo "Running MPS Server on \$node" 
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash" 
+end 
+ 
+sleep 3 
+
+_EOF2_
+
+cat > $HOMDIR/GPUEND.commands << _EOF3_
+# Remove the MPS Server on Each GPU Node
+# --------------------------------------
+
+foreach node (\$GPU_NODELIST) 
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
+end 
+
+_EOF3_
+
+endif
+
+#######################################################################
+#               Create Local Scripts and Resource Files
+#######################################################################
+
+set FILES = "gcm_run_CPLFCST360S2S.j \
+             gcm_post_full_CPLFCST.j    \
+             gcm_post_part_CPLFCST.j    \
+             gcm_archive.j      \
+             gcm_archive_CPLFCST.j     \
+             gcm_regress.j      \
+             gcm_convert.j      \
+             gcm_plot.tmpl      \
+             gcm_quickplot.csh  \
+             gcm_moveplot.j     \
+             gcm_stats.j        \
+             gcm_forecast.tmpl  \
+             gcm_forecast.setup \
+             CAP.rc.tmpl        \
+             AGCM.rc.tmpl       \
+             HISTORY.S2S.rc.tmpl    "
+set FILES = `echo $FILES`
+
+if( $OGCM == TRUE ) then
+    /bin/cp $FCSTBLD/GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml $HOMDIR
+    /bin/cp $FCSTBLD/GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table $HOMDIR
+    /bin/cp $FCSTBLD/GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/INPUT/data_table $HOMDIR
+#   set FILES = "$FILES      \
+#                input_CPLFCST360.nml   \
+#                diag_CPLFCST_table  \
+#                field_CPLFCST_table \
+#                data_CPLFCST_table"
+#   set FILES = `echo $FILES`
+endif
+
+if($CUBED == "TRUE") then
+set FILES = "$FILES \
+             fvcore_layout.rc"
+set FILES = `echo $FILES`
+endif
+
+echo " "
+foreach FILE ($FILES)
+
+/bin/rm -f $HOMDIR/tmpfile
+/bin/rm -f $HOMDIR/sedfile
+/bin/rm -f $HOMDIR/$FILE
+cat        $APPDIR/$FILE > $HOMDIR/tmpfile
+cat >      $HOMDIR/sedfile << EOF
+/@SETENVS/ {
+t success
+: success
+r $HOMDIR/SETENV.commands
+d
+}
+
+/@GPUSTART/ {
+t success1
+: success1
+r $HOMDIR/GPUSTART.commands
+d
+}
+
+/@GPUEND/ {
+t success2
+: success2
+r $HOMDIR/GPUEND.commands
+d
+}
+
+s?@GCMVER?$GCMVER?g
+s?@EXPSRC?$GEOSTAG?g
+s?@EXPYR?$EXPYR?g
+s?@EXPID?$EXPID?g
+s?@ENSM?$ENSM?g
+s?@FCSTMODE?$SUBSEASONAL?g
+s?@RUN_N?$RUN_N?g
+s?@RUN_FN?$RUN_FN?g
+s?@RUN_FT?$RUN_FT?g
+s?@RUN_T?$RUN_T?g
+s?@RUN_P?$RUN_P?g
+s?@RUN_FP?$RUN_FP?g
+s?@RUN_Q?$RUN_Q?g
+s?@RUN_SN?$RUN_SN?g
+s?@RUN_SP?$RUN_SP?g
+s?@POST_N?$POST_N?g
+s?@POST_T?$POST_T?g
+s?@POST_P?$POST_P?g
+s?@POST_Q?$POST_Q?g
+s?@MOVE_N?$MOVE_N?g
+s?@PLOT_N?$PLOT_N?g
+s?@PLOT_T?$PLOT_T?g
+s?@PLOT_P?$PLOT_P?g
+s?@PLOT_Q?$PLOT_Q?g
+s?@MOVE_Q?$MOVE_Q?g
+s?@ARCHIVE_N?$ARCHIVE_N?g
+s?@ARCHIVE_T?$ARCHIVE_T?g
+s?@ARCHIVE_P?$ARCHIVE_P?g
+s?@ARCHIVE_Q?$ARCHIVE_Q?g
+s?@ARCHIVE_D?$ARCHIVE_D?g
+s?@REGRESS_N?$REGRESS_N?g
+s?@CONVERT_N?$CONVERT_N?g
+s?@CONVERT_P?$CONVERT_P?g
+s?@CONVERT_T?$CONVERT_T?g
+s?@CNV_NX?$CNV_NX?g
+s?@CNV_NY?$CNV_NY?g
+s?@BCSDIR?$BCSDIR?g
+s?@SSTDIR?$SSTDIR?g
+s?@SSTNAME?$SSTNAME?g
+s?@SSTFILE?$SSTFILE?g
+s?@ICEFILE?$ICEFILE?g
+s?@KPARFILE?$KPARFILE?g
+s?@CHMDIR?$CHMDIR?g
+s?@COUPLEDIR?$COUPLEDIR?g
+s?@EXPDIR?$EXPDIR?g
+s?@EXPDSC?$EXPDSC?g
+s?@HOMDIR?$HOMDIR?g
+s?@CNVDIR?$CNVDIR?g
+s?@BATCH_GROUP?${BATCH_GROUP}${GROUP}?g
+s?@SITE?$SITE?g
+s?@GEOSDIR?$GEOSDIR?g
+s?@GEOSSRC?$GEOSSRC?g
+s?@GEOSBIN?$GEOSBIN?g
+s?@GEOSUTIL?$GEOSUTIL?g
+s?@RUN_CMD?$RUN_CMD?g
+
+s?@CHECKPOINT_TYPE?default?g
+
+s?@OGCM_NX?$OGCM_NX?g
+s?@OGCM_NY?$OGCM_NY?g
+s?@OGCM_NPROCS?$OGCM_NPROCS?g
+s?@OGCM_GRIDSPEC?$OGCM_GRIDSPEC?g
+
+s?@OBSERVER_FRQ?0?g
+s?RECORD_?#RECORD_?g
+
+s?@DASTUNING?#?g
+
+s?>>>FORCEDAS<<<?$FORCEDAS?g
+s?>>>FORCEGCM<<<?$FORCEGCM?g
+s?>>>COUPLED<<<?$COUPLED?g
+s?>>>FORCAST<<<?$FORCAST?g
+s?>>>DATAOCEAN<<<?$DATAOCEAN?g
+s?>>>GOCART<<<?$GOCART?g
+s?>>>FVCUBED<<<?$FVCUBED?g
+s?>>>FVLATLON<<<?$FVLATLON?g
+s?>>>HIST_GOCART<<<?$HIST_GOCART?g
+s?>>>OSTIA<<<?$OSTIA?g
+
+s?>>>4DIAUDAS<<<?#DELETE?g
+s?>>>REGULAR_REPLAY<<<?#?g
+s?>>>REGULAR_REPLAY_GMAO<<<?#?g
+s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
+s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
+s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA2_MEANS/ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4?g
+
+s?@OX_RELAXTIME?259200.?g
+s?@PCHEM_CLIM_YEARS?228?g
+
+s?@RATS_PROVIDER?$RATS_PROVIDER?g
+s?@AERO_PROVIDER?$AERO_PROVIDER?g
+s?@OANA_PROVIDER?PCHEM?g
+s?@EMISSIONS?$EMISSIONS?g
+
+s^@DYCORE^$DYCORE^g
+s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
+s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
+
+s?@IS_FCST?$IS_FCST?g
+s^@BOOT^YES^g
+s^@BCSRES^$BCSRES^g
+s^@RES_DATELINE^$RES_DATELINE^g
+s^@TILEDATA^$TILEDATA^g
+s^@TILEBIN^$TILEBIN^g
+s/@DT/$DT/g
+s/@SOLAR_DT/$SOLAR_DT/g
+s/@IRRAD_DT/$IRRAD_DT/g
+s/@OCEAN_DT/$OCEAN_DT/g
+s/@CHEM_DT/$CHEM_DT/g
+s/@NX/$NX/g
+s/@NY/$NY/g
+s/@USE_SHMEM/$USE_SHMEM/g
+s/@NUM_READERS/$NUM_READERS/g
+s/@NUM_WRITERS/$NUM_WRITERS/g
+s/@AGCM_IM/$AGCM_IM/g
+s/@AGCM_JM/$AGCM_JM/g
+s/@AGCM_LM/$AGCM_LM/g
+s/@OGCM_IM/$OGCM_IM/g
+s/@OGCM_JM/$OGCM_JM/g
+s/@OGCM_LM/$OGCM_LM/g
+s/@BEG_DATE/${BEG_DATE}/g
+s/@END_DATE/${END_DATE2}/g 
+s/@JOB_SGMT/${JOB_SGMT}/g
+s/@NUM_SGMT/${NUM_SGMT}/g
+
+s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
+s/@HIST_IM/$HIST_IM/g
+s/@HIST_JM/$HIST_JM/g
+
+s/@ISCCP_SATSIM/0/g
+s/@MODIS_SATSIM/0/g
+s/@RADAR_SATSIM/0/g
+s/@LIDAR_SATSIM/0/g
+s/@MISR_SATSIM/0/g
+s/@SATSIM/0/g
+
+s/@USE_SKIN_LAYER/1/g
+s/@ANALYZE_TS/0/g
+
+s/@LSM_CHOICE/$LSM_CHOICE/g
+s/@RUN_ROUTE/$RUN_ROUTE/g
+
+EOF
+
+# Added FV3 Specific Parameters
+# -----------------------------
+if($CUBED == "TRUE") then
+
+cat >> $HOMDIR/sedfile << EOF
+
+s^@HYDROSTATIC^$HYDROSTATIC^g
+s/@GRID_FILE/$GRID_FILE/g
+
+EOF
+endif
+
+sed -f $HOMDIR/sedfile $HOMDIR/tmpfile > $HOMDIR/$FILE
+
+echo "Creating ${C1}${FILE}${CN} for Experiment: $EXPID "
+chmod 755 $HOMDIR/$FILE
+end
+/bin/rm -f $HOMDIR/SETENV.commands
+
+echo ' '
+echo "Rename coupled forecast specific files *CPLFCST* "
+echo "Note:  run.j archive.j and HISTORY.rc different for seasonal and subseasonal"
+/bin/mv $HOMDIR/gcm_run_CPLFCST360S2S.j $HOMDIR/gcm_run.j
+/bin/mv $HOMDIR/gcm_post_part_CPLFCST.j $HOMDIR/gcm_post_part.j
+/bin/mv $HOMDIR/gcm_post_full_CPLFCST.j $HOMDIR/gcm_post_full.j
+#/bin/mv $HOMDIR/AGCM_CPLFCST.rc.tmpl $HOMDIR/AGCM.rc.tmpl
+/bin/mv $HOMDIR/HISTORY.S2S.rc.tmpl $HOMDIR/HISTORY.rc.tmpl
+#/bin/mv $HOMDIR/data_CPLFCST_table $HOMDIR/data_table
+#/bin/mv $HOMDIR/diag_CPLFCST_table $HOMDIR/diag_table
+#/bin/mv $HOMDIR/field_CPLFCST_table $HOMDIR/field_table
+#/bin/mv $HOMDIR/input_CPLFCST360.nml $HOMDIR/input.nml
+if ($SUBSEASONAL == TRUE) then
+   /bin/mv $HOMDIR/gcm_archive_CPLFCST.j $HOMDIR/gcm_archive.j
+else
+   /bin/rm -f $HOMDIR/gcm_archive_CPLFCST.j
+endif
+
+if ($GPU == "TRUE") then
+/bin/rm -f $HOMDIR/GPUSTART.commands
+/bin/rm -f $HOMDIR/GPUEND.commands
+endif
+
+if(     -e $APPDIR/HISTORY.rc.hold ) then
+/bin/mv -f $APPDIR/HISTORY.rc.hold $APPDIR/HISTORY.rc.tmpl
+else
+#/bin/rm -f $APPDIR/HISTORY.rc.tmpl
+endif
+
+echo $HOMDIR > $EXPDIR/.HOMDIR
+echo " "
+
+#######################################################################
+#                 Produce Final script and .rc files
+#######################################################################
+
+# Comment or UN-Comment RESTARTS based on EXP Configuration
+# ---------------------------------------------------------
+set LH2O       = FALSE
+set LMAM       = FALSE
+set LCARMA     = FALSE
+set LGMICHEM   = FALSE
+set LSTRATCHEM = FALSE
+
+set RSNAMES = "LH2O LMAM LCARMA LGMICHEM LSTRATCHEM"
+set RSTYPES = "INTERNAL IMPORT"
+
+/bin/rm -f command
+set FILE = AGCM.rc.tmpl
+
+if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
+if( -e $EXPDIR/$FILE ) set LOCDIR = $EXPDIR
+
+foreach rsname ($RSNAMES)
+   set  name = `echo $rsname | cut -b2-`
+   set  test = `eval echo \$$rsname`
+   if( $test == FALSE ) then
+       foreach type ($RSTYPES)
+          set  string = ${name}_${type}
+          /bin/rm -f $LOCDIR/$FILE.tmp
+          /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
+          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+               \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+          chmod +x   command
+          ./command
+          /bin/rm -f command
+       end
+   endif
+end
+/bin/rm -f $LOCDIR/$FILE.tmp
+
+
+# Delete or Enable EXP Configuration Variables
+# --------------------------------------------
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_stats.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post_full.j gcm_post_part.j gcm_plot.tmpl"
+foreach FILE ($FILES)
+
+if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
+if( -e $EXPDIR/$FILE ) set LOCDIR = $EXPDIR
+
+/bin/rm -f $LOCDIR/$FILE.tmp
+/bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
+    cat    $LOCDIR/$FILE.tmp | awk '{ if ( $1  !~ "#DELETE") { print } }' > $LOCDIR/$FILE
+/bin/rm -f $LOCDIR/$FILE.tmp
+
+end
+
+chmod   +x $HOMDIR/gcm_run.j
+chmod   +x $HOMDIR/gcm_stats.j
+chmod   +x $HOMDIR/gcm_convert.j
+chmod   +x $HOMDIR/gcm_forecast.setup
+chmod   +x $HOMDIR/gcm_regress.j
+chmod   +x $HOMDIR/gcm_post_full.j
+chmod   +x $HOMDIR/gcm_post_part.j
+
+#######################################################################
+#         Finalizing Experiment Directories and Chem Registry
+#######################################################################
+
+# Check for Experiment Sub-Directories
+# ------------------------------------
+if(! -e $EXPDIR/post      ) mkdir -p $EXPDIR/post
+if(! -e $EXPDIR/plot      ) mkdir -p $EXPDIR/plot
+if(! -e $EXPDIR/archive   ) mkdir -p $EXPDIR/archive
+if(! -e $EXPDIR/regress   ) mkdir -p $EXPDIR/regress
+if(! -e $EXPDIR/forecasts ) mkdir -p $EXPDIR/forecasts
+if(! -e $EXPDIR/convert   ) mkdir -p $EXPDIR/convert
+
+if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
+
+
+# Rename and Move Files to Relevant Experiment Work Sub-Directories
+# -----------------------------------------------------------------
+/bin/mv $HOMDIR/gcm_post_full.j     $EXPDIR/post
+/bin/mv $HOMDIR/gcm_post_part.j     $EXPDIR/post
+/bin/mv $HOMDIR/gcm_plot.tmpl       $EXPDIR/plot
+/bin/mv $HOMDIR/gcm_quickplot.csh   $EXPDIR/plot
+/bin/mv $HOMDIR/gcm_moveplot.j      $EXPDIR/plot
+/bin/mv $HOMDIR/gcm_archive.j       $EXPDIR/archive
+/bin/mv $HOMDIR/gcm_regress.j       $EXPDIR/regress
+/bin/mv $HOMDIR/gcm_convert.j       $EXPDIR/convert
+/bin/mv $HOMDIR/gcm_stats.j         $EXPDIR/forecasts
+/bin/mv $HOMDIR/gcm_forecast.tmpl   $EXPDIR/forecasts
+/bin/mv $HOMDIR/gcm_forecast.setup  $EXPDIR/forecasts
+/bin/cp $GEOSUTIL/post/plot_CPLFCST.rc      $EXPDIR/plot/plot.rc
+/bin/cp $GEOSUTIL/post/post.rc      $EXPDIR/post
+
+/bin/mv $HOMDIR/CAP.rc.tmpl         $HOMDIR/CAP.rc
+/bin/mv $HOMDIR/AGCM.rc.tmpl        $HOMDIR/AGCM.rc
+/bin/mv $HOMDIR/HISTORY.rc.tmpl     $HOMDIR/HISTORY.rc
+
+#######################################################################
+#       Modify RC Directory for LM and GOCART.data/GOCART Options     
+#######################################################################
+
+# Modify RC Files for LM
+# ----------------------
+if( $AGCM_LM != 72 ) then
+    set files = `ls -1 $EXPDIR/RC/*.rc`
+    foreach file ($files)
+       /bin/rm -f    $EXPDIR/RC/dummy
+       /bin/mv $file $EXPDIR/RC/dummy
+       cat $EXPDIR/RC/dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
+     end
+endif
+
+
+# Turn on PCHEM
+# -------------
+if( $RATS_PROVIDER == PCHEM ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_PCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
+# Turn on GOCART.data
+# -------------------
+if( $AERO_PROVIDER == GOCART.data ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
+# Turn on TR GridComp
+# -------------------
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+
+# Turn on GOCART
+# --------------
+if( $GOKART == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
+    cat $EXPDIR/RC/Chem_Registry.tmp | \
+    awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+endif
+
+# Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
+# ------------------------------------------------------------------
+    /bin/mv $EXPDIR/RC/GAAS_GridComp.rc $EXPDIR/RC/GAAS_GridComp.tmp
+    cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.??g' > $EXPDIR/RC/GAAS_GridComp.rc
+
+
+# Turn on RATS_PROVIDER
+# ---------------------
+if( $RATS_PROVIDER == PCHEM ) then
+    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
+    cat $EXPDIR/RC/Chem_Registry.tmp | \
+    awk '{if ( $1 ~ "doing") { if ( $1 ~ "PC") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
+endif
+
+# Turn on TR GridComp
+# ---------------------
+    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
+    cat $EXPDIR/RC/Chem_Registry.tmp | \
+    awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
+
+
+#######################################################################
+#                       Echo Settings and Messages
+#######################################################################
+
+echo "Done!"
+echo "-----"
+echo " "
+echo "Build Directory: ${C2}${GEOSDIR}${CN}"
+echo "----------------"
+echo " "
+if ( ! -e $GEOSDIR/$ARCH/bin/GEOSgcm.x ) then
+     echo " "
+     echo "Note:  Build directory does not contain ${C1}GEOSgcm.x${CN} !"
+     echo "       You will need to put a copy of ${C1}GEOSgcm.x${CN} in your Experiment directory"
+     echo "----------------------------------------------------------------------------"
+     echo " "
+else
+     echo " "
+     echo "The following executable has been placed in your Experiment Directory:"
+     echo "----------------------------------------------------------------------"
+     echo "${C2}$GEOSDIR/$ARCH/bin/GEOSgcm.x${CN}"
+     echo " "
+endif
+echo " "
+echo "You must now copy your ${C1}Initial Conditions${CN} into: "
+echo "----------------------------------------------- "
+echo "${C2}${EXPDIR}${CN}"
+echo ""
+echo ""
+
+#######################################################################
+#                              Clean-Up
+#######################################################################
+
+if( -e $HOMDIR/tmpfile ) /bin/rm $HOMDIR/tmpfile
+if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
+
+#######################################################################
+#                  Determine Experiment Specific src Files
+#######################################################################
+
+if ( $NOCVS != "TRUE" ) then
+
+# Make a src directory under EXPDIR to hold current Experiment files
+# Note:  Sandbox Source Location: $GEOSDIR/src
+#        EXP TAG Source Location: $EXPDIR/src/GEOSagcm/src
+# ------------------------------------------------------------------
+/bin/rm -rf ${EXPDIR}/src
+mkdir   -p  ${EXPDIR}/src/GEOSagcm/src
+cd          ${EXPDIR}/src/GEOSagcm/src
+
+echo "${C2}Copying${CN} ${C1}Sandbox Source Code${CN} ${C2}(including non-committed files) into${CN} ${C1}${EXPDIR}/src/GEOSagcm/src${CN} ${C2}...${CN}"
+# ----------------------------------------------------------------------------------------------------------------------------------
+rsync -ar  --exclude '*.o'    \
+           --exclude '*.x'    \
+           --exclude '*.xx'   \
+           --exclude '*.a'    \
+           --exclude '*.d'    \
+           --exclude '*.nc4'  \
+           --exclude '*.mod'  \
+           --exclude 'GEOSgcm.x.*' \
+           --exclude 'mk_LakeLandiceSaltRestarts'  \
+           --exclude 'mk_CatchRestarts'  \
+           --exclude 'mk_CatchCNRestarts'  \
+           --exclude 'mk_LDASsaRestarts'  \
+           --exclude 'Scale_Catch'  \
+           --exclude 'Scale_CatchCN'  \
+           --exclude 'strip_vegdyn'  \
+           --exclude 'newcatch'  \
+             ${GEOSDIR}/src/* .
+echo " "
+
+# -----------------------------------------------------------------------------
+# Create CVS TAG for Experiment
+# -----------------------------------------------------------------------------
+set branchdate = `date +%Y%m%d_%H%M%S`
+set    tagname = "EXPID=${EXPID}__USRID=${LOGNAME}"
+set branchname = "BRANCH__${tagname}"
+
+if( ! $?ESMA_NOCOMMIT ) then
+TAGNAME:
+    echo "Enter ${C1}CVS Tag${CN} to COMMIT this Experiment (Default: ${C2}${tagname}${CN})"
+    echo "Enter ${C1}q${CN} or ${C1}quit${CN} to QUIT or SKIP the CVS COMMIT:"
+    set    TAGTMP  =  $<
+    if ( .$TAGTMP != . ) then
+       set tagname = "$TAGTMP"
+    endif
+    if( $tagname == 'q' | $tagname == 'quit' ) then
+        setenv ESMA_NOCOMMIT TRUE
+        set tagname = "EXPID=${EXPID}__USRID=${LOGNAME}"
+    else
+    set branchname = "BRANCH__${tagname}"
+    set branchtest = `cvs status -v g5_modules | grep ${tagname}`
+    if( $#branchtest != 0 ) then
+        echo "      ${C1}CVS COMMIT Tag${CN} ${C2}${tagname}${CN} already exists."
+        set tagname = "EXPID=${EXPID}__USRID=${LOGNAME}"
+        goto TAGNAME
+    endif
+    endif
+endif
+
+/bin/rm -f       ${EXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
+echo $tagname  > ${EXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
+
+
+# Create a list of non-committed Sandbox files
+# --------------------------------------------
+cvs -nq upd > ${EXPDIR}/src/srcfiles
+
+
+echo "${C2}Non-Committed Sandbox Files:${CN}"
+echo "---------------------------------"
+
+/bin/rm -f ${EXPDIR}/src/cvs.log
+
+while( -e  ${EXPDIR}/src/srcfiles )
+  set file = `head -1 ${EXPDIR}/src/srcfiles`
+  set   bit = `echo "$file" | cut -c1`
+  if( "$bit" != "?" ) then
+         set  file = `echo "$file" | cut -d' ' -f2`
+        echo $file
+
+      # Local Copy of Differing Sandbox File from TAG file
+      # --------------------------------------------------
+        set newfile = `echo $file | sed -e "s?/?^?g"`
+        /bin/cp -f  ${EXPDIR}/src/GEOSagcm/src/$file ${EXPDIR}/src/$newfile
+
+      # CVS Commit updated Sandbox files
+      # --------------------------------
+        if( ! $?ESMA_NOCOMMIT ) then
+              cvs tag    -b  ${branchname}         $file  >&  ${EXPDIR}/src/cvs.log
+              cvs upd    -r  ${branchname}         $file  >&  ${EXPDIR}/src/cvs.log
+              cvs commit -m "${tagname} ${EXPDSC}" $file  >&  ${EXPDIR}/src/cvs.log
+        endif
+
+  endif
+  sed 1,1d -i ${EXPDIR}/src/srcfiles
+  set  nfiles = `wc -c ${EXPDIR}/src/srcfiles | cut -d" " -f 1`
+  if( $nfiles == 0 ) /bin/rm -f ${EXPDIR}/src/srcfiles
+end
+
+echo " "
+      # Tag Final EXPDIR/src/GEOSagcm/src
+      # ---------------------------------
+        if( ! $?ESMA_NOCOMMIT ) then
+              cvs tag ${tagname}  >&  ${EXPDIR}/src/cvs.log
+              if( $status == 0 ) then
+                  echo "${C2}EXP:${CN} ${C1}$EXPID${CN} ${C2}successfully committed with TAG:${CN} ${C1}${tagname}${CN}"
+                  echo "-------------------------------------------------------"
+              else
+                  echo "${C2}EXP:${CN} ${C1}$EXPID${CN} ${C2}failed to be committed with TAG:${CN} ${C1}${tagname}${CN}"
+                 echo "-------------------------------------------------------"
+              endif
+        endif
+
+/bin/rm -f ${EXPDIR}/src/cvs.log
+cd         ${EXPDIR}/src
+
+echo ""
+echo "${C2}Tarring${CN} Experiment Source Code into Single File ${C2}...${CN}"
+# ---------------------------------------------------------------------------
+/bin/tar cf ${EXPID}.GEOSagcm.tar GEOSagcm
+/bin/rm -r                        GEOSagcm
+echo ""
+
+endif
+
+#######################################################################
+
+exit
+
+#######################################################################
+#                         Clone old Experiment
+#######################################################################
+
+DOCLONE:
+
+#######################################################################
+#                    Enter Clone ID and Description
+#######################################################################
+
+OLDEXP:
+echo
+echo "Enter the ${C1}location${CN} of the experiment to clone (where gcm_run.j is located):"
+set CLONEDIR = $<
+
+if ( $CLONEDIR == "") then
+   goto OLDEXP
+else if ( ! -d $CLONEDIR ) then
+   echo
+   echo "Could not find ${CLONEDIR}"
+   goto OLDEXP
+endif
+
+# ------------------------------------------------------
+# To setup the clone, we need to look in a couple files, 
+# so make sure they are readable
+# ------------------------------------------------------
+
+if ( ! -r $CLONEDIR/gcm_run.j ) then
+   echo
+   echo "$CLONEDIR/gcm_run.j is not readable. Please check permissions."
+   exit 1
+endif
+
+if ( ! -r $CLONEDIR/HISTORY.rc ) then
+   echo
+   echo "$CLONEDIR/HISTORY.rc is not readable. Please check permissions."
+   exit 1
+endif
+
+# -----------------------------------------
+# Grab the old EXPID, and other information
+# -----------------------------------------
+
+set  OLDEXPID=`awk '/^EXPID/ {print $2}' $CLONEDIR/HISTORY.rc`
+set OLDHOMDIR=`awk '/^setenv +HOMDIR/ {print $3}' $CLONEDIR/gcm_run.j`
+set OLDEXPDIR=`awk '/^setenv +EXPDIR/ {print $3}' $CLONEDIR/gcm_run.j`
+set   OLDUSER=`/bin/ls -l $CLONEDIR/gcm_run.j | awk '{print $3}'`
+
+setenv ARCH      `uname`
+setenv GEOSDIR  /`grep "setenv GEOSDIR" $CLONEDIR/gcm_run.j | cut -d'/' -f2-`
+setenv GEOSSRC  ${GEOSDIR}/src
+setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
+setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
+setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+
+# -------------------------------------------------
+# Figure out how this person usually runs the model
+# -------------------------------------------------
+
+if ( ! -e $HOME/.HOMDIRroot || ! -e $HOME/.EXPDIRroot ) then
+   if ( -e $HOME/.HOMDIRroot && ! -e $HOME/.EXPDIRroot ) then
+      echo "$HOME/.EXPDIRroot was not found."
+      echo "Please run gcm_setup in non-clone mode at least once to use this script."
+      exit 1
+   else if ( ! -e $HOME/.HOMDIRroot && -e $HOME/.EXPDIRroot ) then
+      echo "$HOME/.HOMDIRroot was not found."
+      echo "Please run gcm_setup in non-clone mode at least once to use this script."
+      exit 1
+   else
+      echo "$HOME/.HOMDIRroot and $HOME/.EXPDIRroot were not found."
+      echo "Please run gcm_setup in non-clone mode at least once to use this script."
+      exit 1
+   endif
+else
+   set HOMDIRroot=`cat $HOME/.HOMDIRroot`
+   #echo "Setting HOMDIR to $HOMDIRroot"
+   set EXPDIRroot=`cat $HOME/.EXPDIRroot`
+   #echo "Setting EXPDIR to $EXPDIRroot"
+endif
+
+if ( -e $HOME/.GROUProot ) then
+   set GROUProot=`cat $HOME/.GROUProot`
+   #echo "Using account $GROUProot"
+else
+   echo "$HOME/.GROUProot not found."
+   set GROUProot=`groups | awk '{print $1}'`
+   echo "Based off of groups, setting account to $GROUProot"
+endif
+
+# -----------------------------------------------
+# Find out if we are running the cube and/or OGCM
+# -----------------------------------------------
+
+if ( -e $CLONEDIR/field_table ) then
+   set OGCM = TRUE
+else
+   set OGCM = FALSE
+endif
+
+if ( -e $CLONEDIR/fvcore_layout.rc ) then
+   set CUBED = TRUE
+else
+   set CUBED = FALSE
+endif
+
+# ------------------------------------------------
+# Set the new EXPDIR and HOMDIR based on the roots
+# ------------------------------------------------
+set  NEWEXPID=$EXPID
+set NEWEXPDIR=$EXPDIRroot/$NEWEXPID
+set NEWHOMDIR=$HOMDIRroot/$NEWEXPID
+
+# -----------------------------------------
+# If the new EXPDIR and HOMDIR exist, exit!
+# -----------------------------------------
+
+if ( -d $NEWEXPDIR ) then
+   echo "$NEWEXPDIR already exists! Exiting!"
+   exit 2
+endif
+
+if ( -d $NEWHOMDIR ) then
+   echo "$NEWHOMDIR already exists! Exiting!"
+   exit 3
+endif
+
+# -----------------------------------
+# Make all our needed temporary files
+# -----------------------------------
+
+onintr TRAP
+
+set FILES_TO_PROCESS=`mktemp`
+set OLDEXPFILES=`mktemp`
+set NEWEXPFILES=`mktemp`
+set COPYSCRIPT=`mktemp`
+set SEDFILE=`mktemp`
+
+
+# --------------------------
+# Setup the files to process
+# --------------------------
+
+cat > $FILES_TO_PROCESS << EOF
+EXPDIR/post/gcm_post.j
+EXPDIR/plot/gcm_plot.tmpl
+EXPDIR/plot/gcm_quickplot.csh
+EXPDIR/plot/gcm_moveplot.j
+EXPDIR/archive/gcm_archive.j
+EXPDIR/regress/gcm_regress.j
+EXPDIR/convert/gcm_convert.j
+EXPDIR/forecasts/gcm_stats.j
+EXPDIR/forecasts/gcm_forecast.tmpl
+EXPDIR/forecasts/gcm_forecast.setup
+EXPDIR/plot/plot.rc
+EXPDIR/post/post.rc
+HOMDIR/CAP.rc
+HOMDIR/AGCM.rc
+HOMDIR/HISTORY.rc
+HOMDIR/gcm_run.j
+EOF
+
+if( $OGCM == TRUE ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/input.nml
+HOMDIR/diag_table
+HOMDIR/field_table
+HOMDIR/data_table
+EOF
+endif
+
+if($CUBED == "TRUE") then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/fvcore_layout.rc
+EOF
+endif
+
+# ------------------------------------------------
+# Create two sets of files so we can copy from one
+# directory to another. 
+# ------------------------------------------------
+
+# Then alter them
+# ---------------
+
+sed -e "/^EXPDIR/ s#EXPDIR#$OLDEXPDIR#" \
+    -e "/^HOMDIR/ s#HOMDIR#$OLDHOMDIR#"   $FILES_TO_PROCESS > $OLDEXPFILES
+
+sed -e "/^EXPDIR/ s#EXPDIR#$NEWEXPDIR#" \
+    -e "/^HOMDIR/ s#HOMDIR#$NEWHOMDIR#"   $FILES_TO_PROCESS > $NEWEXPFILES
+
+# -----------------------------------------
+# Now, use paste to join these two files...
+# ...add a cp in front of the lines.
+# -----------------------------------------
+
+paste $OLDEXPFILES $NEWEXPFILES | sed -e "s/.*/cp -a &/" > $COPYSCRIPT
+
+# ------------------------
+# Make the new directories
+# ------------------------
+
+foreach file (`cat $NEWEXPFILES`)
+   set dir=`dirname $file`
+   /bin/mkdir -p $dir
+end
+
+# -------------------
+# Run the copy script
+# -------------------
+
+sh $COPYSCRIPT
+
+# ----------------------------------------------------
+# Create or copy over files that don't need processing
+# ----------------------------------------------------
+
+echo "$NEWHOMDIR" >> $NEWEXPDIR/.HOMDIR
+/bin/cp $OLDEXPDIR/GEOSgcm.x $NEWEXPDIR
+/bin/cp -a $OLDEXPDIR/RC $NEWEXPDIR/RC
+
+# -----------------------------------------------------
+# Now actually change the various environment variables
+# -----------------------------------------------------
+
+cat > $SEDFILE << EOF
+/^setenv \+EXPDIR/ s#$OLDEXPDIR#$NEWEXPDIR#
+/^setenv \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
+/^setenv \+CNVDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
+/^setenv \+EXPID/  s#$OLDEXPID#$NEWEXPID#
+/^EXPID:/  s#$OLDEXPID#$NEWEXPID#
+/GEOSUTIL\/post\/gcmpost.script/ s#$OLDEXPDIR#$NEWEXPDIR#
+/group_list/ s#\(group_list=\)\(.*\)#\1$GROUProot#
+/^#SBATCH -A/ s#\(SBATCH -A \)\(.*\)#\1$GROUProot#
+/^#SBATCH --account=/ s#\(SBATCH --account=\)\(.*\)#\1$GROUProot#
+EOF
+
+foreach file (`cat $NEWEXPFILES`)
+   sed -i -f $SEDFILE $file
+end
+
+# ------------------------------------------
+# Change the EXPDSC in HISTORY.rc to reflect
+# the fact this experiment was cloned
+# ------------------------------------------
+
+#sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${NEWEXPID}_clonedfrom_${OLDEXPID}_by_${OLDUSER}#" $NEWHOMDIR/HISTORY.rc
+ sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${EXPDSC}#" $NEWHOMDIR/HISTORY.rc
+
+# -------------------------
+# Construct the new job ids
+# -------------------------
+
+    set RUN_N=`echo $NEWEXPID | cut -b1-11`_RUN
+   set RUN_FN=`echo $NEWEXPID | cut -b1-11`_FCST
+   set POST_N=`echo $NEWEXPID | cut -b1-10`_POST
+   set PLOT_N=`echo $NEWEXPID | cut -b1-11`_PLT
+   set MOVE_N=`echo $NEWEXPID | cut -b1-11`_MOVE
+set ARCHIVE_N=`echo $NEWEXPID | cut -b1-10`_ARCH
+set REGRESS_N=`echo $NEWEXPID | cut -b1-10`_RGRS
+set CONVERT_N=`echo $NEWEXPID | cut -b1-11`_CNV
+
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_N#"     \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_N#"     $NEWHOMDIR/gcm_run.j
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_stats.j
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_forecast.tmpl
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$POST_N#"    \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$POST_N#" \
+       -e "/^setenv BATCHNAME/ s#\(setenv BATCHNAME *\)\(.*\)#\1 $POST_N#"      $NEWEXPDIR/post/gcm_post.j
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$PLOT_N#"    \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$PLOT_N#"    $NEWEXPDIR/plot/gcm_plot.tmpl
+
+if ( -e $NEWEXPDIR/plot/gcm_moveplot.j ) then
+   sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$MOVE_N#"    \
+          -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$MOVE_N#" $NEWEXPDIR/plot/gcm_moveplot.j
+endif
+
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$ARCHIVE_N#" \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$ARCHIVE_N#" $NEWEXPDIR/archive/gcm_archive.j
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$REGRESS_N#" \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$REGRESS_N#" $NEWEXPDIR/regress/gcm_regress.j
+sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$CONVERT_N#" \
+       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$CONVERT_N#" $NEWEXPDIR/convert/gcm_convert.j
+
+# --------------------------
+# Echo Settings and Messages
+# --------------------------
+
+echo "Done with cloning!"
+echo "------------------"
+echo " "
+echo "Original Experiment Directory: ${C2}${OLDEXPDIR}${CN}"
+echo "------------------------------"
+echo " "
+echo "You must now copy your ${C1}Initial Conditions${CN} into: "
+echo "----------------------------------------------- "
+echo "${C2}${NEWEXPDIR}${CN}"
+echo ""
+echo ""
+
+# -------------------------
+# Clean up the mktemp files
+# -------------------------
+
+/bin/rm $FILES_TO_PROCESS
+/bin/rm $OLDEXPFILES
+/bin/rm $NEWEXPFILES
+/bin/rm $COPYSCRIPT
+/bin/rm $SEDFILE
+
+# --------------------------------
+# Cloned Experiment Source Control
+# --------------------------------
+
+if ( $NOCVS != "TRUE" ) then
+
+# Make a src directory under NEWEXPDIR to hold current Experiment files
+# Note:  Sandbox Source Location: $GEOSDIR/src
+#        EXP TAG Source Location: $NEWEXPDIR/src/GEOSagcm/src
+# ------------------------------------------------------------------
+/bin/rm -rf ${NEWEXPDIR}/src
+mkdir   -p  ${NEWEXPDIR}/src/GEOSagcm/src
+cd          ${NEWEXPDIR}/src/GEOSagcm/src
+
+echo "${C2}Copying${CN} ${C1}Sandbox Source Code${CN} ${C2}(including non-committed files) into${CN} ${C1}${NEWEXPDIR}/src/GEOSagcm/src${CN} ${C2}...${CN}"
+# ----------------------------------------------------------------------------------------------------------------------------------
+rsync -ar  --exclude '*.o'    \
+           --exclude '*.x'    \
+           --exclude '*.xx'   \
+           --exclude '*.a'    \
+           --exclude '*.d'    \
+           --exclude '*.nc4'  \
+           --exclude '*.mod'  \
+           --exclude 'GEOSgcm.x.*' \
+           --exclude 'mk_LakeLandiceSaltRestarts'  \
+           --exclude 'mk_CatchRestarts'  \
+           --exclude 'mk_CatchCNRestarts'  \
+           --exclude 'mk_LDASsaRestarts'  \
+           --exclude 'Scale_Catch'  \
+           --exclude 'Scale_CatchCN'  \
+           --exclude 'strip_vegdyn'  \
+           --exclude 'newcatch'  \
+             ${GEOSDIR}/src/* .
+echo " "
+
+# -----------------------------------------------------------------------------
+# Create CVS TAG for Experiment
+# -----------------------------------------------------------------------------
+set branchdate = `date +%Y%m%d_%H%M%S`
+set    tagname = "EXPID=${NEWEXPID}__USRID=${LOGNAME}"
+set branchname = "BRANCH__${tagname}"
+
+if( ! $?ESMA_NOCOMMIT ) then
+TAGNAME:
+    echo "Enter ${C1}CVS Tag${CN} to COMMIT this Experiment (Default: ${C2}${tagname}${CN})"
+    echo "Enter ${C1}q${CN} or ${C1}quit${CN} to QUIT or SKIP the CVS COMMIT:"
+    set    TAGTMP  =  $<
+    if ( .$TAGTMP != . ) then
+       set tagname = "$TAGTMP"
+    endif
+    if( $tagname == 'q' | $tagname == 'quit' ) then
+        setenv ESMA_NOCOMMIT TRUE
+        set tagname = "EXPID=${NEWEXPID}__USRID=${LOGNAME}"
+    else
+    set branchname = "BRANCH__${tagname}"
+    set branchtest = `cvs status -v g5_modules | grep ${tagname}`
+    if( $#branchtest != 0 ) then
+        echo "      ${C1}CVS COMMIT Tag${CN} ${C2}${tagname}${CN} already exists."
+        set tagname = "EXPID=${NEWEXPID}__USRID=${LOGNAME}"
+        goto TAGNAME
+    endif
+    endif
+endif
+
+/bin/rm -f       ${NEWEXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
+echo $tagname  > ${NEWEXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
+
+
+# Create a list of non-committed Sandbox files
+# --------------------------------------------
+cvs -nq upd > ${NEWEXPDIR}/src/srcfiles
+
+
+echo "${C2}Non-Committed Sandbox Files:${CN}"
+echo "---------------------------------"
+
+/bin/rm -f ${NEWEXPDIR}/src/cvs.log
+
+while( -e  ${NEWEXPDIR}/src/srcfiles )
+  set file = `head -1 ${NEWEXPDIR}/src/srcfiles`
+  set   bit = `echo "$file" | cut -c1`
+  if( "$bit" != "?" ) then
+         set  file = `echo "$file" | cut -d' ' -f2`
+        echo $file
+
+      # Local Copy of Differing Sandbox File from TAG file
+      # --------------------------------------------------
+        set newfile = `echo $file | sed -e "s?/?^?g"`
+        /bin/cp -f  ${NEWEXPDIR}/src/GEOSagcm/src/$file ${NEWEXPDIR}/src/$newfile
+
+      # CVS Commit updated Sandbox files
+      # --------------------------------
+        if( ! $?ESMA_NOCOMMIT ) then
+              cvs tag    -b  ${branchname}         $file  >&  ${NEWEXPDIR}/src/cvs.log
+              cvs upd    -r  ${branchname}         $file  >&  ${NEWEXPDIR}/src/cvs.log
+              cvs commit -m "${tagname} ${EXPDSC}" $file  >&  ${NEWEXPDIR}/src/cvs.log
+        endif
+
+  endif
+  sed 1,1d -i ${NEWEXPDIR}/src/srcfiles
+  set  nfiles = `wc -c ${NEWEXPDIR}/src/srcfiles | cut -d" " -f 1`
+  if( $nfiles == 0 ) /bin/rm -f ${NEWEXPDIR}/src/srcfiles
+end
+
+echo " "
+      # Tag Final NEWEXPDIR/src/GEOSagcm/src
+      # ---------------------------------
+        if( ! $?ESMA_NOCOMMIT ) then
+              cvs tag ${tagname}  >&  ${NEWEXPDIR}/src/cvs.log
+              if( $status == 0 ) then
+                  echo "${C2}EXP:${CN} ${C1}$NEWEXPID${CN} ${C2}successfully committed with TAG:${CN} ${C1}${tagname}${CN}"
+                  echo "-------------------------------------------------------"
+              else
+                  echo "${C2}EXP:${CN} ${C1}$NEWEXPID${CN} ${C2}failed to be committed with TAG:${CN} ${C1}${tagname}${CN}"
+                 echo "-------------------------------------------------------"
+              endif
+        endif
+
+/bin/rm -f ${NEWEXPDIR}/src/cvs.log
+cd         ${NEWEXPDIR}/src
+
+echo ""
+echo "${C2}Tarring${CN} Experiment Source Code into Single File ${C2}...${CN}"
+# ---------------------------------------------------------------------------
+/bin/tar cf ${NEWEXPID}.GEOSagcm.tar GEOSagcm
+/bin/rm -r                           GEOSagcm
+echo ""
+
+endif
+
+exit
+
+# ------------------------------------------
+# Set a trap to remove the tempfiles on EXIT
+# ------------------------------------------
+TRAP:
+   echo "Interrupt received, cleaning up temporary files"
+   /bin/rm $FILES_TO_PROCESS $OLDEXPFILES $NEWEXPFILES $COPYSCRIPT $SEDFILE
+   exit 1
+
+#######################################################################
+#                      Usage and Error Outputs
+#######################################################################
+
+ONCOMPUTE:
+echo
+echo "${BOLD}${RED}            ERROR: On Compute Node ${RESET}"
+echo "${BOLD}${RED}            ====================== ${RESET}"
+
+cat << EOF
+
+gcm_setup requires access to internet resources, namely
+the CVS repository. You are attempting to run gcm_setup
+on compute node ${NODE} at ${SITE}. Please re-run on a head 
+node. 
+
+For more information, contact Matt Thompson or
+Larry Takacs at GMAO.
+
+EOF
+
+exit 1
+
+CONTACTMATT:
+cat <<EOF
+
+It appears your environment is not set correctly to
+run with the GPUs. If you wish to build and run the 
+model using GPUs, please contact Matt Thompson at:
+    
+            matthew.thompson@nasa.gov
+
+EOF
+exit 1
+
+SETCOLOR:
+echo
+echo "\033[1;4mGCM Setup Utility${RESET}"
+echo
+echo "Enter Desired Color Codes for ${BOLD}Highlighted${RESET} and ${BOLD}Default${RESET} text:"
+echo
+echo "${BOLD}Highlighted${RESET} Text Color: ${BLACK}0 BLACK${RESET}"
+echo "                 Color: ${RED}1 RED${RESET}"
+echo "                 Color: ${GREEN}2 GREEN${RESET}"
+echo "                 Color: ${YELLOW}3 YELLOW${RESET}"
+echo "                 Color: ${BLUE}4 BLUE${RESET}"
+echo "                 Color: ${MAGENTA}5 MAGENTA${RESET}"
+echo "                 Color: ${CYAN}6 CYAN${RESET}"
+echo "                 Color: ${WHITE}7 WHITE${RESET}"
+echo "                 Color: ${RESET}8 No Color"
+set C1 = $<
+  @ C1 = $C1 + 1
+echo
+echo "    ${BOLD}Default${RESET} Text Color: ${BLACK}0 BLACK${RESET}"
+echo "                 Color: ${RED}1 RED${RESET}"
+echo "                 Color: ${GREEN}2 GREEN${RESET}"
+echo "                 Color: ${YELLOW}3 YELLOW${RESET}"
+echo "                 Color: ${BLUE}4 BLUE${RESET}"
+echo "                 Color: ${MAGENTA}5 MAGENTA${RESET}"
+echo "                 Color: ${CYAN}6 CYAN${RESET}"
+echo "                 Color: ${WHITE}7 WHITE${RESET}"
+echo "                 Color: ${RESET}8 No Color"
+set C2 = $<
+  @ C2 = $C2 + 1
+if( -e $HOME/.GCMSETUP ) /bin/rm -f $HOME/.GCMSETUP
+touch $HOME/.GCMSETUP
+echo $COLORS[$C1] >> $HOME/.GCMSETUP
+echo $COLORS[$C2] >> $HOME/.GCMSETUP
+exit 1
+
+USAGE:
+cat <<EOF
+gcm_setup, a setup script for the GEOS-5 GCM
+
+   Usage: $0:t [optional flag]
+
+   -c --color      Set the colors for $0:t
+   -g --gpu        Run the model using the GPUs
+   -h --help       Show usage
+
+   If invoked alone, the script runs as normal.
+
+   For more information, please contact Larry Takacs.
+
+   Note: gcm_setup must be run on a machine with CVS access.
+
+EOF
+exit 1

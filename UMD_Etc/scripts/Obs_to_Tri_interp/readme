@@ -1,0 +1,56 @@
+preparing input ice area (aice) and ice thickness (hice) data for subseasonal/seasonal forecast
+
+(as of 2017/06/15 for GEOS-S2S tag)
+
+#######################################################
+calling scripts:
+call_interpo.ksh 1999  => interpo_aice_hice.py
+call_merge_aice_hice.ksh 1999
+
+call_extract_interpo.ksh calls interpo_aice_hice.py to 1)read in NSIDC aice data and interpolate and maskout to tripolar grid and 2) do spatial and temporal interpolation of hice, and 3)write out aice and hice files in OUTPUT/$year/aice/, OUTPUT/$year/hice
+call_merge_aice_hice.ksh use nco command to merge aice and hice files into a single file
+
+
+to do sanity check and plot timeseries/map:
+call_sanity_check_plot.ksh 1999   => rich_zhao_sanity_check_comp.py/sanity_check_nsidc.py, sanity_check_hice.py
+plotmap_NSIDC.py /discover/nobackup/zli7/geos5/Sub_seasonal/Obs_to_Tri_interp/1999/aice_hice N
+
+call_sanity_check_plot.ksh calls rich_zhao_sanity_check_comp.py and sanity_check_hice.py to draw timeseries
+plotmap_NSIDC.py plot polar projection map for aice
+plots are at OUTPUT/$year/PNG/
+
+######################################################
+
+extra notes:
+
+aice obs is on points (binary files), therefore is interpolated using nearest interpolation function in python and then masked out the unwanted area by longitude zones using the minimum latitude that does have ice in observation data in the particular zone.
+
+hice obs is monthly data on 360x276. This monthly data is treated as 15th day data and linearly interpolated to daily before nearest interpolation. Previous year's last month and the next year's first month are used for the first and last 15 days of this year.
+
+These scripts cannot deal with missing aice/hice files.
+
+######################################################
+
+missing_aice_data_note
+
+before 19870709 every other day is missing
+19871203 to 19880112 are missing (as of 2017/06/20, copied MERRA2 seaice Bin made in /gpfsm/dnb02/bzhao/seaice/odas_exp/M2AICE/M2NEW to OUTPUT/%year/aice/)
+missing aice interpolation are done by the following (formula given by Richard Cullather):
+~~~~~
+polynomial interpolation for the day before (y1), the day after(y2), and the day three days before (y0).
+>
+>
+> y0, y1, y2, where y1 is two days after y0, y2 is two days after y1.
+>
+> Then, apply y(1.5) = -0.125 * y0 + 0.75 * y1 + 0.375 * y2,
+> y(1.5) = min( y(1.5), 1.),
+> y(1.5) = max( y(1.5), 0.)
+~~~~~~
+as of 2017/06/26 seaice_aice is copied from Richard's directory:/discover/nobackup/rcullath/Ice/Interpolated/
+
+"There are two related programs in the directory,
+"interpm2.ncl" interpolates merra-2 sea ice data to tripolar for a given year.
+"fillgap2.ncl" takes the interpolated merra-2 and adds a bias correction using nsidc data before and after the gap"
+
+Richard's method of interpolation: take prior 5 days' and after 5 days' difference between MERRA2 and NSIDC, do linear interpolation for the difference for each day in between, add difference to the MERRA2 data.
+ 

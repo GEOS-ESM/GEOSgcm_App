@@ -1,0 +1,441 @@
+#!/bin/csh
+
+#BSUB -W 8:00
+#BSUB -q gmao_hi
+#BSUB -n 24
+#BSUB -o std.out%J
+#BSUB -e std.err%J
+#BSUB -J ogcm_std
+#BSUB -P g0609
+
+
+#######################################################################
+#                   Batch Parameters for Altix
+#######################################################################
+
+#PBS -l walltime=12:00:00
+#PBS -l ncpus=48
+#PBS -V
+#PBS -N ogcm_std
+##PBS -q pproc
+#PBS -W group_list=g0620
+#######################################################################
+#                  System Environment Variables
+#######################################################################
+
+umask 022
+
+limit stacksize unlimited
+
+setenv ARCH `uname`
+setenv MPI_TYPE_MAX 65536
+setenv DSM_DISTRIBUTE
+setenv MPI_DSM_VERBOSE
+setenv MPI_DSM_DISTRIBUTE
+setenv MPI_USE_XPMEM
+setenv MPI_BUFFER_MAX 2000
+setenv MPI_MSGS_MAX   1048576
+
+if( $ARCH == 'OSF1' ) then
+#     setenv BASEDIR /share/ESMA/baselibs/v1_8r1p
+     setenv BASEDIR /unsipp/trayanov/baselibs/v2_2rp2
+     setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+     setenv RUN_CMD "prun -n"
+#     setenv RUN_CMD "totalview prun -a -n"
+     setenv BCSDIR /share/ltakacs/geos5/bcs
+endif
+
+if( $ARCH == 'IRIX64' ) then
+     setenv BASEDIR /share/ESMA/baselibs/v1_8r1p
+     setenv LD_LIBRARY64_PATH ${LD_LIBRARY64_PATH}:${BASEDIR/${ARCH}/lib
+     setenv AGCM_N_THREADS_PER_PROCESS 1
+     setenv RUN_CMD "mpirun -np"
+     setenv BCSDIR /share/ltakacs/geos5/bcs
+endif
+                                                                                                                      
+if ($ARCH == 'Linux' ) then
+     setenv RUN_CMD "mpirun -np"
+#     setenv RUN_CMD "totalview mpirun -a -np"
+     setenv BCSDIR /u/ltakacs/geos5/bcs
+endif
+
+#######################################################################
+#                        Set Experiment Directories
+#######################################################################
+
+setenv    APPLDIR /nobackup/yuri/mom/GEOSGCM/Linux/bin
+setenv    EXPID   test
+setenv    MASTOR /nobackup/yuri/mom
+setenv    EXPDIR $MASTOR/$EXPID
+setenv    WRKDIR $EXPDIR/wrkdir
+setenv    GRIDDIR /nobackup/yuri/mom/orig_files/Forcings
+#setenv    SST_DIR /atmos/pegion/sst/ESMF/single_variable
+
+
+
+rm $HOME/mom/$EXPID/ogcm_std.*
+
+if (! -e $EXPDIR/history    ) mkdir $EXPDIR/history
+if (! -e $EXPDIR/listings   ) mkdir $EXPDIR/listings
+if (! -e $EXPDIR/restarts   ) mkdir $EXPDIR/restarts
+
+if (! -e $WRKDIR ) mkdir -p $WRKDIR
+cd       $WRKDIR
+
+/bin/rm -Rf *
+
+#######################################################################
+#                       Set Model Run Parameters
+#######################################################################
+
+set NX  = 12
+set NY  = 4
+
+set IM = 360
+set JM = 180
+set LM =  72
+set DATELINE = DE
+
+set OCEAN_IM = 360
+set OCEAN_JM = 200
+set OCEAN_LM =  50
+
+set DT = 3600
+
+set BEG_DATE = '19500101 000000'
+set END_DATE = '20050302 210000'
+set JOB_SGMT = '00000100 000000'
+
+set   EXPDSC = "OGCM_GEOS5_MIT"
+set ANALYSIS = 0
+
+#######################################################################
+#                     Create CAP Resource File
+#######################################################################
+
+set      FILE = CAP.rc
+/bin/rm $FILE
+cat << _EOF_ > $FILE
+
+NX: $NX
+NY: $NY
+IM: $IM
+JM: $JM
+LM: $LM
+
+APP_IM: $IM
+APP_JM: $JM
+APP_LM: $LM
+
+OCEAN_IM: $OCEAN_IM
+OCEAN_JM: $OCEAN_JM
+OCEAN_LM: $OCEAN_LM
+
+CAP_GC1_config_file: GCM.rc
+CAP_GC2_config_file: HISTORY.rc
+
+BEG_DATE: $BEG_DATE
+END_DATE: $END_DATE
+JOB_SGMT: $JOB_SGMT
+RUN_DT:   $DT
+
+
+DATELINE: $DATELINE
+
+_EOF_
+
+#######################################################################
+#                 Create History List for Output
+#######################################################################
+
+set      FILE = HISTORY.rc
+/bin/rm $FILE
+cat << _EOF_ > $FILE
+
+EXPID:  $EXPID
+EXPDSC: OGCM_GEOS5_MIT
+
+  list(1)%filename:   'geosgcm_ocean',
+  list(1)%frequency:  1200000,
+  list(1)%duration:  0,
+  list(1)%fields:    'TS'    , 'MOM',
+                     'US'    , 'MOM',
+                     'VS'    , 'MOM',
+                     'SS'    , 'MOM',
+                     'DH'    , 'MOM',
+                     'T'     , 'MOM',
+                     'S'     , 'MOM',
+                     'U'     , 'MOM',
+                     'V'     , 'MOM',
+                     'RHO'   , 'MOM',
+                      ::
+
+list(2)%filename:   'geosgcm_guest',
+list(2)%frequency:  1200000,
+list(2)%duration:  0,
+list(2)%fields:    'US'    , 'OCEAN',
+                   'VS'    , 'OCEAN',
+                   'TS'    , 'OCEAN',
+                   'SS'    , 'OCEAN',
+                   'QFLUX' , 'OCEAN',
+                   'HFLUX' , 'OCEAN',
+                   'SFLUX' , 'OCEAN',
+                   'TAUX'  , 'OCEAN',
+                   'TAUY'  , 'OCEAN',
+                   'HW0'   , 'OCEAN',
+                   'TW0'   , 'OCEAN',
+                   'SW0'   , 'OCEAN',
+                   'HW1'   , 'OCEAN',
+                   'TW1'   , 'OCEAN',
+                   'SW1'   , 'OCEAN',
+                   'SWHEAT', 'OCEAN',
+                      ::
+
+_EOF_
+
+# T S H U V B Ue Ve TW1 Taux Tauy Eta MixedLayerDepth BuoyancyFlux U3
+# W_z PENDEPTH PENRAD TURB -  latest list
+#######################################################################
+#                     Create GCM Resource File
+#######################################################################
+
+set      FILE = GCM.rc
+/bin/rm $FILE
+cat << _EOF_ > $FILE
+
+IM:     $IM
+JM:     $JM
+LM:     $LM
+NX:     $NX
+NY:     $NY
+
+APP_IM: $IM
+APP_JM: $JM
+APP_LM: $LM
+
+OCEAN_IM: $OCEAN_IM
+OCEAN_JM: $OCEAN_JM
+OCEAN_LM: $OCEAN_LM
+
+DATELINE: $DATELINE
+# specific ATM gridname
+GRIDNAME: PE${IM}x${JM}-${DATELINE}        
+
+
+RUN_DT: $DT
+
+# ICE sst + fractions
+DATA_SIT_FILE: sstsi.data
+DATA_FRT_FILE: fraci.data
+
+# dataatm files (atm resolution)
+SOLAR_FILE: GFDL_NSWRF_mon_clim.ieee
+TAUX_FILE:  GFDL_TAUX_mon_clim.ieee
+TAUY_FILE:  GFDL_TAUY_mon_clim.ieee
+PME_FILE:   GFDL_PME_mon_clim.ieee
+Q_FILE:     GFDL_QNET_mon_clim.ieee
+SSS_FILE:   LEV_SSS_clim_GEOSfmt.ieee
+SST_FILE:   dataoceanfile_reynolds_v2_sst_clim.${IM}x${JM}
+
+# section for Orad (ocean resolution)
+KPAR_FILE:  SEAWIFS_KPAR_mon_clim.ieee
+
+
+SST_RELAXTIME: 1
+SSS_RELAXTIME: 1
+#SST_RELAXTIME: 432000
+#SSS_RELAXTIME: 432000
+TILING_FILE:              tile.data
+
+DATAATM_IMPORT_RESTART_FILE:              dataatm_import_restart
+DATAATM_IMPORT_RESTART_TYPE:              binary
+DATAATM_IMPORT_CHECKPOINT_FILE:           dataatm_import_checkpoint
+DATAATM_IMPORT_CHECKPOINT_TYPE:           binary
+
+DATAATM_INTERNAL_RESTART_FILE:            dataatm_internal_restart
+DATAATM_INTERNAL_RESTART_TYPE:            binary
+DATAATM_INTERNAL_CHECKPOINT_FILE:         dataatm_internal_checkpoint
+DATAATM_INTERNAL_CHECKPOINT_TYPE:         binary
+
+ORAD_IMPORT_RESTART_FILE:              orad_import_restart
+ORAD_IMPORT_RESTART_TYPE:              binary
+ORAD_IMPORT_CHECKPOINT_FILE:           orad_import_checkpoint
+ORAD_IMPORT_CHECKPOINT_TYPE:           binary
+
+# section for MOM4
+MOM_DT: 1200
+MOM_SKINH: 5
+
+ML_PENDEPTH: 15.0
+
+_EOF_
+
+
+########################################################################
+##                        Link Boundary Datasets
+########################################################################
+
+#seaice SST+FRAC
+#/bin/ln -s ${SST_DIR}/${OCEAN_IM}x${OCEAN_JM}/dataoceanfile_reynolds_v2_weekly_sstsi.${OCEAN_IM}x${OCEAN_JM} sstsi.data
+#/bin/ln -s ${SST_DIR}/${OCEAN_IM}x${OCEAN_JM}/dataoceanfile_reynolds_v2_weekly_fraci.${OCEAN_IM}x${OCEAN_JM} fraci.data
+
+#SST for dataatm
+/bin/ln -s $GRIDDIR/dataoceanfile_reynolds_v2_sst_clim.${IM}x${JM} .
+
+/bin/ln -s $GRIDDIR/PE_${IM}x${JM}_${DATELINE}_${OCEAN_IM}x${OCEAN_JM}_TM.til            tile.data
+# KPAR for orad
+/bin/ln -s $GRIDDIR/SEAWIFS_KPAR_mon_clim.ieee .
+
+# MOM data sets
+/bin/cp -R $GRIDDIR/INPUT .
+/bin/cp $EXPDIR/input.nml .
+/bin/cp $EXPDIR/*_table .
+
+
+#######################################################################
+#                      Get RESTARTS and Executable
+#######################################################################
+
+set rst_types = `cat GCM.rc |grep -v "#" | grep "RESTART_FILE"    | cut -d ":" -f1 | cut -d "_" -f1-2`
+set chk_types = `cat GCM.rc |grep -v "#" | grep "CHECKPOINT_FILE" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set rst_files = `cat GCM.rc | grep -v "#"| grep "RESTART_FILE"    | cut -d ":" -f2`
+set chk_files = `cat GCM.rc | grep -v "#"| grep "CHECKPOINT_FILE" | cut -d ":" -f2`
+
+foreach rst ( $rst_files )
+  if( -e $EXPDIR/$rst ) /bin/cp $EXPDIR/$rst . &
+end
+wait
+/bin/cp  $EXPDIR/cap_restart .
+
+# MOM restarts
+/bin/cp $EXPDIR/RESTART/* ./INPUT/
+mkdir RESTART
+
+set epdate = e`cat cap_restart | cut -c1-8`_`cat cap_restart | cut -c10-11`z
+
+#################################################################
+#####          Get forcing climatology 
+#################################################################
+/bin/cp $GRIDDIR/*.ieee .
+
+
+##################################################################
+######
+######         Perform multiple iterations of PRUN
+######
+##################################################################
+
+@ iterations = 6
+@ counter    = 1
+while ( $counter <= $iterations )
+
+#######################################################################
+#                          Run the Model
+#######################################################################
+
+    @ NPES = $NX * $NY
+
+    $RUN_CMD $NPES $APPLDIR/GEOSgcm.x
+
+    set rc = $status
+    echo      Status = $rc
+
+# ALT: for now we do not resubmit
+# exit
+
+#######################################################################
+#           Rename Checkpoints => Restarts for Next Segment
+#######################################################################
+    echo Removing old restart files from wrkdir
+    foreach rst ( $rst_files )
+	/bin/rm $rst &
+    end
+    wait
+    set numrst = `echo $rst_types | wc -w`
+    set numchk = `echo $chk_types | wc -w`
+
+    echo $numrst restart files found
+    echo $numchk checkpoint files found
+
+    @ n = 1
+    @ z = $numrst + 1
+    while ( $n <= $numchk )
+	echo looking for match to $chk_types[$n]
+	@ m = 1
+	while ( $m <= $numrst )
+	    if(  $chk_types[$n] == $rst_types[$m]) then 
+	    echo mv $chk_files[$n] $rst_files[$m]
+	    /bin/mv $chk_files[$n] $rst_files[$m] &
+	    @ m = $numrst + 999
+	    else
+		@ m = $m + 1
+	    endif
+	end
+	if( $m == $z ) then
+	    echo "Warning!!  Could not find CHECKPOINT/RESTART match for:  " $chk_types[$n]
+	    exit
+	endif
+	@ n = $n + 1
+    end
+    wait
+
+    echo moved checkpoint files to restart
+
+#exit
+#######################################################################
+#                 Archive History Output and Restarts
+#        Note: cap_restart contains the current NYMD and NHMS
+#######################################################################
+
+    set edate = e`cat cap_restart | cut -c1-8`_`cat cap_restart | cut -c10-11`z
+    echo $edate
+
+# Archive RESTARTS
+# ----------------
+    foreach   rst ( $rst_files )
+	if( -e $rst ) then
+	    echo cp $rst $EXPDIR/restarts/${rst}.${edate}
+	    cp $rst $EXPDIR/restarts/${rst}.${edate}
+	    echo cp $rst $EXPDIR/$rst
+	    cp $rst $EXPDIR/$rst
+	endif
+    end
+
+    cp cap_restart $EXPDIR/cap_restart
+    cp cap_restart $EXPDIR/restarts/cap_restart.${edate}
+
+# Archive MOM restarts
+    cp -R RESTART $EXPDIR/
+    cp -R RESTART $EXPDIR/restarts/RESTART.${edate}
+# And also move from RESTART/ into INPUT/
+    mv RESTART/* INPUT/
+
+# Archive HISTORY
+    cp geosgcm_ocean $EXPDIR/history/geosgcm_ocean.${edate}
+    cp $EXPID.geosgcm_ocean.ctl $EXPDIR/history/geosgcm_ocean.${edate}.ctl
+
+    cp geosgcm_guest $EXPDIR/history/geosgcm_guest.${edate}
+    cp $EXPID.geosgcm_guest.ctl $EXPDIR/history/geosgcm_guest.${edate}.ctl
+
+#######################################################################
+#                         Update Iteration Counter
+#######################################################################
+
+    if ( $rc == 0 ) then
+	@ counter = $counter    + 1
+    else
+	@ counter = $iterations + 1
+    endif
+
+end
+
+echo $epdate 'Updated '
+echo $edate 'Created'
+
+wait
+
+# Move data to dirac
+cd $HOME/mom/$EXPID
+qsub  run.ogcm.std_dirac
+
+exit

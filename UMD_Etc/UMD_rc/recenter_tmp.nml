@@ -1,0 +1,37 @@
+&recenter_grid_size
+    nx = 720
+    ny = 410
+    nz = 40
+    ncat = 5
+    grid_fname = '/gpfsm/dnb42/projects/p17/gvernier/SAND_BOXES/iodas_utils/data/grid_spec_720x410x40.nc'
+    lon_name = 'x_T'
+    lat_name = 'y_T'
+    lev_name = 'zt'
+    mask_name = 'wet'
+    topo_name='depth_t'
+/
+
+&recenter_hx
+    hx_path = './obs/'
+    hx_varname = 'model_fb'
+    obs_varname = 'obs_fb'
+/
+
+&recenter_x
+    xe_path = './states/'
+    x_varname = 'VICEN'
+    num_levels = 1
+    x_varshape = '2d'
+/
+
+&recenter_correlation
+    correlation = .false.
+/
+
+&recenter_localization
+    l = 10000.0
+/
+
+&recenter_solver
+    solver = 'LU'
+/

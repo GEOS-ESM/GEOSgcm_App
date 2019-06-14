@@ -1,0 +1,157 @@
+
+BEG_DATE:     >>>IOBBKGD<<< >>>IOBBKGT<<< 
+END_DATE:     37760704 000000
+JOB_SGMT:     0 120000
+NUM_SGMT:     9999
+HEARTBEAT_DT:       900
+RUN_DT:       900
+
+MAPL_ENABLE_TIMERS: NO
+MAPL_ENABLE_MEMUTILS: NO
+PRINTSPEC: 0  # (0: OFF, 1: IMPORT & EXPORT, 2: IMPORT, 3: EXPORT)
+
+
+# Atmospheric Model Configuration Parameters
+# ------------------------------------------
+           NX: 2
+           NY: 12
+      AGCM_IM: 180
+      AGCM_JM: 1080
+      AGCM_LM: 72
+AGCM_GRIDNAME: PE180x1080-CF
+      DYN_IM: 180
+      DYN_JM: 1080
+      DYN_LM: 72
+DYN_GRIDNAME: PE180x1080-CF
+
+DYCORE: FV3
+
+#SOLAR_DT: 3600
+#IRRAD_DT: 3600
+
+#SOLARAvrg: 0
+#IRRADAvrg: 0
+
+
+# Ocean Model Configuration Parameters
+# ------------------------------------
+      OGCM_IM: 360
+      OGCM_JM: 180
+      OGCM_LM: 34
+OGCM_GRIDNAME: PE360x180-DE
+
+OGCM_RUN_DT: 3600
+
+#INTERPOLATE_SST: 1
+
+
+# Print Resource Parameters (0: Non-Default values, 1: ALL values)
+#-----------------------------------------------------------------
+PRINTRC: 1
+
+# Set the number of parallel I/O processes to use when
+# RESTART_TYPE and or CHECKPOINT_TYPE are set to pbinary or pnc4
+#---------------------------------------------------------------
+PARALLEL_READFORCING: 1
+
+DFIB_INTERNAL_RESTART_FILE:             bkg_adfi_internal_checkpoint
+DFIB_INTERNAL_RESTART_TYPE:             binary
+
+DFIA_INTERNAL_RESTART_FILE:             ana_adfi_internal_checkpoint
+DFIA_INTERNAL_RESTART_TYPE:             binary
+
+# Required AGCM Model Restart Files
+# ---------------------------------
+DYN_INTERNAL_RESTART_FILE:              fvcore_internal_checkpoint.>>>IOBBKGD<<<_>>>IOBBKGH<<<z.bin
+DYN_INTERNAL_CHECKPOINT_FILE:           iana_fvcore_internal_checkpoint
+DYN_INTERNAL_HEADER:                    1
+
+MOIST_INTERNAL_RESTART_FILE:            moist_internal_checkpoint.>>>IOBBKGD<<<_>>>IOBBKGH<<<z.bin
+MOIST_INTERNAL_RESTART_TYPE:            binary
+MOIST_INTERNAL_CHECKPOINT_FILE:         iana_moist_internal_checkpoint
+MOIST_INTERNAL_CHECKPOINT_TYPE:         binary
+
+PCHEM_INTERNAL_RESTART_FILE:            pchem_internal_checkpoint.>>>IOBBKGD<<<_>>>IOBBKGH<<<z.bin
+PCHEM_INTERNAL_RESTART_TYPE:            binary
+PCHEM_INTERNAL_CHECKPOINT_FILE:         iana_pchem_internal_checkpoint
+PCHEM_INTERNAL_CHECKPOINT_TYPE:         binary
+
+# Boundary Datasets
+# -----------------
+TOPO_MEAN_FILE:     topo_dynave.data
+TOPO_GWDVAR_FILE:   topo_gwdvar.data
+TOPO_TRBVAR_FILE:   topo_trbvar.data
+
+LAI_FILE:                   lai.data
+GREEN_FILE:               green.data
+TILING_FILE:                tile.bin 
+VISDF_FILE:                visdf.dat
+NIRDF_FILE:                nirdf.dat
+
+VEGDYN_INTERNAL_RESTART_FILE:  vegdyn.data
+VEGDYN_INTERNAL_RESTART_TYPE:  binary
+
+KPAR_FILE: SEAWIFS_KPAR_mon_clim.data
+
+
+# AeroChem Environment
+# --------------------
+      CHEM_METHOD: PCHEM
+#     OX_RELAXTIME: 0.00    # Standard Options:  GCM: 259200., DAS: 0.000
+    CH4_RELAXTIME: 259200.
+    N2O_RELAXTIME: 259200.
+  CFC11_RELAXTIME: 259200.
+  CFC12_RELAXTIME: 259200.
+ HCFC22_RELAXTIME: 259200.
+    H2O_RELAXTIME: 259200.
+    OX_FRIENDLIES: ANALYSIS:DYNAMICS:TURBULENCE:MOIST
+   CH4_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
+   N2O_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
+ CFC11_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
+ CFC12_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
+   H2O_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
+HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
+       pchem_clim: species.data
+       pchem_clim_years: 1
+
+# Age-of-Air Parameters
+# ---------------------
+#AOA_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
+
+
+# For Climatological Aerosols (or non-interactive GOCART)
+# -------------------------------------------------------
+AEROCLIM:    ExtData/g5chem/L72/aero_clm/dR_MERRA-AA-r1.aer_Nv.%y4%m2clm.nc4
+AEROCLIMDEL: ExtData/g5chem/L72/aero_clm/dR_MERRA-AA-r1.del_aer_Nv.%y4%m2clm.nc4
+AEROCLIMYEAR: 2008
+
+DU_OPTICS: ExtData/g5chem/x/opticsBands_DU.v11_4.nc
+SS_OPTICS: ExtData/g5chem/x/opticsBands_SS.v3_3.nc
+SU_OPTICS: ExtData/g5chem/x/opticsBands_SU.v1_3.nc
+OC_OPTICS: ExtData/g5chem/x/opticsBands_OC.v1_3.nc
+BC_OPTICS: ExtData/g5chem/x/opticsBands_BC.v1_3.nc
+NUM_BANDS: 18
+
+DIURNAL_BIOMASS_BURNING: yes
+
+       RATS_PROVIDER: PCHEM   # options: PCHEM, GMICHEM, STRATCHEM (Radiatively active tracers)
+       AERO_PROVIDER: PCHEM   # options: PCHEM, GOCART             (Radiatively active aerosols)
+ANALYSIS_OX_PROVIDER: PCHEM   # options: PCHEM, GMICHEM, STRATCHEM, GOCART
+
+
+# Flag for real-time forecasts (persisted SST) IS_FCST: 1 (AMIP-Style Default: 0)
+# -------------------------------------------------------------------------------
+    IS_FCST: 0
+
+
+# Time step for aerosol assimilation (GAAS)
+# -----------------------------------------
+  GAAS_DT: 10800 # 3-hourly
+
+
+# Model Tuning Parameters (For CMIP5 recommended SOLAR_CONSTANT and CO2 values, use -1)
+# -------------------------------------------------------------------------------------
+SOLAR_CONSTANT: -1
+CO2:            -1
+TURBULENCE_C_B: 5.02e-8
+

@@ -1,0 +1,63 @@
+#!/bin/csh -f
+
+#######################################################################
+#                     Batch Parameters for Plot Job
+#######################################################################
+
+#PBS -l walltime=@PLOT_T
+#@PLOT_P
+#PBS -N @NAME
+#@PLOT_Q
+#@BATCH_GROUP
+#PBS -o OUTPUT
+
+#######################################################################
+#                  System Environment Variables
+#######################################################################
+
+umask 022
+
+limit stacksize unlimited
+
+@SETENVS
+
+#######################################################################
+#           Architecture Specific Environment Variables
+#######################################################################
+
+setenv ARCH `uname`
+
+setenv SITE             @SITE
+setenv GEOSBIN          @GEOSBIN
+setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
+
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+
+#######################################################################
+#             Experiment Specific Environment Variables
+#######################################################################
+
+setenv    EXPID   @EXPID
+setenv    EXPDIR  @EXPDIR
+setenv    HOMDIR  @HOMDIR
+
+#######################################################################
+#                         Quickplot Commands           
+#######################################################################
+
+cd $EXPDIR/plot
+
+if( $SITE == NCCS ) then
+     srun ./gcm_quickplot.csh @N @LIST
+else
+          ./gcm_quickplot.csh @N @LIST
+endif
+
+#######################################################################
+#                        Move Plots to Web Server   
+#######################################################################
+
+ set MOVE =  `grep PLOT_MOVE: $EXPDIR/plot/plot.rc | cut -d'#' -f1 | cut -d':' -f2`
+if( $MOVE[1] == 'ON' ) qsub $EXPDIR/plot/gcm_moveplot.j
+

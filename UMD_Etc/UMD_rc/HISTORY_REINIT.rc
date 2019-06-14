@@ -1,0 +1,60 @@
+
+EXPID:  EXPERIMENT_NAME
+EXPDSC: heracles-5.4p3
+EXPSRC: subseasonal
+
+
+COLLECTIONS: 
+             'bug'
+	     'oletkf_ctrl'
+	     'oletkf_ocn3d'
+	     'oletkf_ocn2d'
+	     'oletkf_seaice'
+             ::
+
+  oletkf_ctrl.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  oletkf_ctrl.archive:   '%c/Y%y4',
+  oletkf_ctrl.format: 'CFIO',
+  oletkf_ctrl.frequency:  060000,
+  oletkf_ctrl.fields:   'T'     , 'MOM', 'temp',
+                   	'S'     , 'MOM', 'salt'
+              ::
+
+  oletkf_ocn3d.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  oletkf_ocn3d.archive:   '%c/Y%y4',
+  oletkf_ocn3d.format: 'CFIO',
+  oletkf_ocn3d.frequency:  060000,
+  oletkf_ocn3d.regrid_exch:  'tile_hist_720x361.data',
+  oletkf_ocn3d.fields:  'T'     , 'MOM',
+                     	'S'     , 'MOM'
+              ::
+
+  oletkf_ocn2d.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  oletkf_ocn2d.archive:   '%c/Y%y4',
+  oletkf_ocn2d.format: 'CFIO',
+  oletkf_ocn2d.frequency:  060000,
+  oletkf_ocn2d.regrid_exch: 'tile_hist_720x361.data',
+  oletkf_ocn2d.fields: 'SLV'    , 'MOM'
+              ::
+
+  oletkf_seaice.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  oletkf_seaice.archive:   '%c/Y%y4',
+  oletkf_seaice.format: 'CFIO',
+  oletkf_seaice.frequency:  060000,
+  oletkf_seaice.regrid_exch: 'tile_hist_720x361.data',
+  oletkf_seaice.fields:      'HICE'        , 'SEAICE',
+                              'AICE'        , 'SEAICE',
+                              'DRAFT'       , 'SEAICE',
+                              'HSNO'        , 'SEAICE'
+              ::
+
+  bug.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  bug.archive:   '%c/Y%y4',
+  bug.format:    'CFIO',
+  bug.frequency:  240000,
+  bug.resolution: 360 181,
+  bug.fields:    'DISCHARGE' , 'SURFACE'
+                          ::
+
+
+

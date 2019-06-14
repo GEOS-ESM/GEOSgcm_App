@@ -1,0 +1,252 @@
+#!/usr/bin/env bash
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+CURRDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+# -----------------
+# Detect usual bits
+# -----------------
+
+ARCH=$(uname -s)
+MACH=$(uname -m)
+NODE=$(uname -n)
+
+# ------------------------------
+# Define an in-place sed command
+# Because Mac sed is stupid old,
+# use gsed if found.
+# ------------------------------
+
+if [[ $ARCH == Darwin ]]
+then
+   if [[ $(command -v gsed) ]]
+   then
+      echo "Found gsed on macOS. You are smart!"
+      SED="$(command -v gsed) "
+      ISED="$SED -i "
+   else
+      echo "It is recommended to use GNU sed since macOS default"
+      echo "sed is a useless BSD variant. Consider installing"
+      echo "GNU sed from a packager like Homebrew."
+      SED="$(command -v sed) "
+      ISED="$SED -i.macbak "
+   fi 
+else
+   SED="$(command -v sed) "
+   ISED="$SED -i "
+fi
+
+#ESMADIR=/discover/nobackup/$USER/Models/Jason-UNSTABLE/GEOSagcm
+# (for example)
+
+LM=72 # default for now
+
+# Uncomment the line with the case you want to set up
+
+#CASEDIR="arm_97jul"
+#CASEDIR="merra_arm97jul"
+#CASEDIR="barrow2013"
+#CASEDIR="merra-Kan-L"
+#CASEDIR="arm_kwjx"
+#CASEDIR="merra_kwjx"
+#CASEDIR="COARE"
+#CASEDIR="merra_coare"
+#CASEDIR="TRMM_LBA"
+#CASEDIR="merra_trmm"
+#CASEDIR="arm_scsmex"
+#CASEDIR="merra_arm_scmx"
+#CASEDIR="merra_armsgp"
+#CASEDIR="scm_cfmip-p6"
+#CASEDIR="scm_cfmip-p11"
+#CASEDIR="scm_cfmip-p12"
+#CASEDIR="scm_cfmip-s6"
+#CASEDIR="scm_cfmip-s11"
+#CASEDIR="scm_cfmip-s12"
+#CASEDIR="scm_cfmip2-p6"
+#CASEDIR="scm_cfmip2-p11"
+#CASEDIR="scm_cfmip2-p12"
+#CASEDIR="scm_cfmip2-s6"
+#CASEDIR="scm_cfmip2-s11"
+#CASEDIR="scm_cfmip2-s12"
+#CASEDIR="merra_twp"
+#CASEDIR="armtwp_ice"
+#CASEDIR="merra_namma"
+#CASEDIR="merra_namecore"
+#CASEDIR="merra_nameaznm"
+#CASEDIR="e572p1_discaq"
+
+
+if [ -z $ESMADIR ] 
+then
+   echo "ERROR: you need to set environment variable ESMADIR"
+   exit
+fi
+
+ln -s $ESMADIR/Linux/bin/GEOSgcm.x .
+
+# see geos5 wiki for information about these experiments
+
+if [ $# -ge 1 ] 
+then
+   CASEDIR=$1
+fi
+
+if [ $# -ge 2 ] 
+then
+   LM=$2
+fi
+
+if [ $LM -ne 72 ]  &&  [ $LM -ne 132  ]
+then
+   echo "ERROR: LM needs to be 72 or 132"
+   exit
+fi 
+
+if [ -z $CASEDIR ] 
+then
+   echo "ERROR: you need to set CASEDIR"
+   exit
+fi
+
+
+echo $CASEDIR
+
+
+case $CASEDIR in
+
+ "arm_97jul") DATFILE="arm_97jul.dat";;
+ "merra_arm97jul") DATFILE="merra_arm97jul.dat";;
+ "barrow2013") DATFILE="barrow2013.dat";;
+ "merra-Kan-L") DATFILE="merra-Kan-L.dat";;
+ "arm_kwjx") DATFILE="arm_kwjx.dat";;
+ "merra_kwjx") DATFILE="merra_kwjx.dat";;
+ "merra_coare") DATFILE="merra_coare.dat";;
+ "COARE") DATFILE="TOGA_COARE.dat";;
+ "TRMM_LBA") DATFILE="TRMM_LBA.dat";;
+ "merra_trmm") DATFILE="merra_trmm.dat";;
+ "arm_scsmex") DATFILE="arm_scmx.dat";;
+ "merra_arm_scmx") DATFILE="merra_scmx.dat";;
+ "merra_armsgp") DATFILE="merra_armsgp.dat";;
+ "scm_cfmip-p6") DATFILE="cfmip_p6.bin";;
+ "scm_cfmip-p11") DATFILE="cfmip_p11.bin";;
+ "scm_cfmip-p12") DATFILE="cfmip_p12.bin";;
+ "scm_cfmip-s6") DATFILE="cfmip_s6.bin";;
+ "scm_cfmip-s11") DATFILE="cfmip_s11.bin";;
+ "scm_cfmip-s12") DATFILE="cfmip_s12.bin";;
+ "scm_cfmip2-p6") DATFILE="cfmip2_p6.bin";;
+ "scm_cfmip2-p11") DATFILE="cfmip2_p11.bin";;
+ "scm_cfmip2-p12") DATFILE="cfmip2_p12.bin";;
+ "scm_cfmip2-s6") DATFILE="cfmip2_s6.bin";;
+ "scm_cfmip2-s11") DATFILE="cfmip2_s11.bin";;
+ "scm_cfmip2-s12") DATFILE="cfmip2_s12.bin";;
+ "armtwp_ice") DATFILE="armtwp_ice.dat";;
+ "merra_twp") DATFILE="merra_twp.dat";;
+ "merra_namma") DATFILE="merra_namma.dat";;
+ "merra_namecore") DATFILE="merra_namecore.dat";;
+ "merra_nameaznm") DATFILE="merra_nameaznm.dat";;
+ "e572p1_discaq") DATFILE="e572p1_discaq.dat";;
+
+esac
+
+SITE=$($ESMADIR/src/g5_modules site)
+BCSTAG="Icarus_Reynolds"
+
+case $SITE in
+   NCCS)
+   SCMDIR="/discover/nobackup/mathomp4/scm/scminfiles/j1.0/"
+   BCSDIR="/discover/nobackup/ltakacs/bcs/Icarus/$BCSTAG"
+   CHMDIR="/discover/nobackup/projects/gmao/share/dao_ops/fvInput_nc3"
+   ;;
+   NAS) 
+   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/j1.0/"
+   BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
+   CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
+   ;;
+   GMAO*)
+   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/j1.0/"
+   BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
+   CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
+   ;;
+   *)
+   echo "Unknown site $SITE. Will need to hardcode in SCMDIR, BCSDIR, and CHMDIR."
+   exit 3
+   ;;
+esac
+
+SOURCEDIR=$SCMDIR$CASEDIR
+
+cp $SOURCEDIR/$DATFILE .
+cp $SOURCEDIR/topo_dynave.data .
+cp $SOURCEDIR/fraci.data .
+cp $SOURCEDIR/SEAWIFS_KPAR_mon_clim.data .
+cp $SOURCEDIR/sst.data .
+cp $SOURCEDIR/sstsi.data .
+cp $SOURCEDIR/tile.data .
+cp $SOURCEDIR/topo_gwdvar.data .
+cp $SOURCEDIR/topo_trbvar.data .
+cp $SOURCEDIR/lai.data .
+cp $SOURCEDIR/green.data .
+cp $SOURCEDIR/ndvi.data .
+cp $SOURCEDIR/nirdf.dat .
+cp $SOURCEDIR/vegdyn.data .
+cp $SOURCEDIR/visdf.dat .
+#cp $SOURCEDIR/*rst .
+
+cp $SOURCEDIR/datmodyn_internal_rst .
+cp $SOURCEDIR/moist_internal_rst .
+cp $SOURCEDIR/catch_internal_rst .
+
+mkdir -p ExtData
+/bin/rm -rf ExtData/g5chem
+/bin/ln -s $CHMDIR/g5chem ExtData
+/bin/ln -s $CHMDIR/PIESA ExtData
+/bin/ln -s $CHMDIR/g5gcm ExtData
+
+cp -u $SOURCEDIR/CAP.rc .
+cp $SOURCEDIR/cap_restart .
+cp -u $SOURCEDIR/HISTORY.rc .
+
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+
+cp $ESMADIR/Linux/etc/*.rc .
+cp $SCMDIR/general/* .
+
+#cp -u $SOURCEDIR/AGCM.rc .
+
+cp -u $ESMADIR/src/Applications/GEOSgcm_App/AGCM.rc.tmpl .
+
+cp $SOURCEDIR/sedfile.CASE .
+cp $SOURCEDIR/AGCM.CASE.txt .
+$SED -f sedfile.SCM AGCM.rc.tmpl > AGCM.rc.sed.general
+$SED -f sedfile.CASE AGCM.rc.sed.general > AGCM.rc.CASE
+awk '{ if ( $1  !~ "#DELETE") { print } }' AGCM.rc.CASE > AGCM.rc
+/bin/rm AGCM.rc.sed.general AGCM.rc.CASE
+
+if [ $LM -eq 132 ]
+then 
+
+  $ISED 's/L72/L132/g' *.rc
+
+  $ISED '/AGCM_LM:/c\AGCM_LM: 132' AGCM.rc
+  cp $SOURCEDIR/*rst.r0001x0001x0132  .
+  mv datmodyn_internal_rst.r0001x0001x0132 datmodyn_internal_rst
+  mv moist_internal_rst.r0001x0001x0132 moist_internal_rst
+
+fi
+
+if [[ -e ./ExtData.rc ]]
+then
+   /bin/rm -f  ./ExtData.rc
+fi
+
+extdata_files=`/bin/ls -1 *_ExtData.rc`
+cat $extdata_files > ExtData.rc
+
+chmod -fR 755 *
+

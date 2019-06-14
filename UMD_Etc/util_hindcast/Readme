@@ -1,0 +1,40 @@
+These are scripts to generate restarts for subseasonal hindcast (1999-2015 NMME subX) and S2S-2_1 seasonal hindcast (1981-1998)
+
+=================================================================================================================================
+Along with the scripts descripbed below, these files must be present in your directory:
+anaice2rst.x 
+tile_a180x1080_o720x41.data
+tileloc.nc
+grid_spec.nc
+
+=================================================================================================================================
+Assume the directory you are running from is called /util.  Create next to it directory named /restart with subdirectories /H54 and /MERRA2, and in each one of these, create /InData and /OutData, like this:
+
+/restart/H54:
+InData  OutData
+
+/restart/MERRA2:
+InData  OutData
+
+=================================================================================================================================
+On input scripts take a year number. ICDATE stands for YYYYMMDD.
+Make sure the directory, from which the scripts are run, is set correctly in all scripts.  Also, the input parameter is probably commented out, and the year is set mannualy inside the scripts for testing.
+
+The steps are:
+1 convrstODAS.sh*             GETS F2.5 ODAS RESTARTS from archive
+      from /archive/u/gmaofcst/GEOS5.0/seasonal/?????/ens1/restarts
+      to   /discover/nobackup/projects/gmao/t2ssp/h54/c180_o05/restart/ODAS/RESTART.e$ICDATE_00z/
+
+2 convrstSALT.sh*             GENERATES SALTWATER RESTARTS (needs input, prepared by Zhao and Yury)
+      from /discover/nobackup/zli7/geos5/Sub_seasonal/Obs_to_Tri_interp/OUTPUT/${YEAR}/seaice_aice_hice_${ICDATE}.nc
+      from /gpfsm/dnb02/dvarier/subx_NOAA/aogcm_rs/salt_bkg_Yury/saltwater_internal_${ICDATE}_00z
+      from /discover/nobackup/projects/gmao/t2ssp/h54/c180_o05/restart/ODAS/RESTART.e${ICDATE}_00z/ocean_temp_salt.res.nc
+      to   /discover/nobackup/projects/gmao/t2ssp/h54/c180_o05/restart/H54/OutData (saltwater_internal,ocean_temp_salt)
+
+3 convrstMERRA2fromReplay.sh* GENERATES MERRA2 RESTARTS ON TILES FROM MERRA2 REPLAY (needs input, prepared by Deepthi)
+      from /gpfsm/dnb02/projects/p58/subx/agcm_replay/rs_m200z/restarts.e${icdate}_00z.tar (catch_internal,lake_internal,landice_internal)
+      to   /discover/nobackup/projects/gmao/t2ssp/h54/c180_o05/restart/MERRA2 (catch_internal,lake_internal,landice_internal,vegdyn_internal)
+
+=================================================================================================================================
+
+The scripts above may be run all together with subXconvertALL.sh, but presently this is not used.

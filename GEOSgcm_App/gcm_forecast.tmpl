@@ -1,0 +1,755 @@
+#!/bin/csh -f
+
+#######################################################################
+#                     Batch Parameters for Run Job
+#######################################################################
+
+#PBS -l walltime=@RUN_FT
+#@RUN_FP
+#PBS -N @RUN_FN
+#@RUN_Q
+#@BATCH_GROUP
+#PBS -o FCSTOUT
+
+#######################################################################
+#                  System Environment Variables
+#######################################################################
+
+umask 022
+
+limit stacksize unlimited
+
+@SETENVS
+
+#######################################################################
+#           Architecture Specific Environment Variables
+#######################################################################
+
+setenv ARCH `uname`
+
+setenv SITE             @SITE
+setenv GEOSDIR          @GEOSDIR
+setenv GEOSBIN          @GEOSBIN 
+setenv GEOSUTIL         @GEOSUTIL
+
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+
+setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+
+#######################################################################
+#             Experiment Specific Environment Variables
+#######################################################################
+
+setenv    EXPID   @EXPID
+setenv    EXPDIR  @EXPDIR
+setenv    HOMDIR  @HOMDIR
+
+#######################################################################
+#                  Set Forecast Run Parameters
+#######################################################################
+
+set date = `echo &DATE 000000`
+
+set HEARTBEAT = &HEARTBEAT
+set   AGCM_IM = &AGCM_IM
+set   AGCM_JM = &AGCM_JM
+set        NX = &NX
+set        NY = &NY
+set     NFMAX = &NFMAX
+set       ANA = &ANA
+
+set     FSEGMENT = &FSEGMENT
+set    FCST_TYPE = &FCST_TYPE
+set    FCST_LABL = &FCST_LABL
+set    ANA_EXPID = &ANA_EXPID
+set ANA_LOCATION = &ANA_LOCATION
+
+set PREDICTOR_DURATION = &PREDICTOR_DURATION
+set CORRECTOR_DURATION = &CORRECTOR_DURATION
+set IAU_DIGITAL_FILTER = &IAU_DIGITAL_FILTER
+set REPLAY_BKGAVE    = &REPLAY_BKGAVE
+set REPLAY_NUDGE     = &REPLAY_NUDGE
+set TAUANL           = &TAUANL
+
+if( '&FCST_TYPE' != 'STRAIGHT'      & \
+    '&FCST_TYPE' != 'REPLAY'        & \
+    '&FCST_TYPE' != 'CYCLED_REPLAY' ) then
+     echo "FCST_TYPE must be set to a) STRAIGHT,"
+     echo "                         b) REPLAY, or "
+     echo "                         b) CYCLED_REPLAY"
+     echo "Current Value: "&FCST_TYPE
+     exit
+endif
+
+set STATS_ONLY = FALSE
+
+#######################################################################
+#                 Create Forecast Sub-Directory
+#######################################################################
+
+     @  NFCST  = 1
+while( $NFCST <= $NFMAX )
+
+set date0 = $date[1]
+set time0 = $date[2]
+set hour  = `echo $time0 | cut -c1-2`
+set fdate = ${date0}_${hour}z
+
+setenv   FCSTDIR  $EXPDIR/forecasts/${FCST_TYPE}_${FCST_LABL}_$fdate
+setenv    SCRDIR  $FCSTDIR/scratch
+if (! -e $SCRDIR ) mkdir -p $SCRDIR
+cd       $SCRDIR
+
+/bin/rm -rf *
+
+set date  = `$GEOSUTIL/post/tick $date0 $time0 -10800`
+set nymd0 = $date[1]
+set nhms0 = $date[2]
+set hour  = `echo $nhms0 | cut -c1-2`
+
+if( $STATS_ONLY != TRUE ) then
+
+##################################################################
+######      Create STRIP Utility for File Modifications
+######           (Removes formatted BLANK spaces)
+##################################################################
+
+set      FILE = strip
+/bin/rm $FILE
+cat << EOF > $FILE
+#!/bin/ksh
+/bin/mv \$1 \$1.tmp
+touch   \$1
+while read line
+do
+echo \$line >> \$1
+done < \$1.tmp
+exit
+EOF
+chmod +x $FILE
+
+#######################################################################
+#                 Set Model Resolution Parameters
+#######################################################################
+
+set  AGCM_LM = `grep  AGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  OGCM_IM = `grep  OGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  OGCM_JM = `grep  OGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
+
+# Set ATMOS and OCEAN Horizontal Resolution Tags
+# ----------------------------------------------
+set AGCM_IM_Tag = `echo $AGCM_IM | awk '{printf "%4.4i", $1}'`
+set AGCM_JM_Tag = `echo $AGCM_JM | awk '{printf "%4.4i", $1}'`
+set OGCM_IM_Tag = `echo $OGCM_IM | awk '{printf "%4.4i", $1}'`
+set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
+
+>>>FVLATLON<<<set ATMOStag = DC${AGCM_IM_Tag}xPC${AGCM_JM_Tag}
+>>>FVCUBED<<<set ATMOStag = CF${AGCM_IM_Tag}x6C
+>>>DATAOCEAN<<<set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
+>>>COUPLED<<<set OCEANtag = TM${OGCM_IM_Tag}xTM${OGCM_JM_Tag}
+
+#######################################################################
+#            Copy and Modify RC Files from Home Directory
+#######################################################################
+
+/bin/ln -sf $EXPDIR/RC/* .
+@CPEXEC -f  $HOMDIR/*.rc .
+@CPEXEC -f  $HOMDIR/*.nml .
+
+cat fvcore_layout.rc >> input.nml
+
+echo $nymd0 $nhms0 > cap_restart
+
+@CPEXEC  CAP.rc  CAP.rc.orig
+
+
+# Link AOD Files
+# --------------------------------------
+set date  = `$GEOSUTIL/post/tick $nymd0 $nhms0 10800`
+set kymd  = $date[1]
+set khrs  = `echo $date[2] | cut -c1-2`
+set year  = `echo $kymd    | cut -c1-4`
+set month = `echo $kymd    | cut -c5-6`
+/bin/ln -s $ANA_LOCATION/aod/Y$year/M$month/$ANA_EXPID.aod_*${kymd}_${khrs}00z.nc4 .
+
+set date  = `$GEOSUTIL/post/tick $nymd0 $nhms0 21600`
+set kymd  = $date[1]
+set khrs  = `echo $date[2] | cut -c1-2`
+set year  = `echo $kymd    | cut -c1-4`
+set month = `echo $kymd    | cut -c5-6`
+/bin/ln -s $ANA_LOCATION/aod/Y$year/M$month/$ANA_EXPID.aod_*${kymd}_${khrs}00z.nc4 .
+
+
+# Set LAYOUT based on gcm_forecast.setup
+# --------------------------------------
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep "^ *NX:"`
+set newstring =  "NX: $NX"
+/bin/mv AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
+set newstring =  "NY: $NY"
+/bin/mv AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+
+# Turn Off Intermediate Restarts
+# ------------------------------
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep _FREQUENCY: | grep -v BKG_FREQUENCY:`
+set newstring =  "#RECORD_FREQUENCY:"
+/bin/mv -f AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep _REF_DATE: | grep -v REPLAY_REF_DATE:`
+set newstring =  "#RECORD_REF_DATE:"
+/bin/mv -f AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep _REF_TIME: | grep -v REPLAY_REF_TIME:`
+set newstring =  "#RECORD_REF_TIME:"
+/bin/mv -f AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+
+# Set IAU_DIGITAL_FILTER Option
+# -----------------------------
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep IAU_DIGITAL_FILTER: `
+set newstring =  "IAU_DIGITAL_FILTER: ${IAU_DIGITAL_FILTER}"
+/bin/mv -f AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+
+# Initialize STRAIGHT Forecast Options
+# ------------------------------------
+if( $FCST_TYPE == 'STRAIGHT' ) then
+  set year  = `echo $nymd0 | cut -c1-4`
+  set month = `echo $nymd0 | cut -c5-6`
+  if( -e $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.agcm_import_rst.${nymd0}_${hour}z.bin ) then
+     ./strip AGCM.rc
+     set oldstring =  `cat AGCM.rc | grep "AGCM_IMPORT_RESTART_FILE:"`
+     set newstring =  "AGCM_IMPORT_RESTART_FILE: agcm_import_rst"
+     /bin/mv -f AGCM.rc AGCM.tmp
+     cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+  endif
+endif
+
+# Initialize REPLAY Forecast Options
+# ----------------------------------
+if( $FCST_TYPE == 'REPLAY' | $FCST_TYPE == 'CYCLED_REPLAY' ) then
+
+     set PAIRS = " REPLAY_SHUTOFF:21600               \
+                   PREDICTOR_DURATION:$PREDICTOR_DURATION \
+                   CORRECTOR_DURATION:$CORRECTOR_DURATION \
+                   REPLAY_BKGAVE:$REPLAY_BKGAVE       \
+                   REPLAY_NUDGE:$REPLAY_NUDGE         \
+                   TAUANL:$TAUANL                     "
+     set PAIRS = `echo $PAIRS`
+
+     foreach PAIR ($PAIRS)
+        set KEYWORD = `echo $PAIR | cut -d: -f1`
+        set VALUE   = `echo $PAIR | cut -d: -f2`
+
+        ./strip AGCM.rc
+        set oldstring =  `cat AGCM.rc | grep ${KEYWORD}: `
+        set newstring =  "${KEYWORD}: $VALUE"
+        /bin/mv -f AGCM.rc AGCM.tmp
+        if( $#oldstring == 0 ) then
+            cat AGCM.tmp     > AGCM.rc
+            echo $newstring >> AGCM.rc
+        else
+            if( `echo $oldstring | wc -l` == 1 ) then
+                 cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+            else
+                 echo ERROR:  Multiple occurrences of ${KEYWORD}:
+                 foreach string ($oldstring)
+                   echo $string
+                 end
+                 exit
+             endif
+        endif
+     end
+
+     ./strip AGCM.rc
+     set oldstring =  `cat AGCM.rc | grep REPLAY_MODE: | grep -v Exact | grep -v Intermittent `
+     set newstring =  "REPLAY_MODE: Regular"
+     /bin/mv -f AGCM.rc AGCM.tmp
+     cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+endif
+
+if( $FCST_TYPE == 'REPLAY' ) then
+     ./strip AGCM.rc
+     set oldstring =  `cat AGCM.rc | grep REPLAY_FILE: | grep MERRA-2 `
+     set newstring =  "REPLAY_FILE: ana.eta.%y4%m2%d2_%h2z.nc4"
+     /bin/mv -f AGCM.rc AGCM.tmp
+     cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+     set ana_date = `$GEOSUTIL/post/tick $date0 $time0 -10800`
+     set ana_nymd = $ana_date[1]
+     set ana_nhms = $ana_date[2]
+
+     set ana_year  = `echo $ana_nymd | cut -c1-4`
+     set ana_month = `echo $ana_nymd | cut -c5-6`
+     set ana_hour  = `echo $ana_nhms | cut -c1-2`
+
+     # Link hourly ANA.ETA Files to Local Directory
+     # --------------------------------------------
+     @ count = 1
+     while( $count <= 6 )
+        /bin/ln -sf $ANA_LOCATION/ana/Y${ana_year}/M${ana_month}/$ANA_EXPID.ana.eta.${ana_nymd}_${ana_hour}z.nc4  ana.eta.${ana_nymd}_${ana_hour}z.nc4
+        set ana_date = `$GEOSUTIL/post/tick $ana_nymd $ana_nhms 3600`
+        set ana_nymd = $ana_date[1]
+        set ana_nhms = $ana_date[2]
+        set ana_year  = `echo $ana_nymd | cut -c1-4`
+        set ana_month = `echo $ana_nymd | cut -c5-6`
+        set ana_hour  = `echo $ana_nhms | cut -c1-2`
+     @ count = $count + 1
+     end
+
+     # Re-Link Final ANA.ETA File
+     # --------------------------
+     /bin/ln -sf $ANA_LOCATION/ana/Y${ana_year}/M${ana_month}/$ANA_EXPID.ana09.eta.${ana_nymd}_${ana_hour}z.nc4  ana.eta.${ana_nymd}_${ana_hour}z.nc4
+endif
+
+#######################################################################
+#                 Create Forecast History RC Files
+#######################################################################
+
+set         FILE = HISTORY.rc
+/bin/rm -f $FILE
+cat << _EOF_ > $FILE
+
+VERSION: 1
+EXPID:  G5$ANA
+EXPDSC: G5${ANA}_based_on_${EXPID}
+
+COLLECTIONS: 'geosgcm_fcst'
+             'tavg1_2d_flx_Mx'
+             ::
+             'geosgcm_surf'
+
+GRID_LABELS: PC1152x721-DC
+ ::
+
+
+  PC1152x721-DC.GRID_TYPE: LatLon
+  PC1152x721-DC.IM_WORLD: 1152
+  PC1152x721-DC.JM_WORLD: 721
+  PC1152x721-DC.POLE: PC
+  PC1152x721-DC.DATELINE: DC
+  PC1152x721-DC.LM: 72
+
+  geosgcm_fcst.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_fcst.archive:   '%c/Y%y4',
+  geosgcm_fcst.format:    'CFIO',
+  geosgcm_fcst.frequency:  060000,
+  geosgcm_fcst.duration:   000000,
+  geosgcm_fcst.grid_label: PC1152x721-DC,
+  geosgcm_fcst.vscale:     100.0,
+  geosgcm_fcst.vunit:     'hPa',
+  geosgcm_fcst.vvars:     'log(PLE)' , 'DYN'          ,
+  geosgcm_fcst.levels:     1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100,
+  geosgcm_fcst.fields:    'PHIS'     , 'AGCM'         ,
+                          'SLP'      , 'DYN'          ,
+                          'U;V'      , 'DYN'          ,
+                          'T'        , 'DYN'          ,
+                          'PS'       , 'DYN'          ,
+                          'ZLE'      , 'DYN'          , 'H'   ,
+                          'OMEGA'    , 'DYN'          ,
+                          'Q'        , 'MOIST'        , 'QV'  ,
+                          'RH2'      , 'MOIST'        , 'RH'  ,
+                          ::
+
+  geosgcm_surf.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_surf.archive:   '%c/Y%y4',
+  geosgcm_surf.format:    'CFIO',
+  geosgcm_surf.mode:      'time-averaged',
+  geosgcm_surf.frequency:  030000,
+  geosgcm_surf.duration:   000000,
+  geosgcm_surf.grid_label: PC1152x721-DC,
+  geosgcm_surf.fields:    'PHIS'     , 'AGCM'         ,
+                          'SLP'      , 'DYN'          ,
+                          'PS'       , 'DYN'          ,
+                          'DMDTDYN'  , 'DYN'          ,
+                          'TQV'      , 'AGCM'         ,
+                          'TQL'      , 'AGCM'         ,
+                          'TQI'      , 'AGCM'         ,
+                          'TPREC'    , 'MOIST'        ,
+                          'EVAP'     , 'SURFACE'      ,
+                          'TS'       , 'SURFACE'      ,
+                          ::
+
+  tavg1_2d_flx_Mx.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg1_2d_flx_Mx.archive:     '%c/Y%y4',
+  tavg1_2d_flx_Mx.format:      'CFIO' ,
+  tavg1_2d_flx_Mx.mode:        'time-averaged' ,
+  tavg1_2d_flx_Mx.descr:       '2d,1-Hourly,Time-Averaged,Native Cubed-Sphere on Single-Level,Diagnostics' ,
+  tavg1_2d_flx_Mx.nbits:       12 ,
+  tavg1_2d_flx_Mx.chunksize:   180 180 1 1,
+  tavg1_2d_flx_Mx.cubeFormat:  0
+  tavg1_2d_flx_Mx.deflate:     1,
+  tavg1_2d_flx_Mx.frequency:   010000 ,
+  tavg1_2d_flx_Mx.duration:    010000 ,
+  tavg1_2d_flx_Mx.fields:       'AN_PRCP'  , 'MOIST'       , 'PRECANV' ,
+                                'CN_PRCP'  , 'MOIST'       , 'PRECCON' ,
+                                'LS_PRCP'  , 'MOIST'       , 'PRECLSC' ,
+                                'TPREC'    , 'MOIST'       , 'PRECTOT' ,
+                                'OSR'      , 'SOLAR'       , 'SWTUP'   ,
+                                'OLR'      , 'IRRAD'       , 'LWTUP'   ,
+                                'TQV'      , 'AGCM'        ,
+                                'ZPBL'     , 'TURBULENCE'  ,  'PBLH'   ,
+                                ::
+
+_EOF_
+
+#######################################################################
+#              Create HISTORY Collection Directories
+#######################################################################
+
+set collections = ''
+foreach line ("`cat HISTORY.rc`")
+   set firstword  = `echo $line | awk '{print $1}'`
+   set firstchar  = `echo $firstword | cut -c1`
+   set secondword = `echo $line | awk '{print $2}'`
+
+   if ( $firstword == "::" ) goto done
+
+   if ( $firstchar != "#" ) then
+      set collection  = `echo $firstword | sed -e "s/'//g"`
+      set collections = `echo $collections $collection`
+      if ( $secondword == :: ) goto done
+   endif
+
+   if ( $firstword == COLLECTIONS: ) then
+      set collections = `echo $secondword | sed -e "s/'//g"`
+   endif
+end
+
+done:
+
+#######################################################################
+#                        Link Boundary Datasets
+#######################################################################
+
+setenv BCSDIR    @BCSDIR
+setenv SSTDIR    @SSTDIR
+setenv CHMDIR    @CHMDIR
+setenv BCRSLV    @ATMOStag_@OCEANtag
+setenv DATELINE  DC
+setenv EMISSIONS @EMISSIONS
+
+set             FILE = linkbcs
+/bin/rm -f     $FILE
+cat << _EOF_ > $FILE
+#!/bin/csh -f
+
+/bin/mkdir -p            ExtData
+/bin/ln    -sf $CHMDIR/* ExtData
+
+>>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
+>>>DATAOCEAN<<<if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
+>>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
+>>>DATAOCEAN<<<endif
+
+# DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
+# --------------------------------------------------------------------
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
+
+# CMIP-5 Ozone Data (228-Years)
+# -----------------------------
+#bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+
+# MERRA-2 Ozone Data (39-Years)
+# -----------------------------
+/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+
+/bin/ln -sf $BCSDIR/Shared/*bin .
+/bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
+
+/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
+/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
+/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
+/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
+/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+
+>>>FVCUBED<<<if(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
+>>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
+>>>FVCUBED<<<endif
+
+_EOF_
+
+>>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
+>>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
+>>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
+
+chmod +x linkbcs
+@CPEXEC  linkbcs $EXPDIR
+
+##############################################################################
+#                    Get Executable and RESTARTS 
+#    Note: MERRA Restarts must be Pre-Fetched, Regridded, and Locally Stored
+##############################################################################
+
+@CPEXEC $EXPDIR/GEOSgcm.x .
+
+set rst_types = `cat AGCM.rc | grep "RESTART_FILE"    | cut -d ":" -f1 | cut -d "_" -f1-2`
+set chk_types = `cat AGCM.rc | grep "CHECKPOINT_FILE" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set rst_files = `cat AGCM.rc | grep "RESTART_FILE"    | cut -d ":" -f2`
+set chk_files = `cat AGCM.rc | grep "CHECKPOINT_FILE" | cut -d ":" -f2`
+
+# Remove possible bootstrap parameter (+/-)
+# -----------------------------------------
+set dummy = `echo $rst_files`
+set rst_files = ''
+foreach rst ( $dummy )
+  set length  = `echo $rst | awk '{print length($0)}'`
+  set    bit  = `echo $rst | cut -c1`
+  if(  "$bit" == "+" | \
+       "$bit" == "-" ) set rst = `echo $rst | cut -c2-$length`
+  set rst_files = `echo $rst_files $rst`
+end
+
+# Copy Restarts to Scratch Directory
+# ----------------------------------
+     set year  = `echo $nymd0 | cut -c1-4`
+     set month = `echo $nymd0 | cut -c5-6`
+
+if( $FCST_TYPE == 'CYCLED_REPLAY' ) then
+     /bin/ln -s $EXPDIR/restarts/*${nymd0}_${hour}*z.*  .
+     $GEOSBIN/stripname ${EXPID}.
+     $GEOSBIN/stripname .e${nymd0}_${hour}\*
+endif
+
+if( $FCST_TYPE == 'STRAIGHT' | $FCST_TYPE == 'REPLAY' ) then
+     /bin/ln -s $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.rst.${nymd0}_${hour}z.tar  .
+     @TAREXEC xf $ANA_EXPID.rst.${nymd0}_${hour}z.tar
+         if( -e $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.agcm_import_rst.${nymd0}_${hour}z.bin ) \
+     @CPEXEC -f $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.agcm_import_rst.${nymd0}_${hour}z.bin  .
+     $GEOSBIN/stripname $ANA_EXPID.
+     $GEOSBIN/stripname .${nymd0}_${hour}z.bin
+     $GEOSBIN/stripname .${nymd0}_${hour}z.nc4
+# Note: If Radiation Schemes differ, Radiation Restarts may need to be bootstrapped
+# ---------------------------------------------------------------------------------
+#    /bin/rm solar_internal_rst
+#    /bin/rm irrad_internal_rst
+endif
+
+# Re-Create Proper CAP.rc
+# -----------------------
+@CPEXEC CAP.rc.orig CAP.rc
+./strip CAP.rc
+set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
+set newstring =  "JOB_SGMT: $FSEGMENT 030000"
+/bin/mv CAP.rc CAP.tmp
+cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+
+set oldstring =  `cat CAP.rc | grep HEARTBEAT_DT:`
+set newstring =  "HEARTBEAT_DT: $HEARTBEAT"
+/bin/mv CAP.rc CAP.tmp
+cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+
+# Set Time Variables for Current_(c), Ending_(e), and Segment_(s) dates
+# ---------------------------------------------------------------------
+set nymdc = `cat cap_restart | cut -c1-8`
+set nhmsc = `cat cap_restart | cut -c10-15`
+set nymde = `cat CAP.rc | grep END_DATE:     | cut -d: -f2 | cut -c2-9`
+set nhmse = `cat CAP.rc | grep END_DATE:     | cut -d: -f2 | cut -c11-16`
+set nymds = `cat CAP.rc | grep JOB_SGMT:     | cut -d: -f2 | cut -c2-9`
+set nhmss = `cat CAP.rc | grep JOB_SGMT:     | cut -d: -f2 | cut -c11-16`
+
+# Compute Time Variables at the Finish_(f) of current segment
+# -----------------------------------------------------------
+set nyear   = `echo $nymds | cut -c1-4`
+set nmonth  = `echo $nymds | cut -c5-6`
+set nday    = `echo $nymds | cut -c7-8`
+set nhour   = `echo $nhmss | cut -c1-2`
+set nminute = `echo $nhmss | cut -c3-4`
+set nsec    = `echo $nhmss | cut -c5-6`
+       @ dt = $nsec + 60 * $nminute + 3600 * $nhour + 86400 * $nday
+
+set nymdf = $nymdc
+set nhmsf = $nhmsc
+set date  = `$GEOSBIN/tick $nymdf $nhmsf $dt`
+set nymdf =  $date[1]
+set nhmsf =  $date[2]
+set year  = `echo $nymdf | cut -c1-4`
+set month = `echo $nymdf | cut -c5-6`
+set day   = `echo $nymdf | cut -c7-8`
+
+     @  month = $month + $nmonth
+while( $month > 12 )
+     @  month = $month - 12
+     @  year  = $year  + 1
+end
+     @  year  = $year  + $nyear
+     @ nymdf  = $year * 10000 + $month * 100 + $day
+
+if( $nymdf >  $nymde )    set nymdf = $nymde
+if( $nymdf == $nymde )    then
+    if( $nhmsf > $nhmse ) set nhmsf = $nhmse
+endif
+
+set yearc = `echo $nymdc | cut -c1-4`
+set yearf = `echo $nymdf | cut -c1-4`
+
+# Select proper MERRA-2 GOCART Emission RC Files
+# (NOTE: MERRA2-DD has same transition date)
+# ----------------------------------------------
+if( ${EMISSIONS} == MERRA2 | \
+    ${EMISSIONS} == MERRA2-DD ) then
+    set MERRA2_Transition_Date = 20000401
+
+    if( $nymdc < ${MERRA2_Transition_Date} ) then
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/19600101-20000331
+         if( $nymdf > ${MERRA2_Transition_Date} ) then
+          set nymdf = ${MERRA2_Transition_Date}
+          set oldstring = `cat CAP.rc | grep END_DATE:`
+          set newstring = "END_DATE: $nymdf $nhmsf"
+          /bin/mv CAP.rc CAP.tmp
+                     cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+         endif
+    else
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/20000401-present
+    endif
+
+    if( $AGCM_LM == 72 ) then
+        @CPEXEC --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+    else
+        set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
+        foreach file ($files)
+          /bin/rm -f   `basename $file`
+          /bin/rm -f    dummy
+          @CPEXEC $file dummy
+              cat       dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
+        end
+    endif
+
+endif
+
+#######################################################################
+#                 Create Binary Tile File from ASCII
+#######################################################################
+
+if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
+set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+cat $extdata_files > ExtData.rc
+
+# Link Boundary Conditions for Appropriate Date
+# ---------------------------------------------
+set year = `echo $date0 | cut -b1-4`
+setenv YEAR $year
+./linkbcs
+
+if (! -e tile.bin) then
+$RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
+endif
+
+#######################################################################
+#                Split Saltwater Restart if detected
+#######################################################################
+
+if ( -e $EXPDIR/saltwater_internal_rst ) then
+
+   # The splitter script requires an OutData directory
+   # -------------------------------------------------
+   if (! -d OutData ) mkdir -p OutData
+
+   # Run the script
+   # --------------
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data saltwater_internal_rst
+
+   # Move restarts
+   # -------------
+   /bin/mv OutData/openwater_internal_rst OutData/seaicethermo_internal_rst .
+
+   # Remove OutData
+   # --------------
+   /bin/rmdir OutData
+
+endif
+
+##################################################################
+######
+######          Perform REPLAY Forecast of Model Run
+######
+##################################################################
+
+       @  NPES = $NX * $NY
+$RUN_CMD $NPES ./GEOSgcm.x
+
+if( -e EGRESS ) then
+    /bin/rm $EXPDIR/restarts/*${nymd0}_${hour}*z.*  .
+endif
+ 
+#######################################################################
+#               Move HISTORY Files to Holding Directory
+#######################################################################
+
+foreach collection ( $collections )
+  /bin/mv `/bin/ls -1 *.${collection}.*` $FCSTDIR
+end
+
+#######################################################################
+#                               Create STATS
+#######################################################################
+
+endif  # End STATS_ONLY Test
+
+set nymd   =  $date0
+set yyyymm = `echo $nymd | cut -b1-6`
+mkdir -p $EXPDIR/forecasts/${FCST_TYPE}_${FCST_LABL}_G5${ANA}.stats.$yyyymm
+cd       $EXPDIR/forecasts/${FCST_TYPE}_${FCST_LABL}_G5${ANA}.stats.$yyyymm
+
+set year0      = `echo $nymd | cut -b1-4`
+set month0     = `echo $nymd | cut -b5-6`
+set fcst_files = `/bin/ls -1 $FCSTDIR/G5${ANA}*geosgcm_fcst*nc4`
+
+set anal_files = ''
+@ n = 1
+while ($n <= 6)
+
+set year  = `echo $nymd | cut -b1-4`
+set month = `echo $nymd | cut -b5-6`
+
+
+# G5REPLAY Verification
+# ---------------------
+if( $FCST_TYPE == 'CYCLED_REPLAY' ) then
+     set next = `/bin/ls -1 $EXPDIR/holding/geosgcm_prog/${year}*/$EXPID.geosgcm_prog.${nymd}*nc4`
+else
+     set next = `/bin/ls -1 $ANA_LOCATION/asm/Y$year/M$month/$ANA_EXPID.inst3_3d_asm_Np.${nymd}*nc4`
+endif
+
+set anal_files = `echo $anal_files $next`
+set date = `$GEOSUTIL/post/tick $nymd 0 86400`
+set nymd = $date[1]
+@ n = $n + 1
+end
+
+$RUN_CMD 1 $GEOSUTIL/post/stats.x -fcst $fcst_files \
+                                  -ana  $anal_files \
+                                  -cli $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_00z.576x361.data.nc4 \
+                                       $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_06z.576x361.data.nc4 \
+                                       $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_12z.576x361.data.nc4 \
+                                       $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_18z.576x361.data.nc4 \
+                                  -tag $EXPID -nfreq 060000 -rc $GEOSUTIL/post/stats.rc
+
+#######################################################################
+#                         Update Forecast Counter
+#######################################################################
+
+#/bin/rm  -r $SCRDIR
+ @ NFCST  = $NFCST + 1
+set date  = `$GEOSUTIL/post/tick $date0 $time0 86400`
+end

@@ -1,0 +1,121 @@
+#!/bin/csh -f
+
+#######################################################################
+#             Experiment Specific Environment Variables
+#######################################################################
+
+setenv  ARCH   `uname`
+setenv  SITE    @SITE
+
+setenv  EXPID   @EXPID
+setenv  EXPDIR  @EXPDIR
+setenv  HOMDIR  @HOMDIR
+setenv GEOSUTIL @GEOSUTIL
+
+#######################################################################
+#                    Set Parameters for Forecasts
+#
+#    FCST_TYPE: STRAIGHT
+#               Forecast using archived 21z Restarts including
+#               AGCM_IMPORT (if available)
+#
+#    FCST_TYPE: REPLAY
+#               Forecast using archived 21z Restarts, REPLAY to 
+#               archived ANA.ETA to create internal AGCM_IMPORT
+#
+#    FCST_TYPE: CYCLED_REPLAY
+#               Forecast using a single 21z Restart to initialze and cycle
+#               subsequent restarts, REPLAY to archived ANA.ETA to create 
+#               internal AGCM_IMPORT
+#
+#######################################################################
+
+set    BDATE = $1
+set    EDATE = $2
+set FSEGMENT = `printf "%08i" $3`
+set     QSUB = $4
+
+if( .$QSUB == . ) set QSUB = FALSE
+
+set       NX = @NX
+set       NY = @NY
+set  AGCM_IM = @AGCM_IM
+set  AGCM_JM = @AGCM_JM
+set  AGCM_LM = @AGCM_LM
+
+set HEARTBEAT = @DT
+set       ANA = GMAO
+set     NFMAX = 1
+
+set FCST_TYPE = REPLAY
+set PREDICTOR_DURATION = 10800
+set CORRECTOR_DURATION = 21600
+set IAU_DIGITAL_FILTER = YES
+set      REPLAY_BKGAVE = 0
+set       REPLAY_NUDGE = NO
+set             TAUANL = 21600
+
+if( $REPLAY_NUDGE == 'NO'  ) set FCST_LABL = P${PREDICTOR_DURATION}_C${CORRECTOR_DURATION}_T${TAUANL}
+if( $REPLAY_NUDGE == 'YES' ) set FCST_LABL = NUDGE_C${CORRECTOR_DURATION}_T${TAUANL}
+
+set    ANA_EXPID = x0034
+set ANA_LOCATION = /discover/nobackup/projects/gmao/g6dev/ltakacs/x0034
+
+#######################################################################
+#                   Create Forecast SubScripts
+#######################################################################
+
+     @ NPES   = $NX * $NY
+     @ count  = 0
+set     date  = $BDATE
+while( $date <= $EDATE )
+
+   @ NF = 1
+   set     test  = $date
+   while( $test <= $EDATE & $NF <= $NFMAX )
+   set nymd = `$GEOSUTIL/post/tick $test 000000 86400`
+   set test = $nymd[1]
+   @ NF = $NF + 1
+   end
+   set nymde = `$GEOSUTIL/post/tick $test 000000 -86400`
+   set nymde =  $nymde[1]
+
+   @ NF = $NF - 1
+   @ count = $count + 1
+   echo $date $NF
+   /bin/rm -f gcm_${FCST_TYPE}_forecast_${FCST_LABL}.j${date}-${nymde}
+   /bin/rm -f sedfile
+   /bin/rm -f gcm_forecast.tmp
+   /bin/cp -f $EXPDIR/forecasts/gcm_forecast.tmpl $EXPDIR/forecasts/gcm_forecast.tmp
+cat > sedfile << EOF
+s?&NPES?$NPES?g
+s?&DATE?$date?g
+s?&AGCM_IM?$AGCM_IM?g
+s?&AGCM_JM?$AGCM_JM?g
+s?&NX?$NX?g
+s?&NY?$NY?g
+s?&HEARTBEAT?$HEARTBEAT?g
+s?&NFMAX?$NF?g
+s?&FCST_TYPE?$FCST_TYPE?g
+s?&FCST_LABL?$FCST_LABL?g
+s?&ANA_EXPID?$ANA_EXPID?g
+s?&ANA_LOCATION?$ANA_LOCATION?g
+s?&FSEGMENT?$FSEGMENT?g
+s?&PREDICTOR_DURATION?$PREDICTOR_DURATION?g
+s?&CORRECTOR_DURATION?$CORRECTOR_DURATION?g
+s?&IAU_DIGITAL_FILTER?$IAU_DIGITAL_FILTER?g
+s?&REPLAY_BKGAVE?$REPLAY_BKGAVE?g
+s?&REPLAY_NUDGE?$REPLAY_NUDGE?g
+s?&TAUANL?$TAUANL?g
+s?FCSTOUT?$EXPDIR/forecasts/gcm_${FCST_TYPE}_forecast_${FCST_LABL}.o${date}-${nymde}?g
+s?&ANA?$ANA?g
+EOF
+sed -f sedfile $EXPDIR/forecasts/gcm_forecast.tmp > $EXPDIR/forecasts/gcm_${FCST_TYPE}_forecast_${FCST_LABL}.j${date}-${nymde}
+if( $QSUB != 'FALSE' )                        qsub  $EXPDIR/forecasts/gcm_${FCST_TYPE}_forecast_${FCST_LABL}.j${date}-${nymde}
+
+set   date = $test
+end
+
+/bin/rm -f sedfile
+/bin/rm -f $EXPDIR/forecasts/gcm_forecast.tmp
+

@@ -1,0 +1,13 @@
+Modification history:
+July 3,2017 -
+ populated Readme with information about hindcast procedure
+July 6,2017 -
+ checked out the frozen tag GEOS-S2S-2_1,
+ manually moved the scripts that differ from yuri-S2S-2_1_UNSTABLE to tag_xxxx files,
+ replaced them by the ones from yuri-S2S-2_1_UNSTABLE
+August 10, 2017 -
+ checked out the yuri-S2S-2_1_UNSTABLE
+ updated the scripts
+ asked Yury to add new ones :forecast vs hindcast (emissions, RC), subX vs seasonal (diag_table, MOM_OUtput, duration,postprocessing, perturbation)
+ commit? create new tag?
+ change the link geos-s2s to point to a new build

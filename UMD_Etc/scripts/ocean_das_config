@@ -1,0 +1,90 @@
+#!/bin/csh -v
+
+######################### USER INPUT #######################################################
+
+setenv GEOSDIR          SANDBOX_DIR
+setenv EXPID            EXPERIMENT_NAME                 # experiment name
+setenv EXPDIR           EXPERIMENT_PATH                 #/gpfsm/dnb42/projects/p17/gvernier/SAND_BOXES/GEOS-Yuri/GEOSodas5_4p1/expa1o025/${EXPID}
+
+setenv ODAS_group           g0609
+setenv ODAS_qos             high
+setenv ODAS_Ne              20                # Ensemble size (Hard coded in params_letkf.f90)
+setenv ODAS_Nx              720               # 
+setenv ODAS_Ny              361               # Grid size hard coded in params_model.f90
+setenv ODAS_Nz              40                #
+setenv ODAS_NPE_ocean       256               # Number of core used for oceanda.x
+setenv ODAS_NPE_cice        256               # Number of core used for oceanda.x when assimilating sea-ice
+setenv ODAS_RC              /gpfsm/dnb42/projects/p17/production/GEOS5odas-5.00/RC/OCEAN_DAS_RC/     # Location of static members, mappings, grids, ...
+setenv ODAS_GRID_TYPE       reg               # type of grid, tri (tripolar) or reg (regular lat-lon) !!!!! OBSOLETE, not supporting tripolar !!!!!
+setenv ODAS_logit_transform False             # logit transform for ice fraction                      !!!!! OBSOLETE, not supporting logit transform !!!!!
+setenv ODAS_regrid          True              # regrid from analysis grid to model grid               !!!!! OBSOLETE, always assumes the need to regrid !!!!!
+setenv ODAS_NDAYS	    0.125             # 1/2 the frequency of the launch of the observers.  
+setenv ODAS_T_prof_sigo     10.0 #0.25         # Basic obs error for temperature profiles [deg C]
+setenv ODAS_S_prof_sigo     10.0 #0.025       #        "              salinity       "    [psu]
+setenv ODAS_ADT_sigo        0.2
+setenv ODAS_rewind          True              # True: Rewinds to the start of the window              !!!!! OBSOLETE !!!!!
+setenv ODAS_IAU             True              # True: Use iau, restoring period set to 18 hours   !!!!! No IAU NOT SUPPOETED !!!!
+setenv ODAS_IAU_TIME        18                # IAU restors increment up to ODAS_IAU_TIME in UTC hours
+setenv ODAS_do_aice         True              # True: 
+setenv ODAS_do_hice         False             # True: 
+setenv ODAS_dt_restore_sst  24                # Restoring time scale for the sst nudging
+setenv ODAS_loc_max         400.0             # Max horizontal localizationlength scale [km]
+setenv ODAS_loc_min         200.0             # Min horizontal localizationlength scale [km]
+setenv ODAS_loc_max_cice    200.0             # Max horizontal localizationlength scale [km]
+setenv ODAS_loc_min_cice    200.0             # Min horizontal localizationlength scale [km]
+
+setenv ODAS_do_reinit       False             # True: input to anaice2rst.x is from ice analysis
+                                              #       supposed to be the case for 5-day reinit    
+                                              # False: input to anaice2rst.x is from M2 ice frac
+                                              #       for continuous analysis to be north pole
+                                              #       hole free 
+
+#Switch for assimilation of obs. Boolean, T or F
+setenv ODAS_ACTIVE_Tprof    True                 # Temperature profile
+setenv ODAS_ACTIVE_Sprof    True                 # Salinity profile
+setenv ODAS_ACTIVE_ADT      True                 # Absolute Dynamic Topography
+setenv ODAS_ACTIVE_SST      True                 # 
+setenv ODAS_ACTIVE_SSS      False                 #
+setenv ODAS_ACTIVE_AICE     True                 # Sea-ice concentration
+setenv ODAS_ACTIVE_HICE     False                 # Sea-ice thickness 
+
+#  test to see if you want to output the OMA observers
+setenv ODAS_OUTPUT_OMA      True                # output OMA observers in oda_run.j
+
+#List of observation platforms
+setenv ODAS_OBS_TYPE_1 "Argo CTD XBT TAO PIRATA RAMA Jason-1 Jason-2 Jason-3 Saral ERS-1 ERS-2 TOPEX GEOSAT-2 Envisat HY-2A CryoSat-2 NASA-TEAM-2"
+
+######################### END USER INPUT ####################################################
+
+#######################################################################
+#              Environment Variables
+#######################################################################
+
+#setenv    ODAS_GRID        $ODAS_RC/BKGERR/anom-
+setenv    SCRDIR           $EXPDIR/scratch
+setenv    ODAS_BIN         $GEOSDIR/Linux/bin
+setenv    UMD_LETKFRC      $EXPDIR/ocean_das/UMD_Etc/UMD_rc/
+setenv    UMD_LETKFUTILS   $EXPDIR/ocean_das/UMD_Etc/UMD_utils/
+setenv    UMD_LETKFSCRIPTS $EXPDIR/ocean_das/UMD_Etc/UMD_scripts/
+setenv    UMD_LETKFSRC     $EXPDIR/ocean_das/UMD_Etc/UMD_oletkf/
+setenv    UMD_LETKFPLOT    $UMD_LETKFUTILS/plot/
+setenv    UMD_LETKFSCRDIR  $EXPDIR/ocean_das    # work dir for the ocean das
+
+#setenv    JOB_NDAYS        `cat CAP.rc | grep JOB_SGMT: | cut -d: -f2 | cut -c12-13`                       #Assumes job segments is in days
+setenv    JOB_NDAYS        `grep JOB_SGMT CAP.rc | sed 's/.*://' | sed 's/000000//' | sed 's/000000//'`   #`cat CAP.rc | grep JOB_SGMT: | cut -d: -f2 | cut -c2-9`                          #Assumes job segments is in days
+setenv    OBSERVER_FREQ    `cat HISTORY.rc | grep oletkf_ocn2d.frequency: | cut -d: -f2 | cut -c3-4`      #Assumes observer frequency is in hours
+setenv    OCEAN_Nx         `grep  OGCM_IM: $SCRDIR/AGCM.rc | cut -d':' -f2`
+setenv    OCEAN_Ny         `grep  OGCM_JM: $SCRDIR/AGCM.rc | cut -d':' -f2`
+setenv    OCEAN_Nz         `grep  OGCM_LM: $SCRDIR/AGCM.rc | cut -d':' -f2`
+
+#Set basename for the history collections used by the ocean das  
+setenv OCNCTRL  oletkf_ctrl
+setenv OCN3D    oletkf_ocn3d
+setenv OCN2D    oletkf_ocn2d
+setenv SEAICE   oletkf_seaice
+
+
+
+chmod +x ${UMD_LETKFUTILS}/mean_ods.py
+chmod +x ${UMD_LETKFUTILS}/dynamic_height.py
+chmod +x ${UMD_LETKFUTILS}/rst2hist.py

@@ -1,0 +1,37 @@
+Experiment setup:
+=================
+
+	1 - Setup gcm experiment
+	    If cloned from Yuri, comment out PERPETUAL_YEAR in CAP.rc!!!!!!
+
+
+	2 - Edit gcm_run.j 
+	    	 change job name
+		 set GEOSDIR & GEOSBIN to path to sandbox
+		 update EXPID & EXPDIR
+		 
+	         replace "mpirun -np GEOSgcm.x" by:
+
+	    	 $EXPDIR/oda_run.j $NX $NY
+
+	3 - mkdir $EXPDIR/ocean_das/ 
+
+	4 - Copy entire UMD_Etc build under ocean_das/
+
+	5 - Copy ocean das scripts from $EXPDIR/ocean_das/UMD_Etc/UMD_scripts into EXPDIR: 
+
+	    	 ocean_das_config      : Edit
+		 oda_run.j
+
+	6 - Edit input.nml (MOM's namelist). Turn on iau tracer increment and
+		sponge tracer. Switch on the constant volume option if running
+		stop gap
+
+	7 - Edit HISTORY.rc and CAP.rc 
+	
+		 A template for a minimalist collection is provided in ./UMD_rc/HISTORY.rc
+	    	 Change history name in ocean_das.csh and ocean_observer.csh using $EXPID ...
+
+
+	8 - sbatch gcm_run.j and pray!
+     

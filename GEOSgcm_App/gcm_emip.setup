@@ -1,0 +1,35 @@
+#!/bin/csh -f
+
+#######################################################################
+#            MERRA-2 Dates:  1985-2014:  May-10 & Nov-10
+#######################################################################
+
+set BYEARS = `seq 1985 1994`
+set BYEARS = `seq 1995 2004`
+set BYEARS = `seq 2005 2014`
+
+set SEASON = 'DJF'
+set SEASON = 'JJA'
+
+if( $SEASON == 'DJF' ) set BMONTH = "11"
+if( $SEASON == 'JJA' ) set BMONTH = "05"
+
+foreach BYEAR ($BYEARS)
+set RSTDATE = ${BYEAR}${BMONTH}10_210000
+
+   /bin/rm -f gcm_run.j$RSTDATE
+   /bin/rm -f sedfile
+   /bin/rm -f gcm_run.tmp
+   /bin/cp -f gcm_run.j gcm_run.tmp
+cat > sedfile << EOF
+s?@RSTDATE?$RSTDATE?g
+s?@GCMEMIP?TRUE?g
+s?@PBS?PBS?g
+EOF
+sed -f sedfile gcm_run.tmp > gcm_run.j$RSTDATE
+/bin/rm -f sedfile
+/bin/rm -f gcm_run.tmp
+
+echo qsub gcm_run.j$RSTDATE
+end
+
