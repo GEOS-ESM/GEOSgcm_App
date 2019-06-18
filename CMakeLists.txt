@@ -1,4 +1,5 @@
 add_executable (GEOSgcm.x GEOSgcm.F90)
+target_link_libraries (GEOSgcm.x GFDL_fms_r8)
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
 
