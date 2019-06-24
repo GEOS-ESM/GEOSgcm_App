@@ -1,13 +1,15 @@
-add_executable (GEOSgcm.x GEOSgcm.F90)
-target_link_libraries (GEOSgcm.x GFDL_fms_r8)
+ecbuild_add_executable (
+  TARGET GEOSgcm.x
+  SOURCES GEOSgcm.F90
+  LIBS GEOSgcm_GridComp 
+  )
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
 
 #link_directories (${MKL_LIBRARIES})
-target_link_libraries (GEOSgcm.x GEOSgcm_GridComp MAPL_Base GMAO_pFIO ${OpenMP_Fortran_LIBRARIES})
+target_link_libraries (GEOSgcm.x ${OpenMP_Fortran_LIBRARIES})
 set_target_properties(GEOSgcm.x PROPERTIES LINK_FLAGS "${OpenMP_Fortran_FLAGS}")
 target_include_directories (GEOSgcm.x PUBLIC ${INC_ESMF})
-install(TARGETS GEOSgcm.x DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
 set(templates
   AGCM.rc.tmpl
