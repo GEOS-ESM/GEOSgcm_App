@@ -43,9 +43,12 @@ set(templates
   .AGCM_VERSION
   )
 
-# Need to copy various files into build directory.  Source tree cannot know where the build tree is ...
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gcm_setup ${CMAKE_CURRENT_BINARY_DIR}/gcm_setup COPYONLY)
-foreach(template ${templates})
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${template} ${CMAKE_CURRENT_BINARY_DIR}/${template} COPYONLY)
-endforeach()
+install (
+   FILES ${templates}
+   DESTINATION bin
+   )
 
+install (
+   FILES gcm_setup
+   DESTINATION bin
+   )
