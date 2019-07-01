@@ -30,12 +30,26 @@ setenv GEOSDIR          @GEOSDIR
 setenv GEOSBIN          @GEOSBIN 
 setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
 
-source $GEOSBIN/g5_modules
+setenv MODINIT @MODINIT
+setenv SITEMODULES modules.${SITE}
+
+if ($?MODINIT) then
+if ( -e $GEOSBIN/$SITEMODULES) then
+  source $MODINIT
+  module purge
+  module load $GEOSBIN/$SITEMODULES
+else if ( -e $GEOSBIN/modules) then
+  source $MODINIT
+  module purge
+  module load $GEOSBIN/modules
+endif
+endif
+
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
-setenv GCMVER `cat $GEOSDIR/src/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GCMVER `cat $GEOSBIN/.AGCM_VERSION`
 echo   VERSION: $GCMVER
 
 #######################################################################
