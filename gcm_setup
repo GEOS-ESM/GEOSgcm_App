@@ -33,59 +33,16 @@ endif
 
 # Set Current Working Path to gcm_setup
 # -------------------------------------
-set GCMSETUP = `which $0`
-set root = `echo $GCMSETUP | cut -d / -f1`
-if($root == . ) set GCMSETUP = `echo $cwd`/gcm_setup
-set root = `echo $GCMSETUP | cut -b1`
-if( "$root" != "/" ) set GCMSETUP = `echo $cwd`/$GCMSETUP
-
-
-# Set Default GEOS Build Directory
-# --------------------------------
-@ n = 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-while( .$root == . )
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-set root2 = $root
-
-@ m = `echo $GCMSETUP | tr -cd '/' | wc -c`
-while( $root2 != 'Applications' )
-@ m = $m - 1
-set root2 = `echo $GCMSETUP | cut -d / -f$m`
-end
-
-set GEOSDEF = ''
-while( $n != $m )
-set GEOSDEF = `echo ${GEOSDEF}/${root}`
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-
-
-# Set Applications Directory
-# --------------------------
-@ n = 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-while( .$root == . )
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-
-set APPDIR = ''
-while( $root != 'gcm_setup' )
-set APPDIR = `echo ${APPDIR}/${root}`
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
+set GCMSETUP = `readlink -f $0`
+set BINDIR = `dirname $GCMSETUP`
+set GEOSDEF = `dirname $BINDIR`
 
 #######################################################################
 #                   Test for Command Line Flags
 #######################################################################
 
 # Set default behavior of switches
-set NOCVS = FALSE
+set NOCVS = TRUE
 set GPU   = FALSE
 
 while ( $#argv > 0 )
@@ -110,6 +67,12 @@ while ( $#argv > 0 )
          set NOCVS = TRUE
          breaksw
 
+      # Do not archive the source
+      case --basedir:
+         set PASSBASE = $1
+         shift
+         breaksw
+
       # Here any string not above will trigger USAGE
       case -[Hh]:
       case --[Hh][Ee][Ll][Pp]:
@@ -118,13 +81,19 @@ while ( $#argv > 0 )
    endsw
 end
 
+if ($?PASSBASE) then
+   setenv LOCALBASEDIR $PASSBASE
+else
+   setenv LOCALBASEDIR $BASEDIR
+endif
+
 #######################################################################
 #           CVS: Use CVS functionality only at NCCS or NAS
 #######################################################################
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-setenv SITE `$GEOSDEF/g5_modules site`
+setenv SITE $GEOS_SITE
 
 if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
    set NOCVS = TRUE
@@ -161,17 +130,15 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-set BASEDIR = `$GEOSDEF/g5_modules basedir`
-
-     if ( `echo $BASEDIR | grep -i mvapich2` != '') then
+     if ( `echo $LOCALBASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
-else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
+else if ( `echo $LOCALBASEDIR | grep -i openmpi`  != '') then
    set MPI = openmpi
-else if ( `echo $BASEDIR | grep -i impi`     != '') then
+else if ( `echo $LOCALBASEDIR | grep -i impi`     != '') then
    set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
+else if ( `echo $LOCALBASEDIR | grep -i intelmpi` != '') then
    set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i mpt`      != '') then
+else if ( `echo $LOCALBASEDIR | grep -i mpt`      != '') then
    set MPI = mpt
 else
    # Assume default is Intel MPI in case of older baselibs
@@ -236,19 +203,19 @@ endif
 
 HRCODE:
 echo "Enter the ${C1}Atmospheric Horizontal Resolution${CN} code:"
-echo "-----------------------------------------------------------"
-echo "     Lat/Lon                     Cubed-Sphere"
-echo "-----------------------------------------------------------"
-echo "   ${C2}b --  2  deg  ${CN}              ${C2}c48  --  2   deg ${CN}"
-echo "   ${C2}c --  1  deg  ${CN}              ${C2}c90  --  1   deg ${CN}"
-echo "   ${C2}d -- 1/2 deg  ${CN}              ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
-echo "   ${C2}e -- 1/4 deg (${C1}35-km${C2})        c360 -- 1/4  deg (${C1}28-km${C2}) ${CN} "
-echo "   ${C2}                            c720 -- 1/8  deg (${C1}14-km${C2}) ${CN}"
-echo "   ${C2}                            c1440 - 1/16 deg (${C1} 7-km${C2}) ${CN}"
-echo "   ${C2}                                      DYAMOND Grids                 "
-echo "   ${C2}                            c768 -- 1/8  deg (${C1}12-km${C2}) ${CN}"
-echo "   ${C2}                            c1536 - 1/16 deg (${C1} 6-km${C2}) ${CN}"
-echo "   ${C2}                            c3072 - 1/32 deg (${C1} 3-km${C2}) ${CN}"
+echo "--------------------------------------"
+echo "            Cubed-Sphere"
+echo "--------------------------------------"
+echo "   ${C2}c48  --  2   deg ${CN}"
+echo "   ${C2}c90  --  1   deg ${CN}"
+echo "   ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
+echo "   ${C2}c360 -- 1/4  deg (${C1}28-km${C2}) ${CN} "
+echo "   ${C2}c720 -- 1/8  deg (${C1}14-km${C2}) ${CN}"
+echo "   ${C2}c1440 - 1/16 deg (${C1} 7-km${C2}) ${CN}"
+echo "   ${C2}          DYAMOND Grids                 "
+echo "   ${C2}c768 -- 1/8  deg (${C1}12-km${C2}) ${CN}"
+echo "   ${C2}c1536 - 1/16 deg (${C1} 6-km${C2}) ${CN}"
+echo "   ${C2}c3072 - 1/32 deg (${C1} 3-km${C2}) ${CN}"
 echo " "
 set HRCODE = `echo $<`
 set HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
@@ -1146,8 +1113,6 @@ set  RATS_PROVIDER   = PCHEM
 # per task as a good default
 @ POST_NPES = $POST_NDS * 16
 
-setenv SITE `$GEOSDEF/g5_modules site`
-
               setenv     RUN_N  `echo $EXPID | cut -b1-11`_RUN                         # RUN      Job Name
               setenv     RUN_FN `echo $EXPID | cut -b1-11`_FCST                        # Forecast Job Name
               setenv    POST_N  `echo $EXPID | cut -b1-10`_POST                        # POST     Job Name
@@ -1200,6 +1165,7 @@ if( $SITE == 'NAS' ) then
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
               setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
               setenv TAREXEC    mtar                                                   # Tar utility for large archives
+              setenv MODINIT   '/usr/share/modules/init/tcsh'
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
               setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
@@ -1235,6 +1201,7 @@ else if( $SITE == 'NCCS' ) then
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar                                                    # Tar utility for large archives
+              setenv MODINIT   '/usr/share/modules/init/csh'
 else
 # These are defaults for the desktop
               setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
@@ -1270,6 +1237,7 @@ else
               set CNV_NY = ${NY}
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar                                                    # Tar utility for large archives
+              setenv MODINIT   '/usr/share/Modules/init/tcsh'
 endif
 
 
@@ -1293,14 +1261,14 @@ while( $check == FALSE )
   echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
   if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
-  if( -e $APPDIR/HISTORY.rc.hold ) /bin/mv -f $APPDIR/HISTORY.rc.hold $APPDIR/HISTORY.rc.tmpl
-  if( -e $APPDIR/HISTORY.rc.tmpl ) /bin/mv -f $APPDIR/HISTORY.rc.tmpl $APPDIR/HISTORY.rc.hold
+  if( -e $BINDIR/HISTORY.rc.hold ) /bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
+  if( -e $BINDIR/HISTORY.rc.tmpl ) /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.hold
 
   if( "$HISTORYrc" == "Current" ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $APPDIR/HISTORY.AGCM.rc.tmpl $APPDIR/HISTORY.rc.tmpl
+            /bin/cp -f $BINDIR/HISTORY.AGCM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
   endif
 
   if( "$HISTORYrc" != "Current" ) then
@@ -1308,29 +1276,29 @@ while( $check == FALSE )
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc $APPDIR/HISTORY.rc.tmp1
+            /bin/cp -f $HISTORYrc $BINDIR/HISTORY.rc.tmp1
 
-            set  EXPID_old = `grep  "EXPID:" $APPDIR/HISTORY.rc.tmp1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $APPDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set  EXPID_old = `grep  "EXPID:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set EXPDSC_old = `grep "EXPDSC:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
 
             /bin/rm -f command
             set  string = "EXPID:"
-            echo cat $APPDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $APPDIR/HISTORY.rc.tmpl > command
+            echo cat $BINDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $BINDIR/HISTORY.rc.tmpl > command
             chmod +x   command
                      ./command
             /bin/rm -f command
-            /bin/mv -f $APPDIR/HISTORY.rc.tmpl $APPDIR/HISTORY.rc.tmp1
-                   cat $APPDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $APPDIR/HISTORY.rc.tmpl
-            /bin/rm -f $APPDIR/HISTORY.rc.tmp1
+            /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.tmp1
+                   cat $BINDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $BINDIR/HISTORY.rc.tmpl
+            /bin/rm -f $BINDIR/HISTORY.rc.tmp1
 
        else if( -e $HISTORYrc/HISTORY.AGCM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $APPDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
        else
-           cvs upd -r $HISTORYrc -p $APPDIR/HISTORY.AGCM.rc.tmpl > $APPDIR/HISTORY.rc.tmpl
+           cvs upd -r $HISTORYrc -p $BINDIR/HISTORY.AGCM.rc.tmpl > $BINDIR/HISTORY.rc.tmpl
            if( $status != 0 ) then
             echo " "
             echo "\!\! ERROR in using $HISTORYrc as a cvs tag or directory/filename. \!\!"
@@ -1461,41 +1429,13 @@ echo $EXPDIRroot > $HOME/.EXPDIRroot
 setenv CNVDIR $EXPDIR/convert
 
 #######################################################################
-#                   Test if we are in a CMake Build
-#######################################################################
-
-if (-d $GEOSDEF/CMakeFiles) then
-   set CMAKE = TRUE
-else
-   set CMAKE = FALSE
-endif
-
-#######################################################################
 #                       Locate Build Directory  
 #######################################################################
-
-# The build directory is in two different places for GNU Make and CMake.
-# To be generic we must be clear here.
 
 # GEOSagcm Build Directory
 # ------------------------
 
-# First, for clarity, we must strip src/ off of GEOSDEF if we are in a
-# GNU Make build:
-
-if ( $CMAKE == FALSE ) then
-  set GEOSDEF = `dirname $GEOSDEF`
-endif
-
-# Next, use a different message on a CMake build compared to GNU Make. This
-# isn't quite perfect as one can point to a *different* build, but unfortunately, there
-# is no way to generalize this due to the presence of Linux/Darwin.
-
-  if ( $CMAKE == TRUE ) then
-     echo "Enter Location for ${C1}Build${CN} directory containing:  bin/ CMakeFiles/ etc..."
-  else
-     echo "Enter Location for ${C1}Build${CN} directory containing:  src/ $ARCH/bin etc..."
-  endif
+  echo "Enter Location for ${C1}Build${CN} directory containing:  bin/ etc/ include/ etc..."
   echo "Hit ENTER to use Default Location:"
   echo "----------------------------------"
   echo "Default:  ${C2}${GEOSDEF}${CN}"
@@ -1511,8 +1451,7 @@ endif
 GEOSDIR:
 while( $check == FALSE )
 
-  # We assume one of these must be true GNU Make or CMake
-  if(! (-e $GEOSDIR/$ARCH || -d $GEOSDIR/CMakeFiles) ) then
+  if(! (-e $GEOSDIR/bin ) ) then
        echo " "
        echo "\!\! ${C1}WARNING${CN} \!\!"
        echo "\!\! This Sandbox has not been built"
@@ -1538,21 +1477,14 @@ while( $check == FALSE )
   endif
 end
 
-# Set some useful aliases. GEOSSRC lets us look inside the source
-# code tree, though this isn't quite true with CMake as we depend
-# on needed files being copied into the build tree.
 #
 # GEOSBIN does point to the bin/ directory in each
-if( $CMAKE == TRUE ) then
-   setenv GEOSSRC  ${GEOSDIR}
-   setenv GEOSBIN  ${GEOSDIR}/bin
-else
-   setenv GEOSSRC  ${GEOSDIR}/src
-   setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-endif
+#
+setenv GEOSSRC  ${GEOSDIR}
+setenv GEOSBIN  ${GEOSDIR}/bin
 
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GEOSUTIL ${GEOSSRC}
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 #######################################################################
 #                    Check for Group ID Sponsor Code
@@ -1584,24 +1516,14 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                                   $EXPDIR/RC
-  if ($CMAKE == TRUE) then
-     rsync -ax                  $GEOSDIR/etc/*.rc            $EXPDIR/RC
-     if( .$EMISSIONS != . ) then
-                        /bin/cp $GEOSDIR/etc/$EMISSIONS/*.rc $EXPDIR/RC
-     else
-       set EMISSIONS = g5chem
-     endif
-
+  mkdir -p                                                $EXPDIR/RC
+  rsync -ax                  $GEOSDIR/etc/*.rc            $EXPDIR/RC
+  if( .$EMISSIONS != . ) then
+                     /bin/cp $GEOSDIR/etc/$EMISSIONS/*.rc $EXPDIR/RC
   else
-     rsync -ax                  $GEOSDIR/$ARCH/etc/*.rc            $EXPDIR/RC
-     if( .$EMISSIONS != . ) then
-                        /bin/cp $GEOSDIR/$ARCH/etc/$EMISSIONS/*.rc $EXPDIR/RC
-     else
-       set EMISSIONS = g5chem
-     endif
-
+     set EMISSIONS = g5chem
   endif
+
   if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
 
 #######################################################################
@@ -1800,7 +1722,7 @@ foreach FILE ($FILES)
 /bin/rm -f $HOMDIR/tmpfile
 /bin/rm -f $HOMDIR/sedfile
 /bin/rm -f $HOMDIR/$FILE
-cat        $APPDIR/$FILE > $HOMDIR/tmpfile
+cat        $BINDIR/$FILE > $HOMDIR/tmpfile
 cat >      $HOMDIR/sedfile << EOF
 /@SETENVS/ {
 t success
@@ -1975,6 +1897,7 @@ s/@RUN_ROUTE/$RUN_ROUTE/g
 
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
+s?@MODINIT?$MODINIT?g
 
 EOF
 
@@ -2002,10 +1925,10 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
 
-if(     -e $APPDIR/HISTORY.rc.hold ) then
-/bin/mv -f $APPDIR/HISTORY.rc.hold $APPDIR/HISTORY.rc.tmpl
+if(     -e $BINDIR/HISTORY.rc.hold ) then
+/bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
 else
-/bin/rm -f $APPDIR/HISTORY.rc.tmpl
+/bin/rm -f $BINDIR/HISTORY.rc.tmpl
 endif
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
@@ -2435,10 +2358,10 @@ set   OLDUSER=`/bin/ls -l $CLONEDIR/gcm_run.j | awk '{print $3}'`
 
 setenv ARCH      `uname`
 setenv GEOSDIR  /`grep "setenv GEOSDIR" $CLONEDIR/gcm_run.j | cut -d'/' -f2-`
-setenv GEOSSRC  ${GEOSDIR}/src
-setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GEOSSRC  ${GEOSDIR}
+setenv GEOSBIN  ${GEOSDIR}/bin
+setenv GEOSUTIL ${GEOSDIR}
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 # -------------------------------------------------
 # Figure out how this person usually runs the model
