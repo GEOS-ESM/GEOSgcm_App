@@ -34,8 +34,8 @@ endif
 # Set Current Working Path to gcm_setup
 # -------------------------------------
 set GCMSETUP = `readlink -f $0`
-set BINDIR = `dirname $GCMSETUP`
-set GEOSDEF = `dirname $BINDIR`
+set BINDIR   = `dirname $GCMSETUP`
+set GEOSDEF  = `dirname $BINDIR`
 
 #######################################################################
 #                   Test for Command Line Flags
@@ -67,12 +67,6 @@ while ( $#argv > 0 )
          set NOCVS = TRUE
          breaksw
 
-      # Do not archive the source
-      case --basedir:
-         set PASSBASE = $1
-         shift
-         breaksw
-
       # Here any string not above will trigger USAGE
       case -[Hh]:
       case --[Hh][Ee][Ll][Pp]:
@@ -81,19 +75,13 @@ while ( $#argv > 0 )
    endsw
 end
 
-if ($?PASSBASE) then
-   setenv LOCALBASEDIR $PASSBASE
-else
-   setenv LOCALBASEDIR $BASEDIR
-endif
-
 #######################################################################
 #           CVS: Use CVS functionality only at NCCS or NAS
 #######################################################################
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-setenv SITE $GEOS_SITE
+setenv SITE `awk '{print $2}' $GEOSDEF/etc/SITE.rc`
 
 if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
    set NOCVS = TRUE
@@ -130,15 +118,17 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-     if ( `echo $LOCALBASEDIR | grep -i mvapich2` != '') then
+setenv BASEDIR `awk '{print $2}' $GEOSDEF/etc/BASEDIR.rc`
+
+     if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
-else if ( `echo $LOCALBASEDIR | grep -i openmpi`  != '') then
+else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
    set MPI = openmpi
-else if ( `echo $LOCALBASEDIR | grep -i impi`     != '') then
+else if ( `echo $BASEDIR | grep -i impi`     != '') then
    set MPI = intelmpi
-else if ( `echo $LOCALBASEDIR | grep -i intelmpi` != '') then
+else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
    set MPI = intelmpi
-else if ( `echo $LOCALBASEDIR | grep -i mpt`      != '') then
+else if ( `echo $BASEDIR | grep -i mpt`      != '') then
    set MPI = mpt
 else
    # Assume default is Intel MPI in case of older baselibs

@@ -116,7 +116,7 @@ end
 #######################################################################
 
 setenv NODE `uname -n`
-setenv SITE `$GEOSDEF/src/g5_modules site`
+setenv SITE `awk '{print $2}' $GEOSDEF/etc/SITE.rc`
 
 if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
    set NOCVS = TRUE
@@ -153,16 +153,7 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-set BASEDIR = `$GEOSDEF/src/g5_modules basedir`
-
-if ( `echo $BASEDIR | grep -i ifort` != '') then
-   set COMPILER = ifort
-else if ( `echo $BASEDIR | grep -i pgfortran` != '') then
-   set COMPILER = pgfortran
-else
-   # Assume default is ifort in case of older baselibs
-   set COMPILER = ifort 
-endif
+setenv BASEDIR `awk '{print $2}' $GEOSDEF/etc/BASEDIR.rc`
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
@@ -1085,7 +1076,6 @@ set RATS_PROVIDER = STRATCHEM
 @ POST_NPES = $POST_NDS * 16
 
 setenv ARCH `   uname`
-setenv SITE `$GEOSDEF/src/g5_modules site`
 
               setenv     RUN_N  `echo $EXPID | cut -b1-11`_RUN                         # RUN      Job Name
               setenv     RUN_FN `echo $EXPID | cut -b1-11`_FCST                        # Forecast Job Name
@@ -1450,8 +1440,8 @@ end
 
 setenv GEOSSRC  ${GEOSDIR}/src
 setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GEOSUTIL ${GEOSSRC}
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 #######################################################################
 #                    Check for Group ID Sponsor Code
@@ -2210,7 +2200,6 @@ endif
 #    Change EXTDATA until SC datasets are moved to GMAO Ops share
 #######################################################################
 
-setenv SITE `$GEOSDEF/src/g5_modules site`
 if( ${SITE} == 'NCCS' ) then
  sed -e 's|EXTDATA|/discover/nobackup/projects/gmao/share/dasilva/fvInput|g' $EXPDIR/RC/SC_GridComp.rc > $EXPDIR/RC/SC_GridComp.tmp
  /bin/mv -f $EXPDIR/RC/SC_GridComp.tmp $EXPDIR/RC/SC_GridComp.rc
@@ -2465,8 +2454,8 @@ setenv ARCH      `uname`
 setenv GEOSDIR  /`grep "setenv GEOSDIR" $CLONEDIR/gcm_run.j | cut -d'/' -f2-`
 setenv GEOSSRC  ${GEOSDIR}/src
 setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GEOSUTIL ${GEOSSRC}
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 # -------------------------------------------------
 # Figure out how this person usually runs the model

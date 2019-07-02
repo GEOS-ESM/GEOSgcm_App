@@ -33,51 +33,16 @@ endif
 
 # Set Current Working Path to gmichem_setup
 # -------------------------------------
-set GCMSETUP = `which $0`
-set root = `echo $GCMSETUP | cut -d / -f1`
-if($root == . ) set GCMSETUP = `echo $cwd`/gmichem_setup
-set root = `echo $GCMSETUP | cut -b1`
-if( "$root" != "/" ) set GCMSETUP = `echo $cwd`/$GCMSETUP
-
-# Set Default GEOS Build Directory
-# --------------------------------
-@ n = 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-while( .$root == . )
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-
-set GEOSDEF = ''
-while( $root != 'src' )
-set GEOSDEF = `echo ${GEOSDEF}/${root}`
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-
-
-# Set Applications Directory
-# --------------------------
-@ n = 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-while( .$root == . )
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-
-set APPDIR = ''
-while( $root != 'gmichem_setup' )
-set APPDIR = `echo ${APPDIR}/${root}`
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
+set GCMSETUP = `readlink -f $0`
+set BINDIR   = `dirname $GCMSETUP`
+set GEOSDEF  = `dirname $BINDIR`
 
 #######################################################################
 #                   Test for Command Line Flags
 #######################################################################
 
 # Set default behavior of switches
-set NOCVS = FALSE
+set NOCVS = TRUE
 set GPU   = FALSE
 
 while ( $#argv > 0 )
@@ -115,7 +80,8 @@ end
 #######################################################################
 
 setenv NODE `uname -n`
-setenv SITE `$GEOSDEF/src/g5_modules site`
+setenv ARCH `uname -s`
+setenv SITE `awk '{print $2}' $GEOSDEF/etc/SITE.rc`
 
 if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
    set NOCVS = TRUE
@@ -152,16 +118,7 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-set BASEDIR = `$GEOSDEF/src/g5_modules basedir`
-
-if ( `echo $BASEDIR | grep -i ifort` != '') then
-   set COMPILER = ifort
-else if ( `echo $BASEDIR | grep -i pgfortran` != '') then
-   set COMPILER = pgfortran
-else
-   # Assume default is ifort in case of older baselibs
-   set COMPILER = ifort 
-endif
+setenv BASEDIR `awk '{print $2}' $GEOSDEF/etc/BASEDIR.rc`
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
@@ -1095,7 +1052,6 @@ set RATS_PROVIDER = GMICHEM
 @ POST_NPES = $POST_NDS * 16
 
 setenv ARCH `   uname`
-setenv SITE `$GEOSDEF/src/g5_modules site`
 
               setenv     RUN_N  `echo $EXPID | cut -b1-11`_RUN                         # RUN      Job Name
               setenv     RUN_FN `echo $EXPID | cut -b1-11`_FCST                        # Forecast Job Name
@@ -1146,6 +1102,7 @@ if( $SITE == 'NAS' ) then
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
               setenv CPEXEC    '/usr/local/bin/mcp -a'                                 # Copy utility for large copies
               setenv TAREXEC    /usr/local/bin/mtar                                    # Tar utility for large archives
+              setenv MODINIT   '/usr/share/modules/init/tcsh'
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
               setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
@@ -1179,6 +1136,7 @@ else if( $SITE == 'NCCS' ) then
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    /bin/tar                                               # Tar utility for large archives
+              setenv MODINIT   '/usr/share/modules/init/csh'
 else
 # These are defaults for the desktop
               setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
@@ -1433,7 +1391,7 @@ setenv CNVDIR $EXPDIR/convert
 GEOSDIR:
 while( $check == FALSE )
 
-  if(! (-e $GEOSDIR/Linux || -e $GEOSDIR/Darwin) ) then
+  if(! (-e $GEOSDIR/bin ) ) then
        echo " "
        echo "\!\! ${C1}WARNING${CN} \!\!"
        echo "\!\! This Sandbox has not been built"
@@ -1459,10 +1417,14 @@ while( $check == FALSE )
   endif
 end
 
-setenv GEOSSRC  ${GEOSDIR}/src
-setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+#
+# GEOSBIN does point to the bin/ directory in each
+#
+setenv GEOSSRC  ${GEOSDIR}
+setenv GEOSBIN  ${GEOSDIR}/bin
+
+setenv GEOSUTIL ${GEOSSRC}
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 #######################################################################
 #                    Check for Group ID Sponsor Code
@@ -1496,15 +1458,15 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                                  $EXPDIR/RC
-  rsync -ax                  $GEOSDIR/$ARCH/etc/*.rc        $EXPDIR/RC
+  mkdir -p                                                $EXPDIR/RC
+  rsync -ax                  $GEOSDIR/etc/*.rc            $EXPDIR/RC
   if( .$EMISSIONS != . ) then
-                     /bin/cp $GEOSDIR/$ARCH/etc/$EMISSIONS/*.rc $EXPDIR/RC
+                     /bin/cp $GEOSDIR/etc/$EMISSIONS/*.rc $EXPDIR/RC
   else
-    set EMISSIONS = g5chem
+     set EMISSIONS = g5chem
   endif
 
-  if ( -e $GEOSDIR/$ARCH/bin/GEOSgcm.x ) rsync -avx $GEOSDIR/$ARCH/bin/GEOSgcm.x $EXPDIR
+  if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
 
 #######################################################################
 #                      Create SETENV Commands
@@ -1692,7 +1654,7 @@ foreach FILE ($FILES)
 /bin/rm -f $HOMDIR/tmpfile
 /bin/rm -f $HOMDIR/sedfile
 /bin/rm -f $HOMDIR/$FILE
-cat        $APPDIR/$FILE > $HOMDIR/tmpfile
+cat        $BINDIR/$FILE > $HOMDIR/tmpfile
 cat >      $HOMDIR/sedfile << EOF
 /@SETENVS/ {
 t success
@@ -1854,6 +1816,7 @@ s/@RUN_ROUTE/$RUN_ROUTE/g
 
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
+s?@MODINIT?$MODINIT?g
 
 EOF
 
@@ -1881,10 +1844,10 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
 
-if(     -e $APPDIR/HISTORY.rc.hold ) then
-/bin/mv -f $APPDIR/HISTORY.rc.hold $APPDIR/HISTORY.rc.tmpl
+if(     -e $BINDIR/HISTORY.rc.hold ) then
+/bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
 else
-/bin/rm -f $APPDIR/HISTORY.rc.tmpl
+/bin/rm -f $BINDIR/HISTORY.rc.tmpl
 endif
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
@@ -2125,7 +2088,6 @@ endif
 # Change GMI_GridComp.rc until GMI datasets are moved to GMAO Ops share
 #######################################################################
 
-setenv SITE `$GEOSDEF/src/g5_modules site`
 if( ${SITE} == 'NCCS' ) then
  sed -e 's|ExtData|/discover/nobackup/projects/gmao/share/dasilva/fvInput|g' $EXPDIR/RC/GMI_GridComp.rc > $EXPDIR/RC/GMI_GridComp.tmp
  /bin/mv -f $EXPDIR/RC/GMI_GridComp.tmp $EXPDIR/RC/GMI_GridComp.rc
@@ -2144,7 +2106,7 @@ echo "Build Directory:"
 echo "----------------"
 echo " ${C2}${GEOSDIR}${CN}"
 echo " "
-if ( ! -e $GEOSDIR/$ARCH/bin/GEOSgcm.x ) then
+if ( ! -e $GEOSBIN/GEOSgcm.x ) then
      echo " "
      echo "----------------------------------------------------------------------------"
      echo "Note:  Build directory does not contain ${C1}GEOSgcm.x${CN}"
@@ -2156,7 +2118,7 @@ else
      echo "----------------------------------------------------------------------"
      echo "The following executable has been placed in your Experiment Directory:"
      echo "----------------------------------------------------------------------"
-     echo " ${C2}$GEOSDIR/$ARCH/bin/GEOSgcm.x${CN}"
+     echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
      echo " "
 endif
 echo " "
@@ -2371,10 +2333,10 @@ set   OLDUSER=`/bin/ls -l $CLONEDIR/gcm_run.j | awk '{print $3}'`
 
 setenv ARCH      `uname`
 setenv GEOSDIR  /`grep "setenv GEOSDIR" $CLONEDIR/gcm_run.j | cut -d'/' -f2-`
-setenv GEOSSRC  ${GEOSDIR}/src
-setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GEOSSRC  ${GEOSDIR}
+setenv GEOSBIN  ${GEOSDIR}/bin
+setenv GEOSUTIL ${GEOSDIR}
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 # -------------------------------------------------
 # Figure out how this person usually runs the model
