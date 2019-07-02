@@ -28,7 +28,7 @@ setenv ARCH `uname`
 setenv SITE             @SITE
 setenv GEOSDIR          @GEOSDIR 
 setenv GEOSBIN          @GEOSBIN 
-setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
+setenv GEOSUTIL         @GEOSSRC
 
 setenv MODINIT @MODINIT
 setenv SITEMODULES modules.${SITE}

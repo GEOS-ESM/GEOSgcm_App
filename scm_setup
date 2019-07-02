@@ -41,6 +41,7 @@ else
    ISED="$SED -i "
 fi
 
+
 #ESMADIR=/discover/nobackup/$USER/Models/Jason-UNSTABLE/GEOSagcm
 # (for example)
 
@@ -84,10 +85,18 @@ LM=72 # default for now
 if [ -z $ESMADIR ] 
 then
    echo "ERROR: you need to set environment variable ESMADIR"
-   exit
+   echo "       It should be set to the install directory"
+   echo "       such that $ESMADIR/bin/GEOSgcm.x exists"
+   exit 1
 fi
 
-ln -s $ESMADIR/Linux/bin/GEOSgcm.x .
+if [[ -e $ESMADIR/bin/GEOSgcm.x ]]
+then
+   ln -s $ESMADIR/bin/GEOSgcm.x .
+else
+   echo "ERROR: $ESMADIR/bin/GEOSgcm.x does not exist"
+   exit 1
+fi
 
 # see geos5 wiki for information about these experiments
 
@@ -153,7 +162,7 @@ case $CASEDIR in
 
 esac
 
-SITE=$($ESMADIR/src/g5_modules site)
+SITE=$(awk '{print $2}' $ESMADIR/etc/SITE.rc)
 BCSTAG="Icarus_Reynolds"
 
 case $SITE in
@@ -214,12 +223,10 @@ cp -u $SOURCEDIR/HISTORY.rc .
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 /bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
-cp $ESMADIR/Linux/etc/*.rc .
+cp $ESMADIR/etc/*.rc .
 cp $SCMDIR/general/* .
 
-#cp -u $SOURCEDIR/AGCM.rc .
-
-cp -u $ESMADIR/src/Applications/GEOSgcm_App/AGCM.rc.tmpl .
+cp -u $ESMADIR/bin/AGCM.rc.tmpl .
 
 cp $SOURCEDIR/sedfile.CASE .
 cp $SOURCEDIR/AGCM.CASE.txt .

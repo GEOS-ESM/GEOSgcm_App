@@ -1470,8 +1470,8 @@ end
 
 setenv GEOSSRC  ${GEOSDIR}/src
 setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GEOSUTIL ${GEOSSRC}
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 #######################################################################
 #                    Check for Group ID Sponsor Code
@@ -2334,7 +2334,7 @@ setenv GEOSDIR  /`grep "setenv GEOSDIR" $CLONEDIR/gcm_run.j | cut -d'/' -f2-`
 setenv GEOSSRC  ${GEOSDIR}/src
 setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
 setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
 
 # -------------------------------------------------
 # Figure out how this person usually runs the model
