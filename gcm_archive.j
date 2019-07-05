@@ -30,21 +30,7 @@ setenv ARCH `uname`
 setenv SITE             @SITE
 setenv GEOSBIN          @GEOSBIN
 
-setenv MODINIT @MODINIT
-setenv SITEMODULES modules.${SITE}
-
-if ($?MODINIT) then
-if ( -e $GEOSBIN/$SITEMODULES) then
-  source $MODINIT
-  module purge
-  module load $GEOSBIN/$SITEMODULES
-else if ( -e $GEOSBIN/modules) then
-  source $MODINIT
-  module purge
-  module load $GEOSBIN/modules
-endif
-endif
-
+source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
 
 #######################################################################

@@ -1102,7 +1102,6 @@ if( $SITE == 'NAS' ) then
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
               setenv CPEXEC    '/usr/local/bin/mcp -a'                                 # Copy utility for large copies
               setenv TAREXEC    /usr/local/bin/mtar                                    # Tar utility for large archives
-              setenv MODINIT   '/usr/share/modules/init/tcsh'
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
               setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
@@ -1136,7 +1135,6 @@ else if( $SITE == 'NCCS' ) then
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    /bin/tar                                               # Tar utility for large archives
-              setenv MODINIT   '/usr/share/modules/init/csh'
 else
 # These are defaults for the desktop
               setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
@@ -1816,7 +1814,6 @@ s/@RUN_ROUTE/$RUN_ROUTE/g
 
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
-s?@MODINIT?$MODINIT?g
 
 EOF
 
