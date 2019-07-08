@@ -28,6 +28,7 @@ setenv ARCH `uname`
 setenv SITE             @SITE
 setenv GEOSDIR          @GEOSDIR 
 setenv GEOSBIN          @GEOSBIN 
+setenv GEOSETC          @GEOSETC 
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
@@ -35,7 +36,7 @@ setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
-setenv GCMVER `cat $GEOSBIN/.AGCM_VERSION`
+setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
 
 #######################################################################

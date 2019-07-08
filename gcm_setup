@@ -36,6 +36,7 @@ endif
 set GCMSETUP = `readlink -f $0`
 set BINDIR   = `dirname $GCMSETUP`
 set GEOSDEF  = `dirname $BINDIR`
+set ETCDIR   = ${GEOSDEF}/etc
 
 #######################################################################
 #                   Test for Command Line Flags
@@ -153,7 +154,7 @@ if( $WORD !=  $EXPDSC ) set EXPDSC = `echo ${EXPDSC}_${WORD}`
 end
 
 GEOSTAG:
-set GEOSTAG = `cat .AGCM_VERSION`
+set GEOSTAG = `cat ${ETCDIR}/.AGCM_VERSION`
 #echo "${C1}CVS BASE Source Tag${CN} used for Experiment: ${C2}${GEOSTAG}${CN}"
 
 #######################################################################
@@ -1248,14 +1249,14 @@ while( $check == FALSE )
   echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
   if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
-  if( -e $BINDIR/HISTORY.rc.hold ) /bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
-  if( -e $BINDIR/HISTORY.rc.tmpl ) /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.hold
+  if( -e $ETCDIR/HISTORY.rc.hold ) /bin/mv -f $ETCDIR/HISTORY.rc.hold $ETCDIR/HISTORY.rc.tmpl
+  if( -e $ETCDIR/HISTORY.rc.tmpl ) /bin/mv -f $ETCDIR/HISTORY.rc.tmpl $ETCDIR/HISTORY.rc.hold
 
   if( "$HISTORYrc" == "Current" ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $BINDIR/HISTORY.AGCM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $ETCDIR/HISTORY.AGCM.rc.tmpl $ETCDIR/HISTORY.rc.tmpl
   endif
 
   if( "$HISTORYrc" != "Current" ) then
@@ -1263,29 +1264,29 @@ while( $check == FALSE )
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc $BINDIR/HISTORY.rc.tmp1
+            /bin/cp -f $HISTORYrc $ETCDIR/HISTORY.rc.tmp1
 
-            set  EXPID_old = `grep  "EXPID:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set  EXPID_old = `grep  "EXPID:" $ETCDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set EXPDSC_old = `grep "EXPDSC:" $ETCDIR/HISTORY.rc.tmp1 | cut -d: -f2`
 
             /bin/rm -f command
             set  string = "EXPID:"
-            echo cat $BINDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $BINDIR/HISTORY.rc.tmpl > command
+            echo cat $ETCDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $ETCDIR/HISTORY.rc.tmpl > command
             chmod +x   command
                      ./command
             /bin/rm -f command
-            /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.tmp1
-                   cat $BINDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $BINDIR/HISTORY.rc.tmpl
-            /bin/rm -f $BINDIR/HISTORY.rc.tmp1
+            /bin/mv -f $ETCDIR/HISTORY.rc.tmpl $ETCDIR/HISTORY.rc.tmp1
+                   cat $ETCDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $ETCDIR/HISTORY.rc.tmpl
+            /bin/rm -f $ETCDIR/HISTORY.rc.tmp1
 
        else if( -e $HISTORYrc/HISTORY.AGCM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $ETCDIR/HISTORY.rc.tmpl
        else
-           cvs upd -r $HISTORYrc -p $BINDIR/HISTORY.AGCM.rc.tmpl > $BINDIR/HISTORY.rc.tmpl
+           cvs upd -r $HISTORYrc -p $ETCDIR/HISTORY.AGCM.rc.tmpl > $ETCDIR/HISTORY.rc.tmpl
            if( $status != 0 ) then
             echo " "
             echo "\!\! ERROR in using $HISTORYrc as a cvs tag or directory/filename. \!\!"
@@ -1469,9 +1470,10 @@ end
 #
 setenv GEOSSRC  ${GEOSDIR}
 setenv GEOSBIN  ${GEOSDIR}/bin
+setenv GEOSETC  ${GEOSDIR}/etc
 
 setenv GEOSUTIL ${GEOSSRC}
-setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
+setenv GCMVER   `cat ${GEOSETC}/.AGCM_VERSION`
 
 #######################################################################
 #                    Check for Group ID Sponsor Code
@@ -1664,52 +1666,6 @@ endif
 #               Create Local Scripts and Resource Files
 #######################################################################
 
-set FILES = "gcm_run.j          \
-             gcm_post.j         \
-             gcm_archive.j      \
-             gcm_regress.j      \
-             gcm_convert.j      \
-             gcm_plot.tmpl      \
-             gcm_quickplot.csh  \
-             gcm_moveplot.j     \
-             gcm_stats.j        \
-             gcm_forecast.tmpl  \
-             gcm_forecast.setup \
-             gcm_emip.setup     \
-             CAP.rc.tmpl        \
-             AGCM.rc.tmpl       \
-             HISTORY.rc.tmpl    "
-set FILES = `echo $FILES`
-
-if( $OGCM == TRUE ) then
-    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
-    /bin/cp /home/yvikhlia/python/g5lib/plotocn.j .
-    /bin/cp /home/yvikhlia/python/g5lib/confocn.py __init__.py
-
-set FILES = "$FILES      \
-             input.nml   \
-             diag_table  \
-             field_table \
-             plotocn.j \
-             __init__.py"
-
-set FILES = `echo $FILES`
-endif
-
-if($CUBED == "TRUE") then
-set FILES = "$FILES \
-             fvcore_layout.rc"
-set FILES = `echo $FILES`
-endif
-
-echo " "
-foreach FILE ($FILES)
-
-/bin/rm -f $HOMDIR/tmpfile
-/bin/rm -f $HOMDIR/sedfile
-/bin/rm -f $HOMDIR/$FILE
-cat        $BINDIR/$FILE > $HOMDIR/tmpfile
 cat >      $HOMDIR/sedfile << EOF
 /@SETENVS/ {
 t success
@@ -1782,6 +1738,7 @@ s?@SITE?$SITE?g
 s?@GEOSDIR?$GEOSDIR?g
 s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
+s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
 
 s?@CHECKPOINT_TYPE?default?g
@@ -1898,12 +1855,71 @@ s/@GRID_FILE/$GRID_FILE/g
 
 EOF
 endif
+set FILES = "gcm_run.j          \
+             gcm_post.j         \
+             gcm_archive.j      \
+             gcm_regress.j      \
+             gcm_convert.j      \
+             gcm_plot.tmpl      \
+             gcm_quickplot.csh  \
+             gcm_moveplot.j     \
+             gcm_stats.j        \
+             gcm_forecast.tmpl  \
+             gcm_forecast.setup \
+             gcm_emip.setup     \
+             CAP.rc.tmpl        \
+             AGCM.rc.tmpl       \
+             HISTORY.rc.tmpl    "
+set FILES = `echo $FILES`
 
-sed -f $HOMDIR/sedfile $HOMDIR/tmpfile > $HOMDIR/$FILE
+if( $OGCM == TRUE ) then
+    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    /bin/cp /home/yvikhlia/python/g5lib/plotocn.j .
+    /bin/cp /home/yvikhlia/python/g5lib/confocn.py __init__.py
 
-echo "Creating ${C1}${FILE}${CN} for Experiment: $EXPID "
-chmod 755 $HOMDIR/$FILE
+set FILES = "$FILES      \
+             input.nml   \
+             diag_table  \
+             field_table \
+             plotocn.j \
+             __init__.py"
+
+set FILES = `echo $FILES`
+endif
+
+if($CUBED == "TRUE") then
+set FILES = "$FILES \
+             fvcore_layout.rc"
+set FILES = `echo $FILES`
+endif
+
+echo " "
+
+# Operate on files in BINDIR
+
+foreach FILE ($FILES)
+
+   /bin/rm -f $HOMDIR/tmpfile
+   /bin/rm -f $HOMDIR/$FILE
+
+   if (      -e $BINDIR/$FILE ) then
+      cat       $BINDIR/$FILE > $HOMDIR/tmpfile
+   else if ( -e $ETCDIR/$FILE ) then
+      cat       $ETCDIR/$FILE > $HOMDIR/tmpfile
+   else
+      echo "ERROR! Cannot find $FILE in $BINDIR or $ETCDIR!"
+      exit 2
+   endif
+
+
+   sed -f $HOMDIR/sedfile $HOMDIR/tmpfile > $HOMDIR/$FILE
+
+   echo "Creating ${C1}${FILE}${CN} for Experiment: $EXPID "
+   chmod 755 $HOMDIR/$FILE
+
 end
+
 /bin/rm -f $HOMDIR/SETENV.commands
 
 if ($GPU == "TRUE") then
@@ -1911,10 +1927,10 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
 
-if(     -e $BINDIR/HISTORY.rc.hold ) then
-/bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
+if(     -e $ETCDIR/HISTORY.rc.hold ) then
+/bin/mv -f $ETCDIR/HISTORY.rc.hold $ETCDIR/HISTORY.rc.tmpl
 else
-/bin/rm -f $BINDIR/HISTORY.rc.tmpl
+/bin/rm -f $ETCDIR/HISTORY.rc.tmpl
 endif
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
@@ -2346,8 +2362,9 @@ setenv ARCH      `uname`
 setenv GEOSDIR  /`grep "setenv GEOSDIR" $CLONEDIR/gcm_run.j | cut -d'/' -f2-`
 setenv GEOSSRC  ${GEOSDIR}
 setenv GEOSBIN  ${GEOSDIR}/bin
+setenv GEOSETC  ${GEOSDIR}/etc
 setenv GEOSUTIL ${GEOSDIR}
-setenv GCMVER   `cat ${GEOSBIN}/.AGCM_VERSION`
+setenv GCMVER   `cat ${GEOSETC}/.AGCM_VERSION`
 
 # -------------------------------------------------
 # Figure out how this person usually runs the model
