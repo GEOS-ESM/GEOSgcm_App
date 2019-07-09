@@ -82,7 +82,7 @@ end
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-setenv SITE `awk '{print $2}' $GEOSDEF/etc/SITE.rc`
+setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
 
 if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
    set NOCVS = TRUE
@@ -119,7 +119,7 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-setenv BASEDIR `awk '{print $2}' $GEOSDEF/etc/BASEDIR.rc`
+setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
@@ -1249,54 +1249,47 @@ while( $check == FALSE )
   echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
   if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
-  if( -e $ETCDIR/HISTORY.rc.hold ) /bin/mv -f $ETCDIR/HISTORY.rc.hold $ETCDIR/HISTORY.rc.tmpl
-  if( -e $ETCDIR/HISTORY.rc.tmpl ) /bin/mv -f $ETCDIR/HISTORY.rc.tmpl $ETCDIR/HISTORY.rc.hold
+  if( -e $BINDIR/HISTORY.rc.hold ) /bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
+  if( -e $BINDIR/HISTORY.rc.tmpl ) /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.hold
 
   if( "$HISTORYrc" == "Current" ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/HISTORY.AGCM.rc.tmpl $ETCDIR/HISTORY.rc.tmpl
+            /bin/cp -f $ETCDIR/HISTORY.AGCM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
   endif
 
   if( "$HISTORYrc" != "Current" ) then
-       if( -f $HISTORYrc ) then
+       if( -f $ETCDIR/$HISTORYrc ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc $ETCDIR/HISTORY.rc.tmp1
+            /bin/cp -f $ETCDIR/$HISTORYrc $BINDIR/HISTORY.rc.tmp1
 
-            set  EXPID_old = `grep  "EXPID:" $ETCDIR/HISTORY.rc.tmp1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $ETCDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set  EXPID_old = `grep  "EXPID:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set EXPDSC_old = `grep "EXPDSC:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
 
             /bin/rm -f command
             set  string = "EXPID:"
-            echo cat $ETCDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $ETCDIR/HISTORY.rc.tmpl > command
+            echo cat $BINDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $BINDIR/HISTORY.rc.tmpl > command
             chmod +x   command
                      ./command
             /bin/rm -f command
-            /bin/mv -f $ETCDIR/HISTORY.rc.tmpl $ETCDIR/HISTORY.rc.tmp1
-                   cat $ETCDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $ETCDIR/HISTORY.rc.tmpl
-            /bin/rm -f $ETCDIR/HISTORY.rc.tmp1
+            /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.tmp1
+                   cat $BINDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $BINDIR/HISTORY.rc.tmpl
+            /bin/rm -f $BINDIR/HISTORY.rc.tmp1
 
        else if( -e $HISTORYrc/HISTORY.AGCM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $ETCDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
        else
-           cvs upd -r $HISTORYrc -p $ETCDIR/HISTORY.AGCM.rc.tmpl > $ETCDIR/HISTORY.rc.tmpl
-           if( $status != 0 ) then
-            echo " "
-            echo "\!\! ERROR in using $HISTORYrc as a cvs tag or directory/filename. \!\!"
-            echo "\!\! Please check cvs connectivity or $HISTORYrc syntax. \!\!"
-            echo " "
-           else
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-           endif
+           echo "This condition is based on updating HISTORY.AGCM.rc.tmpl with CVS"
+           echo "This has no equivalent in git at present. Please contact Matt"
+           echo "Thompson or Larry Takacs to help resolve this."
+           exit 2
        endif
   endif
 end
@@ -1927,10 +1920,10 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
 
-if(     -e $ETCDIR/HISTORY.rc.hold ) then
-/bin/mv -f $ETCDIR/HISTORY.rc.hold $ETCDIR/HISTORY.rc.tmpl
+if(     -e $BINDIR/HISTORY.rc.hold ) then
+/bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
 else
-/bin/rm -f $ETCDIR/HISTORY.rc.tmpl
+/bin/rm -f $BINDIR/HISTORY.rc.tmpl
 endif
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
@@ -2161,6 +2154,12 @@ if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
 #######################################################################
 
 if ( $NOCVS != "TRUE" ) then
+
+echo "ERROR! Repository managment is not supported yet in this model"
+echo "       due to the move to git. If this section is reached,"
+echo "       something has gone wrong. Please contact Matt Thompson"
+echo "       or Larry Takacs"
+exit 3
 
 # Make a src directory under EXPDIR to hold current Experiment files
 # Note:  Sandbox Source Location: $GEOSDIR/src
@@ -2643,6 +2642,12 @@ echo ""
 # --------------------------------
 
 if ( $NOCVS != "TRUE" ) then
+
+echo "ERROR! Repository managment is not supported yet in this model"
+echo "       due to the move to git. If this section is reached,"
+echo "       something has gone wrong. Please contact Matt Thompson"
+echo "       or Larry Takacs"
+exit 3
 
 # Make a src directory under NEWEXPDIR to hold current Experiment files
 # Note:  Sandbox Source Location: $GEOSDIR/src
