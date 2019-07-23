@@ -27,6 +27,15 @@ else
 endif
      set CN = $RESET
 
+# Test if GEOSgcm.x is here which means you are in install directory
+if (! -x GEOSgcm.x) then
+   echo "You are trying to run $0 in the Applications/GEOSgcm_App directory"
+   echo "This is no longer supported. Please run from the bin/ directory"
+   echo "in your installation"
+   exit 1
+endif
+
+
 #######################################################################
 #                     Build Directory Locations
 #######################################################################
