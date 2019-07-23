@@ -1874,10 +1874,10 @@ set FILES = "gcm_run.j          \
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
-    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
-    /bin/cp /home/yvikhlia/python/g5lib/plotocn.j .
-    /bin/cp /home/yvikhlia/python/g5lib/confocn.py __init__.py
+    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
+    /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
 
 set FILES = "$FILES      \
              input.nml   \
