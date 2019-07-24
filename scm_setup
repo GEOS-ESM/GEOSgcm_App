@@ -8,6 +8,8 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 CURRDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+INSTALLDIR=$(dirname $CURRDIR)
+
 # -----------------
 # Detect usual bits
 # -----------------
@@ -41,9 +43,6 @@ else
    ISED="$SED -i "
 fi
 
-
-#ESMADIR=/discover/nobackup/$USER/Models/Jason-UNSTABLE/GEOSagcm
-# (for example)
 
 LM=72 # default for now
 
@@ -82,19 +81,11 @@ LM=72 # default for now
 #CASEDIR="e572p1_discaq"
 
 
-if [ -z $ESMADIR ] 
+if [[ -e $INSTALLDIR/bin/GEOSgcm.x ]]
 then
-   echo "ERROR: you need to set environment variable ESMADIR"
-   echo "       It should be set to the install directory"
-   echo "       such that $ESMADIR/bin/GEOSgcm.x exists"
-   exit 1
-fi
-
-if [[ -e $ESMADIR/bin/GEOSgcm.x ]]
-then
-   ln -s $ESMADIR/bin/GEOSgcm.x .
+   ln -s $INSTALLDIR/bin/GEOSgcm.x .
 else
-   echo "ERROR: $ESMADIR/bin/GEOSgcm.x does not exist"
+   echo "ERROR: $INSTALLDIR/bin/GEOSgcm.x does not exist"
    exit 1
 fi
 
@@ -162,7 +153,7 @@ case $CASEDIR in
 
 esac
 
-SITE=$(awk '{print $2}' $ESMADIR/etc/SITE.rc)
+SITE=$(awk '{print $2}' $INSTALLDIR/etc/SITE.rc)
 BCSTAG="Icarus_Reynolds"
 
 case $SITE in
@@ -223,10 +214,10 @@ cp -u $SOURCEDIR/HISTORY.rc .
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 /bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
-cp $ESMADIR/etc/*.rc .
+cp $INSTALLDIR/etc/*.rc .
 cp $SCMDIR/general/* .
 
-cp -u $ESMADIR/bin/AGCM.rc.tmpl .
+cp -u $INSTALLDIR/etc/AGCM.rc.tmpl .
 
 cp $SOURCEDIR/sedfile.CASE .
 cp $SOURCEDIR/AGCM.CASE.txt .
