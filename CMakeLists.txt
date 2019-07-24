@@ -36,6 +36,7 @@ set (programs
    gcm_moveplot.j
    gcm_forecast.setup
    gcm_emip.setup
+   scm_setup
    )
 
 
