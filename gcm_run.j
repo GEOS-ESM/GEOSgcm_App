@@ -161,7 +161,7 @@ else if($IMC < 1000) then
 endif
 
 $GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
-$GEOSBIN/stripname .${year}${month}10_21z.bin.@BCSTAG.@ATMOStag_@OCEANtag
+$GEOSBIN/stripname .${year}${month}10_21z.bin.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
 /bin/mv gocart_internal_rst gocart_internal_rst.merra2
 $GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}10_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
 
