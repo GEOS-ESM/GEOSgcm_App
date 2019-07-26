@@ -961,13 +961,13 @@ endif
                         set LSM_PARMS = "#DELETE"
     endif
     if( $LSM_BCS == 2 ) then
-                        set LSM_BCS = "Icarus-NLv2"
+                        set LSM_BCS = "Icarus-NLv3"
                         set LSM_PARMS = ""
     endif
 
 # Check for Catch-Carbon
 # ----------------------
-if( $LSM_BCS == "Icarus-NLv2" ) then
+if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
     echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN: Catch-Carbon Model)"
     set   LSM_CHOICE = $<

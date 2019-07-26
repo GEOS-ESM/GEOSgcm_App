@@ -8,6 +8,22 @@
 IMPORTANT: This file can only be updated by the Model Development Group.
 ########################################################################
 
+xxxxxxxxx, Takacs,    CVS Tag: Jason-UNSTABLE (non-zero diff to Jason-3_1)
+                       Module: GEOSagcm
+------------------------------------------------------------------------------
+1) Changes in FV3 related to Horizontal Advection choices. (from Bill: JU_20190722_WMP)
+2) Changes in MOIST related to ICE-FALL. (from Bill: JU_20190722_WMP)
+3) Updates to GEOS_OpenWaterGridComp.F90 and GEOS_DataSeaGridComp.F90 to modify
+   the original Coupled/Merged System to include Santha's reformulated ice/melt.
+   (from Santha:  sakella-GEOSadas-5_25_0_DV_in_MIZ_SSTunderIceFix)
+4) Many updates related to CMAKE for upcoming GIT repository.
+5) The addition of ERA5 to QUICKPLOT.
+6) Modified STATS for NPO, SPO, and XPO regions.  Modified Montage plots.
+
+Restart Changes: None.
+
+
+==========================================================================
 13Jun2019, Takacs,    CVS Tag: Jason-3_1 (non-zero diff to Jason-3_0)
                        Module: GEOSagcm
 ------------------------------------------------------------------------------

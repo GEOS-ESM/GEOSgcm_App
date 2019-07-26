@@ -79,6 +79,10 @@ LM=72 # default for now
 #CASEDIR="merra_namecore"
 #CASEDIR="merra_nameaznm"
 #CASEDIR="e572p1_discaq"
+#CASEDIR="merra2_arise_ice_2014"
+#CASEDIR="merra2_arise_opnw_2014"
+#CASEDIR="merra2_ascos2008"
+#CASEDIR="merra2_barrow2013"
 
 
 if [[ -e $INSTALLDIR/bin/GEOSgcm.x ]]
@@ -150,6 +154,10 @@ case $CASEDIR in
  "merra_namecore") DATFILE="merra_namecore.dat";;
  "merra_nameaznm") DATFILE="merra_nameaznm.dat";;
  "e572p1_discaq") DATFILE="e572p1_discaq.dat";;
+ "merra2_arise_ice_2014") DATFILE="merra2_arise_ice_2014.dat";;
+ "merra2_arise_opnw_2014") DATFILE="merra2_arise_opnw_2014.dat";;
+ "merra2_ascos2008") DATFILE="merra2_ascos2008.dat";;
+ "merra2_barrow2013") DATFILE="barrow2013.dat";;
 
 esac
 
