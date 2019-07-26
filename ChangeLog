@@ -8,9 +8,21 @@
 IMPORTANT: This file can only be updated by the Model Development Group.
 ########################################################################
 
-xxxxxxxxx, Takacs,    CVS Tag: Jason-UNSTABLE
+13Jun2019, Takacs,    CVS Tag: Jason-3_1 (non-zero diff to Jason-3_0)
                        Module: GEOSagcm
 ------------------------------------------------------------------------------
+1) Updates to GuestOcean_GridComp.F90 to re-sync OCEAN clock with ATMOS clock
+   when running Regular REPLAY together with DataOcean.  (non-zero diff)
+2) Introduced code in MAPL_CFIO for HISTORY which corresponds to the "fix_undef"
+   utility used in MERRA-2 post-processing.  This creates consistency between
+   horizontally transformed and vertically interpolated quantities and the target
+   output level (i.e., values below surface are UNDEF).
+3) MKIAU has been modified to allow for REPLAYing to different vertical resolution.
+   Results are zero-diff to previous versions if vertical resolution is the same.
+4) Updates to mk_restarts for Land/Catch.  Zero-diff when regrid.pl points to
+   standard (old-land) Icarus/Jason boundary area.
+
+Restart Changes: None.
 
 
 ==========================================================================
