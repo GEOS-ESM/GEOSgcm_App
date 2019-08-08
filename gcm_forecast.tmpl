@@ -157,7 +157,8 @@ set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
 @CPEXEC -f  $HOMDIR/*.rc .
 @CPEXEC -f  $HOMDIR/*.nml .
 
-cat fvcore_layout.rc >> input.nml
+@CPEXEC -f  $HOMDIR/fvcore_layout.rc input.nml
+###cat fvcore_layout.rc >> input.nml
 
 echo $nymd0 $nhms0 > cap_restart
 
@@ -344,7 +345,7 @@ GRID_LABELS: PC1152x721-DC
   PC1152x721-DC.JM_WORLD: 721
   PC1152x721-DC.POLE: PC
   PC1152x721-DC.DATELINE: DC
-  PC1152x721-DC.LM: 72
+  PC1152x721-DC.LM: $AGCM_LM
 
   geosgcm_fcst.template:  '%y4%m2%d2_%h2%n2z.nc4',
   geosgcm_fcst.archive:   '%c/Y%y4',
@@ -401,10 +402,16 @@ GRID_LABELS: PC1152x721-DC
                                 'CN_PRCP'  , 'MOIST'       , 'PRECCON' ,
                                 'LS_PRCP'  , 'MOIST'       , 'PRECLSC' ,
                                 'TPREC'    , 'MOIST'       , 'PRECTOT' ,
+                                'SLRTP'    , 'SOLAR'       , 'RADSWT'  ,
+                                'RSR'      , 'SOLAR'       , 'SWTNET'  ,
                                 'OSR'      , 'SOLAR'       , 'SWTUP'   ,
                                 'OLR'      , 'IRRAD'       , 'LWTUP'   ,
                                 'TQV'      , 'AGCM'        ,
+                                'TQL'      , 'AGCM'        ,
+                                'TQI'      , 'AGCM'        ,
                                 'ZPBL'     , 'TURBULENCE'  ,  'PBLH'   ,
+                                'CNV_FRC'  , 'MOIST'       ,
+                                'CAPE'     , 'MOIST'       ,
                                 ::
 
 _EOF_

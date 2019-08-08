@@ -1,4 +1,7 @@
 &fv_core_nml
+ hydrostatic = .F.
+ do_sat_adj = .T.
+ nwat = 6
  /
 
  &main_nml
@@ -37,7 +40,7 @@
   tau_l2v = 225.
   tau_v2l = 150.
   tau_g2v = 900.
-  rthresh = 10.e-6  ! This is a key parameter for cloud water
+  rthresh = 1.e-6  ! This is a key parameter for cloud water
   dw_land  = 0.16
   dw_ocean = 0.10
   ql_gen = 1.0e-3
@@ -52,7 +55,7 @@
   rh_ins = 0.30
   ccn_l = 300.
   ccn_o = 100.
-  c_paut = 0.5
+  c_paut = 1.0
   c_cracw = 0.8
   use_ppm = .false.
   use_ccn = .true.
