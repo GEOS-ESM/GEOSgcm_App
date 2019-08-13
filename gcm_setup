@@ -33,7 +33,13 @@ endif
 
 # Set Current Working Path to gcm_setup
 # -------------------------------------
-set GCMSETUP = `readlink -f $0`
+setenv ARCH `uname -s`
+if ($ARCH == Darwin) then
+   set FINDPATH = realpath
+else
+   set FINDPATH = 'readlink -f'
+endif
+set GCMSETUP = `$FINDPATH $0`
 set BINDIR   = `dirname $GCMSETUP`
 set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
