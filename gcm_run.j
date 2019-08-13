@@ -150,6 +150,11 @@ if ( $NCPUS != NULL ) then
 
    endif
 
+else
+   # This is for the desktop path
+
+   @ NPES = $MODEL_NPES
+
 endif
 
 #######################################################################

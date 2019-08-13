@@ -1320,6 +1320,7 @@ else
               # By default on desktop, just ignore IOSERVER for now
               set USE_IOSERVER = 0
               set IOS_NDS = 0
+              set NCPUS_PER_NODE = 0
 endif
 
 
