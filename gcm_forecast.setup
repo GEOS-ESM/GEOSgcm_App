@@ -58,8 +58,8 @@ set             TAUANL = 21600
 if( $REPLAY_NUDGE == 'NO'  ) set FCST_LABL = P${PREDICTOR_DURATION}_C${CORRECTOR_DURATION}_T${TAUANL}
 if( $REPLAY_NUDGE == 'YES' ) set FCST_LABL = NUDGE_C${CORRECTOR_DURATION}_T${TAUANL}
 
-set    ANA_EXPID = x0034
-set ANA_LOCATION = /discover/nobackup/projects/gmao/g6dev/ltakacs/x0034
+set    ANA_EXPID = x0037
+set ANA_LOCATION = /discover/nobackup/projects/gmao/g6dev/ltakacs/x0037
 
 #######################################################################
 #                   Create Forecast SubScripts
