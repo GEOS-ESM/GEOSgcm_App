@@ -205,6 +205,9 @@ cd $SCRDIR
                              @CPEXEC -f  $HOMDIR/*.nml .
 
                              cat fvcore_layout.rc >> input.nml
+			     /bin/mv AGCM.rc AGCM.tmp
+			     cat AGCM.tmp GEOS_LandGridComp.rc > AGCM.rc
+			     /bin/rm AGCM.tmp
 
 if( $GCMEMIP == TRUE ) then
     @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -215,6 +218,9 @@ set END_DATE  = `grep     END_DATE:  CAP.rc | cut -d':' -f2`
 set NUM_SGMT  = `grep     NUM_SGMT:  CAP.rc | cut -d':' -f2`
 set FSEGMENT  = `grep FCST_SEGMENT:  CAP.rc | cut -d':' -f2`
 set USE_SHMEM = `grep    USE_SHMEM:  CAP.rc | cut -d':' -f2`
+
+ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
 #######################################################################
 #         Create Strip Utility to Remove Multiple Blank Spaces
@@ -496,6 +502,63 @@ endif
 
 set yearc = `echo $nymdc | cut -c1-4`
 set yearf = `echo $nymdf | cut -c1-4`
+
+# Prescribed LAI/SAI for CATCHCN
+# -------------------------------
+
+set PRESCRIBE_DVG = `grep PRESCRIBE_DVG AGCM.rc | cut -d':' -f2`
+if( ${PRESCRIBE_DVG} == 3 ) then
+    set FCSTDATE = `grep FCAST_BEGTIME  $HOMDIR/AGCM.rc | cut -d':' -f2`
+    if( `echo $FCSTDATE | cut -d' ' -f1` == "" ) then
+        set CAPRES = `cat cap_restart`
+        set CAPRES1 = `echo $CAPRES | cut -d' ' -f1`
+        set CAPRES2 = `echo $CAPRES | cut -d' ' -f2`
+        set CAPRES = 'FCAST_BEGTIME: '`echo $CAPRES1``echo $CAPRES2`
+        echo $CAPRES >> $HOMDIR/AGCM.rc
+        /bin/cp -p $HOMDIR/AGCM.rc .
+    endif
+endif
+
+if( ${PRESCRIBE_DVG} >= 1 ) then
+
+    # Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
+    # ----------------------------------------------------------------------------
+ 
+    if( $yearf > $yearc ) then
+       @ yearf = $yearc + 1
+       @ nymdf = $yearf * 10000 + 0101
+        set oldstring = `cat CAP.rc | grep END_DATE:`
+        set newstring = "END_DATE: $nymdf $nhmsf"
+        /bin/mv CAP.rc CAP.tmp
+        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+    endif
+
+    # Creaate VEGDATA FIle Links
+    # --------------------------
+
+    if( ${PRESCRIBE_DVG} == 1 ) set VEGYR = $yearc
+    if( ${PRESCRIBE_DVG} >= 2 ) set VEGYR = CLIM
+
+    set FILE = vegfile
+    set   nz = 1
+    /bin/rm CNLAI*
+    /bin/rm CNSAI*
+
+    while ( $nz <= 3 )
+	set   nv = 1 
+	while ($nv <= 4 )
+	    /bin/ln -s ../VEGDATA/CNLAI${nv}${nz}_${VEGYR}.data CNLAI${nv}${nz}.data
+	    /bin/ln -s ../VEGDATA/CNSAI${nv}${nz}_${VEGYR}.data CNSAI${nv}${nz}.data
+	    echo "CNLAI${nv}${nz}_FILE:                       CNLAI${nv}${nz}.data" >> $FILE
+	    echo "CNSAI${nv}${nz}_FILE:                       CNSAI${nv}${nz}.data" >> $FILE
+	    @ nv++ 
+        end
+	@ nz++
+    end
+    /bin/mv AGCM.rc AGCM.rc.tmp
+    cat AGCM.rc.tmp $FILE >> AGCM.rc
+    /bin/rm AGCM.rc.tmp $FILE
+endif
 
 # For Non-Reynolds SST, Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
 # --------------------------------------------------------------------------------------------------
