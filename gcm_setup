@@ -1668,6 +1668,10 @@ cat > $HOMDIR/SETENV.commands << EOF
    
    setenv MPI_IB_TIMEOUT 23
 
+   unsetenv MPI_MEMMAP_OFF
+   unsetenv MPI_NUM_MEMORY_REGIONS
+   setenv MPI_XPMEM_ENABLED yes
+
    # For some reason, PMI_RANK is randomly set and interferes
    # with binarytile.x and other executables.
    unsetenv PMI_RANK
