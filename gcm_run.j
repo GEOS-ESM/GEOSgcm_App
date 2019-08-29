@@ -219,8 +219,16 @@ set NUM_SGMT  = `grep     NUM_SGMT:  CAP.rc | cut -d':' -f2`
 set FSEGMENT  = `grep FCST_SEGMENT:  CAP.rc | cut -d':' -f2`
 set USE_SHMEM = `grep    USE_SHMEM:  CAP.rc | cut -d':' -f2`
 
-ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
-ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
+set HOSTNAME = `hostname | rev | cut -c3- | rev`
+
+if ( $HOSTNAME == discover )
+    ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+    ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
+else
+    # NAS
+    /nobackup/gmao_SIteam/ModelData/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+    /nobackup/gmao_SIteam/ModelData/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
+endif
 
 #######################################################################
 #         Create Strip Utility to Remove Multiple Blank Spaces
