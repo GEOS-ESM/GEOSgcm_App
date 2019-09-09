@@ -566,7 +566,7 @@ if( ${EMISSIONS} == MERRA2 | \
     set MERRA2_Transition_Date = 20000401
 
     if( $nymdc < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/19600101-20000331
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/19600101-20000331
          if( $nymdf > ${MERRA2_Transition_Date} ) then
           set nymdf = ${MERRA2_Transition_Date}
           set oldstring = `cat CAP.rc | grep END_DATE:`
@@ -575,7 +575,7 @@ if( ${EMISSIONS} == MERRA2 | \
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/20000401-present
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/20000401-present
     endif
 
     if( $AGCM_LM == 72 ) then

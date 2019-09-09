@@ -37,6 +37,7 @@ set (programs
    gcm_forecast.setup
    gcm_emip.setup
    scm_setup
+   gmichem_setup
    )
 
 
@@ -54,3 +55,7 @@ install (
    FILES fvcore_layout.rc saverst.rc
    DESTINATION etc
    )
+
+configure_file(stratchem_setup stratchem_setup @ONLY)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/stratchem_setup DESTINATION bin)
+
