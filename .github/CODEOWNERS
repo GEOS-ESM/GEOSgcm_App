@@ -3,6 +3,9 @@
 # Order is important; the last matching pattern takes the most
 # precedence.
 
+# Make the GCM Gatekeepers owners of all
+* @GEOS-ESM/gcm-gatekeepers
+
 # The GEOS CMake Team is the CODEOWNER for the CMakeLists.txt files in this repository
 CMakeLists.txt @GEOS-ESM/cmake-team
 
