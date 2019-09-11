@@ -537,6 +537,7 @@ else
     endif
 
     set DATAOCEAN = ""
+    set OCEAN_NAME = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
 
