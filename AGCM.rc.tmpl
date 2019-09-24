@@ -33,14 +33,10 @@ CLDMICRO: GFDL
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
 #HYDROSTATIC: FALSE
 
-TURBULENCE_KHSFCFAC_LND: 0.15
-TURBULENCE_KHSFCFAC_OCN: 0.15
-ANV_ICEFALL: 0.5
- LS_ICEFALL: 0.5
 CNV_FRACTION_MIN: 0.000
-CNV_FRACTION_MAX: 1250.00
+CNV_FRACTION_MAX: 1000.00
 CNV_FRACTION_EXP: 5.0
-GF_MIN_AREA: 2.5e5
+GF_MIN_AREA: 9.0e6
 
 # UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
 USE_AEROSOL_NN: 0
@@ -61,7 +57,7 @@ DICYCLE: 1
 # ----------------------------------------
 DEEP: 1
 SHALLOW: 0
-CONGESTUS: 1
+CONGESTUS: 0
 
 # UW shallow cumulus settings
 DOSHLW: 1
