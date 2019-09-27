@@ -201,9 +201,9 @@ if( @EMISSIONS =~ MERRA2* ) then
     set MERRA2_Transition_Date = 20000401
 
     if( $nymd0 < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/@EMISSIONS/19600101-20000331
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/19600101-20000331
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/@EMISSIONS/20000401-present
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/20000401-present
     endif
 
     if( $LM == 72 ) then
