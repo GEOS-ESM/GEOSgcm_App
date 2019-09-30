@@ -2,13 +2,188 @@
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  DIR="$( builtin cd -P "$( dirname "$SOURCE" )" && pwd )"
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
-CURRDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+SCRIPTDIR="$( builtin cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-INSTALLDIR=$(dirname $CURRDIR)
+INSTALLDIR=$(dirname $SCRIPTDIR)
+
+if [[ ! -e $INSTALLDIR/bin/GEOSgcm.x ]]
+then
+   echo "ERROR: $INSTALLDIR/bin/GEOSgcm.x does not exist"
+   echo "You must execute $0 from the installation directory"
+   exit 1
+fi
+
+CURRDIR=$(pwd)
+
+# -------------
+# Allowed cases
+# -------------
+
+# see geos5 wiki for information about these experiments
+
+allowed_cases=()
+allowed_cases+=("arm_97jul")
+allowed_cases+=("merra_arm97jul")
+allowed_cases+=("barrow2013")
+allowed_cases+=("merra-Kan-L")
+allowed_cases+=("arm_kwjx")
+allowed_cases+=("merra_kwjx")
+allowed_cases+=("COARE")
+allowed_cases+=("merra_coare")
+allowed_cases+=("TRMM_LBA")
+allowed_cases+=("merra_trmm")
+allowed_cases+=("arm_scsmex")
+allowed_cases+=("merra_arm_scmx")
+allowed_cases+=("merra_armsgp")
+allowed_cases+=("scm_cfmip-p6")
+allowed_cases+=("scm_cfmip-p11")
+allowed_cases+=("scm_cfmip-p12")
+allowed_cases+=("scm_cfmip-s6")
+allowed_cases+=("scm_cfmip-s11")
+allowed_cases+=("scm_cfmip-s12")
+allowed_cases+=("scm_cfmip2-p6")
+allowed_cases+=("scm_cfmip2-p11")
+allowed_cases+=("scm_cfmip2-p12")
+allowed_cases+=("scm_cfmip2-s6")
+allowed_cases+=("scm_cfmip2-s11")
+allowed_cases+=("scm_cfmip2-s12")
+allowed_cases+=("merra_twp")
+allowed_cases+=("armtwp_ice")
+allowed_cases+=("merra_namma")
+allowed_cases+=("merra_namecore")
+allowed_cases+=("merra_nameaznm")
+allowed_cases+=("e572p1_discaq")
+allowed_cases+=("merra2_arise_ice_2014")
+allowed_cases+=("merra2_arise_opnw_2014")
+allowed_cases+=("merra2_ascos2008")
+allowed_cases+=("merra2_barrow2013")
+allowed_cases+=("LASIC_aug2016")
+
+sorted_cases=($(for each in ${allowed_cases[@]}; do echo $each; done | sort))
+
+# -----
+# Usage
+# -----
+
+usage ()
+{
+   echo "Usage: $0 --expdir <directory> --case <case> (--num_levels <# of levels>)"
+   echo 
+   echo "  Required arguments: "
+   echo "    --expdir: experiment directory"
+   echo 
+   echo "    --case: case to run where the allowed cases are:"
+   for i in ${!sorted_cases[@]}
+   do
+      printf "       %-25s" "${sorted_cases[$i]}"
+      if (( $i%3 == 2 ))
+      then
+         printf "\n"
+      fi
+   done
+   echo
+   echo "  Optional argument: "
+   echo "    --num_levels: number of levels (72 or 132 allowed). NOTE: This "
+   echo "                  is fragile as some cases might not yet support 132 levels"
+   echo
+   echo
+}
+
+# ------------
+# Set defaults
+# ------------
+selected_case=NULL
+expdir=NULL
+nlev=72
+
+while [ "${1+defined}" ]
+do
+   case "$1" in
+      "--case")
+         shift
+         selected_case=$1
+         shift
+         ;;
+      "--expdir")
+         shift
+         expdir=$1
+         shift
+         ;;
+      "--num_levels")
+         shift
+         nlev=$1
+         shift
+         ;;
+      "--help" | "-h")
+         usage
+         exit 0
+         ;;
+      *)
+         echo "Unknown option: $1"
+         echo ""
+         usage
+         exit 1
+         ;;
+   esac
+done
+
+if [[ "$selected_case" == "NULL" ]]
+then
+   echo "ERROR: Case argument was not passed in"
+   echo
+   usage
+   exit 1
+fi
+
+if [[ "$expdir" == "NULL" ]]
+then
+   echo "ERROR: Experiment directory was not passed in"
+   echo
+   usage
+   exit 1
+fi
+
+if [[ -d $expdir ]]
+then
+   echo "ERROR: $expdir exists! Please select different directory"
+   exit 1
+fi
+
+if [[ $nlev -ne 72 ]]  &&  [[ $nlev -ne 132 ]]
+then
+   echo "ERROR: nlev needs to be 72 or 132"
+   usage
+   exit 1
+fi 
+
+containsElement () {
+  local e 
+  match="$1"
+  #echo "Looking for $match"
+  shift
+  for e
+  do 
+     #echo "Testing $match against $e"
+     [[ "$e" == "$match" ]] && return 0
+  done
+  return 1
+}
+
+if ! containsElement "$selected_case" "${allowed_cases[@]}"
+then
+   echo "ERROR! Requested case $selected_case is not an allowed case"
+   usage
+   exit 1
+fi
+
+echo "Using case: $selected_case"
+echo "Number of levels: $nlev"
+echo "Experiment directory: $expdir"
+echo
 
 # -----------------
 # Detect usual bits
@@ -43,122 +218,121 @@ else
    ISED="$SED -i "
 fi
 
-
-LM=72 # default for now
-
-# Uncomment the line with the case you want to set up
-
-#CASEDIR="arm_97jul"
-#CASEDIR="merra_arm97jul"
-#CASEDIR="barrow2013"
-#CASEDIR="merra-Kan-L"
-#CASEDIR="arm_kwjx"
-#CASEDIR="merra_kwjx"
-#CASEDIR="COARE"
-#CASEDIR="merra_coare"
-#CASEDIR="TRMM_LBA"
-#CASEDIR="merra_trmm"
-#CASEDIR="arm_scsmex"
-#CASEDIR="merra_arm_scmx"
-#CASEDIR="merra_armsgp"
-#CASEDIR="scm_cfmip-p6"
-#CASEDIR="scm_cfmip-p11"
-#CASEDIR="scm_cfmip-p12"
-#CASEDIR="scm_cfmip-s6"
-#CASEDIR="scm_cfmip-s11"
-#CASEDIR="scm_cfmip-s12"
-#CASEDIR="scm_cfmip2-p6"
-#CASEDIR="scm_cfmip2-p11"
-#CASEDIR="scm_cfmip2-p12"
-#CASEDIR="scm_cfmip2-s6"
-#CASEDIR="scm_cfmip2-s11"
-#CASEDIR="scm_cfmip2-s12"
-#CASEDIR="merra_twp"
-#CASEDIR="armtwp_ice"
-#CASEDIR="merra_namma"
-#CASEDIR="merra_namecore"
-#CASEDIR="merra_nameaznm"
-#CASEDIR="e572p1_discaq"
-#CASEDIR="merra2_arise_ice_2014"
-#CASEDIR="merra2_arise_opnw_2014"
-#CASEDIR="merra2_ascos2008"
-#CASEDIR="merra2_barrow2013"
-
-
-if [[ -e $INSTALLDIR/bin/GEOSgcm.x ]]
-then
-   ln -s $INSTALLDIR/bin/GEOSgcm.x .
-else
-   echo "ERROR: $INSTALLDIR/bin/GEOSgcm.x does not exist"
-   exit 1
-fi
-
-# see geos5 wiki for information about these experiments
-
-if [ $# -ge 1 ] 
-then
-   CASEDIR=$1
-fi
-
-if [ $# -ge 2 ] 
-then
-   LM=$2
-fi
-
-if [ $LM -ne 72 ]  &&  [ $LM -ne 132  ]
-then
-   echo "ERROR: LM needs to be 72 or 132"
-   exit
-fi 
-
-if [ -z $CASEDIR ] 
-then
-   echo "ERROR: you need to set CASEDIR"
-   exit
-fi
-
-
-echo $CASEDIR
-
-
-case $CASEDIR in
-
- "arm_97jul") DATFILE="arm_97jul.dat";;
- "merra_arm97jul") DATFILE="merra_arm97jul.dat";;
- "barrow2013") DATFILE="barrow2013.dat";;
- "merra-Kan-L") DATFILE="merra-Kan-L.dat";;
- "arm_kwjx") DATFILE="arm_kwjx.dat";;
- "merra_kwjx") DATFILE="merra_kwjx.dat";;
- "merra_coare") DATFILE="merra_coare.dat";;
- "COARE") DATFILE="TOGA_COARE.dat";;
- "TRMM_LBA") DATFILE="TRMM_LBA.dat";;
- "merra_trmm") DATFILE="merra_trmm.dat";;
- "arm_scsmex") DATFILE="arm_scmx.dat";;
- "merra_arm_scmx") DATFILE="merra_scmx.dat";;
- "merra_armsgp") DATFILE="merra_armsgp.dat";;
- "scm_cfmip-p6") DATFILE="cfmip_p6.bin";;
- "scm_cfmip-p11") DATFILE="cfmip_p11.bin";;
- "scm_cfmip-p12") DATFILE="cfmip_p12.bin";;
- "scm_cfmip-s6") DATFILE="cfmip_s6.bin";;
- "scm_cfmip-s11") DATFILE="cfmip_s11.bin";;
- "scm_cfmip-s12") DATFILE="cfmip_s12.bin";;
- "scm_cfmip2-p6") DATFILE="cfmip2_p6.bin";;
- "scm_cfmip2-p11") DATFILE="cfmip2_p11.bin";;
- "scm_cfmip2-p12") DATFILE="cfmip2_p12.bin";;
- "scm_cfmip2-s6") DATFILE="cfmip2_s6.bin";;
- "scm_cfmip2-s11") DATFILE="cfmip2_s11.bin";;
- "scm_cfmip2-s12") DATFILE="cfmip2_s12.bin";;
- "armtwp_ice") DATFILE="armtwp_ice.dat";;
- "merra_twp") DATFILE="merra_twp.dat";;
- "merra_namma") DATFILE="merra_namma.dat";;
- "merra_namecore") DATFILE="merra_namecore.dat";;
- "merra_nameaznm") DATFILE="merra_nameaznm.dat";;
- "e572p1_discaq") DATFILE="e572p1_discaq.dat";;
- "merra2_arise_ice_2014") DATFILE="merra2_arise_ice_2014.dat";;
- "merra2_arise_opnw_2014") DATFILE="merra2_arise_opnw_2014.dat";;
- "merra2_ascos2008") DATFILE="merra2_ascos2008.dat";;
- "merra2_barrow2013") DATFILE="barrow2013.dat";;
-
+case $selected_case in
+   "arm_97jul")
+      DATFILE="arm_97jul.dat"
+      ;;
+   "merra_arm97jul")
+      DATFILE="merra_arm97jul.dat"
+      ;;
+   "barrow2013")
+      DATFILE="barrow2013.dat"
+      ;;
+   "merra-Kan-L")
+      DATFILE="merra-Kan-L.dat"
+      ;;
+   "arm_kwjx")
+      DATFILE="arm_kwjx.dat"
+      ;;
+   "merra_kwjx")
+      DATFILE="merra_kwjx.dat"
+      ;;
+   "merra_coare")
+      DATFILE="merra_coare.dat"
+      ;;
+   "COARE")
+      DATFILE="TOGA_COARE.dat"
+      ;;
+   "TRMM_LBA")
+      DATFILE="TRMM_LBA.dat"
+      ;;
+   "merra_trmm")
+      DATFILE="merra_trmm.dat"
+      ;;
+   "arm_scsmex")
+      DATFILE="arm_scmx.dat"
+      ;;
+   "merra_arm_scmx")
+      DATFILE="merra_scmx.dat"
+      ;;
+   "merra_armsgp")
+      DATFILE="merra_armsgp.dat"
+      ;;
+   "scm_cfmip-p6")
+      DATFILE="cfmip_p6.bin"
+      ;;
+   "scm_cfmip-p11")
+      DATFILE="cfmip_p11.bin"
+      ;;
+   "scm_cfmip-p12")
+      DATFILE="cfmip_p12.bin"
+      ;;
+   "scm_cfmip-s6")
+      DATFILE="cfmip_s6.bin"
+      ;;
+   "scm_cfmip-s11")
+      DATFILE="cfmip_s11.bin"
+      ;;
+   "scm_cfmip-s12")
+      DATFILE="cfmip_s12.bin"
+      ;;
+   "scm_cfmip2-p6")
+      DATFILE="cfmip2_p6.bin"
+      ;;
+   "scm_cfmip2-p11")
+      DATFILE="cfmip2_p11.bin"
+      ;;
+   "scm_cfmip2-p12")
+      DATFILE="cfmip2_p12.bin"
+      ;;
+   "scm_cfmip2-s6")
+      DATFILE="cfmip2_s6.bin"
+      ;;
+   "scm_cfmip2-s11")
+      DATFILE="cfmip2_s11.bin"
+      ;;
+   "scm_cfmip2-s12")
+      DATFILE="cfmip2_s12.bin"
+      ;;
+   "armtwp_ice")
+      DATFILE="armtwp_ice.dat"
+      ;;
+   "merra_twp")
+      DATFILE="merra_twp.dat"
+      ;;
+   "merra_namma")
+      DATFILE="merra_namma.dat"
+      ;;
+   "merra_namecore")
+      DATFILE="merra_namecore.dat"
+      ;;
+   "merra_nameaznm")
+      DATFILE="merra_nameaznm.dat"
+      ;;
+   "e572p1_discaq")
+      DATFILE="e572p1_discaq.dat"
+      ;;
+   "merra2_arise_ice_2014")
+      DATFILE="merra2_arise_ice_2014.dat"
+      ;;
+   "merra2_arise_opnw_2014")
+      DATFILE="merra2_arise_opnw_2014.dat"
+      ;;
+   "merra2_ascos2008")
+      DATFILE="merra2_ascos2008.dat"
+      ;;
+   "merra2_barrow2013")
+      DATFILE="barrow2013.dat"
+      ;;
+   "LASIC_aug2016")
+      DATFILE="merra2_lasic_aug2016.dat"
+      ;;
+   *)
+      echo "You should not be here!"
+      echo "If you are here, there is a case in allowed_cases"
+      echo "that does not have a corresponding DATFILE"
+      exit 9
+      ;;
 esac
 
 SITE=$(awk '{print $2}' $INSTALLDIR/etc/SITE.rc)
@@ -186,73 +360,83 @@ case $SITE in
    ;;
 esac
 
-SOURCEDIR=$SCMDIR$CASEDIR
+SOURCEDIR=$SCMDIR$selected_case
 
-cp $SOURCEDIR/$DATFILE .
-cp $SOURCEDIR/topo_dynave.data .
-cp $SOURCEDIR/fraci.data .
-cp $SOURCEDIR/SEAWIFS_KPAR_mon_clim.data .
-cp $SOURCEDIR/sst.data .
-cp $SOURCEDIR/sstsi.data .
-cp $SOURCEDIR/tile.data .
-cp $SOURCEDIR/topo_gwdvar.data .
-cp $SOURCEDIR/topo_trbvar.data .
-cp $SOURCEDIR/lai.data .
-cp $SOURCEDIR/green.data .
-cp $SOURCEDIR/ndvi.data .
-cp $SOURCEDIR/nirdf.dat .
-cp $SOURCEDIR/vegdyn.data .
-cp $SOURCEDIR/visdf.dat .
-#cp $SOURCEDIR/*rst .
+mkdir -p $expdir
 
-cp $SOURCEDIR/datmodyn_internal_rst .
-cp $SOURCEDIR/moist_internal_rst .
-cp $SOURCEDIR/catch_internal_rst .
+/bin/cp $INSTALLDIR/bin/GEOSgcm.x $expdir
 
-mkdir -p ExtData
-/bin/rm -rf ExtData/g5chem
-/bin/ln -s $CHMDIR/g5chem ExtData
-/bin/ln -s $CHMDIR/PIESA ExtData
-/bin/ln -s $CHMDIR/g5gcm ExtData
+/bin/cp $SOURCEDIR/$DATFILE $expdir
+/bin/cp $SOURCEDIR/topo_dynave.data $expdir
+/bin/cp $SOURCEDIR/fraci.data $expdir
+/bin/cp $SOURCEDIR/SEAWIFS_KPAR_mon_clim.data $expdir
+/bin/cp $SOURCEDIR/sst.data $expdir
+/bin/cp $SOURCEDIR/sstsi.data $expdir
+/bin/cp $SOURCEDIR/tile.data $expdir
+/bin/cp $SOURCEDIR/topo_gwdvar.data $expdir
+/bin/cp $SOURCEDIR/topo_trbvar.data $expdir
+/bin/cp $SOURCEDIR/lai.data $expdir
+/bin/cp $SOURCEDIR/green.data $expdir
+/bin/cp $SOURCEDIR/ndvi.data $expdir
+/bin/cp $SOURCEDIR/nirdf.dat $expdir
+/bin/cp $SOURCEDIR/vegdyn.data $expdir
+/bin/cp $SOURCEDIR/visdf.dat $expdir
+#/bin/cp $SOURCEDIR/*rst $expdir
 
-cp -u $SOURCEDIR/CAP.rc .
-cp $SOURCEDIR/cap_restart .
-cp -u $SOURCEDIR/HISTORY.rc .
+/bin/cp $SOURCEDIR/datmodyn_internal_rst $expdir
+/bin/cp $SOURCEDIR/moist_internal_rst $expdir
+/bin/cp $SOURCEDIR/catch_internal_rst $expdir
 
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+mkdir -p $expdir/ExtData
+/bin/ln -s $CHMDIR/g5chem $expdir/ExtData
+/bin/ln -s $CHMDIR/PIESA $expdir/ExtData
+/bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 
-cp $INSTALLDIR/etc/*.rc .
-cp $SCMDIR/general/* .
+/bin/cp -u $SOURCEDIR/CAP.rc $expdir
+/bin/cp $SOURCEDIR/cap_restart $expdir
+/bin/cp -u $SOURCEDIR/HISTORY.rc $expdir
 
-cp -u $INSTALLDIR/etc/AGCM.rc.tmpl .
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 $expdir/species.data
+/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 $expdir/species.data
 
-cp $SOURCEDIR/sedfile.CASE .
-cp $SOURCEDIR/AGCM.CASE.txt .
+/bin/cp $INSTALLDIR/etc/*.rc $expdir
+/bin/cp $SCMDIR/general/* $expdir
+
+/bin/cp -u $INSTALLDIR/etc/AGCM.rc.tmpl $expdir
+
+/bin/cp $SOURCEDIR/sedfile.CASE $expdir
+/bin/cp $SOURCEDIR/AGCM.CASE.txt $expdir
+
+# MAT These sed commands have to be done in the experiment directory.
+#     This should probably be fixed at some point
+
+builtin cd $expdir
 $SED -f sedfile.SCM AGCM.rc.tmpl > AGCM.rc.sed.general
 $SED -f sedfile.CASE AGCM.rc.sed.general > AGCM.rc.CASE
 awk '{ if ( $1  !~ "#DELETE") { print } }' AGCM.rc.CASE > AGCM.rc
 /bin/rm AGCM.rc.sed.general AGCM.rc.CASE
+builtin cd $CURRDIR
 
-if [ $LM -eq 132 ]
+if [ $nlev -eq 132 ]
 then 
 
-  $ISED 's/L72/L132/g' *.rc
+  $ISED 's/L72/L132/g' $expdir/*.rc
 
-  $ISED '/AGCM_LM:/c\AGCM_LM: 132' AGCM.rc
-  cp $SOURCEDIR/*rst.r0001x0001x0132  .
-  mv datmodyn_internal_rst.r0001x0001x0132 datmodyn_internal_rst
-  mv moist_internal_rst.r0001x0001x0132 moist_internal_rst
+  $ISED '/AGCM_LM:/c\AGCM_LM: 132' $expdir/AGCM.rc
+  cp $SOURCEDIR/*rst.r0001x0001x0132 $expdir
+  /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x0132 $expdir/datmodyn_internal_rst
+  /bin/mv $expdir/moist_internal_rst.r0001x0001x0132 $expdir/moist_internal_rst
 
 fi
 
-if [[ -e ./ExtData.rc ]]
+if [[ -e $expdir/ExtData.rc ]]
 then
-   /bin/rm -f  ./ExtData.rc
+   /bin/rm -f  $expdir/ExtData.rc
 fi
 
-extdata_files=`/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc
+extdata_files=`/bin/ls -1 $expdir/*_ExtData.rc`
+cat $extdata_files > $expdir/ExtData.rc
 
-chmod -fR 755 *
-
+echo "SUCCESS! The $selected_case experiment has been created in $expdir"
+echo
+exit 0
