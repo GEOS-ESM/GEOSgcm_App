@@ -26,9 +26,9 @@ program idfupd
   use ESMF
   use MAPL_Mod
 
-  use FVdycore_GridCompMod,   only : FV_SetServices    => SetServices
-  use FVdycoreCubed_GridComp, only : FV3_SetServices   => SetServices
-  use GEOS_MoistGridCompMod,  only : Moist_SetServices => SetServices
+!  use FVdycore_GridCompMod,   only : FV_SetServices    => SetServices
+!  use FVdycoreCubed_GridComp, only : FV3_SetServices   => SetServices
+!  use GEOS_MoistGridCompMod,  only : Moist_SetServices => SetServices
   use GEOS_PChemGridCompMod,  only : Pchem_SetServices => SetServices
   use DFI_GridCompMod,        only : DFI_SetServices   => SetServices
 
@@ -146,6 +146,8 @@ CONTAINS
    type (MAPL_MetaComp), pointer      :: CHILD_MAPL
 
    character(len=ESMF_MAXSTR)         :: DYCORE
+   character(len=ESMF_MAXSTR)         :: moist_sharedObj
+   character(len=ESMF_MAXSTR)         :: sdyn_sharedObj
 
 ! Begin
 !------
@@ -250,20 +252,34 @@ CONTAINS
    call MAPL_Set(MAPLOBJ, CF=CF_ROOT, __RC__ )
 
    if ( trim(DYCORE) == 'FV3' ) then
+      call MAPL_GetResource(MAPLOBJ, sdyn_sharedObj, "SDYN.SETSERVICES:",default='libFVdycoreCubed_GridComp.so', &
+                           __RC__ )
       DYN = MAPL_AddChild ( MAPLOBJ,     &
            name       = 'DYN',           &
-           SS         = FV3_SetServices, &
+           procName   = 'setservices',   &
+           sharedObj  = sdyn_sharedObj,  &
                                 __RC__   )
    else
+      call MAPL_GetResource(MAPLOBJ, sdyn_sharedObj, "SDYN.SETSERVICES:",default='libFVdycore_GridComp.so', &
+                           __RC__ )
       DYN = MAPL_AddChild ( MAPLOBJ,     &
            name       = 'DYN',           &
-           SS         = FV_SetServices,  &
+           procName   = 'setservices',   &
+           sharedObj  = sdyn_sharedObj,  &
                                 __RC__   )
    endif
 
+!   MOIST = MAPL_AddChild ( MAPLOBJ,     &
+!        name       = 'MOIST',           &
+!        SS         = MOIST_SetServices, &
+!                                __RC__  )
+
+   call MAPL_GetResource(MAPLOBJ, moist_sharedObj, "MOIST.SETSERVICES:",default='libGEOSmoist_GridComp.so', &
+                           __RC__ )
    MOIST = MAPL_AddChild ( MAPLOBJ,     &
         name       = 'MOIST',           &
-        SS         = MOIST_SetServices, &
+        procName='setservices',         &
+        sharedObj=moist_sharedObj,      &
                                 __RC__  )
 
    PCHEM = MAPL_AddChild ( MAPLOBJ,     &
