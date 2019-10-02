@@ -658,8 +658,7 @@ ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOC
 
 # To compute skin SST over water (or to use SST Analysis Increment) set values to 1
 # ---------------------------------------------------------------------------------
->>>DATAOCEAN<<<USE_SKIN_LAYER: @USE_SKIN_LAYER
->>>COUPLED<<<USE_SKIN_LAYER: 0
+USE_SKIN_LAYER: @USE_SKIN_LAYER
     ANALYZE_TS: @ANALYZE_TS
 
 # Model Tuning Parameters (For CMIP5 recommended SOLAR_CONSTANT and CO2 values, use -1)
@@ -682,14 +681,25 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 >>>COUPLED<<<INTERPOLATE_OCEAN_ICE_CURRENTS: 0
 
 >>>COUPLED<<<CLDMICRO: 2MOMENT
->>>COUPLED<<<LTS_LOW: 18.5
 
 >>>COUPLED<<<# Section for ocean
 >>>COUPLED<<<# ----------------
 >>>COUPLED<<<USE_DATASEA:0
+>>>COUPLED<<<OCEAN_NAME: @OCEAN_NAME
 >>>COUPLED<<<USE_DATASEAICE:0
 >>>COUPLED<<<steady_state_ocean: 0
 >>>COUPLED<<<OCEAN_PICE_SCALING: 0.0
+
+# For running coupled model in dual ocean mode, uncomment three lines below, 
+# make sure that regular replay is enabled, proper PRECIP_FILE is chosen,
+# sst.data and fraci.data are pointing to read forcing files on tripolar grid,
+# the run starts at 21z/03z/09z/15z, 
+# HISTORY.rc collections have proper ref_time field
+# ---------------------------------------------------------------------------
+#DUAL_OCEAN: 1
+#DATA_SST_FILE: sst.data
+#DATA_FRT_FILE: fraci.data
+
 >>>COUPLED<<<
 >>>COUPLED<<<# Section for CICE 
 >>>COUPLED<<<# -----------------

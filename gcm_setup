@@ -374,7 +374,35 @@ if( $OGCM == TRUE ) then
     set COUPLED   = ""
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
-    
+    set OCEAN_NAME = ""
+
+    # Ocean Model
+    # -----------
+    OCNMODEL:
+    echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM5${CN})"
+    echo "   ${C2}MOM5${CN}"
+    echo "   ${C2}MOM6${CN}"
+
+	set OCNMODEL  = $<
+	if ( .$OCNMODEL == . ) then
+		set OCNMODEL  = "MOM5"
+	else
+		set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
+
+    	if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
+			echo
+			echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
+			goto OCNMODEL
+		else
+			echo
+		endif
+	endif
+
+    if ( $OCNMODEL == "MOM5" ) then
+        set OCEAN_NAME="MOM"
+    else if ( $OCNMODEL == "MOM6" ) then
+        set OCEAN_NAME="MOM6"
+    endif
 
     # Coupled Ocean Resolution
     # ------------------------
@@ -557,6 +585,7 @@ else
     endif
 
     set DATAOCEAN = ""
+    set OCEAN_NAME = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
 
@@ -1856,6 +1885,7 @@ s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
+s?@OCEAN_NAME?$OCEAN_NAME?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g
@@ -1968,8 +1998,10 @@ set FILES = "gcm_run.j          \
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
-    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    if ( $OCNMODEL == "MOM5" ) then
+        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    endif
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
 
