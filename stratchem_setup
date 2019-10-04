@@ -31,9 +31,15 @@ endif
 #                     Build Directory Locations
 #######################################################################
 
-# Set Current Working Path to gmichem_setup
-# -------------------------------------
-set GCMSETUP = `readlink -f $0`
+# Set Current Working Path to stratchem_setup
+# -------------------------------------------
+setenv ARCH `uname -s`
+if ($ARCH == Darwin) then
+   set FINDPATH = realpath
+else
+   set FINDPATH = 'readlink -f'
+endif
+set GCMSETUP = `$FINDPATH $0`
 set BINDIR   = `dirname $GCMSETUP`
 set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
@@ -1012,13 +1018,13 @@ endif
                         set LSM_PARMS = "#DELETE"
     endif
     if( $LSM_BCS == 2 ) then
-                        set LSM_BCS = "Icarus-NLv2"
+                        set LSM_BCS = "Icarus-NLv3"
                         set LSM_PARMS = ""
     endif
 
 # Check for Catch-Carbon
 # ----------------------
-if( $LSM_BCS == "Icarus-NLv2" ) then
+if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
     echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN: Catch-Carbon Model)"
     set   LSM_CHOICE = $<
@@ -1343,7 +1349,7 @@ while( $check == FALSE )
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY_STRATCHEM.rc.tmpl $APPDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY_STRATCHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
        else
            echo "This condition is based on updating HISTORY_STRATCHEM.rc.tmpl with CVS"
            echo "This has no equivalent in git at present. Please contact Matt"
@@ -1850,6 +1856,8 @@ s/@SOLAR_DT/$SOLAR_DT/g
 s/@IRRAD_DT/$IRRAD_DT/g
 s/@OCEAN_DT/$OCEAN_DT/g
 s/@CHEM_DT/$CHEM_DT/g
+s/@GOCART_DT/$GOCART_DT/g
+s/@SATSIM_DT/$SATSIM_DT/g
 s/@SC_SPLIT/$SC_SPLIT/g
 s/@NX/$NX/g
 s/@NY/$NY/g
