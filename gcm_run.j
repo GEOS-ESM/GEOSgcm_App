@@ -203,6 +203,7 @@ cd $SCRDIR
                              @CPEXEC     $EXPDIR/cap_restart .
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
+                             @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
 
@@ -546,10 +547,20 @@ endif
 
 # Rename big ExtData files that are not needed
 # --------------------------------------------
-set GMI_TRUE = `grep -i "^ *ENABLE_GMICHEM *: *.TRUE."  GEOS_ChemGridComp.rc | wc -l`
-if ( $GMI_TRUE == 0 && -e GMI_ExtData.rc )          /bin/mv          GMI_ExtData.rc          GMI_ExtData.rc.NOT_USED
-set GCC_TRUE = `grep -i "^ *ENABLE_GEOSCHEM *: *.TRUE." GEOS_ChemGridComp.rc | wc -l`
-if ( $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc ) /bin/mv GEOSCHEMchem_ExtData.rc GEOSCHEMchem_ExtData.rc.NOT_USED
+set            SC_TRUE = `grep -i "^ *ENABLE_STRATCHEM *: *\.TRUE\."     GEOS_ChemGridComp.rc | wc -l`
+if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
+set           GMI_TRUE = `grep -i "^ *ENABLE_GMICHEM *: *\.TRUE\."       GEOS_ChemGridComp.rc | wc -l`
+if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
+set           GCC_TRUE = `grep -i "^ *ENABLE_GEOSCHEM *: *\.TRUE\."      GEOS_ChemGridComp.rc | wc -l`
+if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
+set         CARMA_TRUE = `grep -i "^ *ENABLE_CARMA *: *\.TRUE\."         GEOS_ChemGridComp.rc | wc -l`
+if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
+set           DNA_TRUE = `grep -i "^ *ENABLE_DNA *: *\.TRUE\."           GEOS_ChemGridComp.rc | wc -l`
+if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
+set         ACHEM_TRUE = `grep -i "^ *ENABLE_ACHEM *: *\.TRUE\."         GEOS_ChemGridComp.rc | wc -l`
+if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
+set   GOCART_DATA_TRUE = `grep -i "^ *ENABLE_GOCART_DATA *: *\.TRUE\."   GEOS_ChemGridComp.rc | wc -l`
+if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -626,6 +637,10 @@ endif
 @SETENVS
 
 @GPUSTART
+
+# Run bundleParser.py
+#---------------------
+python bundleParser.py
 
 # Test if at NAS and if BATCH
 # ---------------------------
