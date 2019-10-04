@@ -33,7 +33,13 @@ endif
 
 # Set Current Working Path to gmichem_setup
 # -------------------------------------
-set GCMSETUP = `readlink -f $0`
+setenv ARCH `uname -s`
+if ($ARCH == Darwin) then
+   set FINDPATH = realpath
+else
+   set FINDPATH = 'readlink -f'
+endif
+set GCMSETUP = `$FINDPATH $0`
 set BINDIR   = `dirname $GCMSETUP`
 set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
@@ -1080,13 +1086,13 @@ endif
                         set LSM_PARMS = "#DELETE"
     endif
     if( $LSM_BCS == 2 ) then
-                        set LSM_BCS = "Icarus-NLv2"
+                        set LSM_BCS = "Icarus-NLv3"
                         set LSM_PARMS = ""
     endif
 
 # Check for Catch-Carbon
 # ----------------------
-if( $LSM_BCS == "Icarus-NLv2" ) then
+if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
     echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN: Catch-Carbon Model)"
     set   LSM_CHOICE = $<
@@ -1266,7 +1272,7 @@ endif
 
 # RATS Provider
 # -------------
-set RATS_PROVIDER = GMICHEM
+set  RATS_PROVIDER = GMICHEM
 
 #######################################################################
 #                  Architecture Specific Variables
