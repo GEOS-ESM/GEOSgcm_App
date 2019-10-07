@@ -344,6 +344,7 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<<endif
 
 >>>COUPLED<<<@CPEXEC $HOMDIR/*_table .
+>>>COUPLED<<<@CPEXEC $GRIDDIR/INPUT/* INPUT
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
@@ -393,7 +394,7 @@ else
 endif
 wait
 
->>>COUPLED<<<@CPEXEC -R $GRIDDIR/INPUT .
+>>>COUPLED<<</bin/mkdir INPUT
 >>>COUPLED<<<@CPEXEC $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
