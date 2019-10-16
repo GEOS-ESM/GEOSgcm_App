@@ -93,13 +93,13 @@ set nymd = $date[1]
 @ n = $n + 1
 end
 
-$GEOSUTIL/post/stats.x -fcst $fcst_files \
-                       -ana  $anal_files \
-                       -cli $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_00z.576x361.data.nc4 \
+$GEOSUTIL/bin/stats.x -fcst $fcst_files \
+                      -ana  $anal_files \
+                      -cli  $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_00z.576x361.data.nc4 \
                             $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_06z.576x361.data.nc4 \
                             $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_12z.576x361.data.nc4 \
                             $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_18z.576x361.data.nc4 \
-                       -tag $EXPID -nfreq 060000 -rc $GEOSUTIL/post/stats.rc &
+                      -tag  $EXPID -nfreq 060000 -rc $GEOSUTIL/post/stats.rc &
 
 set date = `$GEOSUTIL/post/tick $date0 $time0 86400`
 set nymd = $date[1]
