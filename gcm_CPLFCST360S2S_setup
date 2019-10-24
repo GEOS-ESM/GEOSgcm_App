@@ -1119,7 +1119,7 @@ else if( $SITE == 'NCCS' ) then
               if( $GPU == "TRUE" ) then
                  setenv  RUN_Q  "SBATCH --constraint=k40"                              # batch queue name for gcm_run.j
               else
-                 setenv  RUN_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_run.j
+                 setenv  RUN_Q  "SBATCH --constraint=sky"                             # batch queue name for gcm_run.j
               endif
               if ($QUEUENAME == 's2s') then
                  set RUN_SP = "SBATCH --partition=preops"
@@ -1130,8 +1130,8 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv    RUN_P   "SBATCH --ntasks=${NPES}"                              # PE Configuration for gcm_run.j
               setenv    RUN_FP  "SBATCH --ntasks=\&NPES"                               # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_plot.j
+              setenv    POST_Q  "SBATCH --constraint=sky"                             # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "SBATCH --constraint=sky"                             # batch queue name for gcm_plot.j
               setenv    MOVE_Q  "SBATCH --partition=datamove"                          # batch queue name for gcm_moveplot.j
               setenv ARCHIVE_Q  "SBATCH --partition=datamove"                          # batch queue name for gcm_archive.j
               setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
