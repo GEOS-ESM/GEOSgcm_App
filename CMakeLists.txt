@@ -7,15 +7,20 @@ ecbuild_add_executable (
 ecbuild_add_executable (
   TARGET idfupd.x
   SOURCES idfupd.F90
-  LIBS GEOSgcm_GridComp 
+  LIBS GEOSgcm_GridComp
   )
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
+
+
 
 #link_directories (${MKL_LIBRARIES})
 target_link_libraries (GEOSgcm.x ${OpenMP_Fortran_LIBRARIES})
 set_target_properties(GEOSgcm.x PROPERTIES LINK_FLAGS "${OpenMP_Fortran_FLAGS}")
 target_include_directories (GEOSgcm.x PUBLIC ${INC_ESMF})
+
+target_link_directories(GEOSgcm.x PUBLIC ${CMAKE_BINARY_DIR}/lib)
+target_link_libraries(GEOSgcm.x model profiler tracers dd2d giss_LSM Ent solvers MPI_Support shared)
 
 file (GLOB templates *.tmpl)
 
