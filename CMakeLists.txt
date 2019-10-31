@@ -28,7 +28,6 @@ set (programs
    gcm_setup
    gcm_run.j
    gcm_regress.j
-   gcm_stats.j
    gcm_post.j
    gcm_archive.j
    gcm_convert.j
