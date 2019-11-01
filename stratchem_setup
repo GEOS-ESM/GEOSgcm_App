@@ -1924,7 +1924,6 @@ set FILES = "gcm_run.j          \
              gcm_plot.tmpl      \
              gcm_quickplot.csh  \
              gcm_moveplot.j     \
-             gcm_stats.j        \
              gcm_forecast.tmpl  \
              gcm_forecast.setup \
              gcm_emip.setup     \
@@ -2051,7 +2050,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_stats.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2065,7 +2064,6 @@ if( -e $EXPDIR/$FILE ) set LOCDIR = $EXPDIR
 end
 
 chmod   +x $HOMDIR/gcm_run.j
-chmod   +x $HOMDIR/gcm_stats.j
 chmod   +x $HOMDIR/gcm_convert.j
 chmod   +x $HOMDIR/gcm_forecast.setup
 chmod   +x $HOMDIR/gcm_regress.j
@@ -2097,7 +2095,6 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/gcm_archive.j       $EXPDIR/archive
 /bin/mv $HOMDIR/gcm_regress.j       $EXPDIR/regress
 /bin/mv $HOMDIR/gcm_convert.j       $EXPDIR/convert
-/bin/mv $HOMDIR/gcm_stats.j         $EXPDIR/forecasts
 /bin/mv $HOMDIR/gcm_forecast.tmpl   $EXPDIR/forecasts
 /bin/mv $HOMDIR/gcm_forecast.setup  $EXPDIR/forecasts
 /bin/cp $GEOSUTIL/post/plot.rc      $EXPDIR/plot
@@ -2639,7 +2636,6 @@ EXPDIR/plot/gcm_moveplot.j
 EXPDIR/archive/gcm_archive.j
 EXPDIR/regress/gcm_regress.j
 EXPDIR/convert/gcm_convert.j
-EXPDIR/forecasts/gcm_stats.j
 EXPDIR/forecasts/gcm_forecast.tmpl
 EXPDIR/forecasts/gcm_forecast.setup
 EXPDIR/plot/plot.rc
@@ -2754,8 +2750,6 @@ set CONVERT_N=`echo $NEWEXPID | cut -b1-11`_CNV
 
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_N#"     \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_N#"     $NEWHOMDIR/gcm_run.j
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
-       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_stats.j
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_forecast.tmpl
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$POST_N#"    \
