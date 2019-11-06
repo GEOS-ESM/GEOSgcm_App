@@ -35,8 +35,9 @@
   vr_max = 12.
   qi_lim = 1.
   prog_ccn = .false.
-  do_qa = .false.
+  do_qa = .true.
   fast_sat_adj = .true.
+  tau_revp = 300.
   tau_l2v = 225.
   tau_v2l = 150.
   tau_g2v = 900.
@@ -55,7 +56,7 @@
   rh_ins = 0.30
   ccn_l = 300.
   ccn_o = 100.
-  c_paut = 0.5
+  c_paut = 1.0
   c_cracw = 0.8
   use_ppm = .false.
   use_ccn = .true.
