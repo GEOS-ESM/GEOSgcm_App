@@ -227,6 +227,15 @@ else
     /nobackup/gmao_SIteam/ModelData/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 endif
 
+if (-f $BCSDIR/$BCRSLV/MODISVISmean_@RES_DATELINE.dat ) /bin/ln -s MODISVISmean.dat
+if (-f $BCSDIR/$BCRSLV/MODISVISstd_@RES_DATELINE.dat  ) /bin/ln -s MODISVISstd.dat
+if (-f $BCSDIR/$BCRSLV/MODISNIRmean_@RES_DATELINE.dat ) /bin/ln -s MODISNIRmean.dat
+if (-f $BCSDIR/$BCRSLV/MODISNIRstd_@RES_DATELINE.dat  ) /bin/ln -s MODISNIRstd.dat
+if (-f $BCSDIR/$BCRSLV/MODELFPARmean_@RES_DATELINE.dat) /bin/ln -s MODELFPARmean.dat
+if (-f $BCSDIR/$BCRSLV/MODELFPARstd_@RES_DATELINE.dat ) /bin/ln -s MODELFPARstd.dat
+if (-f $BCSDIR/$BCRSLV/MODISFPARmean_@RES_DATELINE.dat) /bin/ln -s MODISFPARmean.dat
+if (-f $BCSDIR/$BCRSLV/MODISFPARstd_@RES_DATELINE.dat ) /bin/ln -s MODISFPARstd.dat
+
 #######################################################################
 #         Create Strip Utility to Remove Multiple Blank Spaces
 #######################################################################
