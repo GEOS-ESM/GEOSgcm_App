@@ -205,9 +205,6 @@ cd $SCRDIR
                              @CPEXEC -f  $HOMDIR/*.nml .
 
                              cat fvcore_layout.rc >> input.nml
-			     /bin/mv AGCM.rc AGCM.tmp
-			     cat AGCM.tmp GEOS_LandGridComp.rc > AGCM.rc
-			     /bin/rm AGCM.tmp
 
 if( $GCMEMIP == TRUE ) then
     @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
