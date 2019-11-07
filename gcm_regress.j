@@ -67,6 +67,7 @@ cd $EXPDIR/regress
 /bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
 @CPEXEC $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 @CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
+>>>COUPLED<<<@CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
 
@@ -109,6 +110,9 @@ foreach rst ( $rst_file_names )
        @CPEXEC $EXPDIR/$rst $EXPDIR/regress
 end
 @CPEXEC $EXPDIR/cap_restart $EXPDIR/regress
+
+>>>COUPLED<<</bin/mkdir INPUT
+>>>COUPLED<<<@CPEXEC $EXPDIR/RESTART/* INPUT
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
@@ -270,17 +274,20 @@ end
 
 set test_duration = 180000
 
-if( $CUBE == TRUE ) then
-    @ test_NX = $NPES0 / 6
-    @ test_NP = $IM / $test_NX
-  if($test_NP < 4 ) then
-    @ test_NX = $IM / 4 # To ensure enough gridpoints for HALO
-  endif
-  set test_NY = 6
-else
-  set test_NX = $NY0
-  set test_NY = $NX0
-endif
+>>>DATAOCEAN<<<if( $CUBE == TRUE ) then
+>>>DATAOCEAN<<<    @ test_NX = $NPES0 / 6
+>>>DATAOCEAN<<<    @ test_NP = $IM / $test_NX
+>>>DATAOCEAN<<<  if($test_NP < 4 ) then
+>>>DATAOCEAN<<<    @ test_NX = $IM / 4 # To ensure enough gridpoints for HALO
+>>>DATAOCEAN<<<  endif
+>>>DATAOCEAN<<<  set test_NY = 6
+>>>DATAOCEAN<<<else
+>>>DATAOCEAN<<<  set test_NX = $NY0
+>>>DATAOCEAN<<<  set test_NY = $NX0
+>>>DATAOCEAN<<<endif
+
+>>>COUPLED<<<set test_NX = $NX0
+>>>COUPLED<<<set test_NY = $NY0
 
 /bin/rm              cap_restart
 echo $nymd0 $nhms0 > cap_restart
@@ -338,6 +345,8 @@ while ( $n <= $numchk )
 @ n = $n + 1
 end
 
+>>>COUPLED<<<@CPEXEC RESTART/* INPUT
+
 ##################################################################
 ######
 ######               Perform Regression Test # 3
@@ -371,6 +380,20 @@ set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
 set newstring =  "NY: ${test_NY}"
 /bin/mv AGCM.rc AGCM.tmp
 cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+>>>COUPLED<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NX:"`
+>>>COUPLED<<<set newstring =  "OGCM.NX: ${test_NY}"
+>>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
+>>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+>>>COUPLED<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NY:"`
+>>>COUPLED<<<set newstring =  "OGCM.NY: ${test_NX}"
+>>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
+>>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+>>>COUPLED<<<./strip input.nml
+>>>COUPLED<<<set oldstring =  `cat input.nml | grep "^ *layout"`
+>>>COUPLED<<<set newstring =  "layout = ${test_NY},${test_NX},"
+>>>COUPLED<<</bin/mv input.nml input.nml.tmp
+>>>COUPLED<<<cat input.nml.tmp | sed -e "s?$oldstring?$newstring?g" > input.nml
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
