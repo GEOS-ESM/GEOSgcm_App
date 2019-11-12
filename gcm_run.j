@@ -203,6 +203,7 @@ cd $SCRDIR
                              @CPEXEC     $EXPDIR/cap_restart .
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
+                             @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
 
@@ -296,6 +297,7 @@ setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
 >>>COUPLED<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+>>>COUPLED<<<setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 >>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
 >>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
 
@@ -314,6 +316,9 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>COUPLED<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+
+# Precip correction
+#/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
 >>>DATAOCEAN<<<if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
@@ -360,6 +365,7 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<<endif
 
 >>>COUPLED<<<@CPEXEC $HOMDIR/*_table .
+>>>COUPLED<<<@CPEXEC $GRIDDIR/INPUT/* INPUT
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
@@ -409,7 +415,7 @@ else
 endif
 wait
 
->>>COUPLED<<<@CPEXEC -R $GRIDDIR/INPUT .
+>>>COUPLED<<</bin/mkdir INPUT
 >>>COUPLED<<<@CPEXEC $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
@@ -595,7 +601,7 @@ if( ${EMISSIONS} == MERRA2 | \
     set MERRA2_Transition_Date = 20000401
 
     if( $nymdc < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/19600101-20000331
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/19600101-20000331
          if( $nymdf > ${MERRA2_Transition_Date} ) then
           set nymdf = ${MERRA2_Transition_Date}
           set oldstring = `cat CAP.rc | grep END_DATE:`
@@ -604,7 +610,7 @@ if( ${EMISSIONS} == MERRA2 | \
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/20000401-present
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/20000401-present
     endif
 
     if( $AGCM_LM == 72 ) then
@@ -623,10 +629,20 @@ endif
 
 # Rename big ExtData files that are not needed
 # --------------------------------------------
-set GMI_TRUE = `grep -i "^ *ENABLE_GMICHEM *: *.TRUE."  GEOS_ChemGridComp.rc | wc -l`
-if ( $GMI_TRUE == 0 && -e GMI_ExtData.rc )          /bin/mv          GMI_ExtData.rc          GMI_ExtData.rc.NOT_USED
-set GCC_TRUE = `grep -i "^ *ENABLE_GEOSCHEM *: *.TRUE." GEOS_ChemGridComp.rc | wc -l`
-if ( $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc ) /bin/mv GEOSCHEMchem_ExtData.rc GEOSCHEMchem_ExtData.rc.NOT_USED
+set            SC_TRUE = `grep -i "^ *ENABLE_STRATCHEM *: *\.TRUE\."     GEOS_ChemGridComp.rc | wc -l`
+if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
+set           GMI_TRUE = `grep -i "^ *ENABLE_GMICHEM *: *\.TRUE\."       GEOS_ChemGridComp.rc | wc -l`
+if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
+set           GCC_TRUE = `grep -i "^ *ENABLE_GEOSCHEM *: *\.TRUE\."      GEOS_ChemGridComp.rc | wc -l`
+if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
+set         CARMA_TRUE = `grep -i "^ *ENABLE_CARMA *: *\.TRUE\."         GEOS_ChemGridComp.rc | wc -l`
+if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
+set           DNA_TRUE = `grep -i "^ *ENABLE_DNA *: *\.TRUE\."           GEOS_ChemGridComp.rc | wc -l`
+if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
+set         ACHEM_TRUE = `grep -i "^ *ENABLE_ACHEM *: *\.TRUE\."         GEOS_ChemGridComp.rc | wc -l`
+if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
+set   GOCART_DATA_TRUE = `grep -i "^ *ENABLE_GOCART_DATA *: *\.TRUE\."   GEOS_ChemGridComp.rc | wc -l`
+if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -643,6 +659,12 @@ if (! -e tile.bin) then
 $RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
 >>>COUPLED<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
+
+# If running in dual ocean mode, link sst and fraci data here
+#set yy  = `cat cap_restart | cut -c1-4`
+#echo $yy
+#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
+#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
 #######################################################################
 #                Split Saltwater Restart if detected
@@ -703,6 +725,10 @@ endif
 @SETENVS
 
 @GPUSTART
+
+# Run bundleParser.py
+#---------------------
+python bundleParser.py
 
 # Test if at NAS and if BATCH
 # ---------------------------

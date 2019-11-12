@@ -31,8 +31,8 @@ endif
 #                     Build Directory Locations
 #######################################################################
 
-# Set Current Working Path to stratchem_setup
-# -------------------------------------------
+# Set Current Working Path to geoschemchem_setup
+# ----------------------------------------------
 setenv ARCH `uname -s`
 if ($ARCH == Darwin) then
    set FINDPATH = realpath
@@ -545,7 +545,6 @@ if( $AGCM_IM ==  "c12" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 12
@@ -569,7 +568,6 @@ if( $AGCM_IM ==  "72" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set  CHEM_DT = $DT
      set JOB_SGMT = 00000015
      set NUM_SGMT = 20
@@ -591,7 +589,6 @@ if( $AGCM_IM ==  "c24" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 24
@@ -615,7 +612,6 @@ if( $AGCM_IM ==  "144" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set  CHEM_DT = $DT
      set JOB_SGMT = 00000015
      set NUM_SGMT = 20
@@ -637,12 +633,11 @@ if( $AGCM_IM ==  "c48" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 6
+     set       NX = 4
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = TRUE
      set HIST_IM  = 180
@@ -659,7 +654,6 @@ if( $AGCM_IM ==  "288" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set  CHEM_DT = $DT
      set JOB_SGMT = 00000008
      set NUM_SGMT = 5
@@ -681,7 +675,6 @@ if( $AGCM_IM ==  "c90" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -689,7 +682,7 @@ if( $AGCM_IM ==  "c90" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 6
+          set  NX = 4
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -709,7 +702,6 @@ if( $AGCM_IM ==  "576" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set  CHEM_DT = $DT
      set JOB_SGMT = 00000016
      set NUM_SGMT = 1
@@ -731,7 +723,6 @@ if( $AGCM_IM ==  "c180" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set  CHEM_DT = $DT
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -740,7 +731,7 @@ if( $AGCM_IM ==  "c180" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 8
+          set  NX = 6
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -760,7 +751,6 @@ if( $AGCM_IM == "1152" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set  CHEM_DT = $DT
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
@@ -784,7 +774,6 @@ if( $AGCM_IM == "c360" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 360
@@ -808,7 +797,6 @@ if( $AGCM_IM == "c500" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 500
@@ -833,7 +821,6 @@ if( $AGCM_IM == "c720" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 720
@@ -858,7 +845,6 @@ if( $AGCM_IM == "c1440" ) then
      set IRRAD_DT = 3600
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 1440
@@ -882,9 +868,6 @@ if( $AGCM_IM == "c768" ) then
      set       DT = 180
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
-     set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set AGCM_IM  = 768
@@ -907,9 +890,6 @@ if( $AGCM_IM == "c1536" ) then
      set       DT = 90
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
-     set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set AGCM_IM  = 1536
@@ -932,9 +912,6 @@ if( $AGCM_IM == "c3072" ) then
      set       DT = 45
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
-     set SATSIM_DT = 3600
-     set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set AGCM_IM  = 3072
@@ -1157,7 +1134,22 @@ endif
 
 # RATS Provider
 # -------------
-set RATS_PROVIDER = STRATCHEM
+RATSPRO:
+     set   RATS_PROVIDER = ''
+     echo "Enter the ${C1}RATS PROVIDER${CN} to use: ${C2}PCHEM${CN} (Default) or ${C2}GEOSCHEMCHEM${CN}:"
+     set   RATS_PROVIDER = $<
+     if( .$RATS_PROVIDER == . ) then
+     set   RATS_PROVIDER = PCHEM
+     else
+     set   RATS_PROVIDER = `echo   $RATS_PROVIDER | tr "[:lower:]" "[:upper:]"`
+     if(  $RATS_PROVIDER != PCHEM & $RATS_PROVIDER != GEOSCHEMCHEM ) then
+     echo
+     echo "${C1}RATS PROVIDER${CN} must be equal to:  ${C2}PCHEM${CN}, or ${C2}GEOSCHEMCHEM${CN}!"
+     goto RATSPRO
+     else
+     echo
+     endif
+     endif
 
 #######################################################################
 #                  Architecture Specific Variables
@@ -1308,8 +1300,8 @@ while( $check == FALSE )
           echo $HISTORYrc > $HOME/.HISTORYrc
   endif
 
-  echo "Enter the tag or directory (/filename) of the ${C1}HISTORY_STRATCHEM.rc.tmpl${CN} to use"
-  echo "(To use ${C1}HISTORY_STRATCHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
+  echo "Enter the tag or directory (/filename) of the ${C1}HISTORY_GEOSCHEMCHEM.rc.tmpl${CN} to use"
+  echo "(To use ${C1}HISTORY_GEOSCHEMCHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
   echo "-------------------------------------------------------------------------"
   echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
@@ -1321,7 +1313,7 @@ while( $check == FALSE )
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/HISTORY_STRATCHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $ETCDIR/HISTORY_GEOSCHEMCHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
   endif
 
   if( "$HISTORYrc" != "Current" ) then
@@ -1345,13 +1337,13 @@ while( $check == FALSE )
                    cat $BINDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $BINDIR/HISTORY.rc.tmpl
             /bin/rm -f $BINDIR/HISTORY.rc.tmp1
 
-       else if( -e $HISTORYrc/HISTORY_STRATCHEM.rc.tmpl ) then
+       else if( -e $HISTORYrc/HISTORY_GEOSCHEMCHEM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY_STRATCHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY_GEOSCHEMCHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
        else
-           echo "This condition is based on updating HISTORY_STRATCHEM.rc.tmpl with CVS"
+           echo "This condition is based on updating HISTORY.AGCM.rc.tmpl with CVS"
            echo "This has no equivalent in git at present. Please contact Matt"
            echo "Thompson or Larry Takacs to help resolve this."
            exit 2
@@ -1836,7 +1828,7 @@ s?@PCHEM_CLIM_YEARS?39?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g
-s?@OANA_PROVIDER?STRATCHEM?g
+s?@OANA_PROVIDER?PCHEM?g
 s?@EMISSIONS?$EMISSIONS?g
 
 s^@DYCORE^$DYCORE^g
@@ -1854,11 +1846,10 @@ s^@TILEBIN^$TILEBIN^g
 s/@DT/$DT/g
 s/@SOLAR_DT/$SOLAR_DT/g
 s/@IRRAD_DT/$IRRAD_DT/g
-s/@OCEAN_DT/$OCEAN_DT/g
-s/@CHEM_DT/$CHEM_DT/g
 s/@GOCART_DT/$GOCART_DT/g
 s/@SATSIM_DT/$SATSIM_DT/g
-s/@SC_SPLIT/$SC_SPLIT/g
+s/@OCEAN_DT/$OCEAN_DT/g
+s/@CHEM_DT/$CHEM_DT/g
 s/@NX/$NX/g
 s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
@@ -1988,6 +1979,69 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
 
+# Add 5 snippets to the run script, specialized for GEOS-Chem
+# -----------------------------------------------------------
+
+/bin/rm -f $HOMDIR/chemchem_rename.txt
+cat >      $HOMDIR/chemchem_rename.txt << EOF
+
+#######################################################################
+#                 Special Handling for GEOS-Chem RC files
+#######################################################################
+
+set GEOSCHEM_RCS = ( brc.dat dust.dat FJX_j2j.dat FJX_spec.dat h2so4.dat jv_spec_mie.dat org.dat so4.dat soot.dat ssa.dat ssc.dat input.geos )
+foreach FILE ( \${GEOSCHEM_RCS} )
+  /bin/mv \${FILE}.rc \${FILE}
+end
+EOF
+
+/bin/rm -f $HOMDIR/chemchem_rename2.txt
+cat >      $HOMDIR/chemchem_rename2.txt << EOF
+
+# Rename ExtData file that conflicts w/ GEOS-Chem
+# -----------------------------------------------
+/bin/mv  HEMCOgocart_ExtData.rc  HEMCOgocart_ExtData.rc.NOT_USED
+EOF
+
+/bin/rm -f $HOMDIR/chemchem_ben.txt
+cat >      $HOMDIR/chemchem_ben.txt << EOF
+
+#link to Ben's special tile files:
+/bin/ln -sf /discover/nobackup/bmauer/tile_files/*/* .
+EOF
+
+/bin/rm -f $HOMDIR/chemchem_noNRT.txt
+cat >      $HOMDIR/chemchem_noNRT.txt << EOF
+
+# don't read NRT QFED data
+sed -i 's/QFED\/NRT/QFED/' ExtData.rc
+sed -i 's/v2.5r1_0.1_deg/v2.5r1\/0.1/' ExtData.rc
+EOF
+
+/bin/rm -f $HOMDIR/chemchem_exit.txt
+cat >      $HOMDIR/chemchem_exit.txt << EOF
+
+if ( \$rc == -1 ) then
+   echo 'GEOS-Chem error: exit'
+   exit
+endif
+EOF
+
+/bin/rm -f $HOMDIR/sedfile
+cat >      $HOMDIR/sedfile << EOF
+/set USE_SHMEM/                    r $HOMDIR/chemchem_rename.txt
+/GOCARTdata_ExtData.rc.NOT_USED/   r $HOMDIR/chemchem_rename2.txt
+/\*c2l\*/                          r $HOMDIR/chemchem_ben.txt
+/cat \$extdata_files/              r $HOMDIR/chemchem_noNRT.txt
+/echo GEOSgcm Run Status/          r $HOMDIR/chemchem_exit.txt
+EOF
+
+/bin/rm -f $HOMDIR/tmpfile
+/bin/mv -f $HOMDIR/gcm_run.j $HOMDIR/tmpfile
+
+sed -f $HOMDIR/sedfile   $HOMDIR/tmpfile > $HOMDIR/gcm_run.j
+
+
 if(     -e $BINDIR/HISTORY.rc.hold ) then
 /bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
 else
@@ -2006,10 +2060,14 @@ echo " "
 set LH2O          = FALSE
 set LMAM          = FALSE
 set LCARMA        = FALSE
-set LPCHEM        = FALSE
-set LSTRATCHEM    = TRUE
+if( $RATS_PROVIDER == PCHEM ) then
+  set LPCHEM        = TRUE
+else
+  set LPCHEM        = FALSE
+endif
+set LSTRATCHEM    = FALSE
 set LGMICHEM      = FALSE
-set LGEOSCHEMCHEM = FALSE
+set LGEOSCHEMCHEM = TRUE
 set LHEMCO     = FALSE
 set LGOCART    = $GOKART
 if( $GOKART == TRUE )  then
@@ -2051,7 +2109,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_stats.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_stats.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_plot.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2126,6 +2184,42 @@ if( $AGCM_LM != 72 ) then
      end
 endif
 
+# Turn on GEOS-Chem
+# -----------------
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GEOSCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+# GEOS-Chem needs a recent BEGIN Date
+# -----------------------------------
+sed -i 's/BEG_DATE.*/BEG_DATE:     19500101 000000/' $HOMDIR/CAP.rc
+
+# GEOS-Chem needs resolution-dependent settings
+# ---------------------------------------------
+if($CUBED == "TRUE") then
+  setenv RES $AGCM_IM
+
+  set RES_LINE = "`grep -i '${RES}.*OTD-LIS scaling' $EXPDIR/RC/HEMCO_Config.rc`"
+  if ( $#RES_LINE == 1 ) then
+    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
+    sed -i "s/@OTD_LIS_SCALING/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
+  else
+    echo Expecting exactly 1 line for ${RES} OTD-LIS scaling.
+    echo Please set @OTD_LIS_SCALING in $EXPDIR/RC/HEMCO_Config.rc
+  endif
+
+  set RES_LINE = "`grep -i '${RES}.*Mass tuning factor' $EXPDIR/RC/HEMCO_Config.rc`"
+  if ( $#RES_LINE == 1 ) then
+    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
+    sed -i "s/@MASS_TUNING_FACTOR/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
+  else
+    echo Expecting exactly 1 line for ${RES} Mass tuning factor.
+    echo Please set @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
+  endif
+
+else
+  echo Please set @OTD_LIS_SCALING and @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
+endif
 
 # Turn on PCHEM
 # -------------
@@ -2160,14 +2254,6 @@ if( $GOKART == TRUE ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_CO:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_NI:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
@@ -2178,19 +2264,6 @@ else
     awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
 
-# Turn on STRATCHEM
-# -----------------
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_STRATCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_SC:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_XX:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
 # ------------------------------------------------------------------
@@ -2212,70 +2285,6 @@ endif
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
 
-# Turn off PCHEM
-# --------------
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_PCHEM:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
-######################################################################################################
-# Edit the Chem_Registry.rc to use the species appropriate for the Full or Reduced StratChem mechanism
-######################################################################################################
-
-#   R is the flag for using the StratChem Reduced mechanism
-#   Set R by providing an option to cmake :   -DSTRATCHEM_REDUCED_MECHANISM=ON
-#   This will (1) properly set the line below, and (2) compile StratChem with the appropriate option.
-
-    set R = @STRATCHEM_REDUCED_MECHANISM@
-
-    if (${R} == ON) then
-
-      echo "-----------------------------------------------------"
-      echo "   Enforcing the ${C1}REDUCED${CN} equation set in StratChem"
-      echo "-----------------------------------------------------"
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_SC_r|nbins_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_XX_SC_r|nbins_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_SC_r|variable_table_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_XX_SC_r|variable_table_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-    else
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_SC_f|nbins_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_XX_SC_f|nbins_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_SC_f|variable_table_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_XX_SC_f|variable_table_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-    endif
-
-    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
-
-#######################################################################
-#    Change EXTDATA until SC datasets are moved to GMAO Ops share
-#######################################################################
-
-if( ${SITE} == 'NCCS' ) then
- sed -e 's|EXTDATA|/discover/nobackup/projects/gmao/share/dasilva/fvInput|g' $EXPDIR/RC/SC_GridComp.rc > $EXPDIR/RC/SC_GridComp.tmp
- /bin/mv -f $EXPDIR/RC/SC_GridComp.tmp $EXPDIR/RC/SC_GridComp.rc
-endif
 
 #######################################################################
 #                       Echo Settings and Messages
@@ -2301,6 +2310,17 @@ else
      echo " "
 endif
 echo " "
+echo "If these files are not required, move or rename them (in RC/): "
+echo "-------------------------------------------------------------- "
+echo "  CARMAchem_GridComp_ExtData.rc"
+echo "  CFC_GridComp_ExtData.rc"
+echo "  CH4_GridComp_ExtData.rc"
+echo "  DNA_ExtData.rc"
+echo "  GEOSachem_ExtData.rc"
+echo "  MAM7_ExtData.rc"
+echo "  O3_GridComp_ExtData.rc"
+echo "  Rn_GridComp_ExtData.rc"
+echo " "
 echo "You must now copy your ${C1}Initial Conditions${CN} into: "
 echo "----------------------------------------------- "
 echo "${C2}${EXPDIR}${CN}"
@@ -2311,8 +2331,13 @@ echo ""
 #                              Clean-Up
 #######################################################################
 
-if( -e $HOMDIR/tmpfile ) /bin/rm $HOMDIR/tmpfile
-if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
+if( -e $HOMDIR/tmpfile )              /bin/rm $HOMDIR/tmpfile
+if( -e $HOMDIR/sedfile )              /bin/rm $HOMDIR/sedfile
+if( -e $HOMDIR/chemchem_rename.txt )  /bin/rm $HOMDIR/chemchem_rename.txt
+if( -e $HOMDIR/chemchem_rename2.txt ) /bin/rm $HOMDIR/chemchem_rename2.txt
+if( -e $HOMDIR/chemchem_ben.txt )     /bin/rm $HOMDIR/chemchem_ben.txt
+if( -e $HOMDIR/chemchem_noNRT.txt )   /bin/rm $HOMDIR/chemchem_noNRT.txt
+if( -e $HOMDIR/chemchem_exit.txt )    /bin/rm $HOMDIR/chemchem_exit.txt
 
 #######################################################################
 #                  Determine Experiment Specific src Files
@@ -2537,15 +2562,15 @@ setenv GCMVER   `cat ${GEOSETC}/.AGCM_VERSION`
 if ( ! -e $HOME/.HOMDIRroot || ! -e $HOME/.EXPDIRroot ) then
    if ( -e $HOME/.HOMDIRroot && ! -e $HOME/.EXPDIRroot ) then
       echo "$HOME/.EXPDIRroot was not found."
-      echo "Please run stratchem_setup in non-clone mode at least once to use this script."
+      echo "Please run geoschemchem_setup in non-clone mode at least once to use this script."
       exit 1
    else if ( ! -e $HOME/.HOMDIRroot && -e $HOME/.EXPDIRroot ) then
       echo "$HOME/.HOMDIRroot was not found."
-      echo "Please run stratchem_setup in non-clone mode at least once to use this script."
+      echo "Please run geoschemchem_setup in non-clone mode at least once to use this script."
       exit 1
    else
       echo "$HOME/.HOMDIRroot and $HOME/.EXPDIRroot were not found."
-      echo "Please run stratchem_setup in non-clone mode at least once to use this script."
+      echo "Please run geoschemchem_setup in non-clone mode at least once to use this script."
       exit 1
    endif
 endif
@@ -2977,8 +3002,8 @@ echo "${BOLD}${RED}            ====================== ${RESET}"
 
 cat << EOF
 
-stratchem_setup requires access to internet resources, namely
-the CVS repository. You are attempting to run stratchem_setup
+geoschemchem_setup requires access to internet resources, namely
+the CVS repository. You are attempting to run geoschemchem_setup
 on compute node ${NODE} at ${SITE}. Please re-run on a head 
 node, or supply the --nocvs option. 
 
@@ -3038,7 +3063,7 @@ exit 1
 
 USAGE:
 cat <<EOF
-stratchem_setup, a setup script for the GEOS-5 GCM
+geoschemchem_setup, a setup script for the GEOS-5 GCM
 
    Usage: $0:t [optional flag]
 
@@ -3050,7 +3075,7 @@ stratchem_setup, a setup script for the GEOS-5 GCM
 
    For more information, please contact Larry Takacs.
 
-   Note: stratchem_setup must be run on a machine with CVS access.
+   Note: geoschemchem_setup must be run on a machine with CVS access.
 
 EOF
 exit 1
