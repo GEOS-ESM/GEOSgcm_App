@@ -219,23 +219,8 @@ set USE_SHMEM = `grep    USE_SHMEM:  CAP.rc | cut -d':' -f2`
 
 set HOSTNAME = `hostname | rev | cut -c3- | rev`
 
-if ( $HOSTNAME == discover )
-    ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
-    ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
-else
-    # NAS
-    /nobackup/gmao_SIteam/ModelData/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
-    /nobackup/gmao_SIteam/ModelData/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
-endif
-
-if (-f $BCSDIR/$BCRSLV/MODISVISmean_@RES_DATELINE.dat ) /bin/ln -s MODISVISmean.dat
-if (-f $BCSDIR/$BCRSLV/MODISVISstd_@RES_DATELINE.dat  ) /bin/ln -s MODISVISstd.dat
-if (-f $BCSDIR/$BCRSLV/MODISNIRmean_@RES_DATELINE.dat ) /bin/ln -s MODISNIRmean.dat
-if (-f $BCSDIR/$BCRSLV/MODISNIRstd_@RES_DATELINE.dat  ) /bin/ln -s MODISNIRstd.dat
-if (-f $BCSDIR/$BCRSLV/MODELFPARmean_@RES_DATELINE.dat) /bin/ln -s MODELFPARmean.dat
-if (-f $BCSDIR/$BCRSLV/MODELFPARstd_@RES_DATELINE.dat ) /bin/ln -s MODELFPARstd.dat
-if (-f $BCSDIR/$BCRSLV/MODISFPARmean_@RES_DATELINE.dat) /bin/ln -s MODISFPARmean.dat
-if (-f $BCSDIR/$BCRSLV/MODISFPARstd_@RES_DATELINE.dat ) /bin/ln -s MODISFPARstd.dat
+ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
 #######################################################################
 #         Create Strip Utility to Remove Multiple Blank Spaces
@@ -346,6 +331,14 @@ cat << _EOF_ > $FILE
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
+if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
+if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
+if (-f $BCSDIR/$BCRSLV/MODISNIRstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISNIRstd.dat
+if (-f $BCSDIR/$BCRSLV/MODELFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODELFPARmean.dat
+if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
+if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
+if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
 
 >>>COUPLED<<<if( $OGCM_IM == 1440 ) then
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
