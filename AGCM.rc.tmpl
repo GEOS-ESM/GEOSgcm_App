@@ -399,6 +399,11 @@ LSM_CHOICE: @LSM_CHOICE #  options : 1 (default - Catchment Model);
 #                 MERRA2/CO2_GridComp.rc, MERRA2/19600101-20000331/CO2_GridComp.rc, MERRA2/20000401-present/CO2_GridComp.rc, and PIESA/CO2_GridComp.rc 
 #                           in /GEOSchem_GridComp/GOCART_GridComp/CO2_GridComp/ before you build the model.)
 
+# (5) Fraction of AGCM grid cell that precipitation falls on
+# ----------------------------------------------------------
+# options : 1 (default for zero-diff); 0.025 is recommended to deal with AGCM's drizzle
+# PRECIPFRAC: 0.025
+
 ##############################################################################################
 ##############################################################################################
 
