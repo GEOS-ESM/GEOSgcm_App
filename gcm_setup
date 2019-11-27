@@ -1016,9 +1016,12 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
+    if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
+    if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
+    set GCMRUN_CATCHCN = "#DELETE"
 endif
 
 #######################################################################
@@ -1765,6 +1768,7 @@ s?>>>FVLATLON<<<?$FVLATLON?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
+s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 

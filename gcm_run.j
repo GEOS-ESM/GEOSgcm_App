@@ -217,10 +217,6 @@ set NUM_SGMT  = `grep     NUM_SGMT:  CAP.rc | cut -d':' -f2`
 set FSEGMENT  = `grep FCST_SEGMENT:  CAP.rc | cut -d':' -f2`
 set USE_SHMEM = `grep    USE_SHMEM:  CAP.rc | cut -d':' -f2`
 
-set HOSTNAME = `hostname | rev | cut -c3- | rev`
-
-ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
-ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
 #######################################################################
 #         Create Strip Utility to Remove Multiple Blank Spaces
@@ -331,14 +327,16 @@ cat << _EOF_ > $FILE
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
-if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
-if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
-if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
-if (-f $BCSDIR/$BCRSLV/MODISNIRstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISNIRstd.dat
-if (-f $BCSDIR/$BCRSLV/MODELFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODELFPARmean.dat
-if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
-if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
-if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISNIRstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODELFPARmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
+>>>GCMRUN_CATCHCN<<<ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+>>>GCMRUN_CATCHCN<<<ln -s /discover/nobackup/rreichle/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
 >>>COUPLED<<<if( $OGCM_IM == 1440 ) then
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
@@ -516,62 +514,62 @@ endif
 set yearc = `echo $nymdc | cut -c1-4`
 set yearf = `echo $nymdf | cut -c1-4`
 
-# Prescribed LAI/SAI for CATCHCN
-# -------------------------------
-
-set PRESCRIBE_DVG = `grep PRESCRIBE_DVG AGCM.rc | cut -d':' -f2`
-if( ${PRESCRIBE_DVG} == 3 ) then
-    set FCSTDATE = `grep FCAST_BEGTIME  $HOMDIR/AGCM.rc | cut -d':' -f2`
-    if( `echo $FCSTDATE | cut -d' ' -f1` == "" ) then
-        set CAPRES = `cat cap_restart`
-        set CAPRES1 = `echo $CAPRES | cut -d' ' -f1`
-        set CAPRES2 = `echo $CAPRES | cut -d' ' -f2`
-        set CAPRES = 'FCAST_BEGTIME: '`echo $CAPRES1``echo $CAPRES2`
-        echo $CAPRES >> $HOMDIR/AGCM.rc
-        /bin/cp -p $HOMDIR/AGCM.rc .
-    endif
-endif
-
-if( ${PRESCRIBE_DVG} >= 1 ) then
-
-    # Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
-    # ----------------------------------------------------------------------------
- 
-    if( $yearf > $yearc ) then
-       @ yearf = $yearc + 1
-       @ nymdf = $yearf * 10000 + 0101
-        set oldstring = `cat CAP.rc | grep END_DATE:`
-        set newstring = "END_DATE: $nymdf $nhmsf"
-        /bin/mv CAP.rc CAP.tmp
-        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-    endif
-
-    # Creaate VEGDATA FIle Links
-    # --------------------------
-
-    if( ${PRESCRIBE_DVG} == 1 ) set VEGYR = $yearc
-    if( ${PRESCRIBE_DVG} >= 2 ) set VEGYR = CLIM
-
-    set FILE = vegfile
-    set   nz = 1
-    /bin/rm CNLAI*
-    /bin/rm CNSAI*
-
-    while ( $nz <= 3 )
-	set   nv = 1 
-	while ($nv <= 4 )
-	    /bin/ln -s ../VEGDATA/CNLAI${nv}${nz}_${VEGYR}.data CNLAI${nv}${nz}.data
-	    /bin/ln -s ../VEGDATA/CNSAI${nv}${nz}_${VEGYR}.data CNSAI${nv}${nz}.data
-	    echo "CNLAI${nv}${nz}_FILE:                       CNLAI${nv}${nz}.data" >> $FILE
-	    echo "CNSAI${nv}${nz}_FILE:                       CNSAI${nv}${nz}.data" >> $FILE
-	    @ nv++ 
-        end
-	@ nz++
-    end
-    /bin/mv AGCM.rc AGCM.rc.tmp
-    cat AGCM.rc.tmp $FILE >> AGCM.rc
-    /bin/rm AGCM.rc.tmp $FILE
-endif
+>>>GCMRUN_CATCHCN<<<# Prescribed LAI/SAI for CATCHCN
+>>>GCMRUN_CATCHCN<<<# -------------------------------
+>>>GCMRUN_CATCHCN<<<
+>>>GCMRUN_CATCHCN<<<set PRESCRIBE_DVG = `grep PRESCRIBE_DVG AGCM.rc | cut -d':' -f2`
+>>>GCMRUN_CATCHCN<<<if( ${PRESCRIBE_DVG} == 3 ) then
+>>>GCMRUN_CATCHCN<<<    set FCSTDATE = `grep FCAST_BEGTIME  $HOMDIR/AGCM.rc | cut -d':' -f2`
+>>>GCMRUN_CATCHCN<<<    if( `echo $FCSTDATE | cut -d' ' -f1` == "" ) then
+>>>GCMRUN_CATCHCN<<<        set CAPRES = `cat cap_restart`
+>>>GCMRUN_CATCHCN<<<        set CAPRES1 = `echo $CAPRES | cut -d' ' -f1`
+>>>GCMRUN_CATCHCN<<<        set CAPRES2 = `echo $CAPRES | cut -d' ' -f2`
+>>>GCMRUN_CATCHCN<<<        set CAPRES = 'FCAST_BEGTIME: '`echo $CAPRES1``echo $CAPRES2`
+>>>GCMRUN_CATCHCN<<<        echo $CAPRES >> $HOMDIR/AGCM.rc
+>>>GCMRUN_CATCHCN<<<        /bin/cp -p $HOMDIR/AGCM.rc .
+>>>GCMRUN_CATCHCN<<<    endif
+>>>GCMRUN_CATCHCN<<<endif
+>>>GCMRUN_CATCHCN<<<
+>>>GCMRUN_CATCHCN<<<if( ${PRESCRIBE_DVG} >= 1 ) then
+>>>GCMRUN_CATCHCN<<<
+>>>GCMRUN_CATCHCN<<<    # Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
+>>>GCMRUN_CATCHCN<<<    # ----------------------------------------------------------------------------
+>>>GCMRUN_CATCHCN<<< 
+>>>GCMRUN_CATCHCN<<<    if( $yearf > $yearc ) then
+>>>GCMRUN_CATCHCN<<<       @ yearf = $yearc + 1
+>>>GCMRUN_CATCHCN<<<       @ nymdf = $yearf * 10000 + 0101
+>>>GCMRUN_CATCHCN<<<        set oldstring = `cat CAP.rc | grep END_DATE:`
+>>>GCMRUN_CATCHCN<<<        set newstring = "END_DATE: $nymdf $nhmsf"
+>>>GCMRUN_CATCHCN<<<        /bin/mv CAP.rc CAP.tmp
+>>>GCMRUN_CATCHCN<<<        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+>>>GCMRUN_CATCHCN<<<    endif
+>>>GCMRUN_CATCHCN<<<
+>>>GCMRUN_CATCHCN<<<    # Creaate VEGDATA FIle Links
+>>>GCMRUN_CATCHCN<<<    # --------------------------
+>>>GCMRUN_CATCHCN<<<
+>>>GCMRUN_CATCHCN<<<    if( ${PRESCRIBE_DVG} == 1 ) set VEGYR = $yearc
+>>>GCMRUN_CATCHCN<<<    if( ${PRESCRIBE_DVG} >= 2 ) set VEGYR = CLIM
+>>>GCMRUN_CATCHCN<<<
+>>>GCMRUN_CATCHCN<<<    set FILE = vegfile
+>>>GCMRUN_CATCHCN<<<    set   nz = 1
+>>>GCMRUN_CATCHCN<<<    /bin/rm CNLAI*
+>>>GCMRUN_CATCHCN<<<    /bin/rm CNSAI*
+>>>GCMRUN_CATCHCN<<<
+>>>GCMRUN_CATCHCN<<<    while ( $nz <= 3 )
+>>>GCMRUN_CATCHCN<<<	set   nv = 1 
+>>>GCMRUN_CATCHCN<<<	while ($nv <= 4 )
+>>>GCMRUN_CATCHCN<<<	    /bin/ln -s ../VEGDATA/CNLAI${nv}${nz}_${VEGYR}.data CNLAI${nv}${nz}.data
+>>>GCMRUN_CATCHCN<<<	    /bin/ln -s ../VEGDATA/CNSAI${nv}${nz}_${VEGYR}.data CNSAI${nv}${nz}.data
+>>>GCMRUN_CATCHCN<<<	    echo "CNLAI${nv}${nz}_FILE:                       CNLAI${nv}${nz}.data" >> $FILE
+>>>GCMRUN_CATCHCN<<<	    echo "CNSAI${nv}${nz}_FILE:                       CNSAI${nv}${nz}.data" >> $FILE
+>>>GCMRUN_CATCHCN<<<	    @ nv++ 
+>>>GCMRUN_CATCHCN<<<        end
+>>>GCMRUN_CATCHCN<<<	@ nz++
+>>>GCMRUN_CATCHCN<<<    end
+>>>GCMRUN_CATCHCN<<<    /bin/mv AGCM.rc AGCM.rc.tmp
+>>>GCMRUN_CATCHCN<<<    cat AGCM.rc.tmp $FILE >> AGCM.rc
+>>>GCMRUN_CATCHCN<<<    /bin/rm AGCM.rc.tmp $FILE
+>>>GCMRUN_CATCHCN<<<endif
 
 # For Non-Reynolds SST, Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
 # --------------------------------------------------------------------------------------------------
