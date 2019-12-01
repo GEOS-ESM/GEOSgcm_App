@@ -519,12 +519,12 @@ set yearf = `echo $nymdf | cut -c1-4`
 >>>GCMRUN_CATCHCN<<<
 >>>GCMRUN_CATCHCN<<<set PRESCRIBE_DVG = `grep PRESCRIBE_DVG GEOS_LandGridComp.rc | cut -d':' -f2`
 >>>GCMRUN_CATCHCN<<<if( ${PRESCRIBE_DVG} == 3 ) then
->>>GCMRUN_CATCHCN<<<    set FCSTDATE = `grep RECORD_REF_DATE $HOMDIR/AGCM.rc | cut -d':' -f2`
+>>>GCMRUN_CATCHCN<<<    set FCSTDATE = `grep FCAST_BEGTIME $HOMDIR/AGCM.rc | cut -d':' -f2`
 >>>GCMRUN_CATCHCN<<<    if( `echo $FCSTDATE | cut -d' ' -f1` == "" ) then
 >>>GCMRUN_CATCHCN<<<        set CAPRES = `cat cap_restart`
 >>>GCMRUN_CATCHCN<<<        set CAPRES1 = `echo $CAPRES | cut -d' ' -f1`
 >>>GCMRUN_CATCHCN<<<        set CAPRES2 = `echo $CAPRES | cut -d' ' -f2`
->>>GCMRUN_CATCHCN<<<        set CAPRES = 'RECORD_REF_DATE: '`echo $CAPRES1``echo $CAPRES2`
+>>>GCMRUN_CATCHCN<<<        set CAPRES = 'FCAST_BEGTIME: '`echo $CAPRES1``echo $CAPRES2`
 >>>GCMRUN_CATCHCN<<<        echo $CAPRES >> $HOMDIR/AGCM.rc
 >>>GCMRUN_CATCHCN<<<        /bin/cp -p $HOMDIR/AGCM.rc .
 >>>GCMRUN_CATCHCN<<<    endif
