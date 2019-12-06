@@ -217,7 +217,6 @@ set NUM_SGMT  = `grep     NUM_SGMT:  CAP.rc | cut -d':' -f2`
 set FSEGMENT  = `grep FCST_SEGMENT:  CAP.rc | cut -d':' -f2`
 set USE_SHMEM = `grep    USE_SHMEM:  CAP.rc | cut -d':' -f2`
 
-
 #######################################################################
 #         Create Strip Utility to Remove Multiple Blank Spaces
 #######################################################################
