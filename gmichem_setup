@@ -2161,18 +2161,22 @@ foreach rsname ($RSNAMES)
 
    if( $name == GOCART_DATA ) set name = GOCART.data
 
-   if( $test == FALSE ) then
-       foreach type ($RSTYPES)
-          set  string = ${name}_${type}
-          /bin/rm -f $LOCDIR/$FILE.tmp
-          /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
-          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-               \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
-          chmod +x   command
-          ./command
-          /bin/rm -f command
-       end
-   endif
+   foreach type ($RSTYPES)
+      set  string = ${name}_${type}
+      /bin/rm -f $LOCDIR/$FILE.tmp
+      /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
+      if( $test == TRUE ) then
+         echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+              \{sub \( \/\#${string}\/ ,\"${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+      endif
+      if( $test == FALSE ) then
+         echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+              \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+      endif
+      chmod +x   command
+      ./command
+      /bin/rm -f command
+   end
 end
 /bin/rm -f $LOCDIR/$FILE.tmp
 
