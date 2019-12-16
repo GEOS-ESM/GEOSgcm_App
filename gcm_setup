@@ -139,6 +139,8 @@ setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
    set MPI = mvapich2
 else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
    set MPI = openmpi
+else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
+   set MPI = openmpi
 else if ( `echo $BASEDIR | grep -i impi`     != '') then
    set MPI = intelmpi
 else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
