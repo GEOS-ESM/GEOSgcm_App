@@ -86,8 +86,8 @@ COLLECTIONS: 'geosgcm_eta'
                           'HFC134A'     , 'STRATCHEM' ,
                           'HFC143A'     , 'STRATCHEM' ,
                           'HFC152A'     , 'STRATCHEM' ,
-                          'CO2B'        , 'STRATCHEM' ,
-                          'SF6B'        , 'STRATCHEM' ,
+                          'CO2'         , 'STRATCHEM' ,
+                          'SF6'         , 'STRATCHEM' ,
                           'AOADAYS'     , 'STRATCHEM' ,    
                           'O3P'         , 'STRATCHEM' ,
                           'O1D'         , 'STRATCHEM' ,
@@ -109,7 +109,13 @@ COLLECTIONS: 'geosgcm_eta'
 #   Some tendencies are only computed in the SC Development Tag
 #                         'OX_AGCMTEND' , 'AGCM'      ,
 #                         'OX_PHYSTEND' , 'PHYSICS'   ,
-                          'OXIM'        , 'PHYSICS'   , 'OX_MOISTTEND' ,
-                          'OXIT'        , 'PHYSICS'   , 'OX_TURBTEND' ,
-
+                          'MTRI%STRATCHEM::OXIM'   , 'PHYSICS'    , 'OX_MOISTTEND' ,
+                           'TRI%STRATCHEM::OXIT'   , 'TURBULENCE' , 'OX_TURBTEND' ,
+#                   Examples for writing increments to .nc4 file.
+#                   Legend: 'Bundle_name%GridComp::Species_name_with_suffix', 'Gridded_component'
+#                        'MTRI%STRATCHEM::CH4IM'   ,  'PHYSICS'      ,  'CH4_MOISTTEND',
+#                         'TRI%STRATCHEM::CH4IT'   ,  'TURBULENCE'   ,  'CH4_TURBTEND',
+#                      'TRADVI%STRATCHEM::CH4ID'   ,  'AGCM'         ,  'CH4_DYNTEND',
+#                     'CHEMTRI%STRATCHEM::CH4IC'   ,  'CHEMISTRY'    ,  'CH4_CHEMTEND',
+#                     'H2ORTRI%STRATCHEM::CH4IW'   ,  'PHYSICS'      ,  'CH4_WaterRescaleTEND',
                    ::

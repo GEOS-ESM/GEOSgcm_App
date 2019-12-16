@@ -33,7 +33,13 @@ endif
 
 # Set Current Working Path to gmichem_setup
 # -------------------------------------
-set GCMSETUP = `readlink -f $0`
+setenv ARCH `uname -s`
+if ($ARCH == Darwin) then
+   set FINDPATH = realpath
+else
+   set FINDPATH = 'readlink -f'
+endif
+set GCMSETUP = `$FINDPATH $0`
 set BINDIR   = `dirname $GCMSETUP`
 set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
@@ -1080,13 +1086,13 @@ endif
                         set LSM_PARMS = "#DELETE"
     endif
     if( $LSM_BCS == 2 ) then
-                        set LSM_BCS = "Icarus-NLv2"
+                        set LSM_BCS = "Icarus-NLv3"
                         set LSM_PARMS = ""
     endif
 
 # Check for Catch-Carbon
 # ----------------------
-if( $LSM_BCS == "Icarus-NLv2" ) then
+if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
     echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN: Catch-Carbon Model)"
     set   LSM_CHOICE = $<
@@ -1266,7 +1272,7 @@ endif
 
 # RATS Provider
 # -------------
-set RATS_PROVIDER = GMICHEM
+set  RATS_PROVIDER = GMICHEM
 
 #######################################################################
 #                  Architecture Specific Variables
@@ -2048,7 +2054,6 @@ set FILES = "gcm_run.j          \
              gcm_plot.tmpl      \
              gcm_quickplot.csh  \
              gcm_moveplot.j     \
-             gcm_stats.j        \
              gcm_forecast.tmpl  \
              gcm_forecast.setup \
              CAP.rc.tmpl        \
@@ -2156,25 +2161,29 @@ foreach rsname ($RSNAMES)
 
    if( $name == GOCART_DATA ) set name = GOCART.data
 
-   if( $test == FALSE ) then
-       foreach type ($RSTYPES)
-          set  string = ${name}_${type}
-          /bin/rm -f $LOCDIR/$FILE.tmp
-          /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
-          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-               \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
-          chmod +x   command
-          ./command
-          /bin/rm -f command
-       end
-   endif
+   foreach type ($RSTYPES)
+      set  string = ${name}_${type}
+      /bin/rm -f $LOCDIR/$FILE.tmp
+      /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
+      if( $test == TRUE ) then
+         echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+              \{sub \( \/\#${string}\/ ,\"${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+      endif
+      if( $test == FALSE ) then
+         echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+              \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+      endif
+      chmod +x   command
+      ./command
+      /bin/rm -f command
+   end
 end
 /bin/rm -f $LOCDIR/$FILE.tmp
 
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_stats.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_plot.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_plot.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2188,7 +2197,6 @@ if( -e $EXPDIR/$FILE ) set LOCDIR = $EXPDIR
 end
 
 chmod   +x $HOMDIR/gcm_run.j
-chmod   +x $HOMDIR/gcm_stats.j
 chmod   +x $HOMDIR/gcm_convert.j
 chmod   +x $HOMDIR/gcm_forecast.setup
 chmod   +x $HOMDIR/gcm_regress.j
@@ -2253,7 +2261,6 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/gcm_archive.j       $EXPDIR/archive
 /bin/mv $HOMDIR/gcm_regress.j       $EXPDIR/regress
 /bin/mv $HOMDIR/gcm_convert.j       $EXPDIR/convert
-/bin/mv $HOMDIR/gcm_stats.j         $EXPDIR/forecasts
 /bin/mv $HOMDIR/gcm_forecast.tmpl   $EXPDIR/forecasts
 /bin/mv $HOMDIR/gcm_forecast.setup  $EXPDIR/forecasts
 /bin/cp $GEOSUTIL/post/plot.rc      $EXPDIR/plot
@@ -2755,7 +2762,6 @@ EXPDIR/plot/gcm_moveplot.j
 EXPDIR/archive/gcm_archive.j
 EXPDIR/regress/gcm_regress.j
 EXPDIR/convert/gcm_convert.j
-EXPDIR/forecasts/gcm_stats.j
 EXPDIR/forecasts/gcm_forecast.tmpl
 EXPDIR/forecasts/gcm_forecast.setup
 EXPDIR/plot/plot.rc
@@ -2869,8 +2875,6 @@ set CONVERT_N=`echo $NEWEXPID | cut -b1-11`_CNV
 
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_N#"     \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_N#"     $NEWHOMDIR/gcm_run.j
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
-       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_stats.j
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_forecast.tmpl
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$POST_N#"    \

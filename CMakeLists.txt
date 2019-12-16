@@ -28,7 +28,6 @@ set (programs
    gcm_setup
    gcm_run.j
    gcm_regress.j
-   gcm_stats.j
    gcm_post.j
    gcm_archive.j
    gcm_convert.j
@@ -38,6 +37,8 @@ set (programs
    gcm_emip.setup
    scm_setup
    gmichem_setup
+   geoschemchem_setup
+   gcm_quickstat.j
    )
 
 
