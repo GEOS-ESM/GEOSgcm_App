@@ -204,8 +204,8 @@ cd $SCRDIR
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
 
-                             @CPEXEC -f  $HOMDIR/fvcore_layout.rc input.nml
-                         ### cat fvcore_layout.rc >> input.nml
+                         ### @CPEXEC -f  $HOMDIR/fvcore_layout.rc input.nml
+                             cat fvcore_layout.rc >> input.nml
 
 if( $GCMEMIP == TRUE ) then
     @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .

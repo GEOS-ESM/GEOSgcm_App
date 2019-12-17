@@ -1,8 +1,9 @@
 &fv_core_nml
- hydrostatic = .F.
- do_sat_adj = .T.
- nwat = 6
- /
+  hydrostatic = .F.
+  do_sat_adj = .T.
+  nwat = 6
+  z_tracer = .F.
+/
 
  &main_nml
 /
@@ -37,7 +38,7 @@
   prog_ccn = .false.
   do_qa = .true.
   fast_sat_adj = .true.
-  tau_revp = 300.
+  tau_revp = 225.
   tau_l2v = 225.
   tau_v2l = 150.
   tau_g2v = 900.
@@ -68,3 +69,4 @@
   icloud_f = 1
   mp_time = 150.
 /
+

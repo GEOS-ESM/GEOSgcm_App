@@ -16,10 +16,11 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
       >>>LATLON_AGCM<<<AGCM.JM_WORLD: @AGCM_JM
 
 DYCORE: @DYCORE
+AOIL_COMP_SWITCH: ON
 
  SOLAR_DT: 3600
  IRRAD_DT: 3600
-GOCART_DT: 3600
+#GOCART_DT: 3600
 SATSIM_DT: 1800
 
 SOLARAvrg: 0
@@ -42,6 +43,9 @@ USE_AEROSOL_NN: 0
 # ----------------------------------------
 CONVPAR_OPTION: GF
 
+GF_MIN_AREA: 0.0
+STOCHASTIC_CNV: 1
+
 # Flag to activated scale-awareness approach (0 false, 1 true)
 USE_SCALE_DEP: 1
 
@@ -52,7 +56,7 @@ DICYCLE: 1
 # ----------------------------------------
 DEEP: 1
 SHALLOW: 0
-CONGESTUS: 0
+CONGESTUS: 1
 
 # UW shallow cumulus settings
 DOSHLW: 1
