@@ -547,6 +547,7 @@ if( $AGCM_IM ==  "c12" ) then
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 2
@@ -569,6 +570,7 @@ if( $AGCM_IM ==  "72" ) then
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000015
      set NUM_SGMT = 20
      if( $OGCM == TRUE ) then
@@ -591,6 +593,7 @@ if( $AGCM_IM ==  "c24" ) then
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 24
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
@@ -613,6 +616,7 @@ if( $AGCM_IM ==  "144" ) then
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000015
      set NUM_SGMT = 20
      if( $OGCM == TRUE ) then
@@ -635,6 +639,7 @@ if( $AGCM_IM ==  "c48" ) then
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
@@ -655,6 +660,7 @@ if( $AGCM_IM ==  "288" ) then
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000008
      set NUM_SGMT = 5
      if( $OGCM == TRUE ) then
@@ -687,6 +693,7 @@ if( $AGCM_IM ==  "c90" ) then
      set OCEAN_DT = $IRRAD_DT
      endif
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set HYDROSTATIC = TRUE
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -703,6 +710,7 @@ if( $AGCM_IM ==  "576" ) then
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000016
      set NUM_SGMT = 1
      if( $OGCM == TRUE ) then
@@ -724,6 +732,7 @@ if( $AGCM_IM ==  "c180" ) then
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -752,6 +761,7 @@ if( $AGCM_IM == "1152" ) then
      set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set NUM_READERS = 4
@@ -776,6 +786,7 @@ if( $AGCM_IM == "c360" ) then
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12 
@@ -799,6 +810,7 @@ if( $AGCM_IM == "c500" ) then
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 500
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12
@@ -823,6 +835,7 @@ if( $AGCM_IM == "c720" ) then
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 16
@@ -847,6 +860,7 @@ if( $AGCM_IM == "c1440" ) then
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30 
@@ -870,6 +884,7 @@ if( $AGCM_IM == "c768" ) then
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 768
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 32
@@ -892,6 +907,7 @@ if( $AGCM_IM == "c1536" ) then
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
@@ -914,6 +930,7 @@ if( $AGCM_IM == "c3072" ) then
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
+     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 3072
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
@@ -1874,6 +1891,8 @@ s/@END_DATE/${END_DATE}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
+/SATSIM_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT
+
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
 s/@HIST_JM/$HIST_JM/g
@@ -2009,6 +2028,13 @@ cat >      $HOMDIR/chemchem_ben.txt << EOF
 /bin/ln -sf /discover/nobackup/bmauer/tile_files/*/* .
 EOF
 
+/bin/rm -f $HOMDIR/chemchem_fastJX.txt
+cat >      $HOMDIR/chemchem_fastJX.txt << EOF
+
+# need FJX_j2j.dat file in scratch
+/bin/cp /discover/nobackup/cakelle2/data/CHEM_INPUTS/FAST_JX/v2018-09/FJX_j2j.dat .
+EOF
+
 /bin/rm -f $HOMDIR/chemchem_noNRT.txt
 cat >      $HOMDIR/chemchem_noNRT.txt << EOF
 
@@ -2031,6 +2057,7 @@ cat >      $HOMDIR/sedfile << EOF
 /set USE_SHMEM/                    r $HOMDIR/chemchem_rename.txt
 /GOCARTdata_ExtData.rc.NOT_USED/   r $HOMDIR/chemchem_rename2.txt
 /\*c2l\*/                          r $HOMDIR/chemchem_ben.txt
+/cp  linkbcs/                      r $HOMDIR/chemchem_fastJX.txt
 /cat \$extdata_files/              r $HOMDIR/chemchem_noNRT.txt
 /echo GEOSgcm Run Status/          r $HOMDIR/chemchem_exit.txt
 EOF
@@ -2090,18 +2117,22 @@ foreach rsname ($RSNAMES)
 
    if( $name == GOCART_DATA ) set name = GOCART.data
 
-   if( $test == FALSE ) then
-       foreach type ($RSTYPES)
-          set  string = ${name}_${type}
-          /bin/rm -f $LOCDIR/$FILE.tmp
-          /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
-          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-               \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
-          chmod +x   command
-          ./command
-          /bin/rm -f command
-       end
-   endif
+   foreach type ($RSTYPES)
+      set  string = ${name}_${type}
+      /bin/rm -f $LOCDIR/$FILE.tmp
+      /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
+      if( $test == TRUE ) then
+         echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+              \{sub \( \/\#${string}\/ ,\"${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+      endif
+      if( $test == FALSE ) then
+         echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+              \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+      endif
+      chmod +x   command
+      ./command
+      /bin/rm -f command
+   end
 end
 /bin/rm -f $LOCDIR/$FILE.tmp
 
@@ -2333,6 +2364,7 @@ if( -e $HOMDIR/sedfile )              /bin/rm $HOMDIR/sedfile
 if( -e $HOMDIR/chemchem_rename.txt )  /bin/rm $HOMDIR/chemchem_rename.txt
 if( -e $HOMDIR/chemchem_rename2.txt ) /bin/rm $HOMDIR/chemchem_rename2.txt
 if( -e $HOMDIR/chemchem_ben.txt )     /bin/rm $HOMDIR/chemchem_ben.txt
+if( -e $HOMDIR/chemchem_fastJX.txt )  /bin/rm $HOMDIR/chemchem_fastJX.txt
 if( -e $HOMDIR/chemchem_noNRT.txt )   /bin/rm $HOMDIR/chemchem_noNRT.txt
 if( -e $HOMDIR/chemchem_exit.txt )    /bin/rm $HOMDIR/chemchem_exit.txt
 

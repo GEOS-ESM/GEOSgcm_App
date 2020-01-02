@@ -37,6 +37,7 @@ set (programs
    gcm_emip.setup
    scm_setup
    gmichem_setup
+   geoschemchem_setup
    gcm_quickstat.j
    )
 
