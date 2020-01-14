@@ -246,27 +246,32 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
 #   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
  
-# Note: To REPLAY to MERRA2, use:
-# -------------------------------
+# Typical MERRA-2 Regular REPLAY Configuration
+# --------------------------------------------
 #   REPLAY_ANA_EXPID:   MERRA-2
-#   REPLAY_ANA_ROOTDIR: /discover/nobackup/projects/gmao/share/gmao_ops/verification
-# -------------------------------
-    REPLAY_ANA_EXPID:   @REPLAY_ANA_EXPID
-    REPLAY_ANA_ROOTDIR: @REPLAY_ANA_ROOTDIR
+#   REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2
+#   REPLAY_MODE: Regular
+#   REPLAY_FILE: ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4
+# -----------------------------------------------------------------
 
-#   Exact REPLAY Mode and Files
-#   ---------------------------
+#   ANA EXPID and LOCATION used for REPLAY
+#   --------------------------------------
+#   REPLAY_ANA_EXPID:    @REPLAY_ANA_EXPID
+#   REPLAY_ANA_LOCATION: @REPLAY_ANA_LOCATION
+
+#   Typical Exact REPLAY Configuration
+#   ----------------------------------
 #   REPLAY_MODE: Exact
-#   REPLAY_FILE:     agcm_import_rst.%y4%m2%d2_%h2z.bin
-#   REPLAY_FILE09: agcm09_import_rst.%y4%m2%d2_%h2z.bin
+#   REPLAY_FILE:   rs/Y%y4/M%m2/@REPLAY_ANA_EXPID.agcm_import_rst.%y4%m2%d2_%h2z.bin
+#   REPLAY_FILE09: rs/Y%y4/M%m2/@REPLAY_ANA_EXPID.agcm09_import_rst.%y4%m2%d2_%h2z.bin
 #   REPLAY_FILE_FREQUENCY: 10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
 
-#   Regular REPLAY Mode and Files
-#   -----------------------------
+#   Typical Regular REPLAY Configuration
+#   ------------------------------------
 #   REPLAY_MODE: Regular
-#   REPLAY_FILE:     ana.eta.%y4%m2%d2_%h2z.nc4
-#   REPLAY_FILE09: ana09.eta.%y4%m2%d2_%h2z.nc4
+#   REPLAY_FILE:   ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana.eta.%y4%m2%d2_%h2z.nc4
+#   REPLAY_FILE09: ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana09.eta.%y4%m2%d2_%h2z.nc4
 #   REPLAY_FILE_FREQUENCY:       10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
 

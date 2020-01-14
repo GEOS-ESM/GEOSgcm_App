@@ -1224,7 +1224,7 @@ else if( $SITE == 'NCCS' ) then
 
 	      setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_ROOTDIR /discover/nobackup/projects/gmao/g6dev/ltakacs          # Default Analysis Location   for REPLAY
+              setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
 
 	      setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
 
@@ -1814,7 +1814,7 @@ s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA2_MEANS/ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
-s?@REPLAY_ANA_ROOTDIR?$REPLAY_ANA_ROOTDIR?g
+s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 
 s?@OX_RELAXTIME?259200.?g
 #s?@PCHEM_CLIM_YEARS?228?g

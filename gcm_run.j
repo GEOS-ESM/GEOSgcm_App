@@ -667,41 +667,20 @@ endif
 set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
 if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
-     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:   AGCM.rc | grep -v '#' | cut -d: -f2`
-     set ANA_ROOTDIR  = `grep REPLAY_ANA_ROOTDIR: AGCM.rc | grep -v '#' | cut -d: -f2`
-     set ANA_LOCATION = ${ANA_ROOTDIR}/${ANA_EXPID}
+     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:    AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set ANA_LOCATION = `grep REPLAY_ANA_LOCATION: AGCM.rc | grep -v '#'   | cut -d: -f2`
 
-         set nymdz  = $nymdc    #  Current        Date
-     while( $nymdz <= $nymdf )  #  Segment Finish Date
-         set year   = `echo $nymdz | cut -c1-4`
-         set month  = `echo $nymdz | cut -c5-6`
+     set REPLAY_FILE        = `grep REPLAY_FILE:   AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE09      = `grep REPLAY_FILE09: AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
+     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
 
-     # Link GAAS aod files
-     # -------------------
-     /bin/ln -sf ${ANA_LOCATION}/aod/Y${year}/M${month}/*aod*${nymdz}* .
-     $GEOSBIN/stripname $ANA_EXPID.aod_ aod_
+     # Link REPLAY files
+     # -----------------
+     /bin/ln -sf ${ANA_LOCATION}/aod .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
-     # Link ANA.ETA files
-     # ------------------
-     if( $REPLAY_MODE == 'Exact' ) then
-     /bin/ln -sf ${ANA_LOCATION}/rs/Y${year}/M${month}/$ANA_EXPID.agcm*import*${nymdz}*.bin .
-     $GEOSBIN/stripname $ANA_EXPID.agcm09_import agcm09_import
-     $GEOSBIN/stripname $ANA_EXPID.agcm_import  agcm_import
-     endif
-
-     # Link AGCM_IMPORT files
-     # ----------------------
-     if( $REPLAY_MODE == 'Regular' ) then
-     /bin/ln -sf ${ANA_LOCATION}/ana/Y${year}/M${month}/$ANA_EXPID.ana*eta.${nymdz}*.nc4 .
-     $GEOSBIN/stripname $ANA_EXPID.ana09.eta ana09.eta
-     $GEOSBIN/stripname $ANA_EXPID.ana.eta  ana.eta
-     endif
-
-          set date  = `$GEOSBIN/tick $nymdz 000000 86400`
-          set nymdz =  $date[1]
-          set year  = `echo $nymdz | cut -c1-4`
-          set month = `echo $nymdz | cut -c5-6`
-     end
 endif
 
 # Run GEOSgcm.x
