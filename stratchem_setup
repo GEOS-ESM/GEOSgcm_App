@@ -326,7 +326,35 @@ if( $OGCM == TRUE ) then
     set COUPLED   = ""
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
-    
+    set OCEAN_NAME = ""
+
+    # Ocean Model
+    # -----------
+    OCNMODEL:
+    echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM5${CN})"
+    echo "   ${C2}MOM5${CN}"
+    echo "   ${C2}MOM6${CN}"
+
+	set OCNMODEL  = $<
+	if ( .$OCNMODEL == . ) then
+		set OCNMODEL  = "MOM5"
+	else
+		set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
+
+    	if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
+			echo
+			echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
+			goto OCNMODEL
+		else
+			echo
+		endif
+	endif
+
+    if ( $OCNMODEL == "MOM5" ) then
+        set OCEAN_NAME="MOM"
+    else if ( $OCNMODEL == "MOM6" ) then
+        set OCEAN_NAME="MOM6"
+    endif
 
     # Coupled Ocean Resolution
     # ------------------------
@@ -509,6 +537,7 @@ else
     endif
 
     set DATAOCEAN = ""
+    set OCEAN_NAME = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
 
@@ -543,7 +572,7 @@ if( $AGCM_IM ==  "c12" ) then
      set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -567,7 +596,7 @@ if( $AGCM_IM ==  "72" ) then
      set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set  CHEM_DT = $DT
@@ -589,7 +618,7 @@ if( $AGCM_IM ==  "c24" ) then
      set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -613,7 +642,7 @@ if( $AGCM_IM ==  "144" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set  CHEM_DT = $DT
@@ -635,7 +664,7 @@ if( $AGCM_IM ==  "c48" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -657,7 +686,7 @@ if( $AGCM_IM ==  "288" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set  CHEM_DT = $DT
@@ -679,7 +708,7 @@ if( $AGCM_IM ==  "c90" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set AGCM_IM  = 90
@@ -707,7 +736,7 @@ if( $AGCM_IM ==  "576" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set  CHEM_DT = $DT
@@ -729,7 +758,7 @@ if( $AGCM_IM ==  "c180" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set  CHEM_DT = $DT
@@ -758,7 +787,7 @@ if( $AGCM_IM == "1152" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set  CHEM_DT = $DT
@@ -782,7 +811,7 @@ if( $AGCM_IM == "c360" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -806,7 +835,7 @@ if( $AGCM_IM == "c500" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -831,7 +860,7 @@ if( $AGCM_IM == "c720" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -856,7 +885,7 @@ if( $AGCM_IM == "c1440" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -882,7 +911,7 @@ if( $AGCM_IM == "c768" ) then
      set       DT = 180
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -907,7 +936,7 @@ if( $AGCM_IM == "c1536" ) then
      set       DT = 90
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -932,7 +961,7 @@ if( $AGCM_IM == "c3072" ) then
      set       DT = 45
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set SC_SPLIT = 1
      set OCEAN_DT = $IRRAD_DT
@@ -1822,6 +1851,7 @@ s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
+s?@OCEAN_NAME?$OCEAN_NAME?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g
@@ -1856,7 +1886,7 @@ s/@SOLAR_DT/$SOLAR_DT/g
 s/@IRRAD_DT/$IRRAD_DT/g
 s/@OCEAN_DT/$OCEAN_DT/g
 s/@CHEM_DT/$CHEM_DT/g
-s/@GOCART_DT/$GOCART_DT/g
+s/@GOCART_DT/$DT/g
 s/@SATSIM_DT/$SATSIM_DT/g
 s/@SC_SPLIT/$SC_SPLIT/g
 s/@NX/$NX/g
@@ -1933,8 +1963,10 @@ set FILES = "gcm_run.j          \
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
-    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    if ( $OCNMODEL == "MOM5" ) then
+        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    endif
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
 
@@ -2110,6 +2142,23 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
+# Modify AGCM.rc
+# --------------
+set file = $HOMDIR/AGCM.rc
+
+# Change from GF to RAS for now:
+/bin/mv $file $HOMDIR/dummy
+cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
+
+# (uncomment == turn on the option)
+/bin/mv $file $HOMDIR/dummy
+cat           $HOMDIR/dummy | sed -e "s/#RAS_NO_NEG/RAS_NO_NEG/" > $file
+
+# For future:  sed commands to insert important GF flags:
+#/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
+#/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
+/bin/rm -f    $HOMDIR/dummy
+
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options     
 #######################################################################
@@ -2119,12 +2168,12 @@ if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 if( $AGCM_LM != 72 ) then
     set files = `ls -1 $EXPDIR/RC/*.rc`
     foreach file ($files)
-       /bin/rm -f    $EXPDIR/RC/dummy
        /bin/mv $file $EXPDIR/RC/dummy
        cat $EXPDIR/RC/dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" \
                             | sed -e "s|z72|z${AGCM_LM}|g"     \
                             | sed -e "s|_72_|_${AGCM_LM}_|g"   > $file
-     end
+    end
+    /bin/rm -f       $EXPDIR/RC/dummy
 endif
 
 
