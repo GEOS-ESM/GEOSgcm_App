@@ -13,21 +13,20 @@ setenv  HOMDIR  @HOMDIR
 setenv GEOSUTIL @GEOSUTIL
 
 #######################################################################
-#                       Parameters for Forecasts
+#                    Set Parameters for Forecasts
 #
-#   FCST_TYPE: exact
-#              Forecast using archived 21z Restarts.
-#              Perform EXACT REPLAY for 6-hours to archived AGCM_IMPORT files.
+#    FCST_TYPE: STRAIGHT
+#               Forecast using archived 21z Restarts including
+#               AGCM_IMPORT (if available)
 #
-#   FCST_TYPE: regular
-#              Forecast using archived 21z Restarts.
-#              Perform REGULAR REPLAY for 6-hours to archived ANA.ETA files
+#    FCST_TYPE: REPLAY
+#               Forecast using archived 21z Restarts, REPLAY to 
+#               archived ANA.ETA to create internal AGCM_IMPORT
 #
-#   FCST_TYPE: cycled
-#              Identical to FCST_TYPE: regular, except that a single 21z Restart
-#              is used to generate the first forecast.  All other forecasts are
-#              created by cycling restarts in conjunction with performing a
-#              REGULAR REPLAY to archived ANA.ETA files.
+#    FCST_TYPE: CYCLED_REPLAY
+#               Forecast using a single 21z Restart to initialze and cycle
+#               subsequent restarts, REPLAY to archived ANA.ETA to create 
+#               internal AGCM_IMPORT
 #
 #######################################################################
 
@@ -38,29 +37,35 @@ set     QSUB = $4
 
 if( .$QSUB == . ) set QSUB = FALSE
 
+set       NX = @NX
+set       NY = @NY
+set  AGCM_IM = @AGCM_IM
+set  AGCM_JM = @AGCM_JM
+set  AGCM_LM = @AGCM_LM
+
+set HEARTBEAT = @DT
+set       ANA = GMAO
 set     NFMAX = 1
 
+set FCST_TYPE = REPLAY
+set PREDICTOR_DURATION = 10800
+set CORRECTOR_DURATION = 21600
+set IAU_DIGITAL_FILTER = YES
+set      REPLAY_BKGAVE = 0
+set       REPLAY_NUDGE = NO
+set             TAUANL = 21600
 
-set                  NX   = `grep "^ *NX:"                 $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set                  NY   = `grep "^ *NY:"                 $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set           ANA_EXPID   = `grep "REPLAY_ANA_EXPID:"      $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set           FCST_TYPE   = `grep "REPLAY_MODE:"           $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set REPLAY_FILE_FREQUENCY = `grep "REPLAY_FILE_FREQUENCY:" $HOMDIR/AGCM.rc | grep -v "#" | cut -d: -f2`
-set       MKIAU_FREQUENCY = `grep       "MKIAU_FREQUENCY:" $HOMDIR/AGCM.rc | grep -v "#" | cut -d: -f2`
+if( $REPLAY_NUDGE == 'NO'  ) set FCST_LABL = P${PREDICTOR_DURATION}_C${CORRECTOR_DURATION}_T${TAUANL}
+if( $REPLAY_NUDGE == 'YES' ) set FCST_LABL = NUDGE_C${CORRECTOR_DURATION}_T${TAUANL}
 
-if( .$REPLAY_FILE_FREQUENCY == '.' ) set REPLAY_FILE_FREQUENCY = 21600
-if(       .$MKIAU_FREQUENCY == '.' ) set       MKIAU_FREQUENCY = $REPLAY_FILE_FREQUENCY
-
-set FCST_LABL = "${FCST_TYPE}_RPLFRQ:${REPLAY_FILE_FREQUENCY}_ANA:${ANA_EXPID}"
-
-if( $REPLAY_FILE_FREQUENCY != $MKIAU_FREQUENCY ) then
-    set FCST_LABL = "${FCST_TYPE}_IAUFRQ:${MKIAU_FREQUENCY}_RPLFRQ:{$REPLAY_FILE_FREQUENCY}_ANA:${ANA_EXPID}"
-endif
+set    ANA_EXPID = x0037
+set ANA_LOCATION = /discover/nobackup/projects/gmao/g6dev/ltakacs/x0037
 
 #######################################################################
 #                   Create Forecast SubScripts
 #######################################################################
 
+     @ NPES   = $NX * $NY
      @ count  = 0
 set     date  = $BDATE
 while( $date <= $EDATE )
@@ -78,32 +83,35 @@ while( $date <= $EDATE )
    @ NF = $NF - 1
    @ count = $count + 1
    echo $date $NF
-   /bin/rm -f gcm_forecast_${FCST_LABL}.j${date}-${nymde}
+   /bin/rm -f gcm_${FCST_TYPE}_forecast_${FCST_LABL}.j${date}-${nymde}
    /bin/rm -f sedfile
    /bin/rm -f gcm_forecast.tmp
    /bin/cp -f $EXPDIR/forecasts/gcm_forecast.tmpl $EXPDIR/forecasts/gcm_forecast.tmp
-
-if(! $?CYCLED ) then
-   set cycled = .FALSE.
-else
-   set cycled = $CYCLED
-endif
-
-@ NPES = $NX * $NY
-
 cat > sedfile << EOF
-s?&cycled?$cycled?g
-s?&DATE?$date?g
 s?&NPES?$NPES?g
+s?&DATE?$date?g
+s?&AGCM_IM?$AGCM_IM?g
+s?&AGCM_JM?$AGCM_JM?g
+s?&NX?$NX?g
+s?&NY?$NY?g
+s?&HEARTBEAT?$HEARTBEAT?g
 s?&NFMAX?$NF?g
 s?&FCST_TYPE?$FCST_TYPE?g
 s?&FCST_LABL?$FCST_LABL?g
+s?&ANA_EXPID?$ANA_EXPID?g
+s?&ANA_LOCATION?$ANA_LOCATION?g
 s?&FSEGMENT?$FSEGMENT?g
-s?FCSTOUT?$EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.o${date}-${nymde}?g
+s?&PREDICTOR_DURATION?$PREDICTOR_DURATION?g
+s?&CORRECTOR_DURATION?$CORRECTOR_DURATION?g
+s?&IAU_DIGITAL_FILTER?$IAU_DIGITAL_FILTER?g
+s?&REPLAY_BKGAVE?$REPLAY_BKGAVE?g
+s?&REPLAY_NUDGE?$REPLAY_NUDGE?g
+s?&TAUANL?$TAUANL?g
+s?FCSTOUT?$EXPDIR/forecasts/gcm_${FCST_TYPE}_forecast_${FCST_LABL}.o${date}-${nymde}?g
+s?&ANA?$ANA?g
 EOF
-
-sed -f sedfile $EXPDIR/forecasts/gcm_forecast.tmp > $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
-if( $QSUB != 'FALSE' )                        qsub  $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
+sed -f sedfile $EXPDIR/forecasts/gcm_forecast.tmp > $EXPDIR/forecasts/gcm_${FCST_TYPE}_forecast_${FCST_LABL}.j${date}-${nymde}
+if( $QSUB != 'FALSE' )                        qsub  $EXPDIR/forecasts/gcm_${FCST_TYPE}_forecast_${FCST_LABL}.j${date}-${nymde}
 
 set   date = $test
 end
