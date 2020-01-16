@@ -662,27 +662,6 @@ if ($SITE == NAS) then
    endif
 endif
 
-# If REPLAY, link necessary forcing files
-# ---------------------------------------
-set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
-if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
-
-     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:    AGCM.rc | grep -v '#'   | cut -d: -f2`
-     set ANA_LOCATION = `grep REPLAY_ANA_LOCATION: AGCM.rc | grep -v '#'   | cut -d: -f2`
-
-     set REPLAY_FILE        = `grep REPLAY_FILE:   AGCM.rc | grep -v '#'   | cut -d: -f2`
-     set REPLAY_FILE09      = `grep REPLAY_FILE09: AGCM.rc | grep -v '#'   | cut -d: -f2`
-     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
-     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
-
-     # Link REPLAY files
-     # -----------------
-     /bin/ln -sf ${ANA_LOCATION}/aod .
-     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
-     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
-
-endif
-
 # Run GEOSgcm.x
 # -------------
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
@@ -816,7 +795,6 @@ if( $FSEGMENT != 00000000 ) then
 
      if( $nymdz >= ${REPLAY_BEG_DATE} & \
          $nymdz <= ${REPLAY_END_DATE} ) then
-         setenv CYCLED .TRUE.
          $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $FSEGMENT TRUE
      endif
 endif
