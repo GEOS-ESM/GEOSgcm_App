@@ -1223,6 +1223,10 @@ else if( $SITE == 'NCCS' ) then
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
 
 	      setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
+
+	      setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
@@ -1808,6 +1812,9 @@ s?>>>REGULAR_REPLAY_GMAO<<<?#?g
 s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
 s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA2_MEANS/ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4?g
+
+s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
+s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 
 s?@OX_RELAXTIME?259200.?g
 #s?@PCHEM_CLIM_YEARS?228?g
