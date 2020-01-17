@@ -1188,7 +1188,11 @@ if( $SITE == 'NAS' ) then
               setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS}:mpiprocs=1:model=${MODEL}"                  # PE Configuration for gcm_plot.j
               setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS}:mpiprocs=${NCPUS}:model=${MODEL}"           # PE Configuration for gcm_archive.j
               setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS}:mpiprocs=${NCPUS}:model=${MODEL}"   # PE Configuration for gcm_convert.j
+
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
+
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
@@ -1255,7 +1259,11 @@ else
               setenv    PLOT_P  NULL                                                   # PE Configuration for gcm_post.j
               setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
               setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
+
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
