@@ -86,28 +86,76 @@ set  OGCM_JM  = `grep      "OGCM\.JM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 >>>COUPLED<<<set       NX = `grep  "OGCM\.NX:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 >>>COUPLED<<<set       NY = `grep  "OGCM\.NY:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 
+# Calculate number of cores/nodes for IOSERVER
+# --------------------------------------------
+
+set USE_IOSERVER   = @USE_IOSERVER
+set AGCM_IOS_NODES = `grep IOSERVER_NODES: $HOMDIR/AGCM.rc | cut -d':' -f2`
+
+if ($USE_IOSERVER == 0) then
+   set IOS_NODES = 0
+else
+   set IOS_NODES = $AGCM_IOS_NODES
+endif
+
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
-  if ($?SLURM_NTASKS) then
-     set  NCPUS = $SLURM_NTASKS
-  else if ($?PBS_NODEFILE) then
-     set  NCPUS = `cat $PBS_NODEFILE | wc -l`
-  else
-     set  NCPUS = NULL
-  endif
+if ($?SLURM_NTASKS) then
+   set  NCPUS = $SLURM_NTASKS
+else if ($?PBS_NODEFILE) then
+   set  NCPUS = `cat $PBS_NODEFILE | wc -l`
+else
+   set  NCPUS = NULL
+endif
 
-  if ( $NCPUS != NULL ) then
-     @    NPES  = $NX * $NY
-        if( $NPES > $NCPUS ) then
-             echo "CPU Resources are Over-Specified"
-             echo "--------------------------------"
-             echo "Allotted NCPUs: $NCPUS"
-             echo "Specified  NX : $NX"
-             echo "Specified  NY : $NY"
-             exit
-        endif
-     endif
-  endif
+@ MODEL_NPES = $NX * $NY
+
+if ( $NCPUS != NULL ) then
+
+   if ( $USE_IOSERVER == 1 ) then
+
+      set NCPUS_PER_NODE = @NCPUS_PER_NODE
+
+      @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
+      @ NPES   = $NODES * $NCPUS_PER_NODE
+
+      if( $NPES > $NCPUS ) then
+         echo "CPU Resources are Over-Specified"
+         echo "--------------------------------"
+         echo "Allotted  NCPUs: $NCPUS"
+         echo "Requested NCPUs: $NPES"
+         echo ""
+         echo "Specified NX: $NX"
+         echo "Specified NY: $NY"
+         echo ""
+         echo "Specified IOSERVER_NODES: $AGCM_IOS_NODES"
+         echo "Specified cores per node: $NCPUS_PER_NODE"
+         exit
+      endif
+
+   else
+
+      @ NPES = $MODEL_NPES
+
+      if( $NPES > $NCPUS ) then
+         echo "CPU Resources are Over-Specified"
+         echo "--------------------------------"
+         echo "Allotted  NCPUs: $NCPUS"
+         echo "Requested NCPUs: $NPES"
+         echo ""
+         echo "Specified NX: $NX"
+         echo "Specified NY: $NY"
+         exit
+      endif
+
+   endif
+
+else
+   # This is for the desktop path
+
+   @ NPES = $MODEL_NPES
+
+endif
 
 #######################################################################
 #                       GCMEMIP Setup
@@ -686,11 +734,17 @@ endif
 # Run GEOSgcm.x
 # -------------
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
-       @  NPES = $NX * $NY
-if( $NAS_BATCH == TRUE ) then
-   $RUN_CMD $NPES ./GEOSgcm.x >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
+
+if( $USE_IOSERVER == 1) then
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
 else
-   $RUN_CMD $NPES ./GEOSgcm.x
+   set IOSERVER_OPTIONS = ""
+endif
+
+if( $NAS_BATCH == TRUE ) then
+   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
+else
+   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
 endif
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
