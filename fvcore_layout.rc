@@ -1,6 +1,8 @@
 &fv_core_nml
-  k_split = 2
- /
+ hydrostatic = .F.
+ do_sat_adj = .T.
+ nwat = 6
+/
 
  &main_nml
 /
