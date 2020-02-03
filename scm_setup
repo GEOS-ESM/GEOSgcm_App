@@ -423,6 +423,8 @@ then
   $ISED 's/L72/L132/g' $expdir/*.rc
 
   $ISED '/AGCM_LM:/c\AGCM_LM: 132' $expdir/AGCM.rc
+  $ISED '/AGCM.LM:/c\AGCM.LM: 132' $expdir/AGCM.rc
+  $ISED '/SCMGRID.LM:/c\SCMGRID.LM: 132' $expdir/HISTORY.rc
   cp $SOURCEDIR/*rst.r0001x0001x0132 $expdir
   /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x0132 $expdir/datmodyn_internal_rst
   /bin/mv $expdir/moist_internal_rst.r0001x0001x0132 $expdir/moist_internal_rst
