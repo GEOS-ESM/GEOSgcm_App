@@ -678,6 +678,8 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      # Link REPLAY files
      # -----------------
      /bin/ln -sf ${ANA_LOCATION}/aod .
+     $GEOSBIN/stripname ${ANA_EXPID}.aod_ aod_
+
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
