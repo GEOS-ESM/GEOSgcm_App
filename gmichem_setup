@@ -376,7 +376,35 @@ if( $OGCM == TRUE ) then
     set COUPLED   = ""
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
-    
+    set OCEAN_NAME = ""
+
+    # Ocean Model
+    # -----------
+    OCNMODEL:
+    echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM5${CN})"
+    echo "   ${C2}MOM5${CN}"
+    echo "   ${C2}MOM6${CN}"
+
+	set OCNMODEL  = $<
+	if ( .$OCNMODEL == . ) then
+		set OCNMODEL  = "MOM5"
+	else
+		set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
+
+    	if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
+			echo
+			echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
+			goto OCNMODEL
+		else
+			echo
+		endif
+	endif
+
+    if ( $OCNMODEL == "MOM5" ) then
+        set OCEAN_NAME="MOM"
+    else if ( $OCNMODEL == "MOM6" ) then
+        set OCEAN_NAME="MOM6"
+    endif
 
     # Coupled Ocean Resolution
     # ------------------------
@@ -627,6 +655,7 @@ else
     endif
 
     set DATAOCEAN = ""
+    set OCEAN_NAME = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
 
@@ -663,13 +692,13 @@ endif
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
      set       DT = 900
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 2
@@ -687,12 +716,12 @@ if( $AGCM_IM ==  "c12" ) then
 endif
 if( $AGCM_IM ==  "72" ) then
      set       DT = 900
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000015
      set NUM_SGMT = 20
      if( $OGCM == TRUE ) then
@@ -709,13 +738,13 @@ if( $AGCM_IM ==  "72" ) then
 endif
 if( $AGCM_IM ==  "c24" ) then
      set       DT = 900
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 24
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
@@ -733,12 +762,12 @@ if( $AGCM_IM ==  "c24" ) then
 endif
 if( $AGCM_IM ==  "144" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000015
      set NUM_SGMT = 20
      if( $OGCM == TRUE ) then
@@ -755,13 +784,13 @@ if( $AGCM_IM ==  "144" ) then
 endif
 if( $AGCM_IM ==  "c48" ) then
      set       DT = 450
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 6
@@ -777,12 +806,12 @@ if( $AGCM_IM ==  "c48" ) then
 endif
 if( $AGCM_IM ==  "288" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000008
      set NUM_SGMT = 5
      if( $OGCM == TRUE ) then
@@ -799,9 +828,9 @@ if( $AGCM_IM ==  "288" ) then
 endif
 if( $AGCM_IM ==  "c90" ) then
      set       DT = 450
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -815,7 +844,7 @@ if( $AGCM_IM ==  "c90" ) then
      endif
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set HYDROSTATIC = TRUE
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -827,12 +856,12 @@ if( $AGCM_IM ==  "c90" ) then
 endif
 if( $AGCM_IM ==  "576" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000016
      set NUM_SGMT = 1
      if( $OGCM == TRUE ) then
@@ -849,12 +878,12 @@ if( $AGCM_IM ==  "576" ) then
 endif
 if( $AGCM_IM ==  "c180" ) then
      set       DT = 450
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -879,12 +908,12 @@ if( $AGCM_IM ==  "c180" ) then
 endif
 if( $AGCM_IM == "1152" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set NUM_READERS = 4
@@ -904,13 +933,13 @@ if( $AGCM_IM == "1152" ) then
 endif
 if( $AGCM_IM == "c360" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 14 
@@ -929,13 +958,13 @@ if( $AGCM_IM == "c360" ) then
 endif
 if( $AGCM_IM == "c500" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 500
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12
@@ -955,13 +984,13 @@ if( $AGCM_IM == "c500" ) then
 endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 20
@@ -981,13 +1010,13 @@ if( $AGCM_IM == "c720" ) then
 endif
 if( $AGCM_IM == "c1440" ) then
      set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT  = `expr $DT \* 2`
+     set IRRAD_DT  = `expr $DT \* 2`
+     set SATSIM_DT = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
-     set  GOCART_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30 
@@ -1014,7 +1043,7 @@ if( $AGCM_IM == "c768" ) then
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set GMICHEM_DT = $CHEM_DT
-     set  GOCART_DT = $CHEM_DT
+#    set  GOCART_DT = $CHEM_DT
      set AGCM_IM  = 768
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 32
@@ -1040,7 +1069,7 @@ if( $AGCM_IM == "c1536" ) then
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set GMICHEM_DT = $CHEM_DT
-     set  GOCART_DT = $CHEM_DT
+#    set  GOCART_DT = $CHEM_DT
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
@@ -1066,7 +1095,7 @@ if( $AGCM_IM == "c3072" ) then
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set GMICHEM_DT = $CHEM_DT
-     set  GOCART_DT = $CHEM_DT
+#    set  GOCART_DT = $CHEM_DT
      set AGCM_IM  = 3072
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
@@ -1331,6 +1360,29 @@ GMIEXP:
      endif
      if(  $GMIEXP == CURRENT ) set GMIEXP = ''
 
+endif
+
+# Should we run HEMCO for MEGAN emissions?
+# ----------------------------------------
+MEGANviaHEMCO:
+echo
+echo "--------------------------------------------------"
+echo "Enter the approach for ${C1} MEGAN ISOP emissions ${CN} by number:"
+echo "--------------------------------------------------"
+echo "   ${C2}1${CN} MEGAN via GMI  (Default)"
+echo "   ${C2}2${CN} MEGAN via HEMCO"
+echo "--------------------------------------------------"
+set   MEG  = $<
+if( .$MEG == . ) then
+set   MEG  = 1
+endif
+
+if( $MEG != 1 & $MEG != 2 ) then
+echo
+echo "${C1} MEGAN ISOP emissions ${CN} must be set equal to ${C2}1${CN} or ${C2}2${CN}!"
+goto MEGANviaHEMCO
+else
+echo
 endif
 
 # RATS Provider
@@ -2045,6 +2097,7 @@ s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
+s?@OCEAN_NAME?$OCEAN_NAME?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g
@@ -2071,12 +2124,8 @@ s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
 
 s^SOLAR_DT: 3600^SOLAR_DT: $SOLAR_DT^
 s^IRRAD_DT: 3600^IRRAD_DT: $IRRAD_DT^
-s^#GOCART_DT: 3600^GOCART_DT: $GOCART_DT^
 s^SATSIM_DT: 1800^SATSIM_DT: $SATSIM_DT^
-/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT
-
-/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
-/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
+s/@GOCART_DT/$DT/g
 
 s?@IS_FCST?$IS_FCST?g
 s^@BOOT^YES^g
@@ -2161,14 +2210,17 @@ set FILES = "gcm_run.j          \
              gcm_moveplot.j     \
              gcm_forecast.tmpl  \
              gcm_forecast.setup \
+             gcm_emip.setup     \
              CAP.rc.tmpl        \
              AGCM.rc.tmpl       \
              HISTORY.rc.tmpl    "
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
-    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-    /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    if ( $OCNMODEL == "MOM5" ) then
+        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+    endif
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
 
@@ -2243,8 +2295,8 @@ set LPCHEM        = FALSE
 set LSTRATCHEM    = FALSE
 set LGMICHEM      = TRUE
 set LGEOSCHEMCHEM = FALSE
-set LHEMCO     = FALSE
-set LGOCART    = $GOKART
+set LHEMCO        = FALSE
+set LGOCART       = $GOKART
 if( $GOKART == TRUE )  then
  set LGOCART_DATA = FALSE
 else
@@ -2288,7 +2340,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_plot.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2306,6 +2358,7 @@ chmod   +x $HOMDIR/gcm_convert.j
 chmod   +x $HOMDIR/gcm_forecast.setup
 chmod   +x $HOMDIR/gcm_regress.j
 chmod   +x $HOMDIR/gcm_post.j
+chmod   +x $HOMDIR/gcm_emip.setup
 
 if( ${SITE} == 'NCCS' ) then
 #######################################################################
@@ -2377,6 +2430,31 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
+## Modify AGCM.rc
+## --------------
+#set file = $HOMDIR/AGCM.rc
+#
+## Add GMI timestep:
+#/bin/mv $file $HOMDIR/dummy
+#cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $file
+#
+## Change from GF to RAS for now:
+#/bin/mv $file $HOMDIR/dummy
+#cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
+#
+## (uncomment == turn on the option)
+### Assumes that these lines are in AGCM.rc:
+# UNCOMMENT to guard against negative tracer values in RAS (default: .FALSE.)
+#RAS_NO_NEG: .TRUE.
+###
+#/bin/mv $file $HOMDIR/dummy
+#cat           $HOMDIR/dummy | sed -e "s/#RAS_NO_NEG/RAS_NO_NEG/" > $file
+#
+## For future:  sed commands to insert important GF flags:
+##/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
+##/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
+#/bin/rm -f    $HOMDIR/dummy
+
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options     
 #######################################################################
@@ -2391,7 +2469,8 @@ if( $AGCM_LM != 72 ) then
        cat $EXPDIR/RC/dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" \
                             | sed -e "s|z72|z${AGCM_LM}|g"     \
                             | sed -e "s|_72_|_${AGCM_LM}_|g"   > $file
-     end
+    end
+    /bin/rm -f       $EXPDIR/RC/dummy
 endif
 
 
@@ -2483,6 +2562,25 @@ endif
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 
+# Turn on HEMCO GMI instance
+# --------------------------
+  if ( $MEG == 2 ) then
+
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_HEMCO:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+    # Set GOCART to be instance 999, and GMI to be instance 1
+    sed -e 's/001/999/' $EXPDIR/RC/HEMCO_GridComp.rc > $EXPDIR/RC/HEMCO_GridComp.tmp
+    /bin/mv -f $EXPDIR/RC/HEMCO_GridComp.tmp $EXPDIR/RC/HEMCO_GridComp.rc
+    sed -e 's/002/001/' $EXPDIR/RC/HEMCO_GridComp.rc > $EXPDIR/RC/HEMCO_GridComp.tmp
+    /bin/mv -f $EXPDIR/RC/HEMCO_GridComp.tmp $EXPDIR/RC/HEMCO_GridComp.rc
+
+    sed -e 's/doMEGANviaHEMCO: F/doMEGANviaHEMCO: T/' $EXPDIR/RC/GMI_GridComp.rc > $EXPDIR/RC/GMI_GridComp.tmp
+    /bin/mv -f $EXPDIR/RC/GMI_GridComp.tmp $EXPDIR/RC/GMI_GridComp.rc
+
+  endif
+
 ##################################################################
 # Edit the Chem_Registry.rc to use the species appropriate GMIchem
 ##################################################################
@@ -2504,6 +2602,12 @@ if( ${SITE} == 'NCCS' ) then
  sed -e 's|EXTDATA|/discover/nobackup/projects/gmao/share/dasilva/fvInput|g' $EXPDIR/RC/GMI_GridComp.rc > $EXPDIR/RC/GMI_GridComp.tmp
  /bin/mv -f $EXPDIR/RC/GMI_GridComp.tmp $EXPDIR/RC/GMI_GridComp.rc
 endif
+
+
+# Move extra files out of the way
+# -------------------------------
+mkdir $HOMDIR/extra
+/bin/mv $HOMDIR/gcm_emip.setup $HOMDIR/extra/
   
 #######################################################################
 #                       Echo Settings and Messages
@@ -2875,6 +2979,7 @@ HOMDIR/CAP.rc
 HOMDIR/AGCM.rc
 HOMDIR/HISTORY.rc
 HOMDIR/gcm_run.j
+HOMDIR/gcm_emip.setup
 EOF
 
 if( $OGCM == TRUE ) then
