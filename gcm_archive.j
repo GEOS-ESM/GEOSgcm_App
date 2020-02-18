@@ -4,12 +4,12 @@
 #                     Batch Parameters for Archive Job
 #######################################################################
 
-#PBS -l walltime=@ARCHIVE_T
+#@BATCH_TIME@ARCHIVE_T
 #@ARCHIVE_P
-#PBS -N @ARCHIVE_N
+#@BATCH_JOBNAME@ARCHIVE_N
 #@ARCHIVE_Q
 #@BATCH_GROUP
-#PBS -o OUTPUT
+#@BATCH_OUTPUTNAMEOUTPUT
 
 #######################################################################
 #                  System Environment Variables

@@ -4,12 +4,12 @@
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#PBS -l walltime=@PLOT_T
+#@BATCH_TIME@PLOT_T
 #@PLOT_P
-#PBS -N @NAME
+#@BATCH_JOBNAME@NAME
 #@PLOT_Q
 #@BATCH_GROUP
-#PBS -o OUTPUT
+#@BATCH_OUTPUTNAMEOUTPUT
 
 #######################################################################
 #                  System Environment Variables

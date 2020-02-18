@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@RUN_T
+#@BATCH_TIME@RUN_T
 #@RUN_P
-#PBS -N @RUN_N
+#@BATCH_JOBNAME@RUN_N
 #@RUN_Q
 #@BATCH_GROUP
-#@PBS -o gcm_run.o@RSTDATE
+#@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
 #                         System Settings 

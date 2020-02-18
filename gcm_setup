@@ -1231,6 +1231,10 @@ endif
 
 if( $SITE == 'NAS' ) then
               setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
+              setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
+              setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
+              setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
+              setenv BATCH_JOINOUTERR "PBS -j oe "    # PBS Syntax for joining output and error
               setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
@@ -1261,6 +1265,7 @@ if( $SITE == 'NAS' ) then
               setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=1:model=${MODEL}"                            # PE Configuration for gcm_plot.j
               setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"            # PE Configuration for gcm_archive.j
               setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
 
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
@@ -1277,7 +1282,11 @@ if( $SITE == 'NAS' ) then
               setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
               setenv TAREXEC    mtar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
-              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
+              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
               setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
@@ -1306,6 +1315,7 @@ else if( $SITE == 'NCCS' ) then
               setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
@@ -1323,7 +1333,11 @@ else if( $SITE == 'NCCS' ) then
               setenv TAREXEC    tar
 else
 # These are defaults for the desktop
-              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
+              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
               setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
@@ -1340,6 +1354,7 @@ else
               setenv    PLOT_P  NULL                                                   # PE Configuration for gcm_post.j
               setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
               setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
@@ -1843,6 +1858,7 @@ s?@PLOT_T?$PLOT_T?g
 s?@PLOT_P?$PLOT_P?g
 s?@PLOT_Q?$PLOT_Q?g
 s?@MOVE_Q?$MOVE_Q?g
+s?@MOVE_P?$MOVE_P?g
 s?@ARCHIVE_N?$ARCHIVE_N?g
 s?@ARCHIVE_T?$ARCHIVE_T?g
 s?@ARCHIVE_P?$ARCHIVE_P?g
@@ -1869,6 +1885,10 @@ s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
 s?@CNVDIR?$CNVDIR?g
 s?@BATCH_GROUP?${BATCH_GROUP}${GROUP}?g
+s?@BATCH_TIME?$BATCH_TIME?g
+s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
+s?@BATCH_OUTPUTNAME?$BATCH_OUTPUTNAME?g
+s?@BATCH_JOINOUTERR?$BATCH_JOINOUTERR?g
 s?@SITE?$SITE?g
 s?@GEOSDIR?$GEOSDIR?g
 s?@GEOSSRC?$GEOSSRC?g
