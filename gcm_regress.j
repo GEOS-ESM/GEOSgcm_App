@@ -4,9 +4,9 @@
 #                     Batch Parameters for Regress Job
 #######################################################################
 
-#PBS -l walltime=@RUN_T
+#@BATCH_TIME@RUN_T
 #@RUN_P
-#PBS -N @REGRESS_N
+#@BATCH_JOBNAME@REGRESS_N
 #@RUN_Q
 #@BATCH_GROUP
 

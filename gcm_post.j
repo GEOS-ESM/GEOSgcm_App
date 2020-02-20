@@ -4,13 +4,13 @@
 #                Batch Parameters for Post-Processing Job
 #######################################################################
 
-#PBS -l walltime=@POST_T
+#@BATCH_TIME@POST_T
 #@POST_P
-#PBS -N @POST_N
+#@BATCH_JOBNAME@POST_N
 #@POST_Q
 #@BATCH_GROUP
-#PBS -o @POST_O
-#PBS -j oe
+#@BATCH_OUTPUTNAME@POST_O
+#@BATCH_JOINOUTERR
 
 #######################################################################
 #                  System Environment Variables

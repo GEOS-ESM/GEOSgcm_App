@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@RUN_FT
+#@BATCH_TIME@RUN_FT
 #@RUN_FP
-#PBS -N @RUN_FN
+#@BATCH_JOBNAME@RUN_FN
 #@RUN_Q
 #@BATCH_GROUP
-#PBS -o FCSTOUT
+#@BATCH_OUTPUTNAMEFCSTOUT
 
 #######################################################################
 #                  System Environment Variables
