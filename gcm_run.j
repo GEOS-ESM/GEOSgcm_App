@@ -923,8 +923,8 @@ endif
 if ( $rc == 0 ) then
       cd  $HOMDIR
       if( $GCMEMIP == TRUE ) then
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j$RSTDATE
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
       else
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif
