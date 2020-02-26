@@ -103,7 +103,7 @@ s?FCSTOUT?$EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.o${date}-${nymde}?g
 EOF
 
 sed -f sedfile $EXPDIR/forecasts/gcm_forecast.tmp > $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
-if( $QSUB != 'FALSE' )                        qsub  $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
+if( $QSUB != 'FALSE' )                        @BATCH_CMD  $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
 
 set   date = $test
 end

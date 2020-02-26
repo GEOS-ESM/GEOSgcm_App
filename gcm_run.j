@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@RUN_T
+#@BATCH_TIME@RUN_T
 #@RUN_P
-#PBS -N @RUN_N
+#@BATCH_JOBNAME@RUN_N
 #@RUN_Q
 #@BATCH_GROUP
-#@PBS -o gcm_run.o@RSTDATE
+#@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
 #                         System Settings 
@@ -923,8 +923,8 @@ endif
 if ( $rc == 0 ) then
       cd  $HOMDIR
       if( $GCMEMIP == TRUE ) then
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j$RSTDATE
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
       else
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif
