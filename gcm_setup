@@ -343,6 +343,85 @@ else
 endif
 
 #######################################################################
+#                 What Processor Should We Run On?
+#######################################################################
+
+ASKPROC:
+
+if ( $SITE == 'NCCS' ) then
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}hasw (Haswell)${CN} (default)"
+   if (-e /etc/os-release) then
+      echo "   ${C2}sky  (Skylake)${CN}"
+   endif
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'hasw'
+   endif
+
+   if( $MODEL != 'hasw' & \
+       $MODEL != 'sky' ) goto ASKPROC
+
+   if (     $MODEL == 'hasw') then
+      set NCPUS_PER_NODE = 28
+   else if ($MODEL == 'sky') then
+      set NCPUS_PER_NODE = 40
+   endif
+
+else if ( $SITE == 'NAS' ) then
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}san (Sandy Bridge)${CN}"
+   echo "   ${C2}ivy (Ivy Bridge)${CN}"
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'sky'
+   endif
+
+   if( $MODEL != 'san' & \
+       $MODEL != 'ivy' & \
+       $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' ) goto ASKPROC
+
+   # Some processors have weird names at NAS
+   # ---------------------------------------
+
+   if ($MODEL == bro ) then
+      set MODEL = 'bro_ele'
+   else if ($MODEL == sky) then
+      set MODEL = 'sky_ele'
+   else if ($MODEL == cas) then
+      set MODEL = 'cas_ait'
+   endif
+
+   if (     $MODEL == 'san') then
+      set NCPUS_PER_NODE = 16
+   else if ($MODEL == 'ivy') then
+      set NCPUS_PER_NODE = 20
+   else if ($MODEL == 'has') then
+      set NCPUS_PER_NODE = 24
+   else if ($MODEL == 'bro_ele') then
+      set NCPUS_PER_NODE = 28
+   else if ($MODEL == 'sky_ele') then
+      set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'cas_ait') then
+      set NCPUS_PER_NODE = 40
+   endif
+
+else
+   set MODEL = 'UNKNOWN'
+endif
+
+#######################################################################
 #                         Check for COUPLED Ocean
 #######################################################################
 
@@ -1246,8 +1325,6 @@ if( $SITE == 'NAS' ) then
                  set MODEL = "san_gpu"                # Model of CPU
                  set QTYPE = "gpu_k40"                # Queue to use
               else
-                 set NCPUS_PER_NODE = 40              # CPUS per node
-                 set MODEL = "sky_ele"                # Model of CPU
                  set QTYPE = "normal"                 # Queue to use
               endif
 
@@ -1297,9 +1374,6 @@ else if( $SITE == 'NCCS' ) then
               if( $GPU == "TRUE" ) then
                  set NCPUS_PER_NODE = 16                                         # CPUS per node
                  set MODEL = "k40"                                               # Model of CPU
-              else
-                 set NCPUS_PER_NODE = 28                                         # CPUS per node
-                 set MODEL = "hasw"                                              # Model of CPU
               endif
 
               #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
