@@ -626,7 +626,7 @@ if( $AGCM_IM ==  "c12" ) then
      set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -650,7 +650,7 @@ if( $AGCM_IM ==  "72" ) then
      set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -672,7 +672,7 @@ if( $AGCM_IM ==  "c24" ) then
      set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -696,7 +696,7 @@ if( $AGCM_IM ==  "144" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -718,7 +718,7 @@ if( $AGCM_IM ==  "c48" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -740,7 +740,7 @@ if( $AGCM_IM ==  "288" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -762,7 +762,7 @@ if( $AGCM_IM ==  "c90" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -790,7 +790,7 @@ if( $AGCM_IM ==  "576" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -812,7 +812,7 @@ if( $AGCM_IM ==  "c180" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -842,7 +842,7 @@ if( $AGCM_IM == "1152" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set  CHEM_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -867,7 +867,7 @@ if( $AGCM_IM == "c360" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -892,7 +892,7 @@ if( $AGCM_IM == "c500" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -918,7 +918,7 @@ if( $AGCM_IM == "c720" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -944,7 +944,7 @@ if( $AGCM_IM == "c1440" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set GOCART_DT = 3600
+#    set GOCART_DT = 3600
      set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -2020,7 +2020,7 @@ s^@TILEBIN^$TILEBIN^g
 s/@DT/$DT/g
 s/@SOLAR_DT/$SOLAR_DT/g
 s/@IRRAD_DT/$IRRAD_DT/g
-s/@GOCART_DT/$GOCART_DT/g
+s/@GOCART_DT/$DT/g
 s/@SATSIM_DT/$SATSIM_DT/g
 s/@OCEAN_DT/$OCEAN_DT/g
 s/@CHEM_DT/$CHEM_DT/g
@@ -2357,6 +2357,31 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
+## Modify AGCM.rc
+## --------------
+#set file = $HOMDIR/AGCM.rc
+#
+## Add GEOS-Chem timestep:
+#/bin/mv $file $HOMDIR/dummy
+#cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT" > $file
+#
+## Change from GF to RAS for now:
+#/bin/mv $file $HOMDIR/dummy
+#cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
+#
+## (uncomment == turn on the option)
+### Assumes that these lines are in AGCM.rc:
+# UNCOMMENT to guard against negative tracer values in RAS (default: .FALSE.)
+#RAS_NO_NEG: .TRUE.
+###
+#/bin/mv $file $HOMDIR/dummy
+#cat           $HOMDIR/dummy | sed -e "s/#RAS_NO_NEG/RAS_NO_NEG/" > $file
+#
+## For future:  sed commands to insert important GF flags:
+##/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
+##/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
+#/bin/rm -f    $HOMDIR/dummy
+
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options     
 #######################################################################
@@ -2371,7 +2396,8 @@ if( $AGCM_LM != 72 ) then
        cat $EXPDIR/RC/dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" \
                             | sed -e "s|z72|z${AGCM_LM}|g"     \
                             | sed -e "s|_72_|_${AGCM_LM}_|g"   > $file
-     end
+    end
+    /bin/rm -f       $EXPDIR/RC/dummy
 endif
 
 # Turn on GEOS-Chem
