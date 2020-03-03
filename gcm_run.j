@@ -864,7 +864,7 @@ $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
 if( $FSEGMENT != 00000000 ) then
      set REPLAY_BEG_DATE = `grep BEG_REPDATE: $HOMDIR/CAP.rc | cut -d':' -f2`
      set REPLAY_END_DATE = `grep END_REPDATE: $HOMDIR/CAP.rc | cut -d':' -f2`
-     set nday  = `echo $FSEGMENT | cut -c7-8`
+     set nday            = `echo $FSEGMENT | /bin/grep -Po '\d+' | bc`
          @ dt  = 10800 - 86400 * $nday
      set date  = `$GEOSBIN/tick $nymdc $nhmsc $dt`
      set nymdz =  $date[1]
@@ -873,7 +873,7 @@ if( $FSEGMENT != 00000000 ) then
      if( $nymdz >= ${REPLAY_BEG_DATE} & \
          $nymdz <= ${REPLAY_END_DATE} ) then
          setenv CYCLED .TRUE.
-         $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $FSEGMENT TRUE
+         $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $nday TRUE
      endif
 endif
 
