@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@RUN_FT
+#@BATCH_TIME@RUN_FT
 #@RUN_FP
-#PBS -N @RUN_FN
+#@BATCH_JOBNAME@RUN_FN_&DATE
 #@RUN_Q
 #@BATCH_GROUP
-#PBS -o FCSTOUT
+#@BATCH_OUTPUTNAMEFCSTOUT
 
 #######################################################################
 #                  System Environment Variables
@@ -190,36 +190,39 @@ cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 #                 Create Forecast History RC Files
 #######################################################################
 
+set HIST_IM  = `expr $AGCM_IM \* 4`
+set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+
 set         FILE = HISTORY.rc
 /bin/rm -f $FILE
 cat << _EOF_ > $FILE
 
 VERSION: 1
-EXPID:  G5$ANA
-EXPDSC: G5${ANA}_based_on_${EXPID}
+EXPID:  $ANA
+EXPDSC: ${ANA}_based_on_${EXPID}
 
 COLLECTIONS: 'geosgcm_fcst'
+             'geosgcm_surf'
              ::
              'tavg1_2d_flx_Mx'
-             'geosgcm_surf'
 
-GRID_LABELS: PC1152x721-DC
+GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
  ::
 
 
-  PC1152x721-DC.GRID_TYPE: LatLon
-  PC1152x721-DC.IM_WORLD: 1152
-  PC1152x721-DC.JM_WORLD: 721
-  PC1152x721-DC.POLE: PC
-  PC1152x721-DC.DATELINE: DC
-  PC1152x721-DC.LM: 72
+  PC${HIST_IM}x${HIST_JM}-DC.GRID_TYPE: LatLon
+  PC${HIST_IM}x${HIST_JM}-DC.IM_WORLD: ${HIST_IM}
+  PC${HIST_IM}x${HIST_JM}-DC.JM_WORLD: ${HIST_JM}
+  PC${HIST_IM}x${HIST_JM}-DC.POLE: PC
+  PC${HIST_IM}x${HIST_JM}-DC.DATELINE: DC
+  PC${HIST_IM}x${HIST_JM}-DC.LM: ${AGCM_LM}
 
   geosgcm_fcst.template:  '%y4%m2%d2_%h2%n2z.nc4',
   geosgcm_fcst.archive:   '%c/Y%y4',
   geosgcm_fcst.format:    'CFIO',
   geosgcm_fcst.frequency:  060000,
   geosgcm_fcst.duration:   000000,
-  geosgcm_fcst.grid_label: PC1152x721-DC,
+  geosgcm_fcst.grid_label: PC${HIST_IM}x${HIST_JM}-DC,
   geosgcm_fcst.vscale:     100.0,
   geosgcm_fcst.vunit:     'hPa',
   geosgcm_fcst.vvars:     'log(PLE)' , 'DYN'          ,
@@ -241,7 +244,7 @@ GRID_LABELS: PC1152x721-DC
   geosgcm_surf.mode:      'time-averaged',
   geosgcm_surf.frequency:  030000,
   geosgcm_surf.duration:   000000,
-  geosgcm_surf.grid_label: PC1152x721-DC,
+  geosgcm_surf.grid_label: PC${HIST_IM}x${HIST_JM}-DC,
   geosgcm_surf.fields:    'PHIS'     , 'AGCM'         ,
                           'SLP'      , 'DYN'          ,
                           'PS'       , 'DYN'          ,
@@ -250,8 +253,23 @@ GRID_LABELS: PC1152x721-DC
                           'TQL'      , 'AGCM'         ,
                           'TQI'      , 'AGCM'         ,
                           'TPREC'    , 'MOIST'        ,
+                          'CN_PRCP'  , 'MOIST'        , 'CNPRCP' ,
+                          'LS_PRCP'  , 'MOIST'        , 'LSPRCP' ,
+                          'AN_PRCP'  , 'MOIST'        , 'ANPRCP' ,
+                          'CLDTT'    , 'SOLAR'        ,
+                          'CLDLO'    , 'SOLAR'        ,
+                          'CLDMD'    , 'SOLAR'        ,
+                          'CLDHI'    , 'SOLAR'        ,
+                          'OSR'      , 'SOLAR'        ,
+                          'SLRSF'    , 'SOLAR'        , 'SWGDWN'    ,
+                          'OLR'      , 'IRRAD'        ,
+                          'LWS'      , 'IRRAD'        ,
                           'EVAP'     , 'SURFACE'      ,
                           'TS'       , 'SURFACE'      ,
+                          'T2M'      , 'SURFACE'      ,
+                          'Q2M'      , 'SURFACE'      , 'QV2M'    ,
+                          'U10M;V10M', 'SURFACE'      ,
+                          'ZPBL'     , 'TURBULENCE'   ,  'PBLH'   ,
                           ::
 
   tavg1_2d_flx_Mx.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
@@ -260,7 +278,7 @@ GRID_LABELS: PC1152x721-DC
   tavg1_2d_flx_Mx.mode:        'time-averaged' ,
   tavg1_2d_flx_Mx.descr:       '2d,1-Hourly,Time-Averaged,Native Cubed-Sphere on Single-Level,Diagnostics' ,
   tavg1_2d_flx_Mx.nbits:       12 ,
-  tavg1_2d_flx_Mx.chunksize:   180 180 1 1,
+  tavg1_2d_flx_Mx.chunksize:   ${AGCM_IM} ${AGCM_JM} 1 1,
   tavg1_2d_flx_Mx.cubeFormat:  0
   tavg1_2d_flx_Mx.deflate:     1,
   tavg1_2d_flx_Mx.frequency:   010000 ,
@@ -328,7 +346,7 @@ cat << _EOF_ > $FILE
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
+/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
 
 # CMIP-5 Ozone Data (228-Years)
 # -----------------------------
@@ -336,7 +354,7 @@ cat << _EOF_ > $FILE
 
 # MERRA-2 Ozone Data (39-Years)
 # -----------------------------
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
@@ -560,11 +578,12 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
      set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
 
-     # Link REPLAY files
-     # -----------------
-     /bin/ln -sf ${ANA_LOCATION}/aod .
-     $GEOSBIN/stripname ${ANA_EXPID}.aod_ aod_
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
 
+     /bin/ln -sf ${ANA_LOCATION}/aod .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
@@ -600,18 +619,20 @@ endif  # End STATS_ONLY Test
 
 set nymd     =  $date0
 set yyyymm   = `echo $nymd | cut -b1-6`
-set statsdir = $EXPDIR/forecasts/${FCST_LABL}_G5${ANA}.stats.$yyyymm
+  @ TMPVAL = &FLOOP - 1
+set FDAYS  = `printf "%02d" $TMPVAL`
 
+set statsdir = $EXPDIR/forecasts/${FCST_LABL}_${ANA}.stats.$yyyymm.f${FDAYS}day
 mkdir -p $statsdir
 cd       $statsdir
 
 set year0      = `echo $nymd | cut -b1-4`
 set month0     = `echo $nymd | cut -b5-6`
-set fcst_files = `/bin/ls -1 $FCSTDIR/G5${ANA}*geosgcm_fcst*nc4`
+set fcst_files = `/bin/ls -1 $FCSTDIR/${ANA}*geosgcm_fcst*nc4`
 
 set ana_files = ''
 @ n = 1
-while ($n <= 6)
+while ($n <= &FLOOP)
 
 set year  = `echo $nymd | cut -b1-4`
 set month = `echo $nymd | cut -b5-6`
@@ -637,7 +658,7 @@ $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
                                        $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_06z.576x361.data.nc4 \
                                        $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_12z.576x361.data.nc4 \
                                        $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_18z.576x361.data.nc4 \
-                                  -tag $EXPID -nfreq 060000 -rc $GEOSUTIL/post/stats.rc
+                                  -tag $EXPID -nfreq 060000 -rc $GEOSUTIL/post/stats.rc -fhour &FHRS
 
 #######################################################################
 #                         Update Forecast Counter
