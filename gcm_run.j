@@ -723,11 +723,12 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
      set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
 
-     # Link REPLAY files
-     # -----------------
-     /bin/ln -sf ${ANA_LOCATION}/aod .
-     $GEOSBIN/stripname ${ANA_EXPID}.aod_ aod_
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
 
+     /bin/ln -sf ${ANA_LOCATION}/aod .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
@@ -864,7 +865,7 @@ $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
 if( $FSEGMENT != 00000000 ) then
      set REPLAY_BEG_DATE = `grep BEG_REPDATE: $HOMDIR/CAP.rc | cut -d':' -f2`
      set REPLAY_END_DATE = `grep END_REPDATE: $HOMDIR/CAP.rc | cut -d':' -f2`
-     set nday  = `echo $FSEGMENT | cut -c7-8`
+     set nday            = `echo $FSEGMENT | /bin/grep -Po '\d+' | bc`
          @ dt  = 10800 - 86400 * $nday
      set date  = `$GEOSBIN/tick $nymdc $nhmsc $dt`
      set nymdz =  $date[1]
@@ -873,7 +874,7 @@ if( $FSEGMENT != 00000000 ) then
      if( $nymdz >= ${REPLAY_BEG_DATE} & \
          $nymdz <= ${REPLAY_END_DATE} ) then
          setenv CYCLED .TRUE.
-         $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $FSEGMENT TRUE
+         $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $nday TRUE
      endif
 endif
 
