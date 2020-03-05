@@ -55,7 +55,6 @@ install (
 configure_file(stratchem_setup stratchem_setup @ONLY)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/stratchem_setup DESTINATION bin)
 
-message(STATUS "MATMAT CMAKE_PROJECT_VERSION: ${CMAKE_PROJECT_VERSION}")
 configure_file(.AGCM_VERSION .AGCM_VERSION @ONLY)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/.AGCM_VERSION DESTINATION etc)
 
