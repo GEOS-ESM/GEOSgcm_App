@@ -1716,22 +1716,13 @@ cat > $HOMDIR/SETENV.commands << EOF
    setenv MPI_COLL_REPRODUCIBLE
    setenv SLURM_DISTRIBUTION block
 
-   setenv MPI_XPMEM_ENABLED no
-   setenv SUPPRESS_XPMEM_TRIM_THRESH 1
-   setenv MPI_NUM_MEMORY_REGIONS 0
-   
    #setenv MPI_DISPLAY_SETTINGS 1
    #setenv MPI_VERBOSE 1
    
-   setenv MPI_COMM_MAX  1024
-   setenv MPI_GROUP_MAX 1024
-   setenv MPI_BUFS_PER_PROC 256
-   
-   setenv MPI_IB_TIMEOUT 23
-
    unsetenv MPI_MEMMAP_OFF
    unsetenv MPI_NUM_MEMORY_REGIONS
    setenv MPI_XPMEM_ENABLED yes
+   unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 
    # For some reason, PMI_RANK is randomly set and interferes
    # with binarytile.x and other executables.
