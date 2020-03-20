@@ -452,29 +452,6 @@ DIAGNOSE_PRECIP_TYPE: FALSE
 # ---------------------------------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
-# (1)  Surface layer turbulence scheme
-# ------------------------------------
-#    0 : Louis                  (MERRA, Fortuna-DAS, SMAP NRv4/4.1/5/7.2)
-#    1 : Helfand Monin-Obukhov  (Fortuna-AR5, Ganymed, Heracles, Icarus-3_2, MERRA-2)
-#
-# CHOOSEMOSFC: 0
-
-# (2) Land Physics Parameters Resource File
-# -----------------------------------------
-LANDRC: GEOS_LandGridComp.rc
-   
-# (3)  Atmsophere-Land CO2 coupling
-# ---------------------------------
-
-# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc, CMIP/CO2_GridComp.rc,
-#                 MERRA2/CO2_GridComp.rc, MERRA2/19600101-20000331/CO2_GridComp.rc, MERRA2/20000401-present/CO2_GridComp.rc, and PIESA/CO2_GridComp.rc 
-#                           in /GEOSchem_GridComp/GOCART_GridComp/CO2_GridComp/ before you build the model.)
-
-# (4) Fraction of AGCM grid cell that precipitation falls on
-# ----------------------------------------------------------
-# options : 1 (default for zero-diff); 0.025 is recommended to deal with AGCM's drizzle
-# PRECIPFRAC: 0.025
-
 ##############################################################################################
 ##############################################################################################
 
