@@ -441,7 +441,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #USE_PP_TAPER: 1
 
 ##############################################################################################
-####    Land Surface Physics, Choice of Land Model and  Atmsophere-Land CO2 coupling      ####
+####    Land Surface Model                                                                ####
 ##############################################################################################
 
 # Option to Diagnose Precipitation Types for Land Surface
@@ -451,6 +451,18 @@ DIAGNOSE_PRECIP_TYPE: FALSE
 # Choice for Land Surface Model: LSM_CHOICE=1 for Catchment, LSM_CHOICE=2 for CatchmentCN
 # ---------------------------------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
+
+# ****************************************************************
+# ******* REQUIRES MAJOR CLEAN-UP ACROSS SEVERAL GRIDCOMPs *******
+# ******* (retained to facilitate this cleanup in future)  *******
+#
+# Atmosphere-Land CO2 coupling
+# ----------------------------	
+# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc, CMIP/CO2_GridComp.rc,	
+#                 MERRA2/CO2_GridComp.rc, MERRA2/19600101-20000331/CO2_GridComp.rc, MERRA2/20000401-present/CO2_GridComp.rc, and PIESA/CO2_GridComp.rc 	
+#                           in /GEOSchem_GridComp/GOCART_GridComp/CO2_GridComp/ before you build the model.)
+#
+# ****************************************************************
 
 ##############################################################################################
 ##############################################################################################
