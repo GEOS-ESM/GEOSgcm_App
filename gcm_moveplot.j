@@ -4,12 +4,12 @@
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#PBS -l walltime=1:00:00
-#PBS -l select=1:ncpus=1
-#PBS -N @MOVE_N
+#@BATCH_TIME1:00:00
+#@MOVE_P
+#@BATCH_JOBNAME@MOVE_N
 #@MOVE_Q
 #@BATCH_GROUP
-#PBS -o gcm_moveplot.o
+#@BATCH_OUTPUTNAMEgcm_moveplot.o
 
 #######################################################################
 #                  System Environment Variables

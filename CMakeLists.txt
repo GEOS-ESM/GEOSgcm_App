@@ -19,11 +19,6 @@ target_include_directories (GEOSgcm.x PUBLIC ${INC_ESMF})
 
 file (GLOB templates *.tmpl)
 
-set(otheretc
-   fvcore_layout.rc
-   .AGCM_VERSION
-   )
-
 set (programs
    gcm_setup
    gcm_run.j
@@ -43,7 +38,7 @@ set (programs
 
 
 install (
-   FILES ${templates} ${otheretc}
+   FILES ${templates}
    DESTINATION etc
    )
 
@@ -59,4 +54,7 @@ install (
 
 configure_file(stratchem_setup stratchem_setup @ONLY)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/stratchem_setup DESTINATION bin)
+
+configure_file(.AGCM_VERSION .AGCM_VERSION @ONLY)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/.AGCM_VERSION DESTINATION etc)
 

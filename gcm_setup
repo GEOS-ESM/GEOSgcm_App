@@ -139,6 +139,8 @@ setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
    set MPI = mvapich2
 else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
    set MPI = openmpi
+else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
+   set MPI = openmpi
 else if ( `echo $BASEDIR | grep -i impi`     != '') then
    set MPI = intelmpi
 else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
@@ -290,6 +292,132 @@ echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (D
 set   AGCM_LM = $<
 if( .$AGCM_LM == . ) then
   set AGCM_LM = 72
+endif
+
+#######################################################################
+#            Test to see if you want to use ioserver
+#######################################################################
+
+ASKIOS:
+
+if( $HRCODE == 'c180'  | \
+    $HRCODE == 'c360'  | \
+    $HRCODE == 'c720'  | \
+    $HRCODE == 'c1440' | \
+    $HRCODE == 'c768'  | \
+    $HRCODE == 'c1536' | \
+    $HRCODE == 'c3072' ) then
+
+    set DEFAULT_DO_IOS = TRUE
+    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
+else
+    set DEFAULT_DO_IOS = FALSE
+    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+endif
+
+set   DO_IOS  = $<
+if( .$DO_IOS == . ) then
+   set   DO_IOS  = $DEFAULT_DO_IOS
+else
+   set   DO_IOS  = `echo   $DO_IOS | tr "[:lower:]" "[:upper:]"`
+   if(  $DO_IOS == "Y"     | \
+        $DO_IOS == "YES"   | \
+        $DO_IOS == "T"     | \
+        $DO_IOS == "TRUE"  ) set DO_IOS = TRUE
+   if(  $DO_IOS == "N"     | \
+        $DO_IOS == "NO"    | \
+        $DO_IOS == "F"     | \
+        $DO_IOS == "FALSE" ) set DO_IOS = FALSE
+
+   if( $DO_IOS != "TRUE" & $DO_IOS != "FALSE" ) then
+      echo
+      echo "${C1}IOSERVER${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
+      goto ASKIOS
+   endif
+endif
+
+if ( $DO_IOS == "TRUE" ) then
+   set USE_IOSERVER = 1
+else
+   set USE_IOSERVER = 0
+endif
+
+#######################################################################
+#                 What Processor Should We Run On?
+#######################################################################
+
+ASKPROC:
+
+if ( $SITE == 'NCCS' ) then
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}hasw (Haswell)${CN} (default)"
+   if (-e /etc/os-release) then
+      echo "   ${C2}sky  (Skylake)${CN}"
+   endif
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'hasw'
+   endif
+
+   if( $MODEL != 'hasw' & \
+       $MODEL != 'sky' ) goto ASKPROC
+
+   if (     $MODEL == 'hasw') then
+      set NCPUS_PER_NODE = 28
+   else if ($MODEL == 'sky') then
+      set NCPUS_PER_NODE = 40
+   endif
+
+else if ( $SITE == 'NAS' ) then
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   echo " "
+   echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'sky'
+   endif
+
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' ) goto ASKPROC
+
+   # Some processors have weird names at NAS
+   # ---------------------------------------
+
+   if ($MODEL == bro ) then
+      set MODEL = 'bro_ele'
+   else if ($MODEL == sky) then
+      set MODEL = 'sky_ele'
+   else if ($MODEL == cas) then
+      set MODEL = 'cas_ait'
+   endif
+
+   if (     $MODEL == 'san') then
+      set NCPUS_PER_NODE = 16
+   else if ($MODEL == 'ivy') then
+      set NCPUS_PER_NODE = 20
+   else if ($MODEL == 'has') then
+      set NCPUS_PER_NODE = 24
+   else if ($MODEL == 'bro_ele') then
+      set NCPUS_PER_NODE = 28
+   else if ($MODEL == 'sky_ele') then
+      set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'cas_ait') then
+      set NCPUS_PER_NODE = 40
+   endif
+
+else
+   set MODEL = 'UNKNOWN'
 endif
 
 #######################################################################
@@ -566,6 +694,10 @@ endif
      set NUM_READERS = 1
      set NUM_WRITERS = 1
 
+# Set DEFAULT IOSERVER Parameters
+# -------------------------------
+     set DEF_IOS_NDS      = 1
+
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
@@ -755,6 +887,7 @@ if( $AGCM_IM ==  "c180" ) then
      set NUM_SGMT = 1
      set ATMOS_RES = CF0180x6C
      set POST_NDS = 8
+     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "1152" ) then
      set       DT = 450
@@ -776,6 +909,7 @@ if( $AGCM_IM == "1152" ) then
      set ATMOS_RES = DC1152xPC0721
      set   CNV_NX = 4
      set POST_NDS = 12
+     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c360" ) then
      set       DT = 450
@@ -797,6 +931,7 @@ if( $AGCM_IM == "c360" ) then
      set ATMOS_RES = CF0360x6C
      set   CNV_NX = 4
      set POST_NDS = 12
+     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c500" ) then
      set       DT = 450
@@ -819,6 +954,7 @@ if( $AGCM_IM == "c500" ) then
      set   CNV_NX = 8
      set POST_NDS = 12
      set USE_SHMEM = 1
+     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 450
@@ -841,6 +977,7 @@ if( $AGCM_IM == "c720" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
+     set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
      set       DT = 450
@@ -863,6 +1000,7 @@ if( $AGCM_IM == "c1440" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
+     set DEF_IOS_NDS = 4
 endif
 # DYAMOND Resolutions
 if( $AGCM_IM == "c768" ) then
@@ -886,6 +1024,7 @@ if( $AGCM_IM == "c768" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
+     set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1536" ) then
      set       DT = 90
@@ -908,6 +1047,7 @@ if( $AGCM_IM == "c1536" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
+     set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c3072" ) then
      set       DT = 45
@@ -930,6 +1070,7 @@ if( $AGCM_IM == "c3072" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
+     set DEF_IOS_NDS = 5
 endif
 
 set IS_FCST = 0
@@ -1141,7 +1282,14 @@ set  RATS_PROVIDER   = PCHEM
 #                  Architecture Specific Variables
 #######################################################################
 
-@ NPES = $NX * $NY
+@ MODEL_NPES = $NX * $NY
+
+if ( $DO_IOS == TRUE ) then
+   set IOS_NDS = $DEF_IOS_NDS
+else
+   set IOS_NDS = 0
+endif
+
 @ CNV_NPES = $CNV_NX * $CNV_NY
 # Here we need to convert POST_NDS to total tasks. Using 16 cores
 # per task as a good default
@@ -1160,34 +1308,41 @@ set  RATS_PROVIDER   = PCHEM
               setenv CONVERT_T  "0:15:00"                                              # Wallclock Time   for gcm_convert.j
 
 if( $SITE == 'NAS' ) then
-              setenv BATCH_GROUP "PBS -W group_list="                                  # PBS Syntax for GROUP
-              setenv     RUN_FT "6:00:00"                                              # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "8:00:00"                                              # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
-              setenv    PLOT_T  "8:00:00"                                              # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "8:00:00"                                              # Wallclock Time   for gcm_archive.j
+              setenv BATCH_CMD "qsub"                 # PBS Batch command
+              setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
+              setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
+              setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
+              setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
+              setenv BATCH_JOINOUTERR "PBS -j oe "    # PBS Syntax for joining output and error
+              setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
               if( $GPU == "TRUE" ) then
-                 set NCPUS = 16                                                        # CPUS per node
-                 set MODEL = "san_gpu"                                                 # Model of CPU
-                 set QTYPE = "gpu_k40"                                                 # Queue to use
+                 set NCPUS_PER_NODE = 16              # CPUS per node
+                 set MODEL = "san_gpu"                # Model of CPU
+                 set QTYPE = "gpu_k40"                # Queue to use
               else
-                 set NCPUS = 40                                                        # CPUS per node
-                 set MODEL = "sky_ele"                                                 # Model of CPU
-                 set QTYPE = "normal"                                                  # Queue to use
+                 set QTYPE = "normal"                 # Queue to use
               endif
-              @ NCUS  = `echo "($NPES + $NCPUS - 1)/$NCPUS" | bc`
-              @ NPCUS = `echo "($POST_NPES + $NCPUS - 1)/$NCPUS" | bc`
-              setenv     RUN_Q  "PBS -q ${QTYPE}"                                                           # batch queue name for gcm_run.j
-              setenv     RUN_P  "PBS -l select=${NCUS}:ncpus=${NCPUS}:mpiprocs=${NCPUS}:model=${MODEL}"     # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "PBS -l select=24:ncpus=${NCPUS}:mpiprocs=${NCPUS}:model=${MODEL}"          # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "PBS -q normal"                                                             # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "PBS -q normal"                                                             # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  "PBS -q normal"                                                             # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  "PBS -q normal"                                                             # batch queue name for gcm_archive.j
-              setenv    POST_P  "PBS -l select=${NPCUS}:ncpus=${NCPUS}:mpiprocs=${NCPUS}:model=${MODEL}"    # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS}:mpiprocs=1:model=${MODEL}"                  # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS}:mpiprocs=${NCPUS}:model=${MODEL}"           # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS}:mpiprocs=${NCPUS}:model=${MODEL}"   # PE Configuration for gcm_convert.j
+
+              #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
+              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+
+              setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                              # batch queue name for gcm_run.j
+              setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "PBS -l select=24:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"           # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  "PBS -q normal"                                                                                # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "PBS -q normal"                                                                                # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_archive.j
+              setenv    POST_P  "PBS -l select=${NPCUS}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=1:model=${MODEL}"                            # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"            # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
 
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
@@ -1204,27 +1359,38 @@ if( $SITE == 'NAS' ) then
               setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
               setenv TAREXEC    mtar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
-              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
+              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
               setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
               if( $GPU == "TRUE" ) then
-                 setenv  RUN_Q  "SBATCH --constraint=k40"                              # batch queue name for gcm_run.j
-              else
-                 setenv  RUN_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_run.j
+                 set NCPUS_PER_NODE = 16                                         # CPUS per node
+                 set MODEL = "k40"                                               # Model of CPU
               endif
-              setenv    RUN_P   "SBATCH --ntasks=${NPES}"                              # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "SBATCH --ntasks=\&NPES"                               # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "SBATCH --constraint=hasw"                             # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  "SBATCH --partition=datamove"                          # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  "SBATCH --partition=datamove"                          # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
+
+              #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
+              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+
+              setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
+              setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_archive.j
+              setenv    POST_P  "SBATCH --nodes=${NPCUS} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
@@ -1239,10 +1405,15 @@ else if( $SITE == 'NCCS' ) then
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar                                                    # Tar utility for large archives
+              setenv TAREXEC    tar
 else
 # These are defaults for the desktop
-              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
+              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
               setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
@@ -1259,6 +1430,7 @@ else
               setenv    PLOT_P  NULL                                                   # PE Configuration for gcm_post.j
               setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
               setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
@@ -1279,6 +1451,10 @@ else
               set CNV_NY = ${NY}
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar                                                    # Tar utility for large archives
+              # By default on desktop, just ignore IOSERVER for now
+              set USE_IOSERVER = 0
+              set IOS_NDS = 0
+              set NCPUS_PER_NODE = 0
 endif
 
 
@@ -1613,18 +1789,13 @@ cat > $HOMDIR/SETENV.commands << EOF
    setenv MPI_COLL_REPRODUCIBLE
    setenv SLURM_DISTRIBUTION block
 
-   setenv MPI_XPMEM_ENABLED no
-   setenv SUPPRESS_XPMEM_TRIM_THRESH 1
-   setenv MPI_NUM_MEMORY_REGIONS 0
-   
    #setenv MPI_DISPLAY_SETTINGS 1
    #setenv MPI_VERBOSE 1
    
-   setenv MPI_COMM_MAX  1024
-   setenv MPI_GROUP_MAX 1024
-   setenv MPI_BUFS_PER_PROC 256
-   
-   setenv MPI_IB_TIMEOUT 23
+   unsetenv MPI_MEMMAP_OFF
+   unsetenv MPI_NUM_MEMORY_REGIONS
+   setenv MPI_XPMEM_ENABLED yes
+   unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 
    # For some reason, PMI_RANK is randomly set and interferes
    # with binarytile.x and other executables.
@@ -1754,6 +1925,7 @@ s?@PLOT_T?$PLOT_T?g
 s?@PLOT_P?$PLOT_P?g
 s?@PLOT_Q?$PLOT_Q?g
 s?@MOVE_Q?$MOVE_Q?g
+s?@MOVE_P?$MOVE_P?g
 s?@ARCHIVE_N?$ARCHIVE_N?g
 s?@ARCHIVE_T?$ARCHIVE_T?g
 s?@ARCHIVE_P?$ARCHIVE_P?g
@@ -1780,6 +1952,11 @@ s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
 s?@CNVDIR?$CNVDIR?g
 s?@BATCH_GROUP?${BATCH_GROUP}${GROUP}?g
+s?@BATCH_TIME?$BATCH_TIME?g
+s?@BATCH_CMD?$BATCH_CMD?g
+s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
+s?@BATCH_OUTPUTNAME?$BATCH_OUTPUTNAME?g
+s?@BATCH_JOINOUTERR?$BATCH_JOINOUTERR?g
 s?@SITE?$SITE?g
 s?@GEOSDIR?$GEOSDIR?g
 s?@GEOSSRC?$GEOSSRC?g
@@ -1851,6 +2028,9 @@ s/@CHEM_DT/$CHEM_DT/g
 s/@NX/$NX/g
 s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
+s/@USE_IOSERVER/$USE_IOSERVER/g
+s/@IOS_NDS/$IOS_NDS/g
+s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
 s?>>>LATLON_AGCM<<<?$LATLON_AGCM?g
