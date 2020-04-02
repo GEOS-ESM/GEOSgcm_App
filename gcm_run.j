@@ -747,6 +747,18 @@ endif
 if( $NAS_BATCH == TRUE ) then
    $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
 else
+#
+# In context of atmosphere-ocean coupled model with MOM6
+# ------------------------------------------------------
+# For a runtime switch (between MOM5 and MOM6) to work 
+# by avoiding conflict between modules of MOM5 and MOM6
+# that have same name.
+#
+# https://github.com/GEOS-ESM/GEOSgcm/issues/116
+# ------------------------------------------------------
+#
+   setenv LD_PRELOAD ${GEOSDIR}/lib/libmom6.so
+#
    $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
 endif
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
