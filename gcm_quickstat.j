@@ -8,7 +8,7 @@ alias MATH 'set \!:1 = `echo "\!:3-$" | bc -l`'
 #SBATCH --time=12:00:00
 #SBATCH --ntasks-per-node=1
 #SBATCH --job-name=quickstat
-#SBATCH --constraint=hasw
+#SBATCH --constraint=@MODEL
 #SBATCH  -o quickstat.out
 #SBATCH --@QUEUE=@PARTITION
 #SBATCH --array=1-@NTASKS
