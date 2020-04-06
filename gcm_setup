@@ -1776,6 +1776,7 @@ else if( $MPI == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_DAPL_UD enable
+setenv I_MPI_ADJUST_ALLREDUCE 12
 EOF
 
 endif # if mpi
