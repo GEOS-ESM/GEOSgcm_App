@@ -1157,43 +1157,12 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
+    if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
+    if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
-endif
-
-
-# Check for Runoff Routing Model
-# ------------------------------
-RRM:
-echo "Do you wish to run ${C1} the Runoff Routing Model${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
-set   RUNRRM  = $<
-if( .$RUNRRM == . ) then
-set   RUNRRM  = FALSE
-else
-set   RUNRRM  = `echo   $RUNRRM | tr "[:lower:]" "[:upper:]"`
-if(  $RUNRRM == "Y"     | \
-     $RUNRRM == "YES"   | \
-     $RUNRRM == "T"     | \
-     $RUNRRM == "TRUE"  ) set RUNRRM = TRUE
-if(  $RUNRRM == "N"     | \
-     $RUNRRM == "NO"    | \
-     $RUNRRM == "F"     | \
-     $RUNRRM == "FALSE" ) set RUNRRM = FALSE
-
-if( $RUNRRM != TRUE & $RUNRRM != FALSE ) then
-echo
-echo "${C1} the Runoff Routing Model${CN} must be set equal to ${C2}TRUE${CN} or ${C2}FALSE${CN}!"
-goto RRM
-else
-echo
-endif
-endif
-
-if( $RUNRRM == TRUE ) then
-    set RUN_ROUTE = 1
-else
-    set RUN_ROUTE = 0
+    set GCMRUN_CATCHCN = "#DELETE"
 endif
 
 #######################################################################
@@ -1987,6 +1956,7 @@ s?>>>FVLATLON<<<?$FVLATLON?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
+s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 
@@ -2068,7 +2038,6 @@ s/@USE_SKIN_LAYER/1/g
 s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
-s/@RUN_ROUTE/$RUN_ROUTE/g
 
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
