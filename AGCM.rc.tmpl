@@ -34,7 +34,7 @@ IRRADAvrg: 0
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
 #HYDROSTATIC: FALSE
 
-# UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
+# UNCOMMENT to disable aerosol activation in 1-moment or GFDL cloud microphysics
 #USE_AEROSOL_NN: 0
 
 ###########################################################
@@ -42,6 +42,7 @@ IRRADAvrg: 0
 # The options are RAS or GF
 # ----------------------------------------
 CONVPAR_OPTION: GF
+STOCHASTIC_CNV: 1.0
 
 # Flag to activated scale-awareness approach (0 false, 1 true)
 USE_SCALE_DEP: 1
