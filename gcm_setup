@@ -59,6 +59,7 @@ endif
 # Set default behavior of switches
 set NOCVS = TRUE
 set GPU   = FALSE
+set LINKX = FALSE
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -80,6 +81,11 @@ while ( $#argv > 0 )
       # Do not archive the source
       case --nocvs:
          set NOCVS = TRUE
+         breaksw
+
+      # Symlink GEOSgcm.x
+      case --link:
+         set LINKX = TRUE
          breaksw
 
       # Here any string not above will trigger USAGE
@@ -1704,7 +1710,11 @@ echo $GROUP > $HOME/.GROUProot
      set EMISSIONS = g5chem
   endif
 
+if ( $LINKX == "TRUE" ) then
+  if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+else
   if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
+endif
 
 #######################################################################
 #                      Create SETENV Commands
