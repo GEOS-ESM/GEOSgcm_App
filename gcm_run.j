@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@RUN_T
+#@BATCH_TIME@RUN_T
 #@RUN_P
-#PBS -N @RUN_N
+#@BATCH_JOBNAME@RUN_N
 #@RUN_Q
 #@BATCH_GROUP
-#@PBS -o gcm_run.o@RSTDATE
+#@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
 #                         System Settings 
@@ -86,28 +86,76 @@ set  OGCM_JM  = `grep      "OGCM\.JM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 >>>COUPLED<<<set       NX = `grep  "OGCM\.NX:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 >>>COUPLED<<<set       NY = `grep  "OGCM\.NY:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 
+# Calculate number of cores/nodes for IOSERVER
+# --------------------------------------------
+
+set USE_IOSERVER   = @USE_IOSERVER
+set AGCM_IOS_NODES = `grep IOSERVER_NODES: $HOMDIR/AGCM.rc | cut -d':' -f2`
+
+if ($USE_IOSERVER == 0) then
+   set IOS_NODES = 0
+else
+   set IOS_NODES = $AGCM_IOS_NODES
+endif
+
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
-  if ($?SLURM_NTASKS) then
-     set  NCPUS = $SLURM_NTASKS
-  else if ($?PBS_NODEFILE) then
-     set  NCPUS = `cat $PBS_NODEFILE | wc -l`
-  else
-     set  NCPUS = NULL
-  endif
+if ($?SLURM_NTASKS) then
+   set  NCPUS = $SLURM_NTASKS
+else if ($?PBS_NODEFILE) then
+   set  NCPUS = `cat $PBS_NODEFILE | wc -l`
+else
+   set  NCPUS = NULL
+endif
 
-  if ( $NCPUS != NULL ) then
-     @    NPES  = $NX * $NY
-        if( $NPES > $NCPUS ) then
-             echo "CPU Resources are Over-Specified"
-             echo "--------------------------------"
-             echo "Allotted NCPUs: $NCPUS"
-             echo "Specified  NX : $NX"
-             echo "Specified  NY : $NY"
-             exit
-        endif
-     endif
-  endif
+@ MODEL_NPES = $NX * $NY
+
+if ( $NCPUS != NULL ) then
+
+   if ( $USE_IOSERVER == 1 ) then
+
+      set NCPUS_PER_NODE = @NCPUS_PER_NODE
+
+      @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
+      @ NPES   = $NODES * $NCPUS_PER_NODE
+
+      if( $NPES > $NCPUS ) then
+         echo "CPU Resources are Over-Specified"
+         echo "--------------------------------"
+         echo "Allotted  NCPUs: $NCPUS"
+         echo "Requested NCPUs: $NPES"
+         echo ""
+         echo "Specified NX: $NX"
+         echo "Specified NY: $NY"
+         echo ""
+         echo "Specified IOSERVER_NODES: $AGCM_IOS_NODES"
+         echo "Specified cores per node: $NCPUS_PER_NODE"
+         exit
+      endif
+
+   else
+
+      @ NPES = $MODEL_NPES
+
+      if( $NPES > $NCPUS ) then
+         echo "CPU Resources are Over-Specified"
+         echo "--------------------------------"
+         echo "Allotted  NCPUs: $NCPUS"
+         echo "Requested NCPUs: $NPES"
+         echo ""
+         echo "Specified NX: $NX"
+         echo "Specified NY: $NY"
+         exit
+      endif
+
+   endif
+
+else
+   # This is for the desktop path
+
+   @ NPES = $MODEL_NPES
+
+endif
 
 #######################################################################
 #                       GCMEMIP Setup
@@ -326,6 +374,16 @@ cat << _EOF_ > $FILE
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISNIRstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODELFPARmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
+>>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+>>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
 >>>COUPLED<<<if( $OGCM_IM == 1440 ) then
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
@@ -662,14 +720,44 @@ if ($SITE == NAS) then
    endif
 endif
 
+# If REPLAY, link necessary forcing files
+# ---------------------------------------
+set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
+if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
+
+     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:    AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set ANA_LOCATION = `grep REPLAY_ANA_LOCATION: AGCM.rc | grep -v '#'   | cut -d: -f2`
+
+     set REPLAY_FILE        = `grep REPLAY_FILE:   AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE09      = `grep REPLAY_FILE09: AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
+     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
+
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
+
+     /bin/ln -sf ${ANA_LOCATION}/aod .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
+
+endif
+
 # Run GEOSgcm.x
 # -------------
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
-       @  NPES = $NX * $NY
-if( $NAS_BATCH == TRUE ) then
-   $RUN_CMD $NPES ./GEOSgcm.x >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
+
+if( $USE_IOSERVER == 1) then
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
 else
-   $RUN_CMD $NPES ./GEOSgcm.x
+   set IOSERVER_OPTIONS = ""
+endif
+
+if( $NAS_BATCH == TRUE ) then
+   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
+else
+   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
 endif
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
@@ -787,7 +875,7 @@ $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
 if( $FSEGMENT != 00000000 ) then
      set REPLAY_BEG_DATE = `grep BEG_REPDATE: $HOMDIR/CAP.rc | cut -d':' -f2`
      set REPLAY_END_DATE = `grep END_REPDATE: $HOMDIR/CAP.rc | cut -d':' -f2`
-     set nday  = `echo $FSEGMENT | cut -c7-8`
+     set nday            = `echo $FSEGMENT | /bin/grep -Po '\d+' | bc`
          @ dt  = 10800 - 86400 * $nday
      set date  = `$GEOSBIN/tick $nymdc $nhmsc $dt`
      set nymdz =  $date[1]
@@ -795,7 +883,8 @@ if( $FSEGMENT != 00000000 ) then
 
      if( $nymdz >= ${REPLAY_BEG_DATE} & \
          $nymdz <= ${REPLAY_END_DATE} ) then
-         $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $FSEGMENT TRUE
+         setenv CYCLED .TRUE.
+         $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $nday TRUE
      endif
 endif
 
@@ -845,8 +934,8 @@ endif
 if ( $rc == 0 ) then
       cd  $HOMDIR
       if( $GCMEMIP == TRUE ) then
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j$RSTDATE
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
       else
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif

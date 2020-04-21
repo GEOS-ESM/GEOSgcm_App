@@ -3,6 +3,8 @@
 # ------------------------------------------
            NX: @NX
            NY: @NY
+IOSERVER_NODES: @IOS_NDS
+
       AGCM_IM: @AGCM_IM
       AGCM_JM: @AGCM_JM
       AGCM_LM: @AGCM_LM
@@ -126,52 +128,155 @@ RECORD_FREQUENCY: 000000       000000
 RECORD_REF_DATE: >>>REFDATE<<< >>>FCSDATE<<<
 RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
- 
-####################################################################################################
-####                      DAS/REPLAY  Predictor-Corrector  Parameters                           ####
-####                      -------------------------------------------                           ####
-####                                                                                            ####
-####   ASSIMILATION_CYCLE   nnnnnn   (Duration -in seconds- of Assimilation Cycle)              ####
-####   CORRECTOR_DURATION   nnnnnn   (Duration -in seconds- of Corrector step)                  ####
-####   PREDICTOR_DURATION   nnnnnn   (Duration -in seconds- of Predictor step)                  ####
-####                                                                                            ####
-####   IAU_DIGITAL_FILTER  YES or NO                                                            ####
-####                                                                                            ####
-####   NOTE:  For MERRA2:  CORRECTOR_DURATION => 21600                 (6.0-hrs)                ####
-####          -----------  PREDICTOR_DURATION => CORRECTOR_DURATION/2  (3.0-hrs)                ####
-####                                                                                            ####
-####              For FP:  CORRECTOR_DURATION => 10800                 (3.0-hrs)                ####
-####              -------  PREDICTOR_DURATION => CORRECTOR_DURATION/2  (1.5-hrs)                ####
-####                                                                                            ####
-####################################################################################################
- 
-#   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
-#   CORRECTOR_DURATION:  nnnnnn       #  (Default: ASSIMILATION_CYCLE)
-#   PREDICTOR_DURATION:  nnnnnn       #  (Default: CORRECTOR_DURATION/2)
 
+###################################################################################################
+####                                   DAS/Replay Options                                      ####
+####                                   ------------------                                      ####
+####                                                                                           ####
+####   The REPLAY mechanism operates within 2 distinct "flavors":                              ####
+####              1) Exact    (Uses Archived Increment Files)                                  ####
+####              2) Regular  (Uses Archived Analysis/Assimilation Files)                      ####
+####                                                                                           ####
+####   Exact Replays identically reproduce (bit-for-bit) a previous GEOS DAS experiment        ####
+####         by simply using the archived IAU forcing from the DAS experiment.                 ####
+####         For these cases, only the CORRECTOR step is employed and is, therefore, as        ####
+####         efficient as a stand-alone model run.                                             ####
+####                                                                                           ####
+####         In order to guarentee reproducibility, the model and its BUILD parameters         ####
+####         (Compilers and Options) as well as all INPUT data must be identical to the        ####
+####         original DAS experiment.  This type of REPLAY is useful when producing            ####
+####         additional passive, diagnostic data, or when the original data is lost.           ####
+####                                                                                           ####
+####                                                                                           ####
+####   Regular Replays are used to mimic the original IAU methodology, i.e., both the          ####
+####           PREDICTOR and the CORRECTOR steps are employed.  The key difference being       ####
+####           that the Analysis is based on archived datasets.  These Analyses may be from    ####
+####           the GEOS DAS system, or from any other source that is written using the         ####
+####           appropriate GEOS DAS ana.eta data format.                                       ####
+####                                                                                           ####
+####           Regular Replays will reproduce data (bit-for-bit) from the original source      ####
+####           Analysis experiment provided all model, input data, and Predictor/Corrector     ####
+####           configurations are identical to the original experiment.  Otherwise,            ####
+####           differences in the model and/or IAU procedure will produce changes to the       ####
+####           assimilation and forecasts which may improve or degrade the results.            ####
+####                                                                                           ####
+####                                                                                           ####
+####   Note:  The Operational GEOS DAS always operates in an "Exact" mode since the IAU        ####
+####        Increments are produced off-line, separate from the GCM and GSI executables,       ####
+####        based on ana.eta and bkg.eta files.  Thus, the increments produces from these      ####
+####        files are REPLAYed in an "Exact" manner.                                           ####
+####                                                                                           ####
+####                                                                                           ####
+####   Exact Replay Details:                                                                   ####
+####   ---------------------                                                                   ####
+####        Exact Replays perform the CORRECTOR step by integrating the model forward in       ####
+####        time forced by the IAU Analysis increments.  In MERRA-2, a single Analysis was     ####
+####        computed at the center of the Assimilation Cycle (6-hrs). Thus, as an example,     ####
+####        the cycle between 21z (or -03z) and +03z used the single Analysis at the synoptic  ####
+####        time of 00z.  In contrast, the 4D-EnVar system produces 7 hourly Analyses (-03z,   ####
+####        -02z, -01z, 00z, +01z, +02z, +03z). The IAU sequence currently employed uses       ####
+####        the 3 Analyses defined at -03z, 00z, +03z for its IAU forcing.  Both systems       ####
+####        may be described using the following parameters:                                   ####
+####                                                                                           ####
+####        CORRECTOR_DURATION          nnnnnn   (Duration -in seconds- of Corrector step)     ####
+####        REPLAY_MODE                 Exact                                                  ####
+####        REPLAY_FILE                 %s.agcm_import_rst.%y4%m2%d2_%h2z.bin                  ####
+####        REPLAY_FILE_FREQUENCY       nnnnnn   (Default: CORRECTOR_DURATION)                 ####
+####        REPLAY_FILE_REFERENCE_TIME  HHMMSS   (Default: 000000)                             ####
+####                                                                                           ####
+####        Thus, MERRA-2 => CORRECTOR_DURATION         =  21600                               ####
+####                         REPLAY_FILE_FREQUENCY      =  21600                               ####
+####                         REPLAY_FILE_REFERENCE_TIME = 000000                               ####
+####                                                                                           ####
+####             4D_EnVar => CORRECTOR_DURATION         =  21600                               ####
+####                         REPLAY_FILE_FREQUENCY      =  10800                               ####
+####                         REPLAY_FILE_REFERENCE_TIME = 000000                               ####
+####                                                                                           ####
+####        Note: the Digital Filter (if used) is configured to provide its maximum impact     ####
+####        centered at the time(s) of the Analyses (00z for MERRA-2, and -03z, 00z, +03z      ####
+####        for 4D-EnVar).                                                                     ####
+####                                                                                           ####
+####                                                                                           ####
+####   Regular Replay Details:                                                                 ####
+####   -----------------------                                                                 ####
+####        Regular Replay involves both the PREDICTOR and the CORRECTOR steps.  If a single   ####
+####        Analysis is used within the CORRECTOR window (e.g., as in MERRA-2), the PREDICTOR  ####
+####        duration would be defined as the time from the beginning of the CORRECTOR step to  ####
+####        the time of the Analysis (e.g., 3-hours for the MERRA-2 system).  However, if      ####
+####        multiple Analyses are used within the CORRECTOR window, the PREDICTOR duration     ####
+####        would be defined as the time from the beginning of the CORRECTOR step to the time  ####
+####        of the Last Analysis.  Therefore, the length of the PREDICTOR step is computed     ####
+####        based on the FREQUENCY and REFERENCE TIME of the REPLAYed Analysis/Assimilation    ####
+####        files.  Once the Increment file(s) are created, the model rewinds to the beginning ####
+####        of the CORRECTOR step and performs an EXACT Replay to the just-produced files.     ####
+####                                                                                           ####
+####                                                                                           ####
+####   Replay09 File Details:                                                                  ####
+####   ----------------------                                                                  ####
+####        The current 4D-EnVar system, as previously noted, produces 7 hourly Analyses:      ####
+####        (-03z, -02z, -01z, 00z, +01z, +02z, +03z) for each 6-hour assimilation window      ####
+####        centered around the 4 synpotic times of 00z, 06z, 12z, and 18z.  We see that the   ####
+####        last Analysis (+03z) associated with each synoptic time will be over-ridden by     ####
+####        the first Analyiss (-03z) associated with synoptic time of the next assimilation   ####
+####        window. To prevent these over-ridden files from being lost, the GEOS-5 DAS         ####
+####        archives the (+03z) data with an appended "09" characterization (e.g., bkg09.eta,  ####
+####        ana09.eta, agcm09_import).  Therefore, when running REPLAY, care must be given     ####
+####        to identify the Replay09 files if needed.  A separate REPLAY_FILE09 key word is    ####
+####        used for this purpose, and is only utilized if the REPLAY configuration warrants.  ####
+####                                                                                           ####
+####                                                                                           ####
+####   Regualr Replay Time Interpolation:                                                      ####
+####   ----------------------------------                                                      ####
+####        In some instances the USER might wish to create IAU Increments at a frequency      ####
+####        greater than the frequency of the target analysis.  For those cases additional     ####
+####        parameters are introduced and used in coordination with the standard REPLAY        ####
+####        parameters:                                                                        ####
+####                                                                                           ####
+####            Standard:    REPLAY_FILE_FREQUENCY      =  nnnnn                               ####
+####                         REPLAY_FILE_REFERENCE_TIME = HHMMSS                               ####
+####          Additional:          MKIAU_FREQUENCY      =  nnnnn                               ####
+####                               MKIAU_REFERENCE_TIME = HHMMSS                               ####
+####                               REPLAY_TIME_INTERP   = LINEAR (Default) or CUBIC            ####
+####                                                                                           ####
+####        When the additional parameters are invoked, the system time-interpolates the       ####
+####        REPLAY_FILE analyses to the times referenced by the MKIAU variables to create      ####
+####        the associated increment files.  The time-interpolation is done via a LINEAR       ####
+####        or CUBIC scheme.                                                                   ####
+####                                                                                           ####
+###################################################################################################
+
+#   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
 #   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
  
-###################################################################################################
-####                                    Exact Replay Options                                   ####
-####                                                                                           ####
-####   Exact_XX:  Replays Identically (bit-for-bit) a previously                               ####
-####                    run GEOS-5 DAS by simply using archived IAU forcing.                   ####
-####                    REPLAY File:  %s.agcm_import_rst.%y4%m2%d2_%h2z.bin                    ####
-####                   (Note: %s should be replaced with EXPID you are replaying)              ####
-####                                                                                           ####
-####   Exact_3D:  Uses Single   Increment Centered within Assimilation Cycle  (MERRA-2 Style)  ####
-####   Exact_4D:  Uses Multiple Increments  Spread within Assimilation Cycle       (FP Style)  ####
-####                                                                                           ####
-####    Exact_4D Notes: Nearest   Time:  PREDICTOR_DURATION = CORRECTOR_DURATION / 2           ####
-####                    Beginning Time:  PREDICTOR_DURATION = 0                                ####
-####                    Ending    Time:  PREDICTOR_DURATION = CORRECTOR_DURATION               ####
-####                                                                                           ####
-###################################################################################################
+# Typical MERRA-2 Regular REPLAY Configuration
+# --------------------------------------------
+#M2 REPLAY_ANA_EXPID:   MERRA-2
+#M2 REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2
+#M2 REPLAY_MODE: Regular
+#M2 REPLAY_FILE: ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4
+# -----------------------------------------------------------------
 
-#   Exact REPLAY Mode and File
-#   --------------------------
-#   REPLAY_MODE: Exact_3D
-#   REPLAY_FILE: %s.agcm_import_rst.%y4%m2%d2_%h2z.bin
+#   ANA EXPID and LOCATION used for REPLAY
+#   --------------------------------------
+#   REPLAY_ANA_EXPID:    @REPLAY_ANA_EXPID
+#   REPLAY_ANA_LOCATION: @REPLAY_ANA_LOCATION
+
+#   Typical Exact REPLAY Configuration
+#   ----------------------------------
+#   REPLAY_MODE: Exact
+#   REPLAY_FILE:   rs/Y%y4/M%m2/@REPLAY_ANA_EXPID.agcm_import_rst.%y4%m2%d2_%h2z.bin
+#   REPLAY_FILE09: rs/Y%y4/M%m2/@REPLAY_ANA_EXPID.agcm09_import_rst.%y4%m2%d2_%h2z.bin
+#   REPLAY_FILE_FREQUENCY: 10800
+#   REPLAY_FILE_REFERENCE_TIME: 000000
+
+#   Typical Regular REPLAY Configuration
+#   ------------------------------------
+#   REPLAY_MODE: Regular
+#   REPLAY_FILE:   ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana.eta.%y4%m2%d2_%h2z.nc4
+#   REPLAY_FILE09: ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana09.eta.%y4%m2%d2_%h2z.nc4
+#   REPLAY_FILE_FREQUENCY:       10800
+#   REPLAY_FILE_REFERENCE_TIME: 000000
+
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
@@ -181,31 +286,27 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHH<<<z.bin
 #>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_TYPE:  binary
 
-#   Exact REPLAY Mode for 4d-tendency
-#   ---------------------------------
->>>4DIAUDAS<<<    REPLAY_MODE: Exact_4D
+#   Exact REPLAY Mode for 4D-IAU
+#   ----------------------------
+>>>4DIAUDAS<<<    REPLAY_MODE: Exact
 >>>4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2z.bin
->>>4DIAUDAS<<<    CORRECTOR_DURATION: 10800
+>>>4DIAUDAS<<<    REPLAY_FILE_FREQUENCY: 7200
 >>>4DIAUDAS<<<    REPLAY_SHUTOFF: 21600.0 #  ShutOff Replay after 6-hours for G5NCEP and G5ECMWF Forecasts
 
 #>>>4DIAUDAS<<<    REPLAY_INTERVAL: 3600.0
 #>>>4DIAUDAS<<<    PREDICTOR_OFFSET: 3600.0
 
 ####################################################################################################
-####                                Regular Replay Options                                      ####
-####                                                                                            ####
-####  Replays to an existing Analysis by simulating the IAU process (i.e., IAU=ANA-BKG)         ####
-####  ---------------------------------------------------------------------------------         ####
+####                    Miscellaneous Exact/Regular REPLAY Parameters                           ####
+####                    ---------------------------------------------                           ####
 ####                                                                                            ####
 ####   REPLAY FILE MUST be on an A-Grid!                                                        ####
-####   REPLAY FILES are typically native grid analysis files                                    ####
-####          (E.g.,  %s.ana.eta.%y4%m2%d2_%h2z.nc4)                                            ####
 ####                                                                                            ####
 ####   REPLAY Variable Defaults: p,u,v,t,qv,o3                                                  ####
 ####   REPLAY Variables are set to either:  YES,  NO,  or a character_string NAME.              ####
 ####   The NAME is used as a means of creating an ALIAS for the REPLAY variable.                ####
 ####   An ALIAS is required when the REPLAY FILE contains a variable name NOT included          ####
-####   in our standard list. (E.g.,  REPLAY_T: temperature)                                     ####
+####   in our standard list. (e.g.,  REPLAY_T: temperature)                                     ####
 ####                                                                                            ####
 ####   NOTE:  When using an ALIAS for REPLAY_T, you must also supply the REPLAY_T_TYPE          ####
 ####   -----  REPLAY_T_TYPE: T        # Options: T,TV,TH,THV                                    ####
@@ -214,35 +315,8 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####          (E.g., REPLAY_QV: NO to disable REPLAY of Moisture).                              ####
 ####                                                                                            ####
 ####                                                                                            ####
-####   REPLAY_BKGAVE   nnnnnn  (Duration -in seconds- of Predictor Time-Averaging)              ####
-####                                  In Standard DAS Mode, Default = 0.                        ####
-####                                  To inhibit IAU Instability,                               ####
-####                                  set:  REPLAY_BKGAVE = 2/3 x CORRECTOR_DURATION            ####
-####                               or set:  IAU_DIGITAL_FILTER = YES                            ####
-####                                                                                            ####
-####     REPLAY_NUDGE  (YES or NO) If NUDGING is enabled, REPLAY files will be                  ####
-####                    time-interpolated at EVERY TimeStep to the Current Time.                ####
-####                                                                                            ####
-####             Note:  REPLAY_NUDGE = YES  forces:  CORRECTOR_DURATION = HEARTBEAT             ####
-####                                                 PREDICTOR_DURATION = 0                     ####
-####                                                 REPLAY_BKGAVE      = 0                     ####
-####                                                                                            ####
 ####################################################################################################
 #
-#   Regular REPLAY Mode and File
-#   ----------------------------
->>>REGULAR_REPLAY<<<   REPLAY_MODE: Regular
->>>REGULAR_REPLAY<<<   REPLAY_FILE: ana4replay.eta.%y4%m2%d2_%h2z.nc4
-
-#   REPLAY_FILE_FREQUENCY:      nnnnnn    (Default: CORRECTOR_DURATION)
-#   REPLAY_FILE_REFERENCE_TIME: HHMMSS    (Default: 000000)
-
-#   REPLAY_BKGAVE:              nnnnnn    (Default: 000000)
-#   REPLAY_NUDGE:               YES or NO (Default:     NO)
-
-#   AIAU_IMPORT_RESTART_FILE    => aiau_import_rst          (Required for REPLAY with PREDICTOR =0)
-#   AIAU_IMPORT_CHECKPOINT_FILE => aiau_import_checkpoint   (Required for REPLAY with PREDICTOR =0)
-
 #   BKG2ANACNSRV: 0 or 1    # (Defaults to 0:BiLinear Interpolation.  Note: Conservative Transformation creates Non-Wavenumber 1 Winds at Poles)
 #   ANA2BKGCNSRV: 0 or 1    # (Defaults to 0:BiLinear Interpolation.  Note: Conservative Transformation creates Non-Wavenumber 1 Winds at Poles)
 #
@@ -366,9 +440,8 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # --------------------
 #USE_PP_TAPER: 1
 
-
 ##############################################################################################
-####                  CHOICE OF  Land Surface and Runoff Routing Models                   ####
+####    Land Surface Model                                                                ####
 ##############################################################################################
 
 # Option to Diagnose Precipitation Types for Land Surface
@@ -379,15 +452,24 @@ DIAGNOSE_PRECIP_TYPE: FALSE
 # ---------------------------------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
-# LSM Icarus-NL Options
-# ---------------------
-@LSM_PARMS LAND_PARAMS: NRv7.2
-@LSM_PARMS Z0_FORMULATION: 4
-@LSM_PARMS IGNORE_VEG_HEIGHTS: 1
+# Name of file containing Surface GridComp resource parameters 
+# ------------------------------------------------------------
+# SURFRC: GEOS_SurfaceGridComp.rc
 
-# Set RUN_ROUTE to 1 to run the runoff routing model
-# -------------------------------------------------------------------------------
-RUN_ROUTE: @RUN_ROUTE
+
+# ****************************************************************
+# ******* REQUIRES MAJOR CLEAN-UP ACROSS SEVERAL GRIDCOMPs *******
+# ******* (retained to facilitate this cleanup in future)  *******
+# ******* IMPORTANT: This is merely for future reference   *******
+# *******   The model reads USE_CNNEE from CO2_GridComp.rc *******
+# *******   not from this file.                            *******
+# Atmosphere-Land CO2 coupling
+# ----------------------------	
+# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc, CMIP/CO2_GridComp.rc,	
+#                 MERRA2/CO2_GridComp.rc, MERRA2/19600101-20000331/CO2_GridComp.rc, MERRA2/20000401-present/CO2_GridComp.rc, and PIESA/CO2_GridComp.rc 	
+#                           in /GEOSchem_GridComp/GOCART_GridComp/CO2_GridComp/ before you build the model.)
+#
+# ****************************************************************
 
 ##############################################################################################
 ##############################################################################################
@@ -439,6 +521,10 @@ MOIST_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 
 # Boot-Strapable AGCM Model Restart Files
 # ---------------------------------------
+AIAU_IMPORT_RESTART_FILE:               aiau_import_rst
+AIAU_IMPORT_CHECKPOINT_FILE:            aiau_import_checkpoint
+AIAU_IMPORT_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
 MOIST_IMPORT_RESTART_FILE:              moist_import_rst
 MOIST_IMPORT_CHECKPOINT_FILE:           moist_import_checkpoint
 MOIST_IMPORT_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
@@ -648,10 +734,6 @@ ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOC
 # Time step for aerosol assimilation (GAAS)
 # -----------------------------------------
   GAAS_DT: 10800 # 3-hourly
-
-# Time step for Runoff Routing Model (RRM_RUN_DT)
-# -----------------------------------------
-  RRM_RUN_DT: 3600 # 1-hourly
 
 # DATAOCEAN Parameters for AMIP-Style Run
 # ----------------------------------------

@@ -340,17 +340,17 @@ BCSTAG="Icarus_Reynolds"
 
 case $SITE in
    NCCS)
-   SCMDIR="/discover/nobackup/mathomp4/scm/scminfiles/j1.0/"
-   BCSDIR="/discover/nobackup/ltakacs/bcs/Icarus/$BCSTAG"
+   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/j3.0/"
+   BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/dao_ops/fvInput_nc3"
    ;;
    NAS) 
-   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/j1.0/"
+   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/j3.0/"
    BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
-   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/j1.0/"
+   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/j3.0/"
    BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
@@ -423,6 +423,8 @@ then
   $ISED 's/L72/L132/g' $expdir/*.rc
 
   $ISED '/AGCM_LM:/c\AGCM_LM: 132' $expdir/AGCM.rc
+  $ISED '/AGCM.LM:/c\AGCM.LM: 132' $expdir/AGCM.rc
+  $ISED '/SCMGRID.LM:/c\SCMGRID.LM: 132' $expdir/HISTORY.rc
   cp $SOURCEDIR/*rst.r0001x0001x0132 $expdir
   /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x0132 $expdir/datmodyn_internal_rst
   /bin/mv $expdir/moist_internal_rst.r0001x0001x0132 $expdir/moist_internal_rst

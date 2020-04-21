@@ -4,9 +4,9 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@CONVERT_T
+#@BATCH_TIME@CONVERT_T
 #@CONVERT_P
-#PBS -N @CONVERT_N
+#@BATCH_JOBNAME@CONVERT_N
 #@RUN_Q
 #@BATCH_GROUP
 
@@ -72,10 +72,12 @@ set       NY = `grep  "^ *NY:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 set  AGCM_IM = `grep  AGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set  AGCM_JM = `grep  AGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set  AGCM_LM = `grep  AGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
-set  OGCM_IM = `grep  OGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
-set  OGCM_JM = `grep  OGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
->>>COUPLED<<<set       NX = `grep  OGCM_NX: $HOMDIR/AGCM.rc | cut -d':' -f2`
->>>COUPLED<<<set       NY = `grep  OGCM_NY: $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  OGCM_IM  = `grep      "OGCM\.IM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  OGCM_JM  = `grep      "OGCM\.JM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+
+>>>COUPLED<<<set  OGCM_LM  = `grep "OGCM\.LM:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+>>>COUPLED<<<set       NX = `grep  "OGCM\.NX:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+>>>COUPLED<<<set       NY = `grep  "OGCM\.NY:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 
 # Set ATMOS and OCEAN Horizontal Resolution Tags
 # ----------------------------------------------
@@ -95,8 +97,13 @@ set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
 
 cd $SCRDIR
 /bin/rm -rf * >& /dev/null
-                             /bin/ln -sf $EXPDIR/RC/* .
-                             @CPEXEC -f  $HOMDIR/*.rc .
+
+/bin/ln -sf $EXPDIR/RC/* .
+@CPEXEC -f  $HOMDIR/*.rc .
+@CPEXEC -f  $HOMDIR/*.nml .
+
+cat fvcore_layout.rc >> input.nml
+
 
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
@@ -174,7 +181,8 @@ endif
 setenv BCSDIR   @BCSDIR
 setenv SSTDIR   @SSTDIR
 setenv CHMDIR   @CHMDIR
-setenv BCRSLV   ${ATMOStag}_${OCEANtag}
+>>>DATAOCEAN<<<setenv BCRSLV    @ATMOStag_@OCEANtag
+>>>COUPLED<<<setenv BCRSLV    @ATMOStag_DE0360xPE0180
 setenv DATELINE DC
 
 >>>COUPLED<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
@@ -192,30 +200,52 @@ cat << _EOF_ > $FILE
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
->>>COUPLED<<</bin/ln -s $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}               SEAWIFS_KPAR_mon_clim.data
->>>COUPLED<<</bin/ln -s $GRIDDIR/${BCRSLV}-Pfafstetter.til   tile.data
->>>COUPLED<<</bin/ln -s $GRIDDIR/${BCRSLV}-Pfafstetter.TRN   runoff.bin
->>>COUPLED<<</bin/ln -s $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
->>>COUPLED<<</bin/ln -s $GRIDDIR/vgrid50.ascii ./vgrid.ascii
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+>>>COUPLED<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
->>>DATAOCEAN<<</bin/ln -sf $SSTDIR/@SSTFILE   sst.data
->>>DATAOCEAN<<</bin/ln -sf $SSTDIR/@ICEFILE fraci.data
->>>DATAOCEAN<<</bin/ln -sf $SSTDIR/@KPARFILE SEAWIFS_KPAR_mon_clim.data
+# Precip correction
+#/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
 >>>DATAOCEAN<<<if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
 >>>DATAOCEAN<<<endif
 
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
-/bin/ln -sf $BCSDIR/Shared/*bin .
+# DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
+# --------------------------------------------------------------------
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
 
-/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
-/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
-/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
-/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+# CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
+# ----------------------------------------------------------
+#bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+
+# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
+# ----------------------------------------------------------
+/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+
+/bin/ln -sf $BCSDIR/Shared/*bin .
+/bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
+
+>>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
+>>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
+>>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
+>>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+>>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
-/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
+
+>>>COUPLED<<<if( $OGCM_IM == 1440 ) then
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
+>>>COUPLED<<<endif 
+
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/visdf.dat visdf.dat
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/nirdf.dat nirdf.dat
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/vegdyn.data vegdyn.data
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/lai.dat lai.data
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/green.dat green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
@@ -224,15 +254,10 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
->>>COUPLED<<<@CPEXEC -R $GRIDDIR/INPUT .
->>>COUPLED<<<@CPEXEC $HOMDIR/input.nml .
 >>>COUPLED<<<@CPEXEC $HOMDIR/*_table .
+>>>COUPLED<<<@CPEXEC $GRIDDIR/INPUT/* INPUT
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
-
->>>FVCUBED<<<if(! -e input.nml ) then
->>>FVCUBED<<</bin/touch input.nml
->>>FVCUBED<<<endif
 
 _EOF_
 

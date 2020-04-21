@@ -1168,33 +1168,6 @@ else if( $SITE == 'NCCS' ) then
               setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
-else if( $SITE == 'JIBB' ) then
-              setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
-              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
-              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv     RUN_Q  "SBATCH --partition=general"                           # batch queue name for gcm_run.j
-              setenv     RUN_P  "SBATCH --ntasks=${NPES}"                              # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "SBATCH --ntasks=\&NPES"                               # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "SBATCH --partition=general"                           # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "SBATCH --partition=general"                           # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  "SBATCH --partition=general"                           # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  "SBATCH --partition=general"                           # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
-              setenv BCSDIR     /jibb/nobackup/gmaosi/ModelData/bcs/Ganymed-4_0/$BCSTAG # location of     Boundary Conditions
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     /jibb/nobackup/gmaosi/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              else
-                   setenv SSTDIR     /jibb/nobackup/gmaosi/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              endif
-              setenv CHMDIR     /jibb/nobackup/gmaosi/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /jibb/nobackup/$LOGNAME                                # user work directory
-              setenv COUPLEDIR  /jibb/nobackup/gmaosi/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
 else
 # These are defaults for the desktop
               setenv BATCH_GROUP "SBATCH -A "                                          # PBS Syntax for GROUP
@@ -1579,6 +1552,7 @@ else if( $MPI == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_DAPL_UD enable
+setenv I_MPI_ADJUST_ALLREDUCE 12
 EOF
 
 endif # if mpi
