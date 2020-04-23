@@ -1533,20 +1533,20 @@ while( $check == FALSE )
           echo $HISTORYrc > $HOME/.HISTORYrc
   endif
 
-  echo "Enter the tag or directory (/filename) of the ${C1}HISTORY_GEOSCHEMCHEM.rc.tmpl${CN} to use"
-  echo "(To use ${C1}HISTORY_GEOSCHEMCHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
+  echo "Enter the directory (/filename) of the ${C1}HISTORY.GEOSCHEMCHEM.rc.tmpl${CN} to use"
+  echo "(To use ${C1}HISTORY.GEOSCHEMCHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
   echo "-------------------------------------------------------------------------"
-  echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
+  echo "Hit ENTER to use Default Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
   if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
-  if( -e $BINDIR/HISTORY.rc.hold ) /bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
-  if( -e $BINDIR/HISTORY.rc.tmpl ) /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.hold
+
+  set TMPHIST = `mktemp`
 
   if( "$HISTORYrc" == "Current" ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/HISTORY_GEOSCHEMCHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $ETCDIR/HISTORY.GEOSCHEMCHEM.rc.tmpl $TMPHIST
   endif
 
   if( "$HISTORYrc" != "Current" ) then
@@ -1554,29 +1554,30 @@ while( $check == FALSE )
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/$HISTORYrc $BINDIR/HISTORY.rc.tmp1
+            set TMPHIST1 = `mktemp`
+            /bin/cp -f $ETCDIR/$HISTORYrc $TMPHIST1
 
-            set  EXPID_old = `grep  "EXPID:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
+            set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
 
-            /bin/rm -f command
+            set  TMPCMD = `mktemp`
             set  string = "EXPID:"
-            echo cat $BINDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $BINDIR/HISTORY.rc.tmpl > command
-            chmod +x   command
-                     ./command
-            /bin/rm -f command
-            /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.tmp1
-                   cat $BINDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $BINDIR/HISTORY.rc.tmpl
-            /bin/rm -f $BINDIR/HISTORY.rc.tmp1
+            echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
+            chmod +x   $TMPCMD
+                       $TMPCMD
+            /bin/rm -f $TMPCMD
+            /bin/mv -f $TMPHIST $TMPHIST1
+                   cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
+            /bin/rm -f $TMPHIST1
 
-       else if( -e $HISTORYrc/HISTORY_GEOSCHEMCHEM.rc.tmpl ) then
+       else if( -e $HISTORYrc/HISTORY.GEOSCHEMCHEM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY_GEOSCHEMCHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY.GEOSCHEMCHEM.rc.tmpl $TMPHIST
        else
-           echo "This condition is based on updating HISTORY.AGCM.rc.tmpl with CVS"
+           echo "This condition is based on updating HISTORY.GEOSCHEMCHEM.rc.tmpl with CVS"
            echo "This has no equivalent in git at present. Please contact Matt"
            echo "Thompson or Larry Takacs to help resolve this."
            exit 2
@@ -2193,14 +2194,16 @@ endif
 
 echo " "
 
-# Operate on files in BINDIR
+# Operate on files in ETCDIR
 
 foreach FILE ($FILES)
 
    /bin/rm -f $HOMDIR/tmpfile
    /bin/rm -f $HOMDIR/$FILE
 
-   if (      -e $BINDIR/$FILE ) then
+   if ( $FILE == "HISTORY.rc.tmpl" ) then
+      cat            $TMPHIST > $HOMDIR/tmpfile
+   else if ( -e $BINDIR/$FILE ) then
       cat       $BINDIR/$FILE > $HOMDIR/tmpfile
    else if ( -e $ETCDIR/$FILE ) then
       cat       $ETCDIR/$FILE > $HOMDIR/tmpfile
@@ -2223,6 +2226,8 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUSTART.commands
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
+
+/bin/rm -f $TMPHIST
 
 # Add 5 snippets to the run script, specialized for GEOS-Chem
 # -----------------------------------------------------------
@@ -2332,7 +2337,6 @@ endif
 set RSNAMES = "LH2O LMAM LCARMA LPCHEM LSTRATCHEM LGMICHEM LGEOSCHEMCHEM LHEMCO LGOCART LGOCART_DATA"
 set RSTYPES = "INTERNAL IMPORT"
 
-/bin/rm -f command
 set FILE = AGCM.rc.tmpl
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2345,20 +2349,21 @@ foreach rsname ($RSNAMES)
    if( $name == GOCART_DATA ) set name = GOCART.data
 
    foreach type ($RSTYPES)
+      set  TMPCMD = `mktemp`
       set  string = ${name}_${type}
       /bin/rm -f $LOCDIR/$FILE.tmp
       /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
       if( $test == TRUE ) then
          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-              \{sub \( \/\#${string}\/ ,\"${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+              \{sub \( \/\#${string}\/ ,\"${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > $TMPCMD
       endif
       if( $test == FALSE ) then
          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-              \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+              \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > $TMPCMD
       endif
-      chmod +x   command
-      ./command
-      /bin/rm -f command
+      chmod +x   $TMPCMD
+                 $TMPCMD
+      /bin/rm -f $TMPCMD
    end
 end
 /bin/rm -f $LOCDIR/$FILE.tmp
