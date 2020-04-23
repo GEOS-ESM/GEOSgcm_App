@@ -1524,8 +1524,8 @@ while( $check == FALSE )
           echo $HISTORYrc > $HOME/.HISTORYrc
   endif
 
-  echo "Enter the directory (/filename) of the ${C1}HISTORY.STRATCHEM.rc.tmpl${CN} to use"
-  echo "(To use ${C1}HISTORY.STRATCHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
+  echo "Enter the directory (/filename) of the ${C1}HISTORY_STRATCHEM.rc.tmpl${CN} to use"
+  echo "(To use ${C1}HISTORY_STRATCHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
   echo "-------------------------------------------------------------------------"
   echo "Hit ENTER to use Default Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
@@ -1537,7 +1537,7 @@ while( $check == FALSE )
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/HISTORY.STRATCHEM.rc.tmpl $TMPHIST
+            /bin/cp -f $ETCDIR/HISTORY_STRATCHEM.rc.tmpl $TMPHIST
   endif
 
   if( "$HISTORYrc" != "Current" ) then
@@ -1562,13 +1562,13 @@ while( $check == FALSE )
                    cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
             /bin/rm -f $TMPHIST1
 
-       else if( -e $HISTORYrc/HISTORY.STRATCHEM.rc.tmpl ) then
+       else if( -e $HISTORYrc/HISTORY_STRATCHEM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY.STRATCHEM.rc.tmpl $TMPHIST
+            /bin/cp -f $HISTORYrc/HISTORY_STRATCHEM.rc.tmpl $TMPHIST
        else
-           echo "This condition is based on updating HISTORY.STRATCHEM.rc.tmpl with CVS"
+           echo "This condition is based on updating HISTORY_STRATCHEM.rc.tmpl with CVS"
            echo "This has no equivalent in git at present. Please contact Matt"
            echo "Thompson or Larry Takacs to help resolve this."
            exit 2
