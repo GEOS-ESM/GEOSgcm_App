@@ -1781,6 +1781,12 @@ cat > $HOMDIR/SETENV.commands << EOF
    # with binarytile.x and other executables.
    unsetenv PMI_RANK
 
+   # Often when debugging on MPT, the traceback from Intel Fortran
+   # is "absorbed" and only MPT's errors are displayed. To allow the
+   # compiler's traceback to be displayed, uncomment this environment
+   # variable
+   #setenv FOR_IGNORE_EXCEPTIONS false
+
 EOF
 
 else if( $MPI == intelmpi ) then
