@@ -33,7 +33,7 @@ setenv GEOSUTIL @GEOSUTIL
 
 set    BDATE = $1
 set    EDATE = $2
-set FSEGMENT = `echo $3 | bc | printf "%08i"`
+set FSEGMENT = `echo $3 | bc | xargs printf "%08i"`
 @   FLOOP    = $3 + 1
 @   FHRS     = $3 * 24
 set     QSUB = $4
