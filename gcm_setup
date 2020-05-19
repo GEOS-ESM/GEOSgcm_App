@@ -462,6 +462,7 @@ if( $OGCM == TRUE ) then
     echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM5${CN})"
     echo "   ${C2}MOM5${CN}"
     echo "   ${C2}MOM6${CN}"
+    echo "   ${C2}MIT${CN}"
 
 	set OCNMODEL  = $<
 	if ( .$OCNMODEL == . ) then
