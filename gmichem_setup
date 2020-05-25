@@ -1287,43 +1287,12 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
+    if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
+    if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
-endif
-
-
-# Check for Runoff Routing Model
-# ------------------------------
-RRM:
-echo "Do you wish to run ${C1} the Runoff Routing Model${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
-set   RUNRRM  = $<
-if( .$RUNRRM == . ) then
-set   RUNRRM  = FALSE
-else
-set   RUNRRM  = `echo   $RUNRRM | tr "[:lower:]" "[:upper:]"`
-if(  $RUNRRM == "Y"     | \
-     $RUNRRM == "YES"   | \
-     $RUNRRM == "T"     | \
-     $RUNRRM == "TRUE"  ) set RUNRRM = TRUE
-if(  $RUNRRM == "N"     | \
-     $RUNRRM == "NO"    | \
-     $RUNRRM == "F"     | \
-     $RUNRRM == "FALSE" ) set RUNRRM = FALSE
-
-if( $RUNRRM != TRUE & $RUNRRM != FALSE ) then
-echo
-echo "${C1} the Runoff Routing Model${CN} must be set equal to ${C2}TRUE${CN} or ${C2}FALSE${CN}!"
-goto RRM
-else
-echo
-endif
-endif
-
-if( $RUNRRM == TRUE ) then
-    set RUN_ROUTE = 1
-else
-    set RUN_ROUTE = 0
+    set GCMRUN_CATCHCN = "#DELETE"
 endif
 
 #######################################################################
@@ -1544,7 +1513,6 @@ if( $SITE == 'NAS' ) then
               setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
 
-
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
@@ -1561,7 +1529,7 @@ if( $SITE == 'NAS' ) then
               setenv TAREXEC    mtar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
-              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
+              setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
               setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
               setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
@@ -2209,6 +2177,7 @@ s?>>>FVLATLON<<<?$FVLATLON?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
+s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 
@@ -2238,6 +2207,7 @@ s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
 s^SOLAR_DT: 3600^SOLAR_DT: $SOLAR_DT^
 s^IRRAD_DT: 3600^IRRAD_DT: $IRRAD_DT^
 s^SATSIM_DT: 1800^SATSIM_DT: $SATSIM_DT^
+
 s/@GOCART_DT/$DT/g
 
 s?@IS_FCST?$IS_FCST?g
@@ -2295,7 +2265,6 @@ s/@USE_SKIN_LAYER/1/g
 s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
-s/@RUN_ROUTE/$RUN_ROUTE/g
 
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
@@ -2529,14 +2498,14 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
-## Modify AGCM.rc
-## --------------
-#set file = $HOMDIR/AGCM.rc
-#
-## Add GMI timestep:
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $file
-#
+# Modify AGCM.rc
+# --------------
+set file = $HOMDIR/AGCM.rc
+
+# Add GMI timestep:
+/bin/mv $file $HOMDIR/dummy
+cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $file
+
 ## Change from GF to RAS for now:
 #/bin/mv $file $HOMDIR/dummy
 #cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
@@ -2552,7 +2521,7 @@ if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 ## For future:  sed commands to insert important GF flags:
 ##/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
 ##/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
-#/bin/rm -f    $HOMDIR/dummy
+/bin/rm -f    $HOMDIR/dummy
 
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options     
