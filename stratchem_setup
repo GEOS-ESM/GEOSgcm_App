@@ -2465,7 +2465,7 @@ endif
 #   Set R by providing an option to cmake :   -DSTRATCHEM_REDUCED_MECHANISM=ON
 #   This will (1) properly set the line below, and (2) compile StratChem with the appropriate option.
 
-    set R = OFF
+    set R = @STRATCHEM_REDUCED_MECHANISM@
 
     if (${R} == ON) then
 
