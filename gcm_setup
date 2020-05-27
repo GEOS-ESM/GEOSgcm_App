@@ -470,9 +470,9 @@ if( $OGCM == TRUE ) then
 	else
 		set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
 
-    	if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
+    	if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6"  & $OCNMODEL != "MIT") then
 			echo
-			echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
+			echo "${C1}Ocean Model${CN} must be either MOM5, MOM6, or MIT!"
 			goto OCNMODEL
 		else
 			echo
@@ -483,25 +483,68 @@ if( $OGCM == TRUE ) then
         set OCEAN_NAME="MOM"
     else if ( $OCNMODEL == "MOM6" ) then
         set OCEAN_NAME="MOM6"
+    else if ( $OCNMODEL == "MIT" ) then
+        set OCEAN_NAME="MIT"
     endif
 
     # Coupled Ocean Resolution
     # ------------------------
     CORSLV:
-    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default: 360 200)"
-    set Resolution = `echo $<`
-    set num = $#Resolution
-    if( $num == 2 ) then
-        set OGCM_IM = $Resolution[1]
-        set OGCM_JM = $Resolution[2]
+    if( .$OCNMODEL == .MIT ) then
+        echo "Enter the ${C1}Data_Ocean Horizontal Resolution: ${C2}llc90${CN} (1-deg, Lat-Lon-Cube) Default"
+        echo "                                            ${C2}llc1080${CN} (1/12-deg, Lat-Lon-Cube)"
+        echo "                                            ${C2}llc2160${CN} (1/24-deg, Lat-Lon-Cube)"
+        echo "                                            ${C2}llc270${CN} (1/3-deg, Lat-Lon-Cube)"
+        echo "                                            ${C2}cs32${CN}   (5-deg, cubed-sphere)"
+        set Resolution = `echo $<`
+        set num = $#Resolution
+        if ($Resolution[1] == "cs32" ) then
+            set OGCM_JM = 32
+            set OGCM_IM  = `expr $OGCM_JM \* 6`
+            set OGRIDTYP  = "CM"
+            set DOLEV = 15
+        else if ($Resolution[1] == "llc90" ) then
+            set OGRIDTYP  = "LL"
+            if ($AGCM_IM == c48) then
+                set OGCM_JM = 30
+                set OGCM_IM = `expr $OGCM_JM \* 96`
+            else
+                set OGCM_JM = 15
+                set OGCM_IM = `expr $OGCM_JM \* 360`
+            endif
+        else if ($Resolution[1] == "llc1080" ) then
+            set OGRIDTYP  = "LL"
+            if ($AGCM_IM == c720) then
+                set OGCM_JM = 60
+                set OGCM_IM = `expr $OGCM_JM \* 2880`
+            endif
+        else if ($Resolution[1] == "llc2160" ) then
+            set OGRIDTYP  = "LL"
+            set DOLEV = 90
+            if ($AGCM_IM == c1440) then
+                set OGCM_JM = 72
+                set OGCM_IM = `expr $OGCM_JM \* 7776`
+            endif
+        else
+            goto CORSLV
+        endif
     else
-        if( $num == 0 ) then
-             set OGCM_IM = 360
-             set OGCM_JM = 200
-        else 
-             goto CORSLV
+        echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default: 360 200)"
+        set Resolution = `echo $<`
+        set num = $#Resolution
+        if( $num == 2 ) then
+            set OGCM_IM = $Resolution[1]
+            set OGCM_JM = $Resolution[2]
+        else
+            if( $num == 0 ) then
+                 set OGCM_IM = 360
+                 set OGCM_JM = 200
+            else 
+                 goto CORSLV
+            endif
         endif
     endif
+
     set IMO = ${OGCM_IM}
     set JMO = ${OGCM_JM}
     if( $IMO < 10   ) set IMO = 000$IMO
@@ -534,6 +577,36 @@ if( $OGCM == TRUE ) then
     set CUBE_OGCM = "#DELETE"
     set DATAOCEAN = "#DELETE"
     set OGCM_NF = 1
+
+    if( .$OCNMODEL == .MIT ) then
+        if (${OGRIDTYP} == 'CM') then
+            set OGCM_NX = 24
+            set OGCM_NY = 1
+            set OGCM_GRIDSPEC = mit-cube_${OGCM_IM}x${OGCM_JM}.ascii
+        else
+            if ($AGCM_IM == c48) then
+                set OGCM_NX = 96
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit-llc90.ascii
+            else if ($AGCM_IM == c90) then
+                set OGCM_NX = 360
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit-llc90_15x15.ascii
+            else if ($AGCM_IM == c720) then
+                set OGCM_NX = 2880
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit-llc1080.ascii
+            else if ($AGCM_IM == c1440) then
+                # this set is valid for 72x72 ocean confuguration
+                set OGCM_NX = 7776
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit-llc2160-${OGCM_JM}x${OGCM_JM}.bin
+            endif
+        endif
+        set DATASEAICE = ""
+    endif
+
+
 
 else
 
@@ -967,6 +1040,10 @@ if( $AGCM_IM == "c720" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 16
      set       NY = `expr $NX \* 6`
+     if( .$OCNMODEL == .MIT ) then
+         set       NX = 20
+         set       NY = 144
+     endif
      set HYDROSTATIC = TRUE
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1083,6 +1160,9 @@ if($CUBED == "TRUE") then
         set OGCM_GRIDNAME   = "OC${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
     else
         set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+    endif
+    if( .$OCNMODEL == .MIT ) then
+        set OGCM_GRIDNAME   = "${OGRIDTYP}${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
     endif
     set BCSRES          = "${ATMOS_RES}_${OCEAN_RES}"
     set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}'
@@ -1354,6 +1434,9 @@ if( $SITE == 'NAS' ) then
               else
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               endif
+              if (${OGRIDTYP} == "LL") then
+                setenv SSTDIR /nobackupp2/estrobac/geos5/SSTDIR
+              endif
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
@@ -1401,6 +1484,9 @@ else if( $SITE == 'NCCS' ) then
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+              endif
+              if (${OGRIDTYP} == "LL") then
+                setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
               endif
               setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
@@ -2102,7 +2188,7 @@ set FILES = "gcm_run.j          \
              HISTORY.rc.tmpl    "
 set FILES = `echo $FILES`
 
-if( $OGCM == TRUE ) then
+if( $OGCM == TRUE & $OCNMODEL != "MIT" ) then
     if ( $OCNMODEL == "MOM5" ) then
         /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
         /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
@@ -2264,7 +2350,7 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/AGCM.rc.tmpl        $HOMDIR/AGCM.rc
 /bin/mv $HOMDIR/HISTORY.rc.tmpl     $HOMDIR/HISTORY.rc
 
-if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
+if( $OGCM == TRUE  & $OCNMODEL != "MIT" ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options     
