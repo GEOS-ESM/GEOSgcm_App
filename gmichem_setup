@@ -2647,6 +2647,11 @@ endif
     sed -e 's/doMEGANviaHEMCO: F/doMEGANviaHEMCO: T/' $EXPDIR/RC/GMI_GridComp.rc > $EXPDIR/RC/GMI_GridComp.tmp
     /bin/mv -f $EXPDIR/RC/GMI_GridComp.tmp $EXPDIR/RC/GMI_GridComp.rc
 
+    sed -e 's/#HEMCO_INTERNAL/HEMCO_INTERNAL/' $HOMDIR/AGCM.rc > $HOMDIR/AGCM.rc.tmp
+    /bin/mv -f $HOMDIR/AGCM.rc.tmp $HOMDIR/AGCM.rc
+    sed -e 's/#HEMCO_IMPORT/HEMCO_IMPORT/'     $HOMDIR/AGCM.rc > $HOMDIR/AGCM.rc.tmp
+    /bin/mv -f $HOMDIR/AGCM.rc.tmp $HOMDIR/AGCM.rc
+
   endif
 
 ##################################################################
