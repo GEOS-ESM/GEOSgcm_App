@@ -842,10 +842,10 @@ cd $SCRDIR
 
 # Move monthly collection checkpoints to restarts
 #------------------------------------------------
-set monthlies = `ls *chk` 
+set monthlies = `/bin/ls *chk` 
 if ( $#monthlies > 0 ) then
     foreach ff (*chk)
-	    mv $ff `basename $ff chk`rst
+	    /bin/mv $ff `basename $ff chk`rst
     end
 endif
 
