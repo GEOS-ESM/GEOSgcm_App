@@ -59,6 +59,7 @@ endif
 # Set default behavior of switches
 set NOCVS = TRUE
 set GPU   = FALSE
+set LINKX = FALSE
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -80,6 +81,11 @@ while ( $#argv > 0 )
       # Do not archive the source
       case --nocvs:
          set NOCVS = TRUE
+         breaksw
+
+      # Symlink GEOSgcm.x
+      case --link:
+         set LINKX = TRUE
          breaksw
 
       # Here any string not above will trigger USAGE
@@ -1281,43 +1287,12 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
+    if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
+    if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
-endif
-
-
-# Check for Runoff Routing Model
-# ------------------------------
-RRM:
-echo "Do you wish to run ${C1} the Runoff Routing Model${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
-set   RUNRRM  = $<
-if( .$RUNRRM == . ) then
-set   RUNRRM  = FALSE
-else
-set   RUNRRM  = `echo   $RUNRRM | tr "[:lower:]" "[:upper:]"`
-if(  $RUNRRM == "Y"     | \
-     $RUNRRM == "YES"   | \
-     $RUNRRM == "T"     | \
-     $RUNRRM == "TRUE"  ) set RUNRRM = TRUE
-if(  $RUNRRM == "N"     | \
-     $RUNRRM == "NO"    | \
-     $RUNRRM == "F"     | \
-     $RUNRRM == "FALSE" ) set RUNRRM = FALSE
-
-if( $RUNRRM != TRUE & $RUNRRM != FALSE ) then
-echo
-echo "${C1} the Runoff Routing Model${CN} must be set equal to ${C2}TRUE${CN} or ${C2}FALSE${CN}!"
-goto RRM
-else
-echo
-endif
-endif
-
-if( $RUNRRM == TRUE ) then
-    set RUN_ROUTE = 1
-else
-    set RUN_ROUTE = 0
+    set GCMRUN_CATCHCN = "#DELETE"
 endif
 
 #######################################################################
@@ -1538,7 +1513,6 @@ if( $SITE == 'NAS' ) then
               setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
 
-
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
@@ -1555,7 +1529,7 @@ if( $SITE == 'NAS' ) then
               setenv TAREXEC    mtar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
-              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
+              setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
               setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
               setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
@@ -1672,20 +1646,20 @@ while( $check == FALSE )
           echo $HISTORYrc > $HOME/.HISTORYrc
   endif
 
-  echo "Enter the tag or directory (/filename) of the ${C1}HISTORY_GMICHEM.rc.tmpl${CN} to use"
+  echo "Enter the directory (/filename) of the ${C1}HISTORY_GMICHEM.rc.tmpl${CN} to use"
   echo "(To use ${C1}HISTORY_GMICHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
   echo "-------------------------------------------------------------------------"
-  echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
+  echo "Hit ENTER to use Default Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
   if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
-  if( -e $BINDIR/HISTORY.rc.hold ) /bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
-  if( -e $BINDIR/HISTORY.rc.tmpl ) /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.hold
+
+  set TMPHIST = `mktemp`
 
   if( "$HISTORYrc" == "Current" ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/HISTORY_GMICHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $ETCDIR/HISTORY_GMICHEM.rc.tmpl $TMPHIST
   endif
 
   if( "$HISTORYrc" != "Current" ) then
@@ -1693,29 +1667,30 @@ while( $check == FALSE )
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/$HISTORYrc $BINDIR/HISTORY.rc.tmp1
+            set TMPHIST1 = `mktemp`
+            /bin/cp -f $ETCDIR/$HISTORYrc $TMPHIST1
 
-            set  EXPID_old = `grep  "EXPID:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $BINDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
+            set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
 
-            /bin/rm -f command
+            set  TMPCMD = `mktemp`
             set  string = "EXPID:"
-            echo cat $BINDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $BINDIR/HISTORY.rc.tmpl > command
-            chmod +x   command
-                     ./command
-            /bin/rm -f command
-            /bin/mv -f $BINDIR/HISTORY.rc.tmpl $BINDIR/HISTORY.rc.tmp1
-                   cat $BINDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $BINDIR/HISTORY.rc.tmpl
-            /bin/rm -f $BINDIR/HISTORY.rc.tmp1
+            echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
+            chmod +x   $TMPCMD
+                       $TMPCMD
+            /bin/rm -f $TMPCMD
+            /bin/mv -f $TMPHIST $TMPHIST1
+                   cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
+            /bin/rm -f $TMPHIST1
 
        else if( -e $HISTORYrc/HISTORY_GMICHEM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY_GMICHEM.rc.tmpl $BINDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY_GMICHEM.rc.tmpl $TMPHIST
        else
-           echo "This condition is based on updating HISTORY.AGCM.rc.tmpl with CVS"
+           echo "This condition is based on updating HISTORY_GMICHEM.rc.tmpl with CVS"
            echo "This has no equivalent in git at present. Please contact Matt"
            echo "Thompson or Larry Takacs to help resolve this."
            exit 2
@@ -1939,7 +1914,11 @@ echo $GROUP > $HOME/.GROUProot
         /bin/cp $GEOSDIR/etc/$GMIEXP/chemistry_files/*.rc $EXPDIR/RC
   endif
 
+if ( $LINKX == "TRUE" ) then
+  if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+else
   if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
+endif
 
 #######################################################################
 #                      Create SETENV Commands
@@ -2005,6 +1984,12 @@ cat > $HOMDIR/SETENV.commands << EOF
    # with binarytile.x and other executables.
    unsetenv PMI_RANK
 
+   # Often when debugging on MPT, the traceback from Intel Fortran
+   # is "absorbed" and only MPT's errors are displayed. To allow the
+   # compiler's traceback to be displayed, uncomment this environment
+   # variable
+   #setenv FOR_IGNORE_EXCEPTIONS false
+
 EOF
 
 else if( $MPI == intelmpi ) then
@@ -2012,6 +1997,7 @@ else if( $MPI == intelmpi ) then
 cat > $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_DAPL_UD enable
 setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
 EOF
 
 endif # if mpi
@@ -2191,6 +2177,7 @@ s?>>>FVLATLON<<<?$FVLATLON?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
+s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 
@@ -2220,6 +2207,7 @@ s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
 s^SOLAR_DT: 3600^SOLAR_DT: $SOLAR_DT^
 s^IRRAD_DT: 3600^IRRAD_DT: $IRRAD_DT^
 s^SATSIM_DT: 1800^SATSIM_DT: $SATSIM_DT^
+
 s/@GOCART_DT/$DT/g
 
 s?@IS_FCST?$IS_FCST?g
@@ -2277,7 +2265,6 @@ s/@USE_SKIN_LAYER/1/g
 s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
-s/@RUN_ROUTE/$RUN_ROUTE/g
 
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
@@ -2337,14 +2324,16 @@ endif
 
 echo " "
 
-# Operate on files in BINDIR
+# Operate on files in ETCDIR
 
 foreach FILE ($FILES)
 
    /bin/rm -f $HOMDIR/tmpfile
    /bin/rm -f $HOMDIR/$FILE
 
-   if (      -e $BINDIR/$FILE ) then
+   if ( $FILE == "HISTORY.rc.tmpl" ) then
+      cat            $TMPHIST > $HOMDIR/tmpfile
+   else if ( -e $BINDIR/$FILE ) then
       cat       $BINDIR/$FILE > $HOMDIR/tmpfile
    else if ( -e $ETCDIR/$FILE ) then
       cat       $ETCDIR/$FILE > $HOMDIR/tmpfile
@@ -2368,11 +2357,7 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
 
-if(     -e $BINDIR/HISTORY.rc.hold ) then
-/bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
-else
-/bin/rm -f $BINDIR/HISTORY.rc.tmpl
-endif
+/bin/rm -f $TMPHIST
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
 echo " "
@@ -2401,7 +2386,6 @@ endif
 set RSNAMES = "LH2O LMAM LCARMA LPCHEM LSTRATCHEM LGMICHEM LGEOSCHEMCHEM LHEMCO LGOCART LGOCART_DATA"
 set RSTYPES = "INTERNAL IMPORT"
 
-/bin/rm -f command
 set FILE = AGCM.rc.tmpl
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2414,20 +2398,21 @@ foreach rsname ($RSNAMES)
    if( $name == GOCART_DATA ) set name = GOCART.data
 
    foreach type ($RSTYPES)
+      set  TMPCMD = `mktemp`
       set  string = ${name}_${type}
       /bin/rm -f $LOCDIR/$FILE.tmp
       /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
       if( $test == TRUE ) then
          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-              \{sub \( \/\#${string}\/ ,\"${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+              \{sub \( \/\#${string}\/ ,\"${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > $TMPCMD
       endif
       if( $test == FALSE ) then
          echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-              \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
+              \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > $TMPCMD
       endif
-      chmod +x   command
-      ./command
-      /bin/rm -f command
+      chmod +x   $TMPCMD
+                 $TMPCMD
+      /bin/rm -f $TMPCMD
    end
 end
 /bin/rm -f $LOCDIR/$FILE.tmp
@@ -2513,14 +2498,14 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
-## Modify AGCM.rc
-## --------------
-#set file = $HOMDIR/AGCM.rc
-#
-## Add GMI timestep:
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $file
-#
+# Modify AGCM.rc
+# --------------
+set file = $HOMDIR/AGCM.rc
+
+# Add GMI timestep:
+/bin/mv $file $HOMDIR/dummy
+cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $file
+
 ## Change from GF to RAS for now:
 #/bin/mv $file $HOMDIR/dummy
 #cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
@@ -2536,7 +2521,7 @@ if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 ## For future:  sed commands to insert important GF flags:
 ##/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
 ##/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
-#/bin/rm -f    $HOMDIR/dummy
+/bin/rm -f    $HOMDIR/dummy
 
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options     
@@ -2661,6 +2646,11 @@ endif
 
     sed -e 's/doMEGANviaHEMCO: F/doMEGANviaHEMCO: T/' $EXPDIR/RC/GMI_GridComp.rc > $EXPDIR/RC/GMI_GridComp.tmp
     /bin/mv -f $EXPDIR/RC/GMI_GridComp.tmp $EXPDIR/RC/GMI_GridComp.rc
+
+    sed -e 's/#HEMCO_INTERNAL/HEMCO_INTERNAL/' $HOMDIR/AGCM.rc > $HOMDIR/AGCM.rc.tmp
+    /bin/mv -f $HOMDIR/AGCM.rc.tmp $HOMDIR/AGCM.rc
+    sed -e 's/#HEMCO_IMPORT/HEMCO_IMPORT/'     $HOMDIR/AGCM.rc > $HOMDIR/AGCM.rc.tmp
+    /bin/mv -f $HOMDIR/AGCM.rc.tmp $HOMDIR/AGCM.rc
 
   endif
 
