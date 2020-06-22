@@ -2094,6 +2094,10 @@ if( $OGCM == TRUE ) then
         /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
         /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
     endif
+#
+#
+# a block like above for ${OCNMODEL} == "MOM6" is needed
+#
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
     /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
 
