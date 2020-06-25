@@ -108,9 +108,12 @@ PRINTRC: 1
 # Set the number of parallel I/O processes to use when
 # RESTART_TYPE and or CHECKPOINT_TYPE are set to pbinary or pnc4
 #---------------------------------------------------------------
-PARALLEL_READFORCING: 1
+PARALLEL_READFORCING: 0
 NUM_READERS: @NUM_READERS
 NUM_WRITERS: 1
+
+# Write restarts by oserver (Default: NO)
+WRITE_RESTART_BY_OSERVER: @RESTART_BY_OSERVER
 
 # Active observer when desired
 # ----------------------------
@@ -142,7 +145,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####         For these cases, only the CORRECTOR step is employed and is, therefore, as        ####
 ####         efficient as a stand-alone model run.                                             ####
 ####                                                                                           ####
-####         In order to guarentee reproducibility, the model and its BUILD parameters         ####
+####         In order to guarantee reproducibility, the model and its BUILD parameters         ####
 ####         (Compilers and Options) as well as all INPUT data must be identical to the        ####
 ####         original DAS experiment.  This type of REPLAY is useful when producing            ####
 ####         additional passive, diagnostic data, or when the original data is lost.           ####
@@ -215,7 +218,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####   ----------------------                                                                  ####
 ####        The current 4D-EnVar system, as previously noted, produces 7 hourly Analyses:      ####
 ####        (-03z, -02z, -01z, 00z, +01z, +02z, +03z) for each 6-hour assimilation window      ####
-####        centered around the 4 synpotic times of 00z, 06z, 12z, and 18z.  We see that the   ####
+####        centered around the 4 synoptic times of 00z, 06z, 12z, and 18z.  We see that the   ####
 ####        last Analysis (+03z) associated with each synoptic time will be over-ridden by     ####
 ####        the first Analyiss (-03z) associated with synoptic time of the next assimilation   ####
 ####        window. To prevent these over-ridden files from being lost, the GEOS-5 DAS         ####
@@ -225,7 +228,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####        used for this purpose, and is only utilized if the REPLAY configuration warrants.  ####
 ####                                                                                           ####
 ####                                                                                           ####
-####   Regualr Replay Time Interpolation:                                                      ####
+####   Regular Replay Time Interpolation:                                                      ####
 ####   ----------------------------------                                                      ####
 ####        In some instances the USER might wish to create IAU Increments at a frequency      ####
 ####        greater than the frequency of the target analysis.  For those cases additional     ####

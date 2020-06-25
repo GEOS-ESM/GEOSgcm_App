@@ -219,6 +219,8 @@ echo "Enter the ${C1}Atmospheric Horizontal Resolution${CN} code:"
 echo "--------------------------------------"
 echo "            Cubed-Sphere"
 echo "--------------------------------------"
+echo "   ${C2}c12  --  8   deg ${CN}"
+echo "   ${C2}c24  --  4   deg ${CN}"
 echo "   ${C2}c48  --  2   deg ${CN}"
 echo "   ${C2}c90  --  1   deg ${CN}"
 echo "   ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
@@ -1769,12 +1771,19 @@ else
 endif
 
 #######################################################################
-#                      Create SETENV Commands
+#               Set Recommended MPI Stack Settings
 #######################################################################
+
+# By default do not write restarts by oserver
+set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
 if( $MPI == openmpi ) then
+
+# Open MPI and GEOS has issues with restart writing. Having the
+# oserver write them can be orders of magnitude faster
+set RESTART_BY_OSERVER = YES
 
 # This turns off an annoying warning when running
 # Open MPI on a system where TMPDIRs are on a networked
@@ -1846,7 +1855,25 @@ cat > $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_DAPL_UD enable
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
+
+# This flag prints out the Intel MPI state. Uncomment if needed
+#setenv I_MPI_DEBUG 9
 EOF
+
+# These are options determined to be useful at NCCS
+# Not setting generally as they are more fabric/cluster
+# specific compared to the above adjustments
+if ( $SITE == 'NCCS' ) then
+
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_SHM_HEAP_VSIZE 512
+setenv PSM2_MEMORY large
+setenv I_MPI_EXTRA_FILESYSTEM 1
+setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
+setenv ROMIO_FSTYPE_FORCE "gpfs:"
+EOF
+
+endif # if NCCS
 
 endif # if mpi
 
@@ -2074,6 +2101,7 @@ s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
 s/@USE_IOSERVER/$USE_IOSERVER/g
 s/@IOS_NDS/$IOS_NDS/g
+s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
