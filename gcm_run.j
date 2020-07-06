@@ -254,12 +254,12 @@ cd $SCRDIR
                              @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
-# MOM6 additions
+>>>COUPLED<<<# MOM6 additions
 >>>COUPLED<<<if (${ocean_name} == "MOM6") then
 >>>COUPLED<<</bin/cp -f  $HOMDIR/MOM_input .
 >>>COUPLED<<</bin/cp -f  $HOMDIR/MOM_override .
 >>>COUPLED<<<endif
-# MOM6 additions
+>>>COUPLED<<<# MOM6 additions
 
 if( $GCMEMIP == TRUE ) then
     @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -760,19 +760,10 @@ else
    set IOSERVER_OPTIONS = ""
 endif
 
-
-# MOM6 additions
->>>COUPLED<<<if (${ocean_name} == "MOM6") then
-# for some reason build-Debug/lib/libmom6.so differs from install-Debug/lib/libmom6.so
->>>COUPLED<<<setenv BUILDdir ${GEOSDIR}/../build-Debug/
->>>COUPLED<<<setenv LD_PRELOAD ${BUILDdir}/lib/libmom6.so
->>>COUPLED<<<endif
-# MOM6 additions
-
 if( $NAS_BATCH == TRUE ) then
-   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
+   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
 else
-   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
+   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
 endif
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
