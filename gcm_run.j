@@ -32,7 +32,7 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:$GEOSDIR/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -254,12 +254,9 @@ cd $SCRDIR
                              @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
->>>COUPLED<<<# MOM6 additions
->>>COUPLED<<<if (${ocean_name} == "MOM6") then
->>>COUPLED<<</bin/cp -f  $HOMDIR/MOM_input .
->>>COUPLED<<</bin/cp -f  $HOMDIR/MOM_override .
->>>COUPLED<<<endif
->>>COUPLED<<<# MOM6 additions
+
+			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_input .
+			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_override .
 
 if( $GCMEMIP == TRUE ) then
     @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -330,7 +327,8 @@ setenv CHMDIR    @CHMDIR
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
->>>COUPLED<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+>>>MOM5<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+>>>MOM6<<<setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
 >>>COUPLED<<<setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 >>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
 >>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
@@ -349,7 +347,7 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
->>>COUPLED<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+>>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -644,7 +642,7 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
->>>COUPLED<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+>>>MOM5<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -872,7 +870,8 @@ end
 
 >>>COUPLED<<<# MOM-Specific Output Files
 >>>COUPLED<<<# -------------------------
->>>COUPLED<<< set dsets="ocean_month"
+>>>MOM5<<< set dsets="ocean_month"
+>>>MOM6<<< set dsets="ocean_month prog_z sfc_ave forcing"
 >>>COUPLED<<< foreach dset ( $dsets )
 >>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
 >>>COUPLED<<< if($num != 0) then
