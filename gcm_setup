@@ -1401,7 +1401,18 @@ else if( $SITE == 'NCCS' ) then
               else
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               endif
-              setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
+              # locations of Aerosol Chemistry BCs
+              if      ( $AGCM_LM ==  71 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L71-2020May15/fvInput
+              else if ( $AGCM_LM ==  91 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L91-2020Jul06/fvInput
+              else if ( $AGCM_LM == 127 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L127-2020May15/fvInput
+              else if ( $AGCM_LM == 181 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L181-2020Jul06/fvInput
+              else
+                 setenv CHMDIR   $SHARE/dao_ops/fvInput_nc3
+              endif
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
