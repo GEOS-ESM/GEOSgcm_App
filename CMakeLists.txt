@@ -34,6 +34,7 @@ set (programs
    gmichem_setup
    geoschemchem_setup
    gcm_quickstat.j
+   scm_run.j
    )
 
 
