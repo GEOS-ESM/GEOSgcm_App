@@ -2145,6 +2145,7 @@ if( $OGCM == TRUE ) then
     if ( $OCEAN_NAME == "MOM" ) then
         /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
         /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+	set FILES = "$FILES field_table "
     else if ( $OCEAN_NAME == "MOM6" ) then
 	/bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
 	/bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
@@ -2159,7 +2160,6 @@ if( $OGCM == TRUE ) then
 set FILES = "$FILES      \
              input.nml   \
              diag_table  \
-             field_table \
              plotocn.j   \
              __init__.py"
 
