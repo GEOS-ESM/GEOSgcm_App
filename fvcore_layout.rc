@@ -5,7 +5,6 @@
   @FV_SATADJ
   @FV_ZTRACER
   @FV_NWAT
-  @FV_HORDMT
 /
 
 &main_nml

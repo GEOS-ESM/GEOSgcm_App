@@ -1209,14 +1209,12 @@ else
 endif
 
 # Settings for fvcore_layout.rc
-set FV_HORDMT  = ""
 set FV_NWAT    = ""
 set FV_ZTRACER = "z_tracer    = .T."
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
 	set FV_MAKENH     = "Make_NH     = .F."
 	set FV_HYDRO      = "hydrostatic = .T."
 	set FV_SATADJ     = "do_sat_adj  = .F."
-	set FV_HORDMT     = "hord_mt     =  5 "
 else
 	set FV_MAKENH     = "Make_NH     = .T."
 	set FV_HYDRO      = "hydrostatic = .F."
@@ -2210,7 +2208,6 @@ s?@TAREXEC?$TAREXEC?g
 s?>>>MP_MG1<<<?$MP_MG1?g
 s?>>>MP_GFDL<<<?$MP_GFDL?g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
-s?@FV_HORDMT?$FV_HORDMT?g
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_ZTRACER?$FV_ZTRACER?g
 s?@FV_MAKENH?$FV_MAKENH?g
