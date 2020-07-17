@@ -302,6 +302,73 @@ if( .$AGCM_LM == . ) then
   set AGCM_LM = 72
 endif
 
+
+#######################################################################
+#                 Choose microphysics option
+#######################################################################
+
+ASKMP:
+
+ echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: 1MOM)"
+ echo "   ${C2}1MOM  --  3-phase 1-moment Bacmeister et al${CN}"
+ echo "   ${C2}GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
+ echo "   ${C2}MG1   --  3-phase 2-moment Morrison & Gettleman${CN}"
+#echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
+#echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
+ set   AGCM_MP = $<
+if( .$AGCM_MP == . ) then
+	set AGCM_MP = "1MOM"
+else
+	set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
+	if( "$AGCM_MP" != "1MOM" & \
+       "$AGCM_MP" != "GFDL" & \
+       "$AGCM_MP" != "MG1"  ) then
+       echo
+       echo "${C1}Microphysics${CN} must be one of the options below!"
+       goto ASKMP
+	endif
+endif
+
+
+#######################################################################
+#   Test to see if using hydrostatic or non-hydrostatic atmosphere
+#######################################################################
+
+ASKHYDRO:
+
+if( $HRCODE == 'c1440' | \
+	 $HRCODE == 'c768'  | \
+    $HRCODE == 'c1536' | \
+    $HRCODE == 'c3072' ) then
+    set DEFAULT_HYDROSTATIC = FALSE
+else
+	 set DEFAULT_HYDROSTATIC = TRUE
+endif
+
+echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN} for Grid Resolutions <= C720)"
+set   USE_HYDROSTATIC = $<
+
+if( .$USE_HYDROSTATIC == . ) then
+	set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
+else
+	set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
+	if(  $USE_HYDROSTATIC == "Y"     | \
+        $USE_HYDROSTATIC == "YES"   | \
+        $USE_HYDROSTATIC == "T"     | \
+        $USE_HYDROSTATIC == "TRUE"  ) set USE_HYDROSTATIC = TRUE
+   if(  $USE_HYDROSTATIC == "N"     | \
+        $USE_HYDROSTATIC == "NO"    | \
+        $USE_HYDROSTATIC == "F"     | \
+        $USE_HYDROSTATIC == "FALSE" ) set USE_HYDROSTATIC = FALSE
+
+   if( "$USE_HYDROSTATIC" != "TRUE" & "$USE_HYDROSTATIC" != "FALSE" ) then
+      echo
+      echo "Use ${C1}Hydrostatic Atmosphere${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
+      goto ASKHYDRO
+   endif
+endif
+
+
 #######################################################################
 #            Test to see if you want to use ioserver
 #######################################################################
@@ -817,7 +884,7 @@ if( $AGCM_IM ==  "c12" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 2
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = TRUE
+     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -863,7 +930,7 @@ if( $AGCM_IM ==  "c24" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = TRUE
+     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -909,7 +976,7 @@ if( $AGCM_IM ==  "c48" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 6
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = TRUE
+     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = 180
      set HIST_JM  =  91
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -959,7 +1026,7 @@ if( $AGCM_IM ==  "c90" ) then
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
 #    set  GOCART_DT = `expr $DT \* 2`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1009,7 +1076,7 @@ if( $AGCM_IM ==  "c180" ) then
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1058,7 +1125,7 @@ if( $AGCM_IM == "c360" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 14 
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1083,7 +1150,7 @@ if( $AGCM_IM == "c500" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1109,7 +1176,7 @@ if( $AGCM_IM == "c720" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 20
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1135,7 +1202,7 @@ if( $AGCM_IM == "c1440" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30 
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1162,7 +1229,7 @@ if( $AGCM_IM == "c768" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 32
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1188,7 +1255,7 @@ if( $AGCM_IM == "c1536" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1214,7 +1281,7 @@ if( $AGCM_IM == "c3072" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1269,7 +1336,46 @@ endif
 set BEG_DATE =  '18910301 000000'
 set END_DATE =  '29990302 210000'
 set JOB_SGMT = "$JOB_SGMT 000000"
- 
+
+
+#######################################################################
+#           Setting for Microphysics & Hydrostatic Mode               #
+#######################################################################
+
+# For chevronned lines in AGCM.rc.tmpl
+set GFDL_HYDRO = FALSE
+if ( "$AGCM_MP" == "GFDL" ) then
+	set MP_GFDL = ""
+else
+	set MP_GFDL = "# "
+endif
+if ( "$AGCM_MP" == "MG1" ) then
+	set MP_MG1 = ""
+else
+	set MP_MG1 = "# "
+endif
+
+# Settings for fvcore_layout.rc
+set FV_NWAT    = ""
+set FV_ZTRACER = "z_tracer    = .T."
+if ( "$USE_HYDROSTATIC" == "TRUE" ) then
+	set FV_MAKENH     = "Make_NH     = .F."
+	set FV_HYDRO      = "hydrostatic = .T."
+	set FV_SATADJ     = "do_sat_adj  = .F."
+else
+	set FV_MAKENH     = "Make_NH     = .T."
+	set FV_HYDRO      = "hydrostatic = .F."
+	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+		set FV_SATADJ  = "do_sat_adj = .F."
+		set FV_NWAT    = "nwat       =  3 "
+	else if ( "$AGCM_MP" == "GFDL" ) then
+		set FV_SATADJ  = "do_sat_adj = .T."
+		set FV_NWAT    = "nwat       =  6 "
+		set GFDL_HYDRO = TRUE
+	endif
+endif
+
+
 #######################################################################
 #           Check for land surface and runoff routing  models         #
 #######################################################################
@@ -2333,6 +2439,15 @@ s/@LSM_CHOICE/$LSM_CHOICE/g
 
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
+
+s?>>>MP_MG1<<<?$MP_MG1?g
+s?>>>MP_GFDL<<<?$MP_GFDL?g
+s?@GFDL_HYDRO?$GFDL_HYDRO?g
+s?@FV_NWAT?$FV_NWAT?g
+s?@FV_ZTRACER?$FV_ZTRACER?g
+s?@FV_MAKENH?$FV_MAKENH?g
+s?@FV_HYDRO?$FV_HYDRO?g
+s?@FV_SATADJ?$FV_SATADJ?g
 
 EOF
 

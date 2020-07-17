@@ -1,20 +1,25 @@
 &fv_core_nml
-  k_split = 2
- /
-
- &main_nml
+  k_split     = 2
+  @FV_MAKENH
+  @FV_HYDRO
+  @FV_SATADJ
+  @FV_ZTRACER
+  @FV_NWAT
 /
 
-  &test_case_nml
-       test_case = 13
- /
-
- &fms_io_nml
+&main_nml
 /
 
- &fms_nml
-        print_memory_usage=.false.
-        domains_stack_size = 24000000
+&test_case_nml
+  test_case = 13
+/
+
+&fms_io_nml
+/
+
+&fms_nml
+  print_memory_usage=.false.
+  domains_stack_size = 24000000
 /
 
 &gfdl_cloud_microphysics_nml
