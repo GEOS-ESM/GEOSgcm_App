@@ -27,12 +27,12 @@ SOLARAvrg: 0
 IRRADAvrg: 0
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
-#CLDMICRO: 2MOMENT
+>>>MP_MG1<<<CLDMICRO: 2MOMENT
 
 # UNCOMMENT to use GFDL 6-phase cloud microphysics
-#CLDMICRO: GFDL
+>>>MP_GFDL<<<CLDMICRO: GFDL
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
-#HYDROSTATIC: FALSE
+>>>MP_GFDL<<<HYDROSTATIC: @GFDL_HYDRO
 
 # UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
 #USE_AEROSOL_NN: 0
@@ -527,6 +527,10 @@ MOIST_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 AIAU_IMPORT_RESTART_FILE:               aiau_import_rst
 AIAU_IMPORT_CHECKPOINT_FILE:            aiau_import_checkpoint
 AIAU_IMPORT_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
+GWD_IMPORT_RESTART_FILE:                gwd_import_rst
+GWD_IMPORT_CHECKPOINT_FILE:             gwd_import_checkpoint
+GWD_IMPORT_CHECKPOINT_TYPE:             @CHECKPOINT_TYPE
 
 MOIST_IMPORT_RESTART_FILE:              moist_import_rst
 MOIST_IMPORT_CHECKPOINT_FILE:           moist_import_checkpoint

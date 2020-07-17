@@ -302,6 +302,73 @@ if( .$AGCM_LM == . ) then
   set AGCM_LM = 72
 endif
 
+
+#######################################################################
+#                 Choose microphysics option
+#######################################################################
+
+ASKMP:
+
+ echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: 1MOM)"
+ echo "   ${C2}1MOM  --  3-phase 1-moment Bacmeister et al${CN}"
+ echo "   ${C2}GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
+ echo "   ${C2}MG1   --  3-phase 2-moment Morrison & Gettleman${CN}"
+#echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
+#echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
+ set   AGCM_MP = $<
+if( .$AGCM_MP == . ) then
+	set AGCM_MP = "1MOM"
+else
+	set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
+	if( "$AGCM_MP" != "1MOM" & \
+       "$AGCM_MP" != "GFDL" & \
+       "$AGCM_MP" != "MG1"  ) then
+       echo
+       echo "${C1}Microphysics${CN} must be one of the options below!"
+       goto ASKMP
+	endif
+endif
+
+
+#######################################################################
+#   Test to see if using hydrostatic or non-hydrostatic atmosphere
+#######################################################################
+
+ASKHYDRO:
+
+if( $HRCODE == 'c1440' | \
+	 $HRCODE == 'c768'  | \
+    $HRCODE == 'c1536' | \
+    $HRCODE == 'c3072' ) then
+    set DEFAULT_HYDROSTATIC = FALSE
+else
+	 set DEFAULT_HYDROSTATIC = TRUE
+endif
+
+echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN} for Grid Resolutions <= C720)"
+set   USE_HYDROSTATIC = $<
+
+if( .$USE_HYDROSTATIC == . ) then
+	set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
+else
+	set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
+	if(  $USE_HYDROSTATIC == "Y"     | \
+        $USE_HYDROSTATIC == "YES"   | \
+        $USE_HYDROSTATIC == "T"     | \
+        $USE_HYDROSTATIC == "TRUE"  ) set USE_HYDROSTATIC = TRUE
+   if(  $USE_HYDROSTATIC == "N"     | \
+        $USE_HYDROSTATIC == "NO"    | \
+        $USE_HYDROSTATIC == "F"     | \
+        $USE_HYDROSTATIC == "FALSE" ) set USE_HYDROSTATIC = FALSE
+
+   if( "$USE_HYDROSTATIC" != "TRUE" & "$USE_HYDROSTATIC" != "FALSE" ) then
+      echo
+      echo "Use ${C1}Hydrostatic Atmosphere${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
+      goto ASKHYDRO
+   endif
+endif
+
+
 #######################################################################
 #            Test to see if you want to use ioserver
 #######################################################################
@@ -468,6 +535,7 @@ if( $OGCM == TRUE ) then
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
+    set OCEAN_PRELOAD = ""
 
     # Ocean Model
     # -----------
@@ -476,43 +544,62 @@ if( $OGCM == TRUE ) then
     echo "   ${C2}MOM5${CN}"
     echo "   ${C2}MOM6${CN}"
 
-	set OCNMODEL  = $<
-	if ( .$OCNMODEL == . ) then
-		set OCNMODEL  = "MOM5"
-	else
-		set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
+    set OCNMODEL  = $<
+    if ( .$OCNMODEL == . ) then
+       set OCNMODEL  = "MOM5"
+    else
+       set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
 
-    	if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
-			echo
-			echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
-			goto OCNMODEL
-		else
-			echo
-		endif
-	endif
+       if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
+          echo
+          echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
+          goto OCNMODEL
+       else
+          echo
+       endif
+    endif
 
     if ( $OCNMODEL == "MOM5" ) then
-        set OCEAN_NAME="MOM"
+       set OCEAN_NAME="MOM"
+       set MOM5=""
+       set MOM6 = "#DELETE"
+       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom.so'
     else if ( $OCNMODEL == "MOM6" ) then
-        set OCEAN_NAME="MOM6"
+       set OCEAN_NAME="MOM6"
+       set MOM6=""
+       set MOM5 = "#DELETE"
+       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom6.so'
     endif
 
     # Coupled Ocean Resolution
     # ------------------------
     CORSLV:
-    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default: 360 200)"
+
+    if ( $OCEAN_NAME == "MOM" ) then
+       set Resolution = `echo 360 200`
+    else if ( $OCEAN_NAME == "MOM6" ) then
+       set Resolution = `echo 360 210`
+    endif 
+
+    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
     set Resolution = `echo $<`
     set num = $#Resolution
     if( $num == 2 ) then
         set OGCM_IM = $Resolution[1]
         set OGCM_JM = $Resolution[2]
     else
-        if( $num == 0 ) then
-             set OGCM_IM = 360
-             set OGCM_JM = 200
-        else 
-             goto CORSLV
-        endif
+       if ( $OCEAN_NAME == "MOM" ) then
+          set Resolution = `echo 360 200`
+       else if ( $OCEAN_NAME == "MOM6" ) then
+          set Resolution = `echo 360 210`
+       endif 
+
+       if( $num == 0 ) then
+          set OGCM_IM = $Resolution[1]
+          set OGCM_JM = $Resolution[2]
+       else 
+          goto CORSLV
+       endif
     endif
     set IMO = ${OGCM_IM}
     set JMO = ${OGCM_JM}
@@ -534,7 +621,7 @@ if( $OGCM == TRUE ) then
     echo "Enter the Ocean Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 50)"
     set   OGCM_LM = $<
     if( .$OGCM_LM == . ) then
-	set   OGCM_LM = 50
+    set   OGCM_LM = 50
     endif
 
     set OGCM_GRIDSPEC = tripolar_${OGCM_IM}x${OGCM_JM}.ascii
@@ -747,8 +834,11 @@ else
 
     set DATAOCEAN = ""
     set OCEAN_NAME = ""
+    set OCEAN_PRELOAD = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
+    set MOM5      = "#DELETE"
+    set MOM6      = "#DELETE"
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
@@ -794,7 +884,7 @@ if( $AGCM_IM ==  "c12" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 2
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = TRUE
+     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -840,7 +930,7 @@ if( $AGCM_IM ==  "c24" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = TRUE
+     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -886,7 +976,7 @@ if( $AGCM_IM ==  "c48" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 6
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = TRUE
+     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = 180
      set HIST_JM  =  91
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -936,7 +1026,7 @@ if( $AGCM_IM ==  "c90" ) then
      set  CHEM_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
 #    set  GOCART_DT = `expr $DT \* 2`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -986,7 +1076,7 @@ if( $AGCM_IM ==  "c180" ) then
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1035,7 +1125,7 @@ if( $AGCM_IM == "c360" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 14 
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1060,7 +1150,7 @@ if( $AGCM_IM == "c500" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1086,7 +1176,7 @@ if( $AGCM_IM == "c720" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 20
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = TRUE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1112,7 +1202,7 @@ if( $AGCM_IM == "c1440" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30 
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1139,7 +1229,7 @@ if( $AGCM_IM == "c768" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 32
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1165,7 +1255,7 @@ if( $AGCM_IM == "c1536" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1191,7 +1281,7 @@ if( $AGCM_IM == "c3072" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = FALSE
+     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
@@ -1246,7 +1336,46 @@ endif
 set BEG_DATE =  '18910301 000000'
 set END_DATE =  '29990302 210000'
 set JOB_SGMT = "$JOB_SGMT 000000"
- 
+
+
+#######################################################################
+#           Setting for Microphysics & Hydrostatic Mode               #
+#######################################################################
+
+# For chevronned lines in AGCM.rc.tmpl
+set GFDL_HYDRO = FALSE
+if ( "$AGCM_MP" == "GFDL" ) then
+	set MP_GFDL = ""
+else
+	set MP_GFDL = "# "
+endif
+if ( "$AGCM_MP" == "MG1" ) then
+	set MP_MG1 = ""
+else
+	set MP_MG1 = "# "
+endif
+
+# Settings for fvcore_layout.rc
+set FV_NWAT    = ""
+set FV_ZTRACER = "z_tracer    = .T."
+if ( "$USE_HYDROSTATIC" == "TRUE" ) then
+	set FV_MAKENH     = "Make_NH     = .F."
+	set FV_HYDRO      = "hydrostatic = .T."
+	set FV_SATADJ     = "do_sat_adj  = .F."
+else
+	set FV_MAKENH     = "Make_NH     = .T."
+	set FV_HYDRO      = "hydrostatic = .F."
+	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+		set FV_SATADJ  = "do_sat_adj = .F."
+		set FV_NWAT    = "nwat       =  3 "
+	else if ( "$AGCM_MP" == "GFDL" ) then
+		set FV_SATADJ  = "do_sat_adj = .T."
+		set FV_NWAT    = "nwat       =  6 "
+		set GFDL_HYDRO = TRUE
+	endif
+endif
+
+
 #######################################################################
 #           Check for land surface and runoff routing  models         #
 #######################################################################
@@ -1572,7 +1701,18 @@ else if( $SITE == 'NCCS' ) then
               else
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               endif
-              setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
+              # locations of Aerosol Chemistry BCs
+              if      ( $AGCM_LM ==  71 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L71-2020May15/fvInput
+              else if ( $AGCM_LM ==  91 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L91-2020Jul06/fvInput
+              else if ( $AGCM_LM == 127 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L127-2020May15/fvInput
+              else if ( $AGCM_LM == 181 ) then
+                 setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L181-2020Jul06/fvInput
+              else
+                 setenv CHMDIR   $SHARE/dao_ops/fvInput_nc3
+              endif
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
@@ -2197,6 +2337,8 @@ s?@DASTUNING?#?g
 s?>>>FORCEDAS<<<?$FORCEDAS?g
 s?>>>FORCEGCM<<<?$FORCEGCM?g
 s?>>>COUPLED<<<?$COUPLED?g
+s?>>>MOM5<<<?$MOM5?g
+s?>>>MOM6<<<?$MOM6?g
 s?>>>DATAOCEAN<<<?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
 s?>>>FVCUBED<<<?$FVCUBED?g
@@ -2207,6 +2349,7 @@ s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
+s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g
@@ -2297,6 +2440,15 @@ s/@LSM_CHOICE/$LSM_CHOICE/g
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
 
+s?>>>MP_MG1<<<?$MP_MG1?g
+s?>>>MP_GFDL<<<?$MP_GFDL?g
+s?@GFDL_HYDRO?$GFDL_HYDRO?g
+s?@FV_NWAT?$FV_NWAT?g
+s?@FV_ZTRACER?$FV_ZTRACER?g
+s?@FV_MAKENH?$FV_MAKENH?g
+s?@FV_HYDRO?$FV_HYDRO?g
+s?@FV_SATADJ?$FV_SATADJ?g
+
 EOF
 
 # Added FV3 Specific Parameters
@@ -2327,18 +2479,25 @@ set FILES = "gcm_run.j          \
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
-    if ( $OCNMODEL == "MOM5" ) then
-        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
-    endif
-    /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
-    /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
+   if ( $OCEAN_NAME == "MOM" ) then
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+   else if ( $OCEAN_NAME == "MOM6" ) then
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table .
+      set FILES = "$FILES MOM_input MOM_override data_table "
+   endif
+
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
 
 set FILES = "$FILES      \
              input.nml   \
              diag_table  \
              field_table \
-             plotocn.j \
+             plotocn.j   \
              __init__.py"
 
 set FILES = `echo $FILES`
