@@ -535,6 +535,7 @@ if( $OGCM == TRUE ) then
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
+    set OCEAN_PRELOAD = ""
 
     # Ocean Model
     # -----------
@@ -543,43 +544,62 @@ if( $OGCM == TRUE ) then
     echo "   ${C2}MOM5${CN}"
     echo "   ${C2}MOM6${CN}"
 
-	set OCNMODEL  = $<
-	if ( .$OCNMODEL == . ) then
-		set OCNMODEL  = "MOM5"
-	else
-		set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
+    set OCNMODEL  = $<
+    if ( .$OCNMODEL == . ) then
+       set OCNMODEL  = "MOM5"
+    else
+       set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
 
-    	if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
-			echo
-			echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
-			goto OCNMODEL
-		else
-			echo
-		endif
-	endif
+       if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
+          echo
+          echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
+          goto OCNMODEL
+       else
+          echo
+       endif
+    endif
 
     if ( $OCNMODEL == "MOM5" ) then
-        set OCEAN_NAME="MOM"
+       set OCEAN_NAME="MOM"
+       set MOM5=""
+       set MOM6 = "#DELETE"
+       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom.so'
     else if ( $OCNMODEL == "MOM6" ) then
-        set OCEAN_NAME="MOM6"
+       set OCEAN_NAME="MOM6"
+       set MOM6=""
+       set MOM5 = "#DELETE"
+       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom6.so'
     endif
 
     # Coupled Ocean Resolution
     # ------------------------
     CORSLV:
-    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default: 360 200)"
+
+    if ( $OCEAN_NAME == "MOM" ) then
+       set Resolution = `echo 360 200`
+    else if ( $OCEAN_NAME == "MOM6" ) then
+       set Resolution = `echo 360 210`
+    endif 
+
+    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
     set Resolution = `echo $<`
     set num = $#Resolution
     if( $num == 2 ) then
         set OGCM_IM = $Resolution[1]
         set OGCM_JM = $Resolution[2]
     else
-        if( $num == 0 ) then
-             set OGCM_IM = 360
-             set OGCM_JM = 200
-        else 
-             goto CORSLV
-        endif
+       if ( $OCEAN_NAME == "MOM" ) then
+          set Resolution = `echo 360 200`
+       else if ( $OCEAN_NAME == "MOM6" ) then
+          set Resolution = `echo 360 210`
+       endif 
+
+       if( $num == 0 ) then
+          set OGCM_IM = $Resolution[1]
+          set OGCM_JM = $Resolution[2]
+       else 
+          goto CORSLV
+       endif
     endif
     set IMO = ${OGCM_IM}
     set JMO = ${OGCM_JM}
@@ -601,7 +621,7 @@ if( $OGCM == TRUE ) then
     echo "Enter the Ocean Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 50)"
     set   OGCM_LM = $<
     if( .$OGCM_LM == . ) then
-	set   OGCM_LM = 50
+    set   OGCM_LM = 50
     endif
 
     set OGCM_GRIDSPEC = tripolar_${OGCM_IM}x${OGCM_JM}.ascii
@@ -814,8 +834,11 @@ else
 
     set DATAOCEAN = ""
     set OCEAN_NAME = ""
+    set OCEAN_PRELOAD = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
+    set MOM5      = "#DELETE"
+    set MOM6      = "#DELETE"
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
@@ -2314,6 +2337,8 @@ s?@DASTUNING?#?g
 s?>>>FORCEDAS<<<?$FORCEDAS?g
 s?>>>FORCEGCM<<<?$FORCEGCM?g
 s?>>>COUPLED<<<?$COUPLED?g
+s?>>>MOM5<<<?$MOM5?g
+s?>>>MOM6<<<?$MOM6?g
 s?>>>DATAOCEAN<<<?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
 s?>>>FVCUBED<<<?$FVCUBED?g
@@ -2324,6 +2349,7 @@ s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
+s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g
@@ -2453,18 +2479,25 @@ set FILES = "gcm_run.j          \
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
-    if ( $OCNMODEL == "MOM5" ) then
-        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-        /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
-    endif
-    /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
-    /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
+   if ( $OCEAN_NAME == "MOM" ) then
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+   else if ( $OCEAN_NAME == "MOM6" ) then
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table .
+      set FILES = "$FILES MOM_input MOM_override data_table "
+   endif
+
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
 
 set FILES = "$FILES      \
              input.nml   \
              diag_table  \
              field_table \
-             plotocn.j \
+             plotocn.j   \
              __init__.py"
 
 set FILES = `echo $FILES`
