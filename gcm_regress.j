@@ -68,6 +68,8 @@ cd $EXPDIR/regress
 @CPEXEC $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 @CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
 >>>COUPLED<<<@CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
+>>>MOM6<<<@CPEXEC $HOMDIR/MOM_input   $EXPDIR/regress
+>>>MOM6<<<@CPEXEC $HOMDIR/MOM_override $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
 
@@ -277,7 +279,7 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-$RUN_CMD $NPES ./GEOSgcm.x
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
                                                                                                                       
 
 set date = `cat cap_restart`
@@ -339,7 +341,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-$RUN_CMD $NPES ./GEOSgcm.x
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
 
 foreach rst ( $rst_file_names )
   /bin/rm -f  $rst
@@ -411,18 +413,15 @@ cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 >>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
 >>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
->>>COUPLED<<<./strip input.nml
->>>COUPLED<<<set oldstring =  `cat input.nml | grep "^ *layout"`
->>>COUPLED<<<set newstring =  "layout = ${test_NY},${test_NX},"
->>>COUPLED<<</bin/mv input.nml input.nml.tmp
->>>COUPLED<<<cat input.nml.tmp | sed -e "s?$oldstring?$newstring?g" > input.nml
+>>>MOM5<<<sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
+>>>MOM6<<<sed -r -i -e "/^ *LAYOUT/ s#= ([0-9]+), *([0-9]+)#= ${test_NY}, ${test_NX}#" MOM_input
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-$RUN_CMD $NPES ./GEOSgcm.x
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
                                                                                                                       
 set date = `cat cap_restart`
 set nymde = $date[1]
