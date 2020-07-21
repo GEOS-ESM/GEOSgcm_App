@@ -404,20 +404,17 @@ set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
 set newstring =  "NY: ${test_NY}"
 /bin/mv AGCM.rc AGCM.tmp
 cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
->>>MOM5<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NX:"`
->>>MOM5<<<set newstring =  "OGCM.NX: ${test_NY}"
->>>MOM5<<</bin/mv AGCM.rc AGCM.tmp
->>>MOM5<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
->>>MOM5<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NY:"`
->>>MOM5<<<set newstring =  "OGCM.NY: ${test_NX}"
->>>MOM5<<</bin/mv AGCM.rc AGCM.tmp
->>>MOM5<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+>>>COUPLED<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NX:"`
+>>>COUPLED<<<set newstring =  "OGCM.NX: ${test_NY}"
+>>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
+>>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+>>>COUPLED<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NY:"`
+>>>COUPLED<<<set newstring =  "OGCM.NY: ${test_NX}"
+>>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
+>>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
->>>MOM5<<<./strip input.nml
->>>MOM5<<<set oldstring =  `cat input.nml | grep "^ *layout"`
->>>MOM5<<<set newstring =  "layout = ${test_NY},${test_NX},"
->>>MOM5<<</bin/mv input.nml input.nml.tmp
->>>MOM5<<<cat input.nml.tmp | sed -e "s?$oldstring?$newstring?g" > input.nml
+>>>MOM5<<<sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
+>>>MOM6<<<sed -r -i -e "/^ *LAYOUT/ s#= ([0-9]+), *([0-9]+)#= ${test_NY}, ${test_NX}#" MOM_input
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
