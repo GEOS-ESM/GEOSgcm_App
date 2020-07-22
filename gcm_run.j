@@ -213,9 +213,9 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
-set  chk_type = `/usr/bin/file -Lb --mime-type *catch*`
-if( $chk_type =~ "application/octet-stream" ) set ext = bin
-if( $chk_type =~ "application/x-hdf"        ) set ext = nc4
+set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}e_${RSTID}.*catch*`
+if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
+if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
 $GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
 $GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
