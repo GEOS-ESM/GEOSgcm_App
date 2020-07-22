@@ -15,7 +15,7 @@ if( $SEASON == 'DJF' ) set BMONTH = "11"
 if( $SEASON == 'JJA' ) set BMONTH = "05"
 
 foreach BYEAR ($BYEARS)
-set RSTDATE = ${BYEAR}${BMONTH}10_210000
+set RSTDATE = ${BYEAR}${BMONTH}
 
    /bin/rm -f gcm_run.j$RSTDATE
    /bin/rm -f sedfile
