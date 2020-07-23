@@ -185,19 +185,24 @@ chmod +x $FILE
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
 set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
-# Copy MERRA-2 Restarts
-# ---------------------
-@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
+>>>EMIP_OLDLAND<<<# Copy MERRA-2 Restarts
+>>>EMIP_OLDLAND<<<# ---------------------
+>>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+>>>EMIP_NEWLAND<<<# ----------------------------------------------
+@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
 @TAREXEC xf  restarts.${year}${month}.tar
 /bin/rm restarts.${year}${month}.tar
-/bin/rm MERRA2*bin
+>>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
 
 
-# Regrid MERRA-2 Restarts
-# -----------------------
-set RSTID = `/bin/ls *catch*bin | cut -d. -f1`
-$GEOSBIN/regrid.pl -np -ymd ${year}${month}10 -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin Ganymed-4_0 -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
-/bin/rm $RSTID.*.bin
+>>>EMIP_OLDLAND<<<# Regrid MERRA-2 Restarts
+>>>EMIP_OLDLAND<<<# -----------------------
+>>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+>>>EMIP_NEWLAND<<<# ------------------------------------------------
+set RSTID = `/bin/ls *catch* | cut -d. -f1`
+set day   = `/bin/ls *catch* | cut -d. -f3 | cut -b 7-8`
+$GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
+>>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -208,15 +213,19 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
+set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}e_${RSTID}.*catch*`
+if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
+if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
+
 $GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
-$GEOSBIN/stripname .${year}${month}10_21z.bin.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
-/bin/mv gocart_internal_rst gocart_internal_rst.merra2
-$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}10_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
+$GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
+>>>EMIP_OLDLAND<<</bin/mv gocart_internal_rst gocart_internal_rst.merra2
+>>>EMIP_OLDLAND<<<$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
 
 
 # Create CAP.rc and cap_restart
 # -----------------------------
-set   nymd = ${year}${month}10
+set   nymd = ${year}${month}${day}
 set   nhms = 210000
 echo $nymd $nhms > cap_restart
 
