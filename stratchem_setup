@@ -3070,6 +3070,7 @@ HOMDIR/AGCM.rc
 HOMDIR/HISTORY.rc
 HOMDIR/gcm_run.j
 HOMDIR/gcm_emip.setup
+HOMDIR/logging.yaml
 EOF
 
 if( $OGCM == TRUE ) then
