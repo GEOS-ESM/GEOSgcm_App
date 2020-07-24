@@ -2337,7 +2337,8 @@ set FILES = "gcm_run.j          \
              gcm_emip.setup     \
              CAP.rc.tmpl        \
              AGCM.rc.tmpl       \
-             HISTORY.rc.tmpl    "
+             HISTORY.rc.tmpl    \
+             logging.yaml       "
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
