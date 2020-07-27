@@ -28,7 +28,7 @@ handlers:
       class: streamhandler
       formatter: basic
       unit: OUTPUT_UNIT
-      level: WARNING
+      level: INFO
       
       
    warnings:
@@ -64,8 +64,9 @@ handlers:
 ###############################      
 root:
    parallel: true
-   handlers: [warnings,errors]
+   handlers: [warnings,errors,console]
    level: WARNING
+   root_level: INFO
 
 ###############################      
 loggers:
@@ -87,7 +88,6 @@ loggers:
        parallel: true
        handlers: [mpi_shared]
        lock: mpi
-       propagate: false
        level: INFO
        root_level: DEBUG
 
