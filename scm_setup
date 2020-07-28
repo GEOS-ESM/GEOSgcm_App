@@ -89,7 +89,7 @@ usage ()
    echo "    --account: account under which to run the job"
    echo
    echo "  Optional argument: "
-   echo "    --num_levels: number of levels (72, 91, 132, 137, and 181 allowed)."
+   echo "    --num_levels: number of levels (72, 71, 91, 132, 137, and 181 allowed)."
    echo
    echo
 }
@@ -168,9 +168,9 @@ then
    exit 1
 fi
 
-if [[ $nlev -ne 72 ]]  &&  [[ $nlev -ne 132 ]] && [[ $nlev -ne 91 ]] && [[ $nlev -ne 137 ]] && [[ $nlev -ne 181 ]]
+if [[ $nlev -ne 72 ]]  &&  [[ $nlev -ne 132 ]] && [[ $nlev -ne 91 ]] && [[ $nlev -ne 137 ]] && [[ $nlev -ne 181 ]] && [[ $nlev -ne 71 ]]
 then
-   echo "ERROR: nlev needs to be 72, 91, 132, 137, or 181"
+   echo "ERROR: nlev needs to be 72, 71, 91, 132, 137, or 181"
    usage
    exit 1
 fi 
