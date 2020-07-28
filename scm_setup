@@ -404,9 +404,6 @@ mkdir -p $expdir
 /bin/cp $SOURCEDIR/catch_internal_rst $expdir
 
 mkdir -p $expdir/ExtData
-/bin/ln -s $CHMDIR/g5chem $expdir/ExtData
-/bin/ln -s $CHMDIR/PIESA $expdir/ExtData
-/bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 
 /bin/cp -u $SOURCEDIR/CAP.rc $expdir
 /bin/cp $SOURCEDIR/cap_restart $expdir
@@ -449,7 +446,30 @@ then
   /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x${padlev} $expdir/datmodyn_internal_rst
   /bin/mv $expdir/moist_internal_rst.r0001x0001x${padlev} $expdir/moist_internal_rst
 
+  ORIGCHMDIR=$CHMDIR
+
+  case $nlev in
+     71)
+        CHMDIR=/discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L71-2020May15/fvInput
+        ;;
+     91)
+        CHMDIR=/discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L91-2020Jul06/fvInput
+        ;;
+     127)
+        CHMDIR=/discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L127-2020May15/fvInput
+        ;;
+     181)
+        CHMDIR=/discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L181-2020Jul06/fvInput
+        ;;
+     *)
+        CHMDIR=$ORIGCHMDIR
+        ;;
+   esac
 fi
+
+/bin/ln -s $CHMDIR/g5chem $expdir/ExtData
+/bin/ln -s $CHMDIR/PIESA $expdir/ExtData
+/bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 
 if [[ -e $expdir/ExtData.rc ]]
 then
