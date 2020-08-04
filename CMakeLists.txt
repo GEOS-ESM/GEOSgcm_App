@@ -49,7 +49,7 @@ install (
    )
 
 install (
-   FILES fvcore_layout.rc saverst.rc
+   FILES fvcore_layout.rc saverst.rc logging.yaml
    DESTINATION etc
    )
 

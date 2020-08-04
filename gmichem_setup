@@ -1396,10 +1396,18 @@ endif
     if( $LSM_BCS == 1 ) then
                         set LSM_BCS = "Icarus"
                         set LSM_PARMS = "#DELETE"
+                        set EMIP_BCS_IN = "Ganymed-4_0"
+                        set EMIP_OLDLAND = ""
+                        set EMIP_NEWLAND = "#DELETE"
+                        set EMIP_MERRA2  = "MERRA2"
     endif
     if( $LSM_BCS == 2 ) then
                         set LSM_BCS = "Icarus-NLv3"
                         set LSM_PARMS = ""
+                        set EMIP_BCS_IN = "Icarus-NLv3"
+                        set EMIP_OLDLAND = "#DELETE"
+                        set EMIP_NEWLAND = ""
+                        set EMIP_MERRA2  = "MERRA2_NewLand"
     endif
 
 # Check for Catch-Carbon
@@ -1717,6 +1725,46 @@ else if( $SITE == 'NCCS' ) then
               setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar
+else if( $SITE == 'AWS' ) then
+              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
+              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
+              setenv  RUN_Q     DELETE                                                 # batch queue name for gcm_run.j
+              setenv  RUN_P   "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_run.j
+              setenv  RUN_FP  "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
+              setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  NULL                                                   # batch queue name for gcm_archive.j
+              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_moveplot.j
+
+              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+
+              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+
+              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
+              setenv TAREXEC    tar                                                    # Tar utility for large archives
+              # By default on AWS, just ignore IOSERVER for now until testing
+              set USE_IOSERVER = 0
+              set IOS_NDS = 0
+              set NCPUS_PER_NODE = 0
 else
 # These are defaults for the desktop
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
@@ -2299,6 +2347,8 @@ s?@SSTDIR?$SSTDIR?g
 s?@SSTNAME?$SSTNAME?g
 s?@OCEANOUT?$OCEANOUT?g
 s?@LSMBCS?$LSM_BCS?g
+s?@EMIP_BCS_IN?$EMIP_BCS_IN?g
+s?@EMIP_MERRA2?$EMIP_MERRA2?g
 s?@BCSTAG?$OCEAN_TAG?g
 s?@SSTFILE?$SSTFILE?g
 s?@ICEFILE?$ICEFILE?g
@@ -2347,6 +2397,8 @@ s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
+s?>>>EMIP_OLDLAND<<<?$EMIP_OLDLAND?g
+s?>>>EMIP_NEWLAND<<<?$EMIP_NEWLAND?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
@@ -2475,13 +2527,15 @@ set FILES = "gcm_run.j          \
              gcm_emip.setup     \
              CAP.rc.tmpl        \
              AGCM.rc.tmpl       \
-             HISTORY.rc.tmpl    "
+             HISTORY.rc.tmpl    \
+             logging.yaml       "
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
    if ( $OCEAN_NAME == "MOM" ) then
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+      set FILES = "$FILES field_table "
    else if ( $OCEAN_NAME == "MOM6" ) then
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
@@ -2496,7 +2550,6 @@ if( $OGCM == TRUE ) then
 set FILES = "$FILES      \
              input.nml   \
              diag_table  \
-             field_table \
              plotocn.j   \
              __init__.py"
 
@@ -3240,6 +3293,7 @@ HOMDIR/AGCM.rc
 HOMDIR/HISTORY.rc
 HOMDIR/gcm_run.j
 HOMDIR/gcm_emip.setup
+HOMDIR/logging.yaml
 EOF
 
 if( $OGCM == TRUE ) then

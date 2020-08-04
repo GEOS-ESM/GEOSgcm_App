@@ -136,6 +136,7 @@ set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
                              /bin/ln -sf $EXPDIR/RC/* .
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
+                             @CPEXEC -f  $HOMDIR/*.yaml .
 
                              cat fvcore_layout.rc >> input.nml
 
@@ -596,7 +597,7 @@ set NY = `grep "^ *NY:" AGCM.rc | cut -d':' -f2`
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
        @  NPES = $NX * $NY
-   $RUN_CMD $NPES ./GEOSgcm.x
+   $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
 if( -e EGRESS ) then
