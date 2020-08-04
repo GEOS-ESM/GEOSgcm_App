@@ -67,6 +67,7 @@ cd $EXPDIR/regress
 /bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
 @CPEXEC $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 @CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
+@CPEXEC $HOMDIR/*.yaml      $EXPDIR/regress
 >>>COUPLED<<<@CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
 >>>MOM6<<<@CPEXEC $HOMDIR/MOM_input   $EXPDIR/regress
 >>>MOM6<<<@CPEXEC $HOMDIR/MOM_override $EXPDIR/regress
