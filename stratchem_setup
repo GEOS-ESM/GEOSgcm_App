@@ -1323,10 +1323,18 @@ endif
     if( $LSM_BCS == 1 ) then
                         set LSM_BCS = "Icarus"
                         set LSM_PARMS = "#DELETE"
+                        set EMIP_BCS_IN = "Ganymed-4_0"
+                        set EMIP_OLDLAND = ""
+                        set EMIP_NEWLAND = "#DELETE"
+                        set EMIP_MERRA2  = "MERRA2"
     endif
     if( $LSM_BCS == 2 ) then
                         set LSM_BCS = "Icarus-NLv3"
                         set LSM_PARMS = ""
+                        set EMIP_BCS_IN = "Icarus-NLv3"
+                        set EMIP_OLDLAND = "#DELETE"
+                        set EMIP_NEWLAND = ""
+                        set EMIP_MERRA2  = "MERRA2_NewLand"
     endif
 
 # Check for Catch-Carbon
@@ -2187,6 +2195,8 @@ s?@SSTDIR?$SSTDIR?g
 s?@SSTNAME?$SSTNAME?g
 s?@OCEANOUT?$OCEANOUT?g
 s?@LSMBCS?$LSM_BCS?g
+s?@EMIP_BCS_IN?$EMIP_BCS_IN?g
+s?@EMIP_MERRA2?$EMIP_MERRA2?g
 s?@BCSTAG?$OCEAN_TAG?g
 s?@SSTFILE?$SSTFILE?g
 s?@ICEFILE?$ICEFILE?g
@@ -2235,6 +2245,8 @@ s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
+s?>>>EMIP_OLDLAND<<<?$EMIP_OLDLAND?g
+s?>>>EMIP_NEWLAND<<<?$EMIP_NEWLAND?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
@@ -2361,13 +2373,15 @@ set FILES = "gcm_run.j          \
              gcm_emip.setup     \
              CAP.rc.tmpl        \
              AGCM.rc.tmpl       \
-             HISTORY.rc.tmpl    "
+             HISTORY.rc.tmpl    \
+             logging.yaml       "
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE ) then
    if ( $OCEAN_NAME == "MOM" ) then
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+      set FILES = "$FILES field_table "
    else if ( $OCEAN_NAME == "MOM6" ) then
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
@@ -2382,7 +2396,6 @@ if( $OGCM == TRUE ) then
 set FILES = "$FILES      \
              input.nml   \
              diag_table  \
-             field_table \
              plotocn.j   \
              __init__.py"
 
@@ -3110,6 +3123,7 @@ HOMDIR/AGCM.rc
 HOMDIR/HISTORY.rc
 HOMDIR/gcm_run.j
 HOMDIR/gcm_emip.setup
+HOMDIR/logging.yaml
 EOF
 
 if( $OGCM == TRUE ) then
