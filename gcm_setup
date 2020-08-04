@@ -235,12 +235,7 @@ echo " "
 set HRCODE = `echo $<`
 set HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
 
-if( $HRCODE != 'a'     & \
-    $HRCODE != 'b'     & \
-    $HRCODE != 'c'     & \
-    $HRCODE != 'd'     & \
-    $HRCODE != 'e'     & \
-    $HRCODE != 'c12'   & \
+if( $HRCODE != 'c12'   & \
     $HRCODE != 'c24'   & \
     $HRCODE != 'c48'   & \
     $HRCODE != 'c90'   & \
@@ -252,47 +247,15 @@ if( $HRCODE != 'a'     & \
     $HRCODE != 'c1536' & \
     $HRCODE != 'c3072' ) goto HRCODE
 
-if( $HRCODE == 'c12'   | \
-    $HRCODE == 'c24'   | \
-    $HRCODE == 'c48'   | \
-    $HRCODE == 'c90'   | \
-    $HRCODE == 'c180'  | \
-    $HRCODE == 'c360'  | \
-    $HRCODE == 'c720'  | \
-    $HRCODE == 'c1440' | \
-    $HRCODE == 'c768'  | \
-    $HRCODE == 'c1536' | \
-    $HRCODE == 'c3072' ) then
-     set Resolution = $HRCODE
-else
-     if( $HRCODE == 'a' ) set Resolution = `echo   72  46`
-     if( $HRCODE == 'b' ) set Resolution = `echo  144  91`
-     if( $HRCODE == 'c' ) set Resolution = `echo  288 181`
-     if( $HRCODE == 'd' ) set Resolution = `echo  576 361`
-     if( $HRCODE == 'e' ) set Resolution = `echo 1152 721`
-endif
+set Resolution = $HRCODE
 
-if( $#Resolution == 2 ) then
-   set AGCM_IM = $Resolution[1]
-   set AGCM_JM = $Resolution[2]
-   set CUBED   = FALSE
-   set DYCORE  = FV
-   set GRID_TYPE = "LatLon"
-   set LATLON_AGCM = ""
-   set CUBE_AGCM = "#DELETE"
-   set AGCM_NF = 1
+set DYCORE  = FV3
+set AGCM_NF = 6
+set GRID_TYPE = "Cubed-Sphere"
+if (`echo $Resolution[1] | cut -b1` == "c" ) then
+   set  AGCM_IM = $Resolution[1]
 else
-   set CUBED   = TRUE
-   set DYCORE  = FV3
-   set LATLON_AGCM = "#DELETE"
-   set CUBE_AGCM = ""
-   set AGCM_NF = 6
-   set GRID_TYPE = "Cubed-Sphere"
-   if (`echo $Resolution[1] | cut -b1` == "c" ) then
-        set  AGCM_IM = $Resolution[1]
-   else
-        set  AGCM_IM = "c$Resolution[1]"
-   endif
+   set  AGCM_IM = "c$Resolution[1]"
 endif
 
 
@@ -819,25 +782,6 @@ if( $AGCM_IM ==  "c12" ) then
      set   CNV_NX = 1
      set   CNV_NY = 6
 endif
-if( $AGCM_IM ==  "72" ) then
-     set       DT = 900
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set  CHEM_DT = $DT
-     set JOB_SGMT = 00000015
-     set NUM_SGMT = 20
-     if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NX
-          set  NY = $OGCM_NY
-     set OCEAN_DT = $DT
-     else
-          set  NX = 4
-          set  NY = 12
-     set OCEAN_DT = $IRRAD_DT
-     endif
-     set ATMOS_RES = DC0072xPC0046
-     set POST_NDS = 4
-endif
 if( $AGCM_IM ==  "c24" ) then
      set       DT = 900
      set SOLAR_DT = 3600
@@ -859,25 +803,6 @@ if( $AGCM_IM ==  "c24" ) then
      set   CNV_NX = 1
      set   CNV_NY = 6
 endif
-if( $AGCM_IM ==  "144" ) then
-     set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set  CHEM_DT = $DT
-     set JOB_SGMT = 00000015
-     set NUM_SGMT = 20
-     if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NX
-          set  NY = $OGCM_NY
-     set OCEAN_DT = $DT
-     else
-          set  NX = 4
-          set  NY = 12
-     set OCEAN_DT = $IRRAD_DT
-     endif
-     set ATMOS_RES = DC0144xPC0091
-     set POST_NDS = 4
-endif
 if( $AGCM_IM ==  "c48" ) then
      set       DT = 450
      set SOLAR_DT = 3600
@@ -896,25 +821,6 @@ if( $AGCM_IM ==  "c48" ) then
      set NUM_SGMT = 20
      set ATMOS_RES = CF0048x6C
      set POST_NDS = 4
-endif
-if( $AGCM_IM ==  "288" ) then
-     set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set  CHEM_DT = $DT
-     set JOB_SGMT = 00000008
-     set NUM_SGMT = 5
-     if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NX
-          set  NY = $OGCM_NY
-     set OCEAN_DT = $DT
-     else
-          set  NX = 8
-          set  NY = 12
-     set OCEAN_DT = $IRRAD_DT
-     endif
-     set ATMOS_RES = DC0288xPC0181
-     set POST_NDS = 8
 endif
 if( $AGCM_IM ==  "c90" ) then
      set       DT = 450
@@ -939,25 +845,6 @@ if( $AGCM_IM ==  "c90" ) then
      set JOB_SGMT = 00000032
      set NUM_SGMT = 4
      set ATMOS_RES = CF0090x6C
-     set POST_NDS = 8
-endif
-if( $AGCM_IM ==  "576" ) then
-     set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set  CHEM_DT = $DT
-     set JOB_SGMT = 00000016
-     set NUM_SGMT = 1
-     if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NX
-          set  NY = $OGCM_NY
-     set OCEAN_DT = $DT
-     else
-          set  NX = 12
-          set  NY = 32
-     set OCEAN_DT = $IRRAD_DT
-     endif
-     set ATMOS_RES = DC0576xPC0361
      set POST_NDS = 8
 endif
 if( $AGCM_IM ==  "c180" ) then
@@ -985,28 +872,6 @@ if( $AGCM_IM ==  "c180" ) then
      set NUM_SGMT = 1
      set ATMOS_RES = CF0180x6C
      set POST_NDS = 8
-     set DEF_IOS_NDS = 2
-endif
-if( $AGCM_IM == "1152" ) then
-     set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set  CHEM_DT = $DT
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
-     set NUM_READERS = 4
-     if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NX
-          set  NY = $OGCM_NY
-     set OCEAN_DT = $DT
-     else
-          set  NX = 24
-          set  NY = 32
-     set OCEAN_DT = $IRRAD_DT
-     endif
-     set ATMOS_RES = DC1152xPC0721
-     set   CNV_NX = 4
-     set POST_NDS = 12
      set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c360" ) then
@@ -1172,40 +1037,21 @@ if( $AGCM_IM == "c3072" ) then
 endif
 
 set IS_FCST = 0
-if($CUBED == "TRUE") then
-    set FVCUBED         = ""
-    set FVLATLON        = "#DELETE"
-    set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
-    if( ${OGRIDTYP} == 'CF' ) then
-        set OGCM_GRIDNAME   = "OC${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
-    else
-        set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
-    endif
-    set BCSRES          = "${ATMOS_RES}_${OCEAN_RES}"
-    set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}'
-    set TILEDATA        = "${ATMOS_RES}_${OCEAN_RES}_Pfafstetter.til"
-    set TILEBIN         = "${ATMOS_RES}_${OCEAN_RES}_Pfafstetter.TIL"
-    if( $HIST_IM >= $OGCM_IM ) then
-         set INTERPOLATE_SST = 1
-    else
-         set INTERPOLATE_SST = 0
-    endif
+set FVCUBED         = ""
+set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
+if( ${OGRIDTYP} == 'CF' ) then
+   set OGCM_GRIDNAME   = "OC${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
 else
-    set FVLATLON        = ""
-    set FVCUBED         = "#DELETE"
-    set AGCM_GRIDNAME   = "PC${AGCM_IM}x${AGCM_JM}-DC"
-    set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
-    set BCSRES          = "${ATMOS_RES}_${OCEAN_RES}"
-    set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}_${DATELINE}'
-    set TILEDATA        = "${ATMOS_RES}_${OCEAN_RES}_Pfafstetter.til"
-    set TILEBIN         = "${ATMOS_RES}_${OCEAN_RES}_Pfafstetter.TIL"
-    set HIST_IM         = "$AGCM_IM"
-    set HIST_JM         = "$AGCM_JM"
-    if( $AGCM_IM >= $OGCM_IM ) then
-         set INTERPOLATE_SST = 1
-    else
-         set INTERPOLATE_SST = 0
-    endif
+   set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+endif
+set BCSRES          = "${ATMOS_RES}_${OCEAN_RES}"
+set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}'
+set TILEDATA        = "${ATMOS_RES}_${OCEAN_RES}_Pfafstetter.til"
+set TILEBIN         = "${ATMOS_RES}_${OCEAN_RES}_Pfafstetter.TIL"
+if( $HIST_IM >= $OGCM_IM ) then
+   set INTERPOLATE_SST = 1
+else
+   set INTERPOLATE_SST = 0
 endif
 
 
@@ -1605,13 +1451,8 @@ else
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
               setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
-              if( $CUBED == "TRUE" ) then
-                 set NX = 1
-                 set NY = 6
-              else
-                 set NX = 2
-                 set NY = 4
-              endif
+              set NX = 1
+              set NY = 6
               set CNV_NX = ${NX}
               set CNV_NY = ${NY}
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
@@ -2189,7 +2030,6 @@ s?>>>MOM6<<<?$MOM6?g
 s?>>>DATAOCEAN<<<?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
 s?>>>FVCUBED<<<?$FVCUBED?g
-s?>>>FVLATLON<<<?$FVLATLON?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
@@ -2245,9 +2085,7 @@ s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
-s?>>>LATLON_AGCM<<<?$LATLON_AGCM?g
 s?>>>LATLON_OGCM<<<?$LATLON_OGCM?g
-s?>>>CUBE_AGCM<<<?$CUBE_AGCM?g
 s?>>>CUBE_OGCM<<<?$CUBE_OGCM?g
 s/@GRID_TYPE/$GRID_TYPE/g
 s/@AGCM_NF/$AGCM_NF/g
@@ -2296,7 +2134,6 @@ EOF
 
 # Added FV3 Specific Parameters
 # -----------------------------
-if($CUBED == "TRUE") then
 
 cat >> $HOMDIR/sedfile << EOF
 
@@ -2304,7 +2141,7 @@ s^@HYDROSTATIC^$HYDROSTATIC^g
 s/@GRID_FILE/$GRID_FILE/g
 
 EOF
-endif
+
 set FILES = "gcm_run.j          \
              gcm_post.j         \
              gcm_archive.j      \
@@ -2347,11 +2184,9 @@ set FILES = "$FILES      \
 set FILES = `echo $FILES`
 endif
 
-if($CUBED == "TRUE") then
 set FILES = "$FILES \
              fvcore_layout.rc"
 set FILES = `echo $FILES`
-endif
 
 echo " "
 
@@ -2884,12 +2719,6 @@ else
    set OGCM = FALSE
 endif
 
-if ( -e $CLONEDIR/fvcore_layout.rc ) then
-   set CUBED = TRUE
-else
-   set CUBED = FALSE
-endif
-
 # ------------------------------------------------
 # Set the new EXPDIR and HOMDIR based on the roots
 # ------------------------------------------------
@@ -2958,11 +2787,9 @@ EXPDIR/plot/plotocn.j
 EOF
 endif
 
-if($CUBED == "TRUE") then
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/fvcore_layout.rc
 EOF
-endif
 
 # ------------------------------------------------
 # Create two sets of files so we can copy from one
