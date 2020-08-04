@@ -100,6 +100,7 @@ cd $SCRDIR
 /bin/ln -sf $EXPDIR/RC/* .
 @CPEXEC -f  $HOMDIR/*.rc .
 @CPEXEC -f  $HOMDIR/*.nml .
+@CPEXEC -f  $HOMDIR/*.yaml .
 
 cat fvcore_layout.rc >> input.nml
 
