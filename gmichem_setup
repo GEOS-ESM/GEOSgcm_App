@@ -258,6 +258,9 @@ else
    set  AGCM_IM = "c$Resolution[1]"
 endif
 
+# These are superfluous for GCM, but needed for SCM (considered latlon)
+set LATLON_AGCM = "#DELETE"
+set CUBE_AGCM = ""
 
 echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 72)"
 set   AGCM_LM = $<
@@ -2268,7 +2271,9 @@ s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
+s?>>>LATLON_AGCM<<<?$LATLON_AGCM?g
 s?>>>LATLON_OGCM<<<?$LATLON_OGCM?g
+s?>>>CUBE_AGCM<<<?$CUBE_AGCM?g
 s?>>>CUBE_OGCM<<<?$CUBE_OGCM?g
 s/@GRID_TYPE/$GRID_TYPE/g
 s/@AGCM_NF/$AGCM_NF/g
