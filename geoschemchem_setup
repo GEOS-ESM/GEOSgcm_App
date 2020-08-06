@@ -2528,30 +2528,27 @@ sed -i 's/BEG_DATE.*/BEG_DATE:     19500101 000000/' $HOMDIR/CAP.rc
 
 # GEOS-Chem needs resolution-dependent settings
 # ---------------------------------------------
-if($CUBED == "TRUE") then
-  setenv RES $AGCM_IM
 
-  set RES_LINE = "`grep -i '${RES}.*OTD-LIS scaling' $EXPDIR/RC/HEMCO_Config.rc`"
-  if ( $#RES_LINE == 1 ) then
-    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-    sed -i "s/@OTD_LIS_SCALING/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-  else
-    echo Expecting exactly 1 line for ${RES} OTD-LIS scaling.
-    echo Please set @OTD_LIS_SCALING in $EXPDIR/RC/HEMCO_Config.rc
-  endif
+setenv RES $AGCM_IM
 
-  set RES_LINE = "`grep -i '${RES}.*Mass tuning factor' $EXPDIR/RC/HEMCO_Config.rc`"
-  if ( $#RES_LINE == 1 ) then
-    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-    sed -i "s/@MASS_TUNING_FACTOR/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-  else
-    echo Expecting exactly 1 line for ${RES} Mass tuning factor.
-    echo Please set @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
-  endif
-
+set RES_LINE = "`grep -i '${RES}.*OTD-LIS scaling' $EXPDIR/RC/HEMCO_Config.rc`"
+if ( $#RES_LINE == 1 ) then
+   set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
+   sed -i "s/@OTD_LIS_SCALING/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
 else
-  echo Please set @OTD_LIS_SCALING and @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
+   echo Expecting exactly 1 line for ${RES} OTD-LIS scaling.
+   echo Please set @OTD_LIS_SCALING in $EXPDIR/RC/HEMCO_Config.rc
 endif
+
+set RES_LINE = "`grep -i '${RES}.*Mass tuning factor' $EXPDIR/RC/HEMCO_Config.rc`"
+if ( $#RES_LINE == 1 ) then
+   set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
+   sed -i "s/@MASS_TUNING_FACTOR/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
+else
+   echo Expecting exactly 1 line for ${RES} Mass tuning factor.
+   echo Please set @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
+endif
+
 
 # Turn on PCHEM
 # -------------
