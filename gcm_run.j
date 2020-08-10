@@ -651,8 +651,8 @@ setenv YEAR $yearc
 ./linkbcs
 
 if (! -e tile.bin) then
-$RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
->>>MOM5<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+$GEOSBIN/binarytile.x tile.data tile.bin
+>>>MOM5<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
