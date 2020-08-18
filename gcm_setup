@@ -1154,6 +1154,9 @@ if( $AGCM_IM == "c3072" ) then
      set USE_SHMEM = 1
      set DEF_IOS_NDS = 5
 endif
+if( .$OCNMODEL == .MIT ) then
+  set OCEAN_DT = $DT
+endif
 
 set IS_FCST = 0
 if($CUBED == "TRUE") then
