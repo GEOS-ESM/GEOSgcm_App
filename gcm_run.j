@@ -373,7 +373,7 @@ cat << _EOF_ > $FILE
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
-/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+/bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
 
 >>>COUPLED<<<if( $OGCM_IM == 1440 ) then
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
@@ -627,8 +627,8 @@ setenv YEAR $yearc
 ./linkbcs
 
 if (! -e tile.bin) then
-$RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
->>>COUPLED<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+$GEOSBIN/binarytile.x tile.data tile.bin
+>>>COUPLED<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here

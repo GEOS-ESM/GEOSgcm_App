@@ -553,7 +553,11 @@ if( $OGCM == TRUE ) then
     if( $JMO < 10   ) set JMO = 000$JMO
     if( $JMO < 100  ) set JMO =  00$JMO
     if( $JMO < 1000 ) set JMO =   0$JMO
-    set OCEAN_RES = TM${IMO}xTM${JMO}
+    if( .$OCNMODEL == .MIT ) then
+      set OCEAN_RES = ${OGRIDTYP}${IMO}x${OGRIDTYP}${JMO}
+    else
+      set OCEAN_RES = TM${IMO}xTM${JMO}
+    endif
     set OCEAN_TAG  = Reynolds
     set SSTNAME  = "#DELETE"
     set SSTFILE  = "#DELETE"
@@ -580,18 +584,18 @@ if( $OGCM == TRUE ) then
 
     if( .$OCNMODEL == .MIT ) then
         if (${OGRIDTYP} == 'CM') then
-            set OGCM_NX = 24
+            set OGCM_NX = 6
             set OGCM_NY = 1
-            set OGCM_GRIDSPEC = mit-cube_${OGCM_IM}x${OGCM_JM}.ascii
+            set OGCM_GRIDSPEC = mit.ascii
         else
             if ($AGCM_IM == c48) then
                 set OGCM_NX = 96
                 set OGCM_NY = 1
-                set OGCM_GRIDSPEC = mit-llc90.ascii
+                set OGCM_GRIDSPEC = mit.ascii
             else if ($AGCM_IM == c90) then
                 set OGCM_NX = 360
                 set OGCM_NY = 1
-                set OGCM_GRIDSPEC = mit-llc90_15x15.ascii
+                set OGCM_GRIDSPEC = mit.ascii
             else if ($AGCM_IM == c720) then
                 set OGCM_NX = 2880
                 set OGCM_NY = 1
@@ -782,7 +786,7 @@ if( $AGCM_IM ==  "c12" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 2
+     set       NX = 1
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = TRUE
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1439,7 +1443,11 @@ if( $SITE == 'NAS' ) then
               endif
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
+              if ( $OCNMODEL == "MIT" ) then
+                setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
+              else 
+                setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings     # Coupled Ocean/Atmos Forcing
+              endif
               setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
               setenv TAREXEC    mtar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
@@ -1490,7 +1498,11 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
+              if ( $OCNMODEL == "MIT" ) then
+                setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos Forcing
+              else 
+                setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings         # Coupled Ocean/Atmos Forcing
+              endif
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar
 else
