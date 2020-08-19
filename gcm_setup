@@ -1155,7 +1155,7 @@ if( $AGCM_IM == "c3072" ) then
      set DEF_IOS_NDS = 5
 endif
 if( .$OCNMODEL == .MIT ) then
-  set OCEAN_DT = $DT
+     set OCEAN_DT = $DT
 endif
 
 set IS_FCST = 0

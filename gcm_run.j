@@ -32,6 +32,7 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
+setenv ARCH `uname`
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
@@ -341,7 +342,7 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
->>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/mit.ascii .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>COUPLED<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
@@ -734,6 +735,77 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
 endif
 
+# ---------------------------------------------------
+# For MITgcm restarts - before running GEOSgcm.x
+# ---------------------------------------------------
+
+# set time interval for segment in seconds
+
+set yearc  = `echo $nymdc | cut -c1-4`
+set monthc = `echo $nymdc | cut -c5-6`
+set dayc   = `echo $nymdc | cut -c7-8`
+set hourc  = `echo $nhmsc | cut -c1-2`
+set minutec = `echo $nhmsc | cut -c3-4`
+set secondc = `echo $nhmsc | cut -c5-6`
+
+set yearf  = `echo $nymdf | cut -c1-4`
+set monthf = `echo $nymdf | cut -c5-6`
+set dayf   = `echo $nymdf | cut -c7-8`
+set hourf  = `echo $nhmsf | cut -c1-2`
+set minutef = `echo $nhmsf | cut -c3-4`
+set secondf = `echo $nhmsf | cut -c5-6`
+
+set yearf = `echo $nymdf | cut -c1-4`
+
+set time1 = `date -u -d "${yearc}-${monthc}-${dayc}T${hourc}:${minutec}:${secondc}" "+%s"`
+set time2 = `date -u -d "${yearf}-${monthf}-${dayf}T${hourf}:${minutef}:${secondf}" "+%s"`
+
+     @ mitdt = $time2 - $time1
+echo "Segment time: $mitdt"
+
+
+# Set-up MITgcm run directory
+if (! -e mitocean_run) mkdir -p mitocean_run
+cd mitocean_run
+
+# link mit configuration and initialization files
+ln -sf $EXPDIR/mit_input/* .
+# link mitgcm restarts if exist
+/bin/ln -sf $EXPDIR/restarts/pic* .
+# make an archive folder for mitgcm run
+mkdir $EXPDIR/mit_output
+
+# Calculate segment time steps
+set mit_nTimeSteps = `cat ${SCRDIR}/AGCM.rc | grep OGCM_RUN_DT: | cut -d: -f2 | tr -s " " | cut -d" " -f2`
+@ mit_nTimeSteps = ${mitdt} / $mit_nTimeSteps
+
+#change namelist variables in data - nTimeSteps, chkptFreq and monitorFreq
+sed -i "s/nTimeSteps.*/nTimeSteps       = ${mit_nTimeSteps},/" data
+sed -i "s/chkptFreq.*/chkptFreq        = ${mitdt}.0,/" data
+sed -i "s/pChkptFreq.*/pChkptFreq        = ${mitdt}.0,/" data
+# get nIter0
+
+if (! -e ${EXPDIR}/restarts/MITgcm_restart_dates.txt ) then
+  set nIter0 = `grep nIter0 data | tr -s " " | cut -d"=" -f2 | cut -d"," -f1 | awk '{$1=$1;print}'`
+else
+  set nIter0 = `grep "$nymdc $nhmsc" ${EXPDIR}/restarts/MITgcm_restart_dates.txt | cut -d" " -f5`
+  if ( $nIter0 == "" ) then
+    echo "No ocean restart file for $nymdc $nhmsc, exiting"
+    echo "If this is a new initialized experiment, delete:"
+    echo "${EXPDIR}/restarts/MITgcm_restart_dates.txt"
+    echo "and restart"
+    exit
+  else
+    sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
+  endif
+endif
+
+cd ..
+# ---------------------------------------------------
+# End MITgcm restarts - before running GEOSgcm.x
+# ---------------------------------------------------
+
+
 # Run GEOSgcm.x
 # -------------
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
@@ -759,6 +831,88 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
+
+# ---------------------------------------------------
+# For MITgcm restarts - after running GEOSgcm.x
+# ---------------------------------------------------
+
+set STEADY_STATE_OCEAN=`grep STEADY_STATE_OCEAN AGCM.rc | cut -d':' -f2 | tr -d " "`
+
+# update ocean only if activated. Otherwize use the same pickups (passive ocean).
+if ( ${STEADY_STATE_OCEAN} != 0 ) then
+
+  if ( ${rc} == 0 ) then
+
+    # Update nIter0 for next segment
+    set znIter00 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
+    @ nIter0 = $nIter0 + $mit_nTimeSteps
+    set znIter0 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
+
+    # to update MITgcm restart list file
+    sed -i "/${nIter0}/d" ${EXPDIR}/restarts/MITgcm_restart_dates.txt
+    echo "Date_GEOS5 $nymdf $nhmsf NITER0_MITgcm ${nIter0}" >> ${EXPDIR}/restarts/MITgcm_restart_dates.txt
+
+    /bin/mv $SCRDIR/mitocean_run/STDOUT.0000 $EXPDIR/mit_output/STDOUT.${znIter00}
+
+  endif
+
+  cd $SCRDIR/mitocean_run
+
+  # Check existance of roling pickups
+  set nonomatch rp =  ( pickup*ckptA* )
+  echo $rp
+  # Rename and move them if exist
+  if ( -e $rp[1] ) then
+    set timeStepNumber=`cat pickup.ckptA.meta | grep timeStepNumber | tr -s " " | cut -d" " -f5 | awk '{printf("%010d",$1)}'`
+    foreach fname ( pickup*ckptA* )
+      set bname = `echo ${fname} | cut -d "." -f1 | cut -d "/" -f2`
+      set aname = `echo ${fname} | cut -d "." -f3`
+      echo $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
+      /bin/mv ${fname} $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
+    end
+  endif
+
+  # Check existance of permanent pickups
+  set nonomatch pp =  ( pickup* )
+  echo $pp
+  # Move them if exist
+  if ( -e $pp[1] ) then
+    foreach fname ( pickup* )
+      if ( ! -e $EXPDIR/restarts/${fname} ) /bin/mv ${fname} $EXPDIR/restarts/${fname}
+    end
+  endif
+
+  /bin/mv T.* $EXPDIR/mit_output/
+  /bin/mv S.* $EXPDIR/mit_output/
+  /bin/mv U.* $EXPDIR/mit_output/
+  /bin/mv V.* $EXPDIR/mit_output/
+  /bin/mv W.* $EXPDIR/mit_output/
+  /bin/mv PH* $EXPDIR/mit_output/
+  /bin/mv Eta.* $EXPDIR/mit_output/
+
+  /bin/mv AREA.* $EXPDIR/mit_output/
+  /bin/mv HEFF.* $EXPDIR/mit_output/
+  /bin/mv HSNOW.* $EXPDIR/mit_output/
+  /bin/mv UICE.* $EXPDIR/mit_output/
+  /bin/mv VICE.* $EXPDIR/mit_output/
+
+  #copy mit output to mit_output
+  foreach i (`grep -i filename data.diagnostics  | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
+   /bin/mv ${i}* $EXPDIR/mit_output/
+  end
+
+  foreach i (`grep -i stat_fName data.diagnostics | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
+   /bin/mv ${i}* $EXPDIR/mit_output/
+  end
+
+  cd $SCRDIR
+
+endif
+
+# ---------------------------------------------------
+# End MITgcm restarts - after running GEOSgcm.x
+# ---------------------------------------------------
+
  
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
