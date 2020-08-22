@@ -809,7 +809,7 @@ if( $AGCM_IM ==  "72" ) then
      if( $OGCM == TRUE ) then
           set  NX = $OGCM_NX
           set  NY = $OGCM_NY
-     set OCEAN_DT = $DT
+          set OCEAN_DT = $DT
      else
           set  NX = 4
           set  NY = 12
@@ -903,9 +903,14 @@ if( $AGCM_IM ==  "c90" ) then
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NY
-          set  NY = $OGCM_NX
-     set OCEAN_DT = $DT
+          if( .$OCNMODEL == .MIT ) then
+              set  NX = 10
+              set  NY = 36
+          else
+              set  NX = $OGCM_NY
+              set  NY = $OGCM_NX
+          endif
+          set OCEAN_DT = $DT
      else
           set  NX = 4
           set  NY = `expr $NX \* 6`
