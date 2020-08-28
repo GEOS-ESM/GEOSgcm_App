@@ -1082,20 +1082,11 @@ endif
 
 # Settings for fvcore_layout.rc
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
-	set FV_HYDRO      = "hydrostatic = .T."
-	set FV_SATADJ     = "do_sat_adj  = .F."
-        set FV_HORD_MT    = "hord_mt  = 5"
+	set FV_HYDRO   = "hydrostatic = .T."
 else
-        set FV_HORD_MT    = ""
-	set FV_HYDRO      = "hydrostatic = .F."
-	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
-		set FV_SATADJ  = "do_sat_adj = .F."
-	else if ( "$AGCM_MP" == "GFDL" ) then
-		set FV_SATADJ  = "do_sat_adj = .T."
-		set GFDL_HYDRO = FALSE
-	endif
+	set FV_HYDRO   = "hydrostatic = .F."
+	set GFDL_HYDRO = FALSE
 endif
-
 
 #######################################################################
 #           Check for land surface and runoff routing  models         #
@@ -2115,8 +2106,6 @@ s?>>>MP_MG1<<<?$MP_MG1?g
 s?>>>MP_GFDL<<<?$MP_GFDL?g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_HYDRO?$FV_HYDRO?g
-s?@FV_SATADJ?$FV_SATADJ?g
-s?@FV_HORD_MT?$FV_HORD_MT?g
 
 EOF
 

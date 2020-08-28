@@ -1,7 +1,5 @@
 &fv_core_nml
   @FV_HYDRO
-  @FV_SATADJ
-  @FV_HORD_MT
 /
 
 &main_nml
@@ -29,13 +27,12 @@
   const_vs = .F.
   const_vg = .F.
   const_vr = .F.
-  vi_fac = 1.
   vi_max = 1.
   vs_max = 2.
   vg_max = 12.
   vr_max = 12.
   qi_lim = 1.
-  prog_ccn = .false.
+  prog_ccn = .true.
   do_qa = .false.
   fast_sat_adj = .true.
   tau_l2v  = 900.
@@ -59,7 +56,7 @@
   c_paut = 1.0
   c_cracw = 0.8
   use_ppm = .false.
-  use_ccn = .true.
+  use_ccn = .false.
   mono_prof = .true.
   z_slope_liq  = .true.
   z_slope_ice  = .true.
