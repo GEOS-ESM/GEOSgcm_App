@@ -697,7 +697,10 @@ if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_interna
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
+ else
+   echo "Neither saltwater_internal_rst, or openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
  endif
+ 
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
