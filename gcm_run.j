@@ -665,7 +665,8 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_internal_rst)) then
+ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -696,6 +697,7 @@ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
+ endif
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
@@ -713,6 +715,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
    endif    
 
 endif
+
 
 # Environment variables for MPI, etc
 # ----------------------------------
