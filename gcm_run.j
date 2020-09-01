@@ -696,7 +696,11 @@ if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_interna
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
+   
+   # Remove the saltwater internal restart
+   # -------------------------------------
+   /bin/rm $EXPDIR/saltwater_internal_rst
+   
  else
    echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
    exit 6
