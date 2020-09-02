@@ -270,7 +270,7 @@ chmod +x linkbcs
 #######################################################################
 
 if (! -e tile.bin) then
-$RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
+$GEOSBIN/binarytile.x tile.data tile.bin
 endif
 
 #######################################################################

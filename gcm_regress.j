@@ -119,7 +119,7 @@ end
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
-if(! -e tile.bin) $RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
+if(! -e tile.bin) $GEOSBIN/binarytile.x tile.data tile.bin
 
 #######################################################################
 #                Split Saltwater Restart if detected
