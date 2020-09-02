@@ -665,7 +665,8 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_internal_rst)) then
+ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -695,7 +696,16 @@ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
+   
+   # Remove the saltwater internal restart
+   # -------------------------------------
+   /bin/rm $EXPDIR/saltwater_internal_rst
+   
+ else
+   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
+   exit 6
+ endif
+ 
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
@@ -713,6 +723,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
    endif    
 
 endif
+
 
 # Environment variables for MPI, etc
 # ----------------------------------
