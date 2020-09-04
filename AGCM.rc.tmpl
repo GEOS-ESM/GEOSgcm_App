@@ -67,6 +67,15 @@ CLOSURE_DEEP:0
 CLOSURE_SHALLOW:7
 CLOSURE_CONGESTUS:3
 
+# GWD Parameterization
+# --------------------
+
+# if .FALSE., use GEOS GWD code (default); .TRUE., use new NCAR GWD code
+USE_NCAR_GWD: .FALSE.
+
+# This is only used if USE_NCAR_GWD is .TRUE.
+BERES_GWD_FILE: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
+
 # Ocean Model Configuration Parameters
 # ------------------------------------
       OGCM.GRID_TYPE: @OGCM_GRID_TYPE
