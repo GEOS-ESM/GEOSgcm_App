@@ -357,6 +357,7 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+>>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DE0@HIST_IMxPC0@HIST_JM_@OCEANtag/DE0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -651,7 +652,7 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
->>>MOM5<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+>>>COUPLED<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -880,7 +881,7 @@ end
 >>>COUPLED<<<# MOM-Specific Output Files
 >>>COUPLED<<<# -------------------------
 >>>MOM5<<< set dsets="ocean_month"
->>>MOM6<<< set dsets="ocean_month prog_z sfc_ave forcing"
+>>>MOM6<<< set dsets="ocean_state prog_z sfc_ave forcing"
 >>>COUPLED<<< foreach dset ( $dsets )
 >>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
 >>>COUPLED<<< if($num != 0) then
