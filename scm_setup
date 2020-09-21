@@ -89,8 +89,7 @@ usage ()
    echo "    --account: account under which to run the job"
    echo
    echo "  Optional argument: "
-   echo "    --num_levels: number of levels (72 or 132 allowed). NOTE: This "
-   echo "                  is fragile as some cases might not yet support 132 levels"
+   echo "    --num_levels: number of levels (72, 71, 91, 132, 137, and 181 allowed)."
    echo
    echo
 }
@@ -169,9 +168,9 @@ then
    exit 1
 fi
 
-if [[ $nlev -ne 72 ]]  &&  [[ $nlev -ne 132 ]]
+if [[ $nlev -ne 72 ]]  &&  [[ $nlev -ne 132 ]] && [[ $nlev -ne 91 ]] && [[ $nlev -ne 137 ]] && [[ $nlev -ne 181 ]] && [[ $nlev -ne 71 ]]
 then
-   echo "ERROR: nlev needs to be 72 or 132"
+   echo "ERROR: nlev needs to be 72, 71, 91, 132, 137, or 181"
    usage
    exit 1
 fi 
@@ -405,9 +404,6 @@ mkdir -p $expdir
 /bin/cp $SOURCEDIR/catch_internal_rst $expdir
 
 mkdir -p $expdir/ExtData
-/bin/ln -s $CHMDIR/g5chem $expdir/ExtData
-/bin/ln -s $CHMDIR/PIESA $expdir/ExtData
-/bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 
 /bin/cp -u $SOURCEDIR/CAP.rc $expdir
 /bin/cp $SOURCEDIR/cap_restart $expdir
@@ -434,19 +430,27 @@ awk '{ if ( $1  !~ "#DELETE") { print } }' AGCM.rc.CASE > AGCM.rc
 /bin/rm AGCM.rc.sed.general AGCM.rc.CASE
 builtin cd $CURRDIR
 
-if [ $nlev -eq 132 ]
+if [ $nlev -ne 72 ]
 then 
 
-  $ISED 's/L72/L132/g' $expdir/*.rc
+  digits=0000
+  temp=$digits$nlev
+  padlev=${temp:(-${#digits})}
 
-  $ISED '/AGCM_LM:/c\AGCM_LM: 132' $expdir/AGCM.rc
-  $ISED '/AGCM.LM:/c\AGCM.LM: 132' $expdir/AGCM.rc
-  $ISED '/SCMGRID.LM:/c\SCMGRID.LM: 132' $expdir/HISTORY.rc
-  cp $SOURCEDIR/*rst.r0001x0001x0132 $expdir
-  /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x0132 $expdir/datmodyn_internal_rst
-  /bin/mv $expdir/moist_internal_rst.r0001x0001x0132 $expdir/moist_internal_rst
+  $ISED "s/L72/L${nlev}/g" $expdir/*.rc
+
+  $ISED "/AGCM_LM:/c\AGCM_LM: ${nlev}" $expdir/AGCM.rc
+  $ISED "/AGCM.LM:/c\AGCM.LM: ${nlev}" $expdir/AGCM.rc
+  $ISED "/SCMGRID.LM:/c\SCMGRID.LM: ${nlev}" $expdir/HISTORY.rc
+  cp $SOURCEDIR/*rst.r0001x0001x${padlev} $expdir
+  /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x${padlev} $expdir/datmodyn_internal_rst
+  /bin/mv $expdir/moist_internal_rst.r0001x0001x${padlev} $expdir/moist_internal_rst
 
 fi
+
+/bin/ln -s $CHMDIR/g5chem $expdir/ExtData
+/bin/ln -s $CHMDIR/PIESA $expdir/ExtData
+/bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 
 if [[ -e $expdir/ExtData.rc ]]
 then

@@ -260,6 +260,7 @@ cd $SCRDIR
                              @CPEXEC     $EXPDIR/cap_restart .
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
+                             @CPEXEC -f  $HOMDIR/*.yaml .
                              @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
@@ -651,8 +652,8 @@ setenv YEAR $yearc
 ./linkbcs
 
 if (! -e tile.bin) then
-$RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
->>>COUPLED<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+$GEOSBIN/binarytile.x tile.data tile.bin
+>>>COUPLED<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -665,7 +666,8 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_internal_rst)) then
+ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -695,7 +697,16 @@ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
+   
+   # Remove the saltwater internal restart
+   # -------------------------------------
+   /bin/rm $EXPDIR/saltwater_internal_rst
+   
+ else
+   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
+   exit 6
+ endif
+ 
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
@@ -713,6 +724,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
    endif    
 
 endif
+
 
 # Environment variables for MPI, etc
 # ----------------------------------
@@ -769,9 +781,9 @@ else
 endif
 
 if( $NAS_BATCH == TRUE ) then
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
+   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml' >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
 else
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
+   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
 endif
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
