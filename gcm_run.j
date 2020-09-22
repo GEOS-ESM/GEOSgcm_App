@@ -666,7 +666,9 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( (! -e $SCRDIR/openwater_internal_rst) && (! -e $SCRDIR/seaicethermo_internal_rst)) then
+if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
  if ( ( -e $SCRDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # The splitter script requires an OutData directory
@@ -701,13 +703,10 @@ if ( (! -e $SCRDIR/openwater_internal_rst) && (! -e $SCRDIR/seaicethermo_interna
    # Remove the saltwater internal restart
    # -------------------------------------
    /bin/rm $SCRDIR/saltwater_internal_rst
- endif
- 
-else
-
+ else
    echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
    exit 6
- 
+ endif
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
