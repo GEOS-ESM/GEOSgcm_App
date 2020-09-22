@@ -590,7 +590,6 @@ if( $OGCM == TRUE ) then
     set   OGCM_LM = 50
     endif
 
-    set OGCM_GRIDSPEC = tripolar_${OGCM_IM}x${OGCM_JM}.ascii
     set OGCM_NX = 36
     set OGCM_NY = 10
     @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
@@ -808,7 +807,6 @@ else
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
-    set OGCM_GRIDSPEC = ""
     set OGCM_NPROCS   = ""
 endif
 
@@ -2195,7 +2193,6 @@ s?@CHECKPOINT_TYPE?default?g
 s?@OGCM_NX?$OGCM_NX?g
 s?@OGCM_NY?$OGCM_NY?g
 s?@OGCM_NPROCS?$OGCM_NPROCS?g
-s?@OGCM_GRIDSPEC?$OGCM_GRIDSPEC?g
 
 s?@OBSERVER_FRQ?0?g
 s?RECORD_?#RECORD_?g
