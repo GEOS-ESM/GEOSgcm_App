@@ -67,6 +67,15 @@ CLOSURE_DEEP:0
 CLOSURE_SHALLOW:7
 CLOSURE_CONGESTUS:3
 
+# GWD Parameterization
+# --------------------
+
+# if .FALSE., use GEOS GWD code (default); .TRUE., use new NCAR GWD code
+USE_NCAR_GWD: .FALSE.
+
+# This is only used if USE_NCAR_GWD is .TRUE.
+BERES_FILE_NAME: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
+
 # Ocean Model Configuration Parameters
 # ------------------------------------
       OGCM.GRID_TYPE: @OGCM_GRID_TYPE
@@ -76,7 +85,7 @@ CLOSURE_CONGESTUS:3
       OGCM.LM: @OGCM_LM
       >>>COUPLED<<<OGCM.NX: @OGCM_NX
       >>>COUPLED<<<OGCM.NY: @OGCM_NY
-      >>>COUPLED<<<OGCM.GRIDSPEC: @OGCM_GRIDSPEC
+      >>>COUPLED<<<OGCM.GRIDSPEC: MAPL_Tripolar.nc
 
       >>>DATAOCEAN<<<>>>LATLON_OGCM<<<OGCM.POLE: 'PE'
       >>>DATAOCEAN<<<>>>LATLON_OGCM<<<OGCM.DATELINE: 'DE'

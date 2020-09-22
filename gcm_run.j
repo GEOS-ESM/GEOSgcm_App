@@ -260,6 +260,7 @@ cd $SCRDIR
                              @CPEXEC     $EXPDIR/cap_restart .
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
+                             @CPEXEC -f  $HOMDIR/*.yaml .
                              @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
@@ -354,9 +355,10 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
->>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
+>>>COUPLED<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+>>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DE0@HIST_IMxPC0@HIST_JM_@OCEANtag/DE0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -650,8 +652,8 @@ setenv YEAR $yearc
 ./linkbcs
 
 if (! -e tile.bin) then
-$RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
->>>MOM5<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+$GEOSBIN/binarytile.x tile.data tile.bin
+>>>COUPLED<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -664,7 +666,8 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_internal_rst)) then
+ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -694,7 +697,16 @@ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
+   
+   # Remove the saltwater internal restart
+   # -------------------------------------
+   /bin/rm $EXPDIR/saltwater_internal_rst
+   
+ else
+   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
+   exit 6
+ endif
+ 
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
@@ -712,6 +724,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
    endif    
 
 endif
+
 
 # Environment variables for MPI, etc
 # ----------------------------------
@@ -768,9 +781,9 @@ else
 endif
 
 if( $NAS_BATCH == TRUE ) then
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
+   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml' >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
 else
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
+   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
 endif
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
@@ -880,7 +893,7 @@ end
 >>>COUPLED<<<# MOM-Specific Output Files
 >>>COUPLED<<<# -------------------------
 >>>MOM5<<< set dsets="ocean_month"
->>>MOM6<<< set dsets="ocean_month prog_z sfc_ave forcing"
+>>>MOM6<<< set dsets="ocean_state prog_z sfc_ave forcing"
 >>>COUPLED<<< foreach dset ( $dsets )
 >>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
 >>>COUPLED<<< if($num != 0) then
