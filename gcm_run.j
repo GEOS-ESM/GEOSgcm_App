@@ -666,8 +666,8 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_internal_rst)) then
- if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+if ( (! -e $SCRDIR/openwater_internal_rst) && (! -e $SCRDIR/seaicethermo_internal_rst)) then
+ if ( ( -e $SCRDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -675,7 +675,7 @@ if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_interna
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -700,7 +700,7 @@ if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_interna
    
    # Remove the saltwater internal restart
    # -------------------------------------
-   /bin/rm $EXPDIR/saltwater_internal_rst
+   /bin/rm $SCRDIR/saltwater_internal_rst
  endif
  
 else
