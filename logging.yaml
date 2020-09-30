@@ -8,13 +8,19 @@ locks:
 
 ###############################      
 formatters:
+   legacy:
+      class: Formatter
+      format:  '%(message)a'
+
    basic:
       class: Formatter
-      format:  '%(name)a~: %(level_name)a~: %(message)a'
+      format:  '%(short_name)a15~: %(level_name)a~: %(message)a'
+
    mpi:
       class: MpiFormatter
       format:  '%(mpi_rank)i4.4~: %(name)~: %(level_name)a~: %(message)a'
       comm: MPI_COMM_WORLD
+
    column:
       class: Formatter
       format: '(%(i)i3.3,%(j)i3.3): %(level_name)'
@@ -26,6 +32,7 @@ handlers:
 
    console:
       class: streamhandler
+#      formatter: legacy
       formatter: basic
       unit: OUTPUT_UNIT
       level: INFO
@@ -63,31 +70,23 @@ handlers:
 
 ###############################      
 root:
-   parallel: true
    handlers: [warnings,errors,console]
    level: WARNING
-   root_level: INFO
+   root_level: WARNING
 
 ###############################      
 loggers:
 
    errors:
        handlers: [errors]
-       parallel: true
-       lock: mpi
        level: ERROR
 
    CAP:
-       parallel: true
-       handlers: [console]
-       lock: mpi
        level: WARNING
        root_level: INFO
        
    MAPL:
-       parallel: true
        handlers: [mpi_shared]
-       lock: mpi
        level: INFO
        root_level: DEBUG
 
