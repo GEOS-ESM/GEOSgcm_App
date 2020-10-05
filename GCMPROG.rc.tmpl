@@ -82,7 +82,7 @@ COLLECTIONS: 'prog.eta'
              ::
 
   prog.eta.format:      'CFIO' ,
-  prog.eta.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<',
+  prog.eta.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
   prog.eta.frequency:   060000 ,
   prog.eta.duration:    060000 ,
   prog.eta.ref_time:    000000 ,
@@ -109,7 +109,7 @@ COLLECTIONS: 'prog.eta'
                         ::
 
   prog.sfc.format:      'CFIO' ,
-  prog.sfc.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<',
+  prog.sfc.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
   prog.sfc.frequency:   060000 ,
   prog.sfc.duration:    060000 ,
   prog.sfc.ref_time:    000000 ,
@@ -160,6 +160,8 @@ COLLECTIONS: 'prog.eta'
                         'TROPP_BLENDED'  , 'AGCM'     , 'TROPPB'    ,
                         'TROPT'          , 'AGCM'     ,
                         'TROPQ'          , 'AGCM'     ,
+                        'EVAP'           , 'SURFACE'  ,
+                        'ZPBL'           , 'TURBULENCE', 'PBLH'     ,
                         ::
 
   vtx.prs.format:      'CFIO' ,

@@ -625,14 +625,13 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Nv-.duration:   030000,
   tavg3_3d_odt_Nv-.end_date:   >>>IOEDATE<<< ,
   tavg3_3d_odt_Nv-.end_time:   >>>IOETIME<<< ,
-  tavg3_3d_odt_Nv-.fields:     'PS'                 , 'DYN'        ,
-                               'DELP'               , 'DYN'        ,
-                                 'MTRI%PCHEM::OXIM' , 'PHYSICS'    , 'DOXDTMST'  ,
-                                  'TRI%PCHEM::OXIT' , 'TURBULENCE' , 'DOXDTTRB'  ,
-                               'OX_TEND'            , 'CHEMISTRY'  , 'DOXDTCHM'  ,
-# equivalent to DOXDTDYN       'TRADVI%PCHEM::OXID' , 'AGCM'       , 'DOXDTDYN'  ,
-                               'DOXDTDYN'           , 'DYN'        ,
-                               'DO3DT_ANA'          , 'AGCM'       , 'DOXDTANA'  ,
+  tavg3_3d_odt_Nv-.fields:     'PS'         , 'DYN'        ,
+                               'DELP'       , 'DYN'        ,
+                               'OXIM'       , 'PHYSICS'    , 'DOXDTMST'  ,
+                               'OXIT'       , 'PHYSICS'    , 'DOXDTTRB'  ,
+                               'OX_TEND'    , 'CHEMISTRY'  , 'DOXDTCHM'  ,
+                               'DOXDTDYN'   , 'DYN'        ,
+                               'DO3DT_ANA'  , 'AGCM'       , 'DOXDTANA'  ,
                                ::
 
   tavg3_3d_odt_Cp-.format:      'CFIO' ,
@@ -649,12 +648,11 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Cp-.vunit:       'hPa',
   tavg3_3d_odt_Cp-.vvars:       'log(PLE)' , 'DYN'          ,
   tavg3_3d_odt_Cp-.levels:      1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1,
-  tavg3_3d_odt_Cp-.fields:        'MTRI%PCHEM::OXIM' , 'PHYSICS'    , 'DOXDTMST'  ,
-                                   'TRI%PCHEM::OXIT' , 'TURBULENCE' , 'DOXDTTRB'  ,
-                                'OX_TEND'            , 'CHEMISTRY'  , 'DOXDTCHM'  ,
-# equivalent to DOXDTDYN        'TRADVI%PCHEM::OXID' , 'AGCM'       , 'DOXDTDYN'  ,
-                                'DOXDTDYN'           , 'DYN'        ,
-                                'DO3DT_ANA'          , 'AGCM'       , 'DOXDTANA'  ,
+  tavg3_3d_odt_Cp-.fields:      'OXIM'       , 'PHYSICS'    , 'DOXDTMST'  ,
+                                'OXIT'       , 'PHYSICS'    , 'DOXDTTRB'  ,
+                                'OX_TEND'    , 'CHEMISTRY'  , 'DOXDTCHM'  ,
+                                'DOXDTDYN'   , 'DYN'        ,
+                                'DO3DT_ANA'  , 'AGCM'       , 'DOXDTANA'  ,
                                 ::
 
   tavg3_3d_lsf_Nv-.format:     'CFIO' ,
@@ -1056,7 +1054,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #######################################################################
 
   bkg.eta.format:      'CFIO' ,
-  bkg.eta.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<' ,
+  bkg.eta.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   bkg.eta.ref_date:    >>>IOBBKGD<<< ,
   bkg.eta.ref_time:    >>>IOBBKGT<<< ,
   bkg.eta.end_date:    >>>IOEBKGD<<< ,
@@ -1086,7 +1084,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                        ::
 
   bkg.sfc.format:      'CFIO' ,
-  bkg.sfc.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<' ,
+  bkg.sfc.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   bkg.sfc.ref_date:    >>>IOBBKGD<<< ,
   bkg.sfc.ref_time:    >>>IOBBKGT<<< ,
   bkg.sfc.end_date:    >>>IOEBKGD<<< ,
@@ -1140,6 +1138,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                        'TDROP'          , 'SURFACE'  ,
                        'TS_FOUND'       , 'SURFACE'  ,
                        'TDEL'           , 'SURFACE'  ,
+                       'EVAP'           , 'SURFACE'  ,
+                       'ZPBL'           , 'TURBULENCE', 'PBLH'     ,
                        ::
 
   abkg.eta.format:      'CFIO' ,
@@ -1189,7 +1189,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                ::
 
   cbkg.eta.format:      'CFIO' ,
-  cbkg.eta.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<',
+  cbkg.eta.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
   cbkg.eta.ref_date:    >>>IOBBKGD<<< ,
   cbkg.eta.ref_time:    >>>IOBBKGT<<< ,
   cbkg.eta.end_date:    >>>IOEBKGD<<< ,
@@ -2616,7 +2616,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #######################################################################
 
   asm.eta.format:     'CFIO' ,
-  asm.eta.template:   '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<',
+  asm.eta.template:   '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
 # asm.eta.ref_date:   >>>IOBBKGD<<< ,
 # asm.eta.ref_time:   000000 ,
   asm.eta.end_date:   >>>IOEDATE<<< ,
