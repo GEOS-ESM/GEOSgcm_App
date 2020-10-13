@@ -374,7 +374,7 @@ cat << _EOF_ > $FILE
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-#bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
@@ -666,8 +666,10 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_internal_rst)) then
- if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
+ if ( ( -e $SCRDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -675,7 +677,7 @@ if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_interna
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -700,13 +702,11 @@ if ( (! -e $EXPDIR/openwater_internal_rst) && (! -e $EXPDIR/seaicethermo_interna
    
    # Remove the saltwater internal restart
    # -------------------------------------
-   /bin/rm $EXPDIR/saltwater_internal_rst
-   
+   /bin/rm $SCRDIR/saltwater_internal_rst
  else
    echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
    exit 6
  endif
- 
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
