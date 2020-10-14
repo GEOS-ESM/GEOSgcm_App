@@ -374,7 +374,7 @@ cat << _EOF_ > $FILE
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-#bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
