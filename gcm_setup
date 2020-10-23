@@ -227,6 +227,7 @@ echo "   ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
 echo "   ${C2}c360 -- 1/4  deg (${C1}28-km${C2}) ${CN} "
 echo "   ${C2}c720 -- 1/8  deg (${C1}14-km${C2}) ${CN}"
 echo "   ${C2}c1440 - 1/16 deg (${C1} 7-km${C2}) ${CN}"
+echo "   ${C2}c2880 - 1/32 deg (${C1} 3-km${C2}) ${CN}"
 echo "   ${C2}          DYAMOND Grids                 "
 echo "   ${C2}c768 -- 1/8  deg (${C1}12-km${C2}) ${CN}"
 echo "   ${C2}c1536 - 1/16 deg (${C1} 6-km${C2}) ${CN}"
@@ -243,6 +244,7 @@ if( $HRCODE != 'c12'   & \
     $HRCODE != 'c360'  & \
     $HRCODE != 'c720'  & \
     $HRCODE != 'c1440' & \
+    $HRCODE != 'c2880' & \
     $HRCODE != 'c768'  & \
     $HRCODE != 'c1536' & \
     $HRCODE != 'c3072' ) goto HRCODE
@@ -302,16 +304,9 @@ endif
 
 ASKHYDRO:
 
-if( $HRCODE == 'c1440' | \
-	 $HRCODE == 'c768'  | \
-    $HRCODE == 'c1536' | \
-    $HRCODE == 'c3072' ) then
-    set DEFAULT_HYDROSTATIC = FALSE
-else
-	 set DEFAULT_HYDROSTATIC = TRUE
-endif
+set DEFAULT_HYDROSTATIC = FALSE
 
-echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN} for Grid Resolutions <= C720)"
+echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN} for Grid Resolutions <= C720)"
 set   USE_HYDROSTATIC = $<
 
 if( .$USE_HYDROSTATIC == . ) then
@@ -345,6 +340,7 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c360'  | \
     $HRCODE == 'c720'  | \
     $HRCODE == 'c1440' | \
+    $HRCODE == 'c2880' | \
     $HRCODE == 'c768'  | \
     $HRCODE == 'c1536' | \
     $HRCODE == 'c3072' ) then
@@ -923,7 +919,7 @@ if( $AGCM_IM == "c500" ) then
      set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 450
+     set       DT = 225
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -946,7 +942,7 @@ if( $AGCM_IM == "c720" ) then
      set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 450
+     set       DT = 150
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -963,6 +959,29 @@ if( $AGCM_IM == "c1440" ) then
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF1440x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set DEF_IOS_NDS = 4
+endif
+if( $AGCM_IM == "c2880" ) then
+     set       DT = 150
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 2880
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 30
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF2880x6C
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
