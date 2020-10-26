@@ -15,7 +15,7 @@ if( $SEASON == 'DJF' ) set BMONTH = "11"
 if( $SEASON == 'JJA' ) set BMONTH = "05"
 
 foreach BYEAR ($BYEARS)
-set RSTDATE = ${BYEAR}${BMONTH}10_210000
+set RSTDATE = ${BYEAR}${BMONTH}
 
    /bin/rm -f gcm_run.j$RSTDATE
    /bin/rm -f sedfile
@@ -24,12 +24,12 @@ set RSTDATE = ${BYEAR}${BMONTH}10_210000
 cat > sedfile << EOF
 s?@RSTDATE?$RSTDATE?g
 s?@GCMEMIP?TRUE?g
-s?@PBS?PBS?g
+s?@BATCH_NAME?SBATCH?g
 EOF
 sed -f sedfile gcm_run.tmp > gcm_run.j$RSTDATE
 /bin/rm -f sedfile
 /bin/rm -f gcm_run.tmp
 
-echo qsub gcm_run.j$RSTDATE
+echo @BATCH_CMD gcm_run.j$RSTDATE
 end
 

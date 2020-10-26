@@ -34,9 +34,9 @@ setenv GEOSUTIL @GEOSUTIL
 set    BDATE = $1
 set    EDATE = $2
 set FSEGMENT = `printf "%08i" $3`
-set     QSUB = $4
+set   SUBMIT = $4
 
-if( .$QSUB == . ) set QSUB = FALSE
+if( .$SUBMIT == . ) set SUBMIT = FALSE
 
 set     NFMAX = 1
 
@@ -51,10 +51,10 @@ set       MKIAU_FREQUENCY = `grep       "MKIAU_FREQUENCY:" $HOMDIR/AGCM.rc | gre
 if( .$REPLAY_FILE_FREQUENCY == '.' ) set REPLAY_FILE_FREQUENCY = 21600
 if(       .$MKIAU_FREQUENCY == '.' ) set       MKIAU_FREQUENCY = $REPLAY_FILE_FREQUENCY
 
-set FCST_LABL = "${FCST_TYPE}_RPLFRQ:${REPLAY_FILE_FREQUENCY}_ANA:${ANA_EXPID}"
+set FCST_LABL = "REPLAY_TYP-ANA-FRQ_${FCST_TYPE}_${ANA_EXPID}_${REPLAY_FILE_FREQUENCY}"
 
 if( $REPLAY_FILE_FREQUENCY != $MKIAU_FREQUENCY ) then
-    set FCST_LABL = "${FCST_TYPE}_IAUFRQ:${MKIAU_FREQUENCY}_RPLFRQ:{$REPLAY_FILE_FREQUENCY}_ANA:${ANA_EXPID}"
+    set FCST_LABL = "REPLAY_TYP-ANA-FRQ-IAU_${FCST_TYPE}_${ANA_EXPID}_${REPLAY_FILE_FREQUENCY}_${MKIAU_FREQUENCY}"
 endif
 
 #######################################################################
@@ -103,7 +103,7 @@ s?FCSTOUT?$EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.o${date}-${nymde}?g
 EOF
 
 sed -f sedfile $EXPDIR/forecasts/gcm_forecast.tmp > $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
-if( $QSUB != 'FALSE' )                        qsub  $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
+if( $SUBMIT != 'FALSE' )                 @BATCH_CMD $EXPDIR/forecasts/gcm_forecast_${FCST_LABL}.j${date}-${nymde}
 
 set   date = $test
 end

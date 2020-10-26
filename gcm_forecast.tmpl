@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@RUN_FT
+#@BATCH_TIME@RUN_FT
 #@RUN_FP
-#PBS -N @RUN_FN
+#@BATCH_JOBNAME@RUN_FN_&DATE
 #@RUN_Q
 #@BATCH_GROUP
-#PBS -o FCSTOUT
+#@BATCH_OUTPUTNAMEFCSTOUT
 
 #######################################################################
 #                  System Environment Variables
@@ -56,9 +56,9 @@ set        NFMAX = &NFMAX
 set     FSEGMENT = &FSEGMENT
 set    FCST_TYPE = &FCST_TYPE
 set    FCST_LABL = &FCST_LABL
+set      FCST_ID = ${EXPID}_FCST
 set       CYCLED = &cycled
 
-set        ANA = G5GMAO
 set STATS_ONLY = FALSE
 
 #######################################################################
@@ -195,8 +195,8 @@ set         FILE = HISTORY.rc
 cat << _EOF_ > $FILE
 
 VERSION: 1
-EXPID:  G5$ANA
-EXPDSC: G5${ANA}_based_on_${EXPID}
+EXPID:  ${EXPID}_FCST
+EXPDSC: Forecasts_spawned_from_${EXPID}
 
 COLLECTIONS: 'geosgcm_fcst'
              ::
@@ -223,7 +223,7 @@ GRID_LABELS: PC1152x721-DC
   geosgcm_fcst.vscale:     100.0,
   geosgcm_fcst.vunit:     'hPa',
   geosgcm_fcst.vvars:     'log(PLE)' , 'DYN'          ,
-  geosgcm_fcst.levels:     1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100,
+  geosgcm_fcst.levels:     1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1,
   geosgcm_fcst.fields:    'PHIS'     , 'AGCM'         ,
                           'SLP'      , 'DYN'          ,
                           'U;V'      , 'DYN'          ,
@@ -403,10 +403,10 @@ end
           $GEOSBIN/stripname .e${nymd0}_${hour}\*
 
      else if( $FCST_TYPE == 'Exact' | $FCST_TYPE == 'Regular' ) then
-          /bin/ln -s $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.rst.${nymd0}_${hour}z.tar  .
-          @TAREXEC xf $ANA_EXPID.rst.${nymd0}_${hour}z.tar
-          if( $FCST_TYPE == 'Exact' ) /bin/ln -s $ANA_LOCATION/rs/Y$year/M*/$ANA_EXPID.agcm_import_rst.*  .
-          $GEOSBIN/stripname $ANA_EXPID.
+          /bin/ln -s ${ANA_LOCATION}/rs/Y$year/M$month/${ANA_EXPID}.rst.${nymd0}_${hour}z.tar  .
+          @TAREXEC xf ${ANA_EXPID}.rst.${nymd0}_${hour}z.tar
+          if( $FCST_TYPE == 'Exact' ) /bin/ln -s ${ANA_LOCATION}/rs/Y$year/M*/${ANA_EXPID}.agcm_import_rst.*  .
+          $GEOSBIN/stripname ${ANA_EXPID}.
           $GEOSBIN/stripname .${nymd0}_${hour}z.bin
           $GEOSBIN/stripname .${nymd0}_${hour}z.nc4
           # Note: If Radiation Schemes differ, Radiation Restarts may need to be bootstrapped
@@ -560,11 +560,12 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
      set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
 
-     # Link REPLAY files
-     # -----------------
-     /bin/ln -sf ${ANA_LOCATION}/aod .
-     $GEOSBIN/stripname ${ANA_EXPID}.aod_ aod_
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
 
+     /bin/ln -sf ${ANA_LOCATION}/aod .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
@@ -600,14 +601,14 @@ endif  # End STATS_ONLY Test
 
 set nymd     =  $date0
 set yyyymm   = `echo $nymd | cut -b1-6`
-set statsdir = $EXPDIR/forecasts/${FCST_LABL}_G5${ANA}.stats.$yyyymm
+set statsdir = $EXPDIR/forecasts/${FCST_LABL}.stats.$yyyymm
 
 mkdir -p $statsdir
 cd       $statsdir
 
 set year0      = `echo $nymd | cut -b1-4`
 set month0     = `echo $nymd | cut -b5-6`
-set fcst_files = `/bin/ls -1 $FCSTDIR/G5${ANA}*geosgcm_fcst*nc4`
+set fcst_files = `/bin/ls -1 $FCSTDIR/${FCST_ID}.geosgcm_fcst*nc4`
 
 set ana_files = ''
 @ n = 1
@@ -622,17 +623,17 @@ set month = `echo $nymd | cut -b5-6`
 if( $CYCLED == .TRUE. ) then
      set next = `/bin/ls -1 $EXPDIR/holding/geosgcm_prog/${year}*/$EXPID.geosgcm_prog.${nymd}*nc4`
 else
-     set next = `/bin/ls -1 $ANA_LOCATION/asm/Y$year/M$month/$ANA_EXPID.inst3_3d_asm_Np.${nymd}*nc4`
+     set next = `/bin/ls -1 ${ANA_LOCATION}/asm/Y$year/M$month/${ANA_EXPID}.inst3_3d_asm_Np.${nymd}*nc4`
 endif
 
-set ana_files = `echo $ana_files $next`
+set ana_files = `echo ${ana_files} $next`
 set date = `$GEOSUTIL/post/tick $nymd 0 86400`
 set nymd = $date[1]
 @ n = $n + 1
 end
 
-$RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
-                                  -ana   $ana_files \
+$RUN_CMD 1 $GEOSUTIL/post/stats.x -fcst ${fcst_files} \
+                                  -ana   ${ana_files} \
                                   -cli $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_00z.576x361.data.nc4 \
                                        $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_06z.576x361.data.nc4 \
                                        $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_12z.576x361.data.nc4 \
@@ -646,4 +647,4 @@ $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
 #/bin/rm  -r $SCRDIR
  @ NFCST  = $NFCST + 1
 set date  = `$GEOSUTIL/post/tick $date0 $time0 86400`
-end
+     end

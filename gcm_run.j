@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#PBS -l walltime=@RUN_T
+#@BATCH_TIME@RUN_T
 #@RUN_P
-#PBS -N @RUN_N
+#@BATCH_JOBNAME@RUN_N
 #@RUN_Q
 #@BATCH_GROUP
-#@PBS -o gcm_run.o@RSTDATE
+#@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
 #                         System Settings 
@@ -28,15 +28,14 @@ setenv ARCH `uname`
 setenv SITE             @SITE
 setenv GEOSDIR          @GEOSDIR 
 setenv GEOSBIN          @GEOSBIN 
-setenv GEOSETC          @GEOSETC 
-setenv GEOSUTIL         @GEOSSRC
+setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
 
 source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
-setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
+setenv GCMVER `cat $GEOSDIR/src/Applications/GEOSgcm_App/.AGCM_VERSION`
 echo   VERSION: $GCMVER
 
 #######################################################################
@@ -88,26 +87,27 @@ set  OGCM_JM  = `grep      "OGCM\.JM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
-  if ($?SLURM_NTASKS) then
-     set  NCPUS = $SLURM_NTASKS
-  else if ($?PBS_NODEFILE) then
-     set  NCPUS = `cat $PBS_NODEFILE | wc -l`
-  else
-     set  NCPUS = NULL
-  endif
+if ($?SLURM_NTASKS) then
+   set  NCPUS = $SLURM_NTASKS
+else if ($?PBS_NODEFILE) then
+   set  NCPUS = `cat $PBS_NODEFILE | wc -l`
+else
+   set  NCPUS = NULL
+endif
 
-  if ( $NCPUS != NULL ) then
+if ( $NCPUS != NULL ) then
      @    NPES  = $NX * $NY
-        if( $NPES > $NCPUS ) then
-             echo "CPU Resources are Over-Specified"
-             echo "--------------------------------"
-             echo "Allotted NCPUs: $NCPUS"
-             echo "Specified  NX : $NX"
-             echo "Specified  NY : $NY"
-             exit
-        endif
-     endif
-  endif
+      if( $NPES > $NCPUS ) then
+         echo "CPU Resources are Over-Specified"
+         echo "--------------------------------"
+         echo "Allotted  NCPUs: $NCPUS"
+         echo "Specified NX: $NX"
+         echo "Specified NY: $NY"
+         exit
+      endif
+
+   endif
+endif
 
 #######################################################################
 #                       GCMEMIP Setup
@@ -137,19 +137,24 @@ chmod +x $FILE
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
 set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
-# Copy MERRA-2 Restarts
-# ---------------------
-@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
+>>>EMIP_OLDLAND<<<# Copy MERRA-2 Restarts
+>>>EMIP_OLDLAND<<<# ---------------------
+>>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+>>>EMIP_NEWLAND<<<# ----------------------------------------------
+@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
 @TAREXEC xf  restarts.${year}${month}.tar
 /bin/rm restarts.${year}${month}.tar
-/bin/rm MERRA2*bin
+>>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
 
 
-# Regrid MERRA-2 Restarts
-# -----------------------
-set RSTID = `/bin/ls *catch*bin | cut -d. -f1`
-$GEOSBIN/regrid.pl -np -ymd ${year}${month}10 -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin Ganymed-4_0 -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
-/bin/rm $RSTID.*.bin
+>>>EMIP_OLDLAND<<<# Regrid MERRA-2 Restarts
+>>>EMIP_OLDLAND<<<# -----------------------
+>>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+>>>EMIP_NEWLAND<<<# ------------------------------------------------
+set RSTID = `/bin/ls *catch* | cut -d. -f1`
+set day   = `/bin/ls *catch* | cut -d. -f3 | cut -b 7-8`
+$GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
+>>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -160,15 +165,19 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
+set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}@OCEANOUT_${RSTID}.catch*`
+if( $chk_type =~ "application/octet-stream" ) set ext = bin
+if( $chk_type =~ "application/x-hdf"        ) set ext = nc4
+
 $GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
-$GEOSBIN/stripname .${year}${month}10_21z.bin.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
-/bin/mv gocart_internal_rst gocart_internal_rst.merra2
-$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}10_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
+$GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
+>>>EMIP_OLDLAND<<</bin/mv gocart_internal_rst gocart_internal_rst.merra2
+>>>EMIP_OLDLAND<<<$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
 
 
 # Create CAP.rc and cap_restart
 # -----------------------------
-set   nymd = ${year}${month}10
+set   nymd = ${year}${month}${day}
 set   nhms = 210000
 echo $nymd $nhms > cap_restart
 
@@ -203,7 +212,6 @@ cd $SCRDIR
                              @CPEXEC     $EXPDIR/cap_restart .
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
-                             @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
 
@@ -277,7 +285,6 @@ setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
 >>>COUPLED<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
->>>COUPLED<<<setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 >>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
 >>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
 
@@ -296,9 +303,6 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>COUPLED<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
-
-# Precip correction
-#/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
 >>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
 >>>DATAOCEAN<<<if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
@@ -345,7 +349,6 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<<endif
 
 >>>COUPLED<<<@CPEXEC $HOMDIR/*_table .
->>>COUPLED<<<@CPEXEC $GRIDDIR/INPUT/* INPUT
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
@@ -395,7 +398,7 @@ else
 endif
 wait
 
->>>COUPLED<<</bin/mkdir INPUT
+>>>COUPLED<<<@CPEXEC -R $GRIDDIR/INPUT .
 >>>COUPLED<<<@CPEXEC $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
@@ -524,7 +527,7 @@ if( ${EMISSIONS} == MERRA2 | \
     set MERRA2_Transition_Date = 20000401
 
     if( $nymdc < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/19600101-20000331
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/19600101-20000331
          if( $nymdf > ${MERRA2_Transition_Date} ) then
           set nymdf = ${MERRA2_Transition_Date}
           set oldstring = `cat CAP.rc | grep END_DATE:`
@@ -533,7 +536,7 @@ if( ${EMISSIONS} == MERRA2 | \
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/20000401-present
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/20000401-present
     endif
 
     if( $AGCM_LM == 72 ) then
@@ -552,20 +555,10 @@ endif
 
 # Rename big ExtData files that are not needed
 # --------------------------------------------
-set            SC_TRUE = `grep -i "^ *ENABLE_STRATCHEM *: *\.TRUE\."     GEOS_ChemGridComp.rc | wc -l`
-if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
-set           GMI_TRUE = `grep -i "^ *ENABLE_GMICHEM *: *\.TRUE\."       GEOS_ChemGridComp.rc | wc -l`
+set GMI_TRUE = `grep -i "^ *ENABLE_GMICHEM *: *.TRUE."  GEOS_ChemGridComp.rc | wc -l`
 if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
-set           GCC_TRUE = `grep -i "^ *ENABLE_GEOSCHEM *: *\.TRUE\."      GEOS_ChemGridComp.rc | wc -l`
+set GCC_TRUE = `grep -i "^ *ENABLE_GEOSCHEM *: *.TRUE." GEOS_ChemGridComp.rc | wc -l`
 if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
-set         CARMA_TRUE = `grep -i "^ *ENABLE_CARMA *: *\.TRUE\."         GEOS_ChemGridComp.rc | wc -l`
-if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
-set           DNA_TRUE = `grep -i "^ *ENABLE_DNA *: *\.TRUE\."           GEOS_ChemGridComp.rc | wc -l`
-if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
-set         ACHEM_TRUE = `grep -i "^ *ENABLE_ACHEM *: *\.TRUE\."         GEOS_ChemGridComp.rc | wc -l`
-if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
-set   GOCART_DATA_TRUE = `grep -i "^ *ENABLE_GOCART_DATA *: *\.TRUE\."   GEOS_ChemGridComp.rc | wc -l`
-if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -582,12 +575,6 @@ if (! -e tile.bin) then
 $RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
 >>>COUPLED<<<$RUN_CMD 1 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
-
-# If running in dual ocean mode, link sst and fraci data here
-#set yy  = `cat cap_restart | cut -c1-4`
-#echo $yy
-#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
-#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
 #######################################################################
 #                Split Saltwater Restart if detected
@@ -649,10 +636,6 @@ endif
 
 @GPUSTART
 
-# Run bundleParser.py
-#---------------------
-python bundleParser.py
-
 # Test if at NAS and if BATCH
 # ---------------------------
 set NAS_BATCH = FALSE
@@ -675,11 +658,12 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
      set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
 
-     # Link REPLAY files
-     # -----------------
-     /bin/ln -sf ${ANA_LOCATION}/aod .
-     $GEOSBIN/stripname ${ANA_EXPID}.aod_ aod_
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
 
+     /bin/ln -sf ${ANA_LOCATION}/aod .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
@@ -692,7 +676,7 @@ if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 if( $NAS_BATCH == TRUE ) then
    $RUN_CMD $NPES ./GEOSgcm.x >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
 else
-   $RUN_CMD $NPES ./GEOSgcm.x
+$RUN_CMD $NPES ./GEOSgcm.x
 endif
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
@@ -869,8 +853,8 @@ endif
 if ( $rc == 0 ) then
       cd  $HOMDIR
       if( $GCMEMIP == TRUE ) then
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j$RSTDATE
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
       else
-          if( $capdate < $enddate ) qsub $HOMDIR/gcm_run.j
+          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif

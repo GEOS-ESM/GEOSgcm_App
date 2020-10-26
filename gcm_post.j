@@ -4,13 +4,13 @@
 #                Batch Parameters for Post-Processing Job
 #######################################################################
 
-#PBS -l walltime=@POST_T
+#@BATCH_TIME@POST_T
 #@POST_P
-#PBS -N @POST_N
+#@BATCH_JOBNAME@POST_N_@COLLECTION.@YYYYMM
 #@POST_Q
 #@BATCH_GROUP
-#PBS -o @POST_O
-#PBS -j oe
+#@BATCH_OUTPUTNAME@POST_O
+#@BATCH_JOINOUTERR
 
 #######################################################################
 #                  System Environment Variables
@@ -30,7 +30,7 @@ setenv ARCH `uname`
 
 setenv SITE             @SITE
 setenv GEOSBIN          @GEOSBIN
-setenv GEOSUTIL         @GEOSSRC
+setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
 setenv BATCHNAME       "@POST_N"
 
 source $GEOSBIN/g5_modules
@@ -50,6 +50,6 @@ endif
 #                      Perform Post Processing
 #######################################################################
 
-$GEOSUTIL/post/gcmpost.script -source @EXPDIR -ncpus $NCPUS -collections @COLLECTION -rec_plt @YYYYMM
+$GEOSUTIL/post/gcmpost.script -source @EXPDIR -ncpus $NCPUS -collections @COLLECTION -rec_plt @YYYYMM -ignore_nan
 
 exit

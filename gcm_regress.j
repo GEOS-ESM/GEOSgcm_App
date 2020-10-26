@@ -4,9 +4,9 @@
 #                     Batch Parameters for Regress Job
 #######################################################################
 
-#PBS -l walltime=@RUN_T
+#@BATCH_TIME@RUN_T
 #@RUN_P
-#PBS -N @REGRESS_N
+#@BATCH_JOBNAME@REGRESS_N
 #@RUN_Q
 #@BATCH_GROUP
 
@@ -67,7 +67,6 @@ cd $EXPDIR/regress
 /bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
 @CPEXEC $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 @CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
->>>COUPLED<<<@CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
 
@@ -110,9 +109,6 @@ foreach rst ( $rst_file_names )
        @CPEXEC $EXPDIR/$rst $EXPDIR/regress
 end
 @CPEXEC $EXPDIR/cap_restart $EXPDIR/regress
-
->>>COUPLED<<</bin/mkdir INPUT
->>>COUPLED<<<@CPEXEC $EXPDIR/RESTART/* INPUT
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
@@ -205,9 +201,9 @@ if( @EMISSIONS =~ MERRA2* ) then
     set MERRA2_Transition_Date = 20000401
 
     if( $nymd0 < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/19600101-20000331
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/@EMISSIONS/19600101-20000331
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/20000401-present
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/@EMISSIONS/20000401-present
     endif
 
     if( $LM == 72 ) then
@@ -226,28 +222,6 @@ endif
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 cat $extdata_files > ExtData.rc 
-
-
-# If REPLAY, link necessary forcing files
-# ---------------------------------------
-set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
-if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
-
-     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:    AGCM.rc | grep -v '#'   | cut -d: -f2`
-     set ANA_LOCATION = `grep REPLAY_ANA_LOCATION: AGCM.rc | grep -v '#'   | cut -d: -f2`
-
-     set REPLAY_FILE        = `grep REPLAY_FILE:   AGCM.rc | grep -v '#'   | cut -d: -f2`
-     set REPLAY_FILE09      = `grep REPLAY_FILE09: AGCM.rc | grep -v '#'   | cut -d: -f2`
-     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
-     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
-
-     # Link REPLAY files
-     # -----------------
-     /bin/ln -sf ${ANA_LOCATION}/aod .
-     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
-     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
-
-endif 
 
 ##################################################################
 ######
@@ -274,6 +248,28 @@ set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
+# If REPLAY, link necessary forcing files
+# ---------------------------------------
+set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
+if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
+     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:    AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set ANA_LOCATION = `grep REPLAY_ANA_LOCATION: AGCM.rc | grep -v '#'   | cut -d: -f2`
+
+     set REPLAY_FILE        = `grep  REPLAY_FILE:   AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE09      = `grep  REPLAY_FILE09: AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE            | cut -d"/" -f1 | grep -v %`
+     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09          | cut -d"/" -f1 | grep -v %`
+
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
+
+     /bin/ln -sf ${ANA_LOCATION}/aod .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
+endif
+
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
@@ -296,20 +292,17 @@ end
 
 set test_duration = 180000
 
->>>DATAOCEAN<<<if( $CUBE == TRUE ) then
->>>DATAOCEAN<<<    @ test_NX = $NPES0 / 6
->>>DATAOCEAN<<<    @ test_NP = $IM / $test_NX
->>>DATAOCEAN<<<  if($test_NP < 4 ) then
->>>DATAOCEAN<<<    @ test_NX = $IM / 4 # To ensure enough gridpoints for HALO
->>>DATAOCEAN<<<  endif
->>>DATAOCEAN<<<  set test_NY = 6
->>>DATAOCEAN<<<else
->>>DATAOCEAN<<<  set test_NX = $NY0
->>>DATAOCEAN<<<  set test_NY = $NX0
->>>DATAOCEAN<<<endif
-
->>>COUPLED<<<set test_NX = $NX0
->>>COUPLED<<<set test_NY = $NY0
+if( $CUBE == TRUE ) then
+    @ test_NX = $NPES0 / 6
+    @ test_NP = $IM / $test_NX
+  if($test_NP < 4 ) then
+    @ test_NX = $IM / 4 # To ensure enough gridpoints for HALO
+  endif
+  set test_NY = 6
+else
+  set test_NX = $NY0
+  set test_NY = $NX0
+endif
 
 /bin/rm              cap_restart
 echo $nymd0 $nhms0 > cap_restart
@@ -336,6 +329,29 @@ cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
+
+# If REPLAY, link necessary forcing files
+# ---------------------------------------
+set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
+if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
+     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:    AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set ANA_LOCATION = `grep REPLAY_ANA_LOCATION: AGCM.rc | grep -v '#'   | cut -d: -f2`
+
+     set REPLAY_FILE        = `grep  REPLAY_FILE:   AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE09      = `grep  REPLAY_FILE09: AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE            | cut -d"/" -f1 | grep -v %`
+     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09          | cut -d"/" -f1 | grep -v %`
+
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
+
+     /bin/ln -sf ${ANA_LOCATION}/aod .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
+endif
+
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
@@ -366,8 +382,6 @@ while ( $n <= $numchk )
        endif
 @ n = $n + 1
 end
-
->>>COUPLED<<<@CPEXEC RESTART/* INPUT
 
 ##################################################################
 ######
@@ -402,23 +416,32 @@ set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
 set newstring =  "NY: ${test_NY}"
 /bin/mv AGCM.rc AGCM.tmp
 cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
->>>COUPLED<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NX:"`
->>>COUPLED<<<set newstring =  "OGCM.NX: ${test_NY}"
->>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
->>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
->>>COUPLED<<<set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NY:"`
->>>COUPLED<<<set newstring =  "OGCM.NY: ${test_NX}"
->>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
->>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-
->>>COUPLED<<<./strip input.nml
->>>COUPLED<<<set oldstring =  `cat input.nml | grep "^ *layout"`
->>>COUPLED<<<set newstring =  "layout = ${test_NY},${test_NX},"
->>>COUPLED<<</bin/mv input.nml input.nml.tmp
->>>COUPLED<<<cat input.nml.tmp | sed -e "s?$oldstring?$newstring?g" > input.nml
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
+
+# If REPLAY, link necessary forcing files
+# ---------------------------------------
+set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
+if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
+     set ANA_EXPID    = `grep REPLAY_ANA_EXPID:    AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set ANA_LOCATION = `grep REPLAY_ANA_LOCATION: AGCM.rc | grep -v '#'   | cut -d: -f2`
+
+     set REPLAY_FILE        = `grep  REPLAY_FILE:   AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE09      = `grep  REPLAY_FILE09: AGCM.rc | grep -v '#'   | cut -d: -f2`
+     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE            | cut -d"/" -f1 | grep -v %`
+     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09          | cut -d"/" -f1 | grep -v %`
+
+     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
+     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/@ANA_EXPID.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
+
+     /bin/ln -sf ${ANA_LOCATION}/aod .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
+endif
+
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
