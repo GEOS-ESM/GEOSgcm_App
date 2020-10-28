@@ -1435,7 +1435,7 @@ endif
 # per task as a good default
 @ POST_NPES = $POST_NDS * 16
 
-# Longer messages are now supported with SLURM and PBS. Limits seem to be 1024 characters with SLURM
+# Longer job names are now supported with SLURM and PBS. Limits seem to be 1024 characters with SLURM
 # and 230 with PBS. To be safe, we will limit to 200
 
               setenv     RUN_N  `echo $EXPID | cut -b1-200`_RUN                         # RUN      Job Name
