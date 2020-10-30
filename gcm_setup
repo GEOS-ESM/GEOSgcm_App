@@ -1208,7 +1208,7 @@ EMISSIONS:
 
 # AERO Provider
 # -------------
-     set AERO_PROVIDER = GOCART
+     set AERO_PROVIDER = GOCART2G
 #AERO:
 #echo "Enter the ${C1}AERO_PROVIDER${CN}: ${C2}GOCART${CN} (Default) or ${C2}GOCART.data${CN}:"
 #      set AERO_PROVIDER  = $<
