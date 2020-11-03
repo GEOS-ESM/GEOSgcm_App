@@ -28,14 +28,15 @@ setenv ARCH `uname`
 setenv SITE             @SITE
 setenv GEOSDIR          @GEOSDIR 
 setenv GEOSBIN          @GEOSBIN 
-setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
+setenv GEOSETC          @GEOSETC 
+setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
-setenv GCMVER `cat $GEOSDIR/src/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
 
 #######################################################################
@@ -527,7 +528,7 @@ if( ${EMISSIONS} == MERRA2 | \
     set MERRA2_Transition_Date = 20000401
 
     if( $nymdc < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/19600101-20000331
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/19600101-20000331
          if( $nymdf > ${MERRA2_Transition_Date} ) then
           set nymdf = ${MERRA2_Transition_Date}
           set oldstring = `cat CAP.rc | grep END_DATE:`
@@ -536,7 +537,7 @@ if( ${EMISSIONS} == MERRA2 | \
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/$ARCH/etc/$EMISSIONS/20000401-present
+         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/20000401-present
     endif
 
     if( $AGCM_LM == 72 ) then

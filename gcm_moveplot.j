@@ -29,7 +29,7 @@ setenv ARCH `uname`
 
 setenv SITE             @SITE
 setenv GEOSBIN          @GEOSBIN
-setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
+setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib

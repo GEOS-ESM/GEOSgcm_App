@@ -30,7 +30,7 @@ setenv ARCH `uname`
 
 setenv SITE             @SITE
 setenv GEOSBIN          @GEOSBIN
-setenv GEOSUTIL         @GEOSSRC/GMAO_Shared/GEOS_Util
+setenv GEOSUTIL         @GEOSSRC
 setenv BATCHNAME       "@POST_N"
 
 source $GEOSBIN/g5_modules

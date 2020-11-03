@@ -33,59 +33,31 @@ endif
 
 # Set Current Working Path to gcm_setup
 # -------------------------------------
-set GCMSETUP = `which $0`
-set root = `echo $GCMSETUP | cut -d / -f1`
-if($root == . ) set GCMSETUP = `echo $cwd`/gcm_setup
-set root = `echo $GCMSETUP | cut -b1`
-if( "$root" != "/" ) set GCMSETUP = `echo $cwd`/$GCMSETUP
+setenv ARCH `uname -s`
+if ($ARCH == Darwin) then
+   set FINDPATH = realpath
+else
+   set FINDPATH = 'readlink -f'
+endif
+set GCMSETUP = `$FINDPATH $0`
+set BINDIR   = `dirname $GCMSETUP`
+set GEOSDEF  = `dirname $BINDIR`
+set ETCDIR   = ${GEOSDEF}/etc
 
-
-# Set Default GEOS Build Directory
-# --------------------------------
-@ n = 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-while( .$root == . )
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-set root2 = $root
-
-@ m = `echo $GCMSETUP | tr -cd '/' | wc -c`
-while( $root2 != 'Applications' )
-@ m = $m - 1
-set root2 = `echo $GCMSETUP | cut -d / -f$m`
-end
-
-set GEOSDEF = ''
-while( $n != $m )
-set GEOSDEF = `echo ${GEOSDEF}/${root}`
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-
-
-# Set Applications Directory
-# --------------------------
-@ n = 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-while( .$root == . )
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
-
-set APPDIR = ''
-while( $root != 'gcm_setup' )
-set APPDIR = `echo ${APPDIR}/${root}`
-@ n = $n + 1
-set root = `echo $GCMSETUP | cut -d / -f$n`
-end
+# Test if GEOSgcm.x is here which means you are in install directory
+if (! -x GEOSgcm.x) then
+   echo "You are trying to run $0 in the Applications/GEOSgcm_App directory"
+   echo "This is no longer supported. Please run from the bin/ directory"
+   echo "in your installation"
+   exit 1
+endif
 
 #######################################################################
 #                   Test for Command Line Flags
 #######################################################################
 
 # Set default behavior of switches
-set NOCVS = FALSE
+set NOCVS = TRUE
 set GPU   = FALSE
 
 while ( $#argv > 0 )
@@ -124,7 +96,7 @@ end
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-setenv SITE `$GEOSDEF/g5_modules site`
+setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
 
 if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
    set NOCVS = TRUE
@@ -161,7 +133,7 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-set BASEDIR = `$GEOSDEF/g5_modules basedir`
+setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
@@ -198,7 +170,7 @@ if( $WORD !=  $EXPDSC ) set EXPDSC = `echo ${EXPDSC}_${WORD}`
 end
 
 GEOSTAG:
-set GEOSTAG = `cat .AGCM_VERSION`
+set GEOSTAG = `cat ${ETCDIR}/.AGCM_VERSION`
 #echo "${C1}CVS BASE Source Tag${CN} used for Experiment: ${C2}${GEOSTAG}${CN}"
 
 #######################################################################
@@ -1239,8 +1211,6 @@ set  RATS_PROVIDER   = PCHEM
 # per task as a good default
 @ POST_NPES = $POST_NDS * 16
 
-setenv SITE `$GEOSDEF/g5_modules site`
-
               setenv     RUN_N  `echo $EXPID | cut -b1-11`_RUN                         # RUN      Job Name
               setenv     RUN_FN `echo $EXPID | cut -b1-11`_FCST                        # Forecast Job Name
               setenv    POST_N  `echo $EXPID | cut -b1-10`_POST                        # POST     Job Name
@@ -1274,7 +1244,7 @@ if( $SITE == 'NAS' ) then
               endif
 
               @ NODES = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ NPCUS = `echo "( $POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
               setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                              # batch queue name for gcm_run.j
               setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_run.j
@@ -1323,7 +1293,7 @@ else if( $SITE == 'NCCS' ) then
               endif
 
               @ NODES = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ NPCUS = `echo "( $POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
               setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
               setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
@@ -1419,60 +1389,54 @@ while( $check == FALSE )
           echo $HISTORYrc > $HOME/.HISTORYrc
   endif
 
-  echo "Enter the tag or directory (/filename) of the ${C1}HISTORY.AGCM.rc.tmpl${CN} to use"
+  echo "Enter the directory (/filename) of the ${C1}HISTORY.AGCM.rc.tmpl${CN} to use"
   echo "(To use ${C1}HISTORY.AGCM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
   echo "-------------------------------------------------------------------------"
-  echo "Hit ENTER to use Default Tag/Location: (${C2}${HISTORYrc}${CN})"
+  echo "Hit ENTER to use Default Location: (${C2}${HISTORYrc}${CN})"
   set   NUHISTORY  = $<
   if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
-  if( -e $APPDIR/HISTORY.rc.hold ) /bin/mv -f $APPDIR/HISTORY.rc.hold $APPDIR/HISTORY.rc.tmpl
-  if( -e $APPDIR/HISTORY.rc.tmpl ) /bin/mv -f $APPDIR/HISTORY.rc.tmpl $APPDIR/HISTORY.rc.hold
+
+  set TMPHIST = `mktemp`
 
   if( "$HISTORYrc" == "Current" ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $APPDIR/HISTORY.AGCM.rc.tmpl $APPDIR/HISTORY.rc.tmpl
+            /bin/cp -f $ETCDIR/HISTORY.AGCM.rc.tmpl $TMPHIST
   endif
 
   if( "$HISTORYrc" != "Current" ) then
-       if( -f $HISTORYrc ) then
+       if( -f $ETCDIR/$HISTORYrc ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc $APPDIR/HISTORY.rc.tmp1
+            set TMPHIST1 = `mktemp`
+            /bin/cp -f $ETCDIR/$HISTORYrc $TMPHIST1
 
-            set  EXPID_old = `grep  "EXPID:" $APPDIR/HISTORY.rc.tmp1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $APPDIR/HISTORY.rc.tmp1 | cut -d: -f2`
+            set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
+            set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
 
-            /bin/rm -f command
+            set  TMPCMD = `mktemp`
             set  string = "EXPID:"
-            echo cat $APPDIR/HISTORY.rc.tmp1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $APPDIR/HISTORY.rc.tmpl > command
-            chmod +x   command
-                     ./command
-            /bin/rm -f command
-            /bin/mv -f $APPDIR/HISTORY.rc.tmpl $APPDIR/HISTORY.rc.tmp1
-                   cat $APPDIR/HISTORY.rc.tmp1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $APPDIR/HISTORY.rc.tmpl
-            /bin/rm -f $APPDIR/HISTORY.rc.tmp1
+            echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
+            chmod +x   $TMPCMD
+                       $TMPCMD
+            /bin/rm -f $TMPCMD
+            /bin/mv -f $TMPHIST $TMPHIST1
+                   cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
+            /bin/rm -f $TMPHIST1
 
        else if( -e $HISTORYrc/HISTORY.AGCM.rc.tmpl ) then
             set check = TRUE
             if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
             echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $APPDIR/HISTORY.rc.tmpl
+            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $TMPHIST
        else
-           cvs upd -r $HISTORYrc -p $APPDIR/HISTORY.AGCM.rc.tmpl > $APPDIR/HISTORY.rc.tmpl
-           if( $status != 0 ) then
-            echo " "
-            echo "\!\! ERROR in using $HISTORYrc as a cvs tag or directory/filename. \!\!"
-            echo "\!\! Please check cvs connectivity or $HISTORYrc syntax. \!\!"
-            echo " "
-           else
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-           endif
+           echo "This condition is based on updating HISTORY.AGCM.rc.tmpl with CVS"
+           echo "This has no equivalent in git at present. Please contact Matt"
+           echo "Thompson or Larry Takacs to help resolve this."
+           exit 2
        endif
   endif
 end
@@ -1593,41 +1557,13 @@ echo $EXPDIRroot > $HOME/.EXPDIRroot
 setenv CNVDIR $EXPDIR/convert
 
 #######################################################################
-#                   Test if we are in a CMake Build
-#######################################################################
-
-if (-d $GEOSDEF/CMakeFiles) then
-   set CMAKE = TRUE
-else
-   set CMAKE = FALSE
-endif
-
-#######################################################################
 #                       Locate Build Directory  
 #######################################################################
-
-# The build directory is in two different places for GNU Make and CMake.
-# To be generic we must be clear here.
 
 # GEOSagcm Build Directory
 # ------------------------
 
-# First, for clarity, we must strip src/ off of GEOSDEF if we are in a
-# GNU Make build:
-
-if ( $CMAKE == FALSE ) then
-  set GEOSDEF = `dirname $GEOSDEF`
-endif
-
-# Next, use a different message on a CMake build compared to GNU Make. This
-# isn't quite perfect as one can point to a *different* build, but unfortunately, there
-# is no way to generalize this due to the presence of Linux/Darwin.
-
-  if ( $CMAKE == TRUE ) then
-     echo "Enter Location for ${C1}Build${CN} directory containing:  bin/ CMakeFiles/ etc..."
-  else
-     echo "Enter Location for ${C1}Build${CN} directory containing:  src/ $ARCH/bin etc..."
-  endif
+  echo "Enter Location for ${C1}Build${CN} directory containing:  bin/ etc/ include/ etc..."
   echo "Hit ENTER to use Default Location:"
   echo "----------------------------------"
   echo "Default:  ${C2}${GEOSDEF}${CN}"
@@ -1643,8 +1579,7 @@ endif
 GEOSDIR:
 while( $check == FALSE )
 
-  # We assume one of these must be true GNU Make or CMake
-  if(! (-e $GEOSDIR/$ARCH || -d $GEOSDIR/CMakeFiles) ) then
+  if(! (-e $GEOSDIR/bin ) ) then
        echo " "
        echo "\!\! ${C1}WARNING${CN} \!\!"
        echo "\!\! This Sandbox has not been built"
@@ -1670,21 +1605,15 @@ while( $check == FALSE )
   endif
 end
 
-# Set some useful aliases. GEOSSRC lets us look inside the source
-# code tree, though this isn't quite true with CMake as we depend
-# on needed files being copied into the build tree.
 #
 # GEOSBIN does point to the bin/ directory in each
-if( $CMAKE == TRUE ) then
+#
 setenv GEOSSRC  ${GEOSDIR}
 setenv GEOSBIN  ${GEOSDIR}/bin
-else
-   setenv GEOSSRC  ${GEOSDIR}/src
-   setenv GEOSBIN  ${GEOSDIR}/$ARCH/bin
-endif
+setenv GEOSETC  ${GEOSDIR}/etc
 
-setenv GEOSUTIL ${GEOSSRC}/GMAO_Shared/GEOS_Util
-setenv GCMVER   `cat ${GEOSSRC}/Applications/GEOSgcm_App/.AGCM_VERSION`
+setenv GEOSUTIL ${GEOSSRC}
+setenv GCMVER   `cat ${GEOSETC}/.AGCM_VERSION`
 
 #######################################################################
 #                    Check for Group ID Sponsor Code
@@ -1717,7 +1646,6 @@ echo $GROUP > $HOME/.GROUProot
 #######################################################################
 
   mkdir -p                                                $EXPDIR/RC
-  if ($CMAKE == TRUE) then
   rsync -ax                  $GEOSDIR/etc/*.rc            $EXPDIR/RC
   if( .$EMISSIONS != . ) then
                      /bin/cp $GEOSDIR/etc/$EMISSIONS/*.rc $EXPDIR/RC
@@ -1725,15 +1653,6 @@ echo $GROUP > $HOME/.GROUProot
      set EMISSIONS = g5chem
   endif
 
-else
-     rsync -ax                  $GEOSDIR/$ARCH/etc/*.rc            $EXPDIR/RC
-     if( .$EMISSIONS != . ) then
-                        /bin/cp $GEOSDIR/$ARCH/etc/$EMISSIONS/*.rc $EXPDIR/RC
-     else
-       set EMISSIONS = g5chem
-     endif
-
-endif
   if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
 
 #######################################################################
@@ -1805,13 +1724,39 @@ cat > $HOMDIR/SETENV.commands << EOF
    # with binarytile.x and other executables.
    unsetenv PMI_RANK
 
+   # Often when debugging on MPT, the traceback from Intel Fortran
+   # is "absorbed" and only MPT's errors are displayed. To allow the
+   # compiler's traceback to be displayed, uncomment this environment
+   # variable
+   #setenv FOR_IGNORE_EXCEPTIONS false
+
 EOF
 
 else if( $MPI == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_DAPL_UD enable
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
+
+# This flag prints out the Intel MPI state. Uncomment if needed
+#setenv I_MPI_DEBUG 9
 EOF
+
+# These are options determined to be useful at NCCS
+# Not setting generally as they are more fabric/cluster
+# specific compared to the above adjustments
+if ( $SITE == 'NCCS' ) then
+
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_SHM_HEAP_VSIZE 512
+setenv PSM2_MEMORY large
+setenv I_MPI_EXTRA_FILESYSTEM 1
+setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
+setenv ROMIO_FSTYPE_FORCE "gpfs:"
+EOF
+
+endif # if NCCS
 
 endif # if mpi
 
@@ -1887,52 +1832,6 @@ endif
 #               Create Local Scripts and Resource Files
 #######################################################################
 
-set FILES = "gcm_run.j          \
-             gcm_post.j         \
-             gcm_archive.j      \
-             gcm_regress.j      \
-             gcm_convert.j      \
-             gcm_plot.tmpl      \
-             gcm_quickplot.csh  \
-             gcm_moveplot.j     \
-             gcm_stats.j        \
-             gcm_forecast.tmpl  \
-             gcm_forecast.setup \
-             gcm_emip.setup     \
-             CAP.rc.tmpl        \
-             AGCM.rc.tmpl       \
-             HISTORY.rc.tmpl    "
-set FILES = `echo $FILES`
-
-if( $OGCM == TRUE ) then
-    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-    /bin/cp ../../GEOSgcs_GridComp/GEOSgcm_GridComp/GEOSogcm_GridComp/GEOSocean_GridComp/GuestOcean_GridComp/MOM_GEOS5PlugMod/mom/data/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
-    /bin/cp /home/yvikhlia/python/g5lib/plotocn.j .
-    /bin/cp /home/yvikhlia/python/g5lib/confocn.py __init__.py
-
-set FILES = "$FILES      \
-             input.nml   \
-             diag_table  \
-             field_table \
-             plotocn.j \
-             __init__.py"
-
-set FILES = `echo $FILES`
-endif
-
-if($CUBED == "TRUE") then
-set FILES = "$FILES \
-             fvcore_layout.rc"
-set FILES = `echo $FILES`
-endif
-
-echo " "
-foreach FILE ($FILES)
-
-/bin/rm -f $HOMDIR/tmpfile
-/bin/rm -f $HOMDIR/sedfile
-/bin/rm -f $HOMDIR/$FILE
-cat        $APPDIR/$FILE > $HOMDIR/tmpfile
 cat >      $HOMDIR/sedfile << EOF
 /@SETENVS/ {
 t success
@@ -2013,6 +1912,7 @@ s?@SITE?$SITE?g
 s?@GEOSDIR?$GEOSDIR?g
 s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
+s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
 
 s?@CHECKPOINT_TYPE?default?g
@@ -2136,7 +2036,73 @@ s^@HYDROSTATIC^$HYDROSTATIC^g
 s/@GRID_FILE/$GRID_FILE/g
 
 EOF
+
+set FILES = "gcm_run.j          \
+             gcm_post.j         \
+             gcm_archive.j      \
+             gcm_regress.j      \
+             gcm_convert.j      \
+             gcm_plot.tmpl      \
+             gcm_quickplot.csh  \
+             gcm_moveplot.j     \
+             gcm_forecast.tmpl  \
+             gcm_forecast.setup \
+             gcm_emip.setup     \
+             CAP.rc.tmpl        \
+             AGCM.rc.tmpl       \
+             HISTORY.rc.tmpl    \
+             logging.yaml       "
+set FILES = `echo $FILES`
+
+if( $OGCM == TRUE ) then
+   if ( $OCEAN_NAME == "MOM" ) then
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+      set FILES = "$FILES field_table "
+   else if ( $OCEAN_NAME == "MOM6" ) then
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table .
+      set FILES = "$FILES MOM_input MOM_override data_table "
+   endif
+
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
+
+set FILES = "$FILES      \
+             input.nml   \
+             diag_table  \
+             plotocn.j   \
+             __init__.py"
+
+set FILES = `echo $FILES`
 endif
+
+set FILES = "$FILES \
+             fvcore_layout.rc"
+set FILES = `echo $FILES`
+
+echo " "
+
+# Operate on files in ETCDIR
+
+foreach FILE ($FILES)
+
+   /bin/rm -f $HOMDIR/tmpfile
+   /bin/rm -f $HOMDIR/$FILE
+
+   if ( $FILE == "HISTORY.rc.tmpl" ) then
+      cat            $TMPHIST > $HOMDIR/tmpfile
+   else if ( -e $BINDIR/$FILE ) then
+      cat       $BINDIR/$FILE > $HOMDIR/tmpfile
+   else if ( -e $ETCDIR/$FILE ) then
+      cat       $ETCDIR/$FILE > $HOMDIR/tmpfile
+   else
+      echo "ERROR! Cannot find $FILE in $BINDIR or $ETCDIR!"
+      exit 2
+   endif
+
 
    sed -f $HOMDIR/sedfile $HOMDIR/tmpfile > $HOMDIR/$FILE
 
@@ -2152,11 +2118,7 @@ if ($GPU == "TRUE") then
 /bin/rm -f $HOMDIR/GPUEND.commands
 endif
 
-if(     -e $APPDIR/HISTORY.rc.hold ) then
-/bin/mv -f $APPDIR/HISTORY.rc.hold $APPDIR/HISTORY.rc.tmpl
-else
-/bin/rm -f $APPDIR/HISTORY.rc.tmpl
-endif
+/bin/rm -f $TMPHIST
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
 echo " "
@@ -2176,7 +2138,6 @@ set LSTRATCHEM = FALSE
 set RSNAMES = "LH2O LMAM LCARMA LGMICHEM LSTRATCHEM"
 set RSTYPES = "INTERNAL IMPORT"
 
-/bin/rm -f command
 set FILE = AGCM.rc.tmpl
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2187,14 +2148,15 @@ foreach rsname ($RSNAMES)
    set  test = `eval echo \$$rsname`
    if( $test == FALSE ) then
        foreach type ($RSTYPES)
+          set  TMPCMD = `mktemp`
           set  string = ${name}_${type}
           /bin/rm -f $LOCDIR/$FILE.tmp
           /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
           echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-               \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > command
-          chmod +x   command
-          ./command
-          /bin/rm -f command
+               \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > $TMPCMD
+          chmod +x   $TMPCMD
+                     $TMPCMD
+          /bin/rm -f $TMPCMD
        end
    endif
 end
@@ -2203,7 +2165,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_stats.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2217,7 +2179,6 @@ if( -e $EXPDIR/$FILE ) set LOCDIR = $EXPDIR
 end
 
 chmod   +x $HOMDIR/gcm_run.j
-chmod   +x $HOMDIR/gcm_stats.j
 chmod   +x $HOMDIR/gcm_convert.j
 chmod   +x $HOMDIR/gcm_forecast.setup
 chmod   +x $HOMDIR/gcm_regress.j
@@ -2249,7 +2210,6 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/gcm_archive.j       $EXPDIR/archive
 /bin/mv $HOMDIR/gcm_regress.j       $EXPDIR/regress
 /bin/mv $HOMDIR/gcm_convert.j       $EXPDIR/convert
-/bin/mv $HOMDIR/gcm_stats.j         $EXPDIR/forecasts
 /bin/mv $HOMDIR/gcm_forecast.tmpl   $EXPDIR/forecasts
 /bin/mv $HOMDIR/gcm_forecast.setup  $EXPDIR/forecasts
 /bin/cp $GEOSUTIL/post/plot.rc      $EXPDIR/plot
@@ -2386,6 +2346,12 @@ if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
 #######################################################################
 
 if ( $NOCVS != "TRUE" ) then
+
+echo "ERROR! Repository managment is not supported yet in this model"
+echo "       due to the move to git. If this section is reached,"
+echo "       something has gone wrong. Please contact Matt Thompson"
+echo "       or Larry Takacs"
+exit 3
 
 # Make a src directory under EXPDIR to hold current Experiment files
 # Note:  Sandbox Source Location: $GEOSDIR/src
@@ -2699,7 +2665,6 @@ EXPDIR/plot/gcm_moveplot.j
 EXPDIR/archive/gcm_archive.j
 EXPDIR/regress/gcm_regress.j
 EXPDIR/convert/gcm_convert.j
-EXPDIR/forecasts/gcm_stats.j
 EXPDIR/forecasts/gcm_forecast.tmpl
 EXPDIR/forecasts/gcm_forecast.setup
 EXPDIR/plot/plot.rc
@@ -2815,8 +2780,6 @@ set CONVERT_N=`echo $NEWEXPID | cut -b1-11`_CNV
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_N#"     \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_N#"     $NEWHOMDIR/gcm_run.j
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
-       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_stats.j
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_forecast.tmpl
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$POST_N#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$POST_N#" \
@@ -2867,6 +2830,12 @@ echo ""
 # --------------------------------
 
 if ( $NOCVS != "TRUE" ) then
+
+echo "ERROR! Repository managment is not supported yet in this model"
+echo "       due to the move to git. If this section is reached,"
+echo "       something has gone wrong. Please contact Matt Thompson"
+echo "       or Larry Takacs"
+exit 3
 
 # Make a src directory under NEWEXPDIR to hold current Experiment files
 # Note:  Sandbox Source Location: $GEOSDIR/src
