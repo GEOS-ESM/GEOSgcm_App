@@ -509,14 +509,8 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                           'DTDT_ANA'    , 'AGCM'         , 'DTDTANA'    ,
                           'DQVDT_ANA'   , 'AGCM'         , 'DQDTANA'    ,
                           'DMDTANA'     , 'DYN'          , 'DMDTANA'    ,
-#                         'VINTDIV_ANA' , 'AIAU'         ,
-#                         'VINTDIV_BKG' , 'AIAU'         ,
-#                         'VINTDIV_COR' , 'AIAU'         ,
-#                         'DUWINDFIX;DVWINDFIX'   , 'AIAU'         ,
-#                         'DTSDT_ANA'   , 'AGCM'         ,
-#                         'UBKG;VBKG'   , 'AIAU'         ,
-#                         'TVBKG'       , 'AIAU'         ,
-#                         'QVBKG'       , 'AIAU'         ,
+                          'DQVDT_CON'   , 'AGCM'         , 'DQDTCON'    ,
+                          'DPSDT_CON'   , 'AGCM'         , 'DPDTCON'    ,
                           ::
 
 # Note: Be Sure to ADD: USE_SATSIM_MODIS: 1 in AGCM.rc for this Collection
@@ -925,8 +919,8 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_tracer.archive:   '%c/Y%y4',
   geosgcm_tracer.format:    'CFIO',
   geosgcm_tracer.mode:      'time-averaged',
-  geosgcm_tracer.frequency:  030000,
-  geosgcm_tracer.ref_time:   030000,
+  geosgcm_tracer.frequency:  240000,
+  geosgcm_tracer.ref_time:   210000,
   geosgcm_tracer.grid_label: PC@HIST_IMx@HIST_JM-DC
   geosgcm_tracer.vscale:     100.0,
   geosgcm_tracer.vunit:     'hPa',
