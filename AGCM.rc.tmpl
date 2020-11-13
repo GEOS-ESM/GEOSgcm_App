@@ -19,12 +19,37 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 
 DYCORE: @DYCORE
 
- SOLAR_DT: 3600
- IRRAD_DT: 3600
-SATSIM_DT: 1800
+# Hybrid FV parameters,
+# Node topology is NNX by NNY
+# Total OMP threads is NTH_X*NTH_Y
+NNX: 40
+NNY: 1
+NTH_X: 1
+NTH_Y: 1
+
+CONSTRAIN_DAS: 2
+
+#PHYS_HYDROSTATIC: FALSE
+HYDROSTATIC: FALSE
+
+   SOLAR_DT:  900
+   IRRAD_DT:  900
+  SATSIM_DT:  900
+OGCM_RUN_DT: 3600
+ #GOCART_DT: 3600
 
 SOLARAvrg: 0
 IRRADAvrg: 0
+
+EXCLUDE_ADVECTION_TRACERS: ALWAYS
+
+EXCLUDE_ADVECTION_TRACERS_LIST:
+PCHEM::N2O
+PCHEM::CFC11
+PCHEM::CFC12
+PCHEM::HCFC22
+PCHEM::CH4
+::
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
 >>>MP_MG1<<<CLDMICRO: 2MOMENT
@@ -51,7 +76,7 @@ DICYCLE: 1
 
 # Convective plumes to be activated (1 true, 0 false)
 # ----------------------------------------
-DEEP: 1
+DEEP: 0
 SHALLOW: 0
 CONGESTUS: 1
 
@@ -280,6 +305,9 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   REPLAY_FILE_FREQUENCY:       10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
 
+    REPLAY_MODE: Regular
+    REPLAY_ANA_EXPID: era5_eta2eta_L137
+    REPLAY_FILE: /discover/nobackup/projects/gmao/osse2/Ops12KM_R/forecasts_EC/ERA5/UV/%y4%m2%d2_%h20000/era5_eta2eta_L137.%y4%m2%d2_%h2z.nc4
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
