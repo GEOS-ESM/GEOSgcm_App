@@ -62,6 +62,6 @@
   z_slope_ice  = .true.
   de_ice = .false.
   fix_negative = .true.
-  icloud_f = 1
+  icloud_f = 0
   mp_time = 150.
 /
