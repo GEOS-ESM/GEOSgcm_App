@@ -7,7 +7,6 @@
 #SBATCH --time=06:00:00
 #SBATCH --nodes=@NODES --ntasks-per-node=1
 #SBATCH --job-name=quickstat
-#SBATCH --constraint=@MODEL
 #SBATCH --output=quickstat.out
 #SBATCH --@QUEUE=@PARTITION
 #SBATCH --array=1-@NTASKS
