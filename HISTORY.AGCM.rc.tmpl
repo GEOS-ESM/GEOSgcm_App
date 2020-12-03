@@ -18,6 +18,7 @@ COLLECTIONS: 'geosgcm_prog'
              'geosgcm_tracer'
 >>>HIST_GOCART<<<             'tavg2d_aer_x'
 >>>HIST_GOCART<<<             'tavg3d_aer_p'
+#             'geosgcm_pbl'
 #             'geosgcm_iau'
 #             'geosgcm_conv'
 #             'goswim_catch'
@@ -96,6 +97,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                           'QS'       , 'SURFACE'       ,
                           'THAT'     , 'SURFACE'       ,
                           'QHAT'     , 'SURFACE'       ,
+                          'CLDBASEHGT' , 'MOIST'       ,
                           'CU2DRAINMOVE' , 'MOIST'     ,
                           'CU2DSNOWMOVE' , 'MOIST'     ,
                           'RAS_TIME' , 'MOIST'         ,
@@ -393,6 +395,36 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                           'KHRAD'    , 'TURBULENCE'    ,
                           'RI'       , 'TURBULENCE'    ,
                           'DU'       , 'TURBULENCE'    ,
+                          ::
+
+  geosgcm_pbl.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_pbl.archive:   '%c/Y%y4',
+  geosgcm_pbl.format:    'CFIO',
+  geosgcm_pbl.mode:      'time-averaged',
+  geosgcm_pbl.grid_label: PC@HIST_IMx@HIST_JM-DC
+  geosgcm_pbl.frequency:  010000,
+  geosgcm_pbl.ref_time:   210000,
+  geosgcm_pbl.vunit:     'm',
+  geosgcm_pbl.vscale:     1.0,
+  geosgcm_pbl.vvars:     'ZLES' , 'TURBULENCE'          ,
+  geosgcm_pbl.levels:    50 100 150 200 250 300 400 500 600 800 1000 1200 1400 1600 1800 2000 2300 2600 2900 3200 3600 4000,
+  geosgcm_pbl.fields:     'PL'        , 'DYN'         ,
+                          'QT'        , 'TURBULENCE'  ,
+                          'SL'        , 'TURBULENCE'  ,
+                          'THX0'      , 'MOIST'       , 'TH'
+                          'QLLS'+'QLCN', 'MOIST'    , 'QL'
+                          'QILS'+'QICN', 'MOIST'    , 'QI'
+                          'U'         , 'DYN'         ,
+                          'V'         , 'DYN'         ,
+                          'FCLD'      , 'MOIST'         ,
+                          'QTFLXTRB'  , 'TURBULENCE'  ,
+                          'SLFLXTRB'  , 'TURBULENCE'  ,
+                          'UFLXTRB'   , 'TURBULENCE'  ,
+                          'VFLXTRB'   , 'TURBULENCE'  ,
+                          'QTFLX_SC'  , 'MOIST'         ,
+                          'SLFLX_SC'  , 'MOIST'         ,
+                          'UFLX_SC'   , 'MOIST'         ,
+                          'VFLX_SC'   , 'MOIST'         ,
                           ::
 
   geosgcm_gwd.template:  '%y4%m2%d2_%h2%n2z.nc4',

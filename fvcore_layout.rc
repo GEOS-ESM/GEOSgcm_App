@@ -1,20 +1,23 @@
 &fv_core_nml
-  @FV_HYDRO
+ hydrostatic = .F.
+ do_sat_adj = .T.
+ nwat = 6
 /
 
-&main_nml
+ &main_nml
 /
 
-&test_case_nml
-  test_case = 13
+  &test_case_nml
+       test_case = 13
+ /
+
+ &fms_io_nml
 /
 
-&fms_io_nml
-/
-
-&fms_nml
-  print_memory_usage=.false.
-  domains_stack_size = 24000000
+ &fms_nml
+       clock_grain = 'ROUTINE'
+       domains_stack_size = 24000000
+       print_memory_usage = .false.
 /
 
 &gfdl_cloud_microphysics_nml
@@ -32,15 +35,15 @@
   vg_max = 12.
   vr_max = 12.
   qi_lim = 1.
-  prog_ccn = .false.
-  do_qa = .false.
+  prog_ccn = .F. 
+  do_qa = .true.
   fast_sat_adj = .true.
   tau_l2v  = 900.
   tau_v2l  = 150.
   tau_g2v  = 900.
-  rthresh  = 10.e-6  ! This is a key parameter for cloud water
-  dw_land  = 0.16
-  dw_ocean = 0.10
+  rthresh  = 7.e-6  ! This is a key parameter for cloud water
+  dw_land  = 0.4
+  dw_ocean = 0.4
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
@@ -56,12 +59,13 @@
   c_paut = 1.0
   c_cracw = 0.8
   use_ppm = .false.
-  use_ccn = .true.
+  use_ccn = .T. 
   mono_prof = .true.
   z_slope_liq  = .true.
   z_slope_ice  = .true.
   de_ice = .false.
   fix_negative = .true.
-  icloud_f = 1
+  icloud_f = 0
   mp_time = 150.
 /
+
