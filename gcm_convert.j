@@ -27,6 +27,7 @@ limit stacksize unlimited
 setenv ARCH `uname`
 
 setenv SITE             @SITE
+setenv GEOSDIR          @GEOSDIR
 setenv GEOSBIN          @GEOSBIN 
 setenv GCMVER           @GCMVER
 
