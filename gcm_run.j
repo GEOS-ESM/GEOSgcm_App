@@ -89,9 +89,8 @@ set  OGCM_JM  = `grep      "OGCM\.JM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
 
-set USE_IOSERVER   = @USE_IOSERVER
-set AGCM_IOS_NODES = `grep IOSERVER_NODES: $HOMDIR/AGCM.rc | cut -d':' -f2`
-
+set USE_IOSERVER   = 1
+set AGCM_IOS_NODES = 116
 if ($USE_IOSERVER == 0) then
    set IOS_NODES = 0
 else
@@ -109,12 +108,11 @@ else
 endif
 
 @ MODEL_NPES = $NX * $NY
+set NCPUS_PER_NODE = 20
 
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
-
-      set NCPUS_PER_NODE = @NCPUS_PER_NODE
 
       @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
       @ NPES   = $NODES * $NCPUS_PER_NODE
@@ -255,6 +253,7 @@ endif
 #######################################################################
 
 cd $SCRDIR
+
 /bin/rm -rf *
                              /bin/ln -sf $EXPDIR/RC/* .
                              @CPEXEC     $EXPDIR/cap_restart .
@@ -263,7 +262,7 @@ cd $SCRDIR
                              @CPEXEC -f  $HOMDIR/*.yaml .
                              @CPEXEC     $GEOSBIN/bundleParser.py .
 
-                             cat fvcore_layout.rc >> input.nml
+                             /bin/cp fvcore_layout.rc input.nml
 
 			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_input .
 			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_override .
@@ -329,19 +328,30 @@ done:
 #                        Link Boundary Datasets
 #######################################################################
 
-setenv BCSDIR    @BCSDIR
->>>DATAOCEAN<<<setenv SSTDIR    @SSTDIR
-setenv CHMDIR    @CHMDIR
->>>DATAOCEAN<<<setenv BCRSLV    @ATMOStag_@OCEANtag
->>>COUPLED<<<setenv BCRSLV    @ATMOStag_DE0360xPE0180
+set AGCM_IM_Tag = `echo $AGCM_IM | awk '{printf "%4.4i", $1}'`
+set OGCM_IM_Tag = `echo $OGCM_IM | awk '{printf "%4.4i", $1}'`
+set ATMOStag = CF${AGCM_IM_Tag}x6C
+set OCEANtag = CF${OGCM_IM_Tag}x6C
+setenv BCRSLV    ${ATMOStag}_${OCEANtag}
 setenv DATELINE  DC
-setenv EMISSIONS @EMISSIONS
+setenv EMISSIONS g5chem
+setenv BCSDIR  /discover/nobackup/projects/gmao/osse2/mathomp4/DYAMOND2/bcs/Icarus-NLv3/Icarus-NLv3_Ostia
+setenv SSTDIR  /discover/nobackup/projects/gmao/osse2/mathomp4/DYAMOND2/bcs/realtime/OSTIA_REYNOLDS/5760x34560/
+setenv CHMDIR  /discover/nobackup/projects/gmao/share/dao_ops/fvInput_nc3
+if( $AGCM_LM == 71 ) then
+setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L71-2020May15/fvInput
+endif
+if( $AGCM_LM == 91 ) then
+setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L91-2020Jul06/fvInput
+endif
+if( $AGCM_LM == 127 ) then
+setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L127-2020May15/fvInput
+endif
+if( $AGCM_LM == 181 ) then
+setenv CHMDIR   /discover/nobackup/mathomp4/NewRemapping/RemapOutput/Remap-L181-2020Jul06/fvInput
+endif
 
->>>MOM5<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
->>>MOM6<<<setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
->>>COUPLED<<<setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
->>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
->>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
+setenv BCTAG `basename $BCSDIR`
 
 set             FILE = linkbcs
 /bin/rm -f     $FILE
@@ -362,10 +372,8 @@ cat << _EOF_ > $FILE
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
->>>DATAOCEAN<<<if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
->>>DATAOCEAN<<<endif
+/bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
+/bin/ln -sf $HOMDIR/tile.bin  tile.bin
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
@@ -373,59 +381,42 @@ cat << _EOF_ > $FILE
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-#bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
 
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
-/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISNIRstd.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODELFPARmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
->>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
->>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
+/bin/ln -sf $BCSDIR/$BCRSLV/visdf_${AGCM_IM}x${AGCM_JM}.dat visdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_${AGCM_IM}x${AGCM_JM}.dat nirdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_${AGCM_IM}x${AGCM_JM}.dat vegdyn.data
+/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_${AGCM_IM}x${AGCM_JM}.data lai.data
+/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_${AGCM_IM}x${AGCM_JM}.data green.data
+/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_${AGCM_IM}x${AGCM_JM}.data ndvi.data
 
->>>COUPLED<<<if( $OGCM_IM == 1440 ) then
->>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
->>>COUPLED<<<endif 
+if (${AGCM_IM} == '5760') then
+/bin/ln -sf /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/C5760/topo_DYN_ave_5760x34560.data topo_dynave.data
+/bin/ln -sf /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/C5760/topo_GWD_var_5760x34560.data topo_gwdvar.data
+/bin/ln -sf /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/C5760/topo_TRB_var_5760x34560.data topo_trbvar.data
+else
+/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_${AGCM_IM}x${AGCM_JM}.data topo_dynave.data
+/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_${AGCM_IM}x${AGCM_JM}.data topo_gwdvar.data
+/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_${AGCM_IM}x${AGCM_JM}.data topo_trbvar.data
+endif
 
->>>COUPLED<<</bin/ln -sf $GRIDDIR/visdf.dat visdf.dat
->>>COUPLED<<</bin/ln -sf $GRIDDIR/nirdf.dat nirdf.dat
->>>COUPLED<<</bin/ln -sf $GRIDDIR/vegdyn.data vegdyn.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/lai.dat lai.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/green.dat green.data
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+if(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
+/bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
+endif
 
->>>FVCUBED<<<if(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
->>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
->>>FVCUBED<<<endif
-
->>>COUPLED<<<@CPEXEC $HOMDIR/*_table .
->>>COUPLED<<<@CPEXEC $GRIDDIR/INPUT/* INPUT
->>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
->>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
 _EOF_
 
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
+echo "/bin/ln -sf $SSTDIR"'/dataoceanfile_OSTIA_REYNOLDS_SST.5760x34560.$YEAR.data   sst.data' >> $FILE
+echo "/bin/ln -sf $SSTDIR"'/dataoceanfile_OSTIA_REYNOLDS_ICE.5760x34560.$YEAR.data fraci.data' >> $FILE
+echo "/bin/ln -sf $SSTDIR"'/SEAWIFS_KPAR_mon_clim.5760x34560 SEAWIFS_KPAR_mon_clim.data' >> $FILE
 
 chmod +x linkbcs
 @CPEXEC  linkbcs $EXPDIR
@@ -462,7 +453,7 @@ if( $GCMEMIP == TRUE ) then
     end
 else
     foreach rst ( $rst_file_names )
-      if(-e $EXPDIR/$rst ) @CPEXEC $EXPDIR/$rst . &
+      if(-e $EXPDIR/$rst ) /bin/mv $EXPDIR/$rst .
     end
 endif
 wait
@@ -481,13 +472,10 @@ if($numrs == 0) then
       endif
    end
    wait
->>>COUPLED<<<   @CPEXEC -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
-   cd $EXPDIR/restarts
-      >>>DATAOCEAN<<<@TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-      >>>COUPLED<<<@TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
-     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
-     >>>COUPLED<<</bin/rm -rf RESTART.${edate}
-   cd $SCRDIR
+  #cd $EXPDIR/restarts
+  #   tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+  #  /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
+  #cd $SCRDIR
 endif
 
 # If any restart is binary, set NUM_READERS to 1 so that
@@ -760,10 +748,10 @@ endif
 
 # Run GEOSgcm.x
 # -------------
-if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1) then
-   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server 3 3 3 3 52 52"
 else
    set IOSERVER_OPTIONS = ""
 endif
@@ -773,17 +761,28 @@ if( $NAS_BATCH == TRUE ) then
 else
    @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
 endif
-if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
-@GPUEND
+if( -e cap_restart ) then
+  set dateF = `cat cap_restart | cut -c1-8`
+  set timeF = `cat cap_restart | cut -c10-15`
+  echo "cap_restart: $dateF $timeF"
+else
+  /bin/mv *_rst ../
+  echo "cap_restart: missing"
+  exit 0
+endif
 
 if( -e EGRESS ) then
    set rc = 0
+   echo GEOSgcm Run Status: $rc
 else
    set rc = -1
+   echo GEOSgcm Run Status: $rc
+   /bin/mv *_rst ../
+   exit 0
 endif
-echo GEOSgcm Run Status: $rc
- 
+
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
 #        Note: cap_restart contains the current NYMD and NHMS
@@ -825,7 +824,8 @@ set restarts = `/bin/ls -1 *_rst`
 # ----------------------------------------------------
     set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
 foreach  restart ($restarts)
-@CPEXEC $restart ${EXPDIR}/restarts
+/bin/mv $restart ${EXPDIR}/restarts
+/bin/ln -s ${EXPDIR}/restarts/$restart .
 end
 
 # Remove EXPID from RESTART name
@@ -842,16 +842,6 @@ foreach  restart ($restarts)
 $GEOSBIN/stripname .${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.\* '' $restart
 end
 
-
-# TAR ARCHIVED RESTARTS
-# ---------------------
-cd $EXPDIR/restarts
-    if( $FSEGMENT == 00000000 ) then
-	>>>DATAOCEAN<<<@TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-        >>>COUPLED<<<@TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
-        /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-	>>>COUPLED<<</bin/rm -rf RESTART.${edate}
-    endif
 cd $SCRDIR
 
 # Move monthly collection checkpoints to restarts
@@ -947,10 +937,10 @@ else
      end
         /bin/rm -f $EXPDIR/cap_restart
      foreach rst ( `/bin/ls -1 *_rst` )
-       @CPEXEC $rst $EXPDIR/$rst &
+       /bin/mv $rst $EXPDIR/$rst
      end
      wait
-     @CPEXEC cap_restart $EXPDIR/cap_restart
+     /bin/mv cap_restart $EXPDIR/cap_restart
 endif
 
 >>>COUPLED<<<@CPEXEC -rf RESTART $EXPDIR

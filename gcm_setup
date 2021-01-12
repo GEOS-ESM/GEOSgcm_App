@@ -223,11 +223,12 @@ echo "   ${C2}c12  --  8   deg ${CN}"
 echo "   ${C2}c24  --  4   deg ${CN}"
 echo "   ${C2}c48  --  2   deg ${CN}"
 echo "   ${C2}c90  --  1   deg ${CN}"
-echo "   ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
-echo "   ${C2}c360 -- 1/4  deg (${C1}28-km${C2}) ${CN} "
-echo "   ${C2}c720 -- 1/8  deg (${C1}14-km${C2}) ${CN}"
-echo "   ${C2}c1440 - 1/16 deg (${C1} 7-km${C2}) ${CN}"
-echo "   ${C2}c2880 - 1/32 deg (${C1} 3-km${C2}) ${CN}"
+echo "   ${C2}c180 -- 1/2  deg (${C1}56.0-km${C2}) ${CN}"
+echo "   ${C2}c360 -- 1/4  deg (${C1}28.0-km${C2}) ${CN} "
+echo "   ${C2}c720 -- 1/8  deg (${C1}14.0-km${C2}) ${CN}"
+echo "   ${C2}c1440 - 1/16 deg (${C1} 7.0-km${C2}) ${CN}"
+echo "   ${C2}c2880 - 1/32 deg (${C1} 3.0-km${C2}) ${CN}"
+echo "   ${C2}c5760 - 1/64 deg (${C1} 1.5-km${C2}) ${CN}"
 echo "   ${C2}          DYAMOND Grids                 "
 echo "   ${C2}c768 -- 1/8  deg (${C1}12-km${C2}) ${CN}"
 echo "   ${C2}c1536 - 1/16 deg (${C1} 6-km${C2}) ${CN}"
@@ -245,6 +246,7 @@ if( $HRCODE != 'c12'   & \
     $HRCODE != 'c720'  & \
     $HRCODE != 'c1440' & \
     $HRCODE != 'c2880' & \
+    $HRCODE != 'c5760' & \
     $HRCODE != 'c768'  & \
     $HRCODE != 'c1536' & \
     $HRCODE != 'c3072' ) goto HRCODE
@@ -341,6 +343,7 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c720'  | \
     $HRCODE == 'c1440' | \
     $HRCODE == 'c2880' | \
+    $HRCODE == 'c5760' | \
     $HRCODE == 'c768'  | \
     $HRCODE == 'c1536' | \
     $HRCODE == 'c3072' ) then
@@ -667,6 +670,9 @@ else
             $AGCM_IM == 'c180' | \
             $AGCM_IM == 'c360' | \
             $AGCM_IM == 'c720'  | \
+            $AGCM_IM == 'c1440'  | \
+            $AGCM_IM == 'c2880'  | \
+            $AGCM_IM == 'c5760'  | \
             $AGCM_IM == 'c768'  | \
             $AGCM_IM == 'c1536' | \
             $AGCM_IM == 'c3072') then
@@ -986,6 +992,29 @@ if( $AGCM_IM == "c2880" ) then
      set POST_NDS = 32
      set USE_SHMEM = 1
      set DEF_IOS_NDS = 4
+endif
+if( $AGCM_IM == "c5760" ) then
+     set       DT = 75
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 5760
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 60
+     set       NY = 720
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 24
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF5760x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set DEF_IOS_NDS = 116
 endif
 # DYAMOND Resolutions
 if( $AGCM_IM == "c768" ) then
