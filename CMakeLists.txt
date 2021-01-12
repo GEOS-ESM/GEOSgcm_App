@@ -17,7 +17,7 @@ target_link_libraries (GEOSgcm.x ${OpenMP_Fortran_LIBRARIES})
 set_target_properties(GEOSgcm.x PROPERTIES LINK_FLAGS "${OpenMP_Fortran_FLAGS}")
 target_include_directories (GEOSgcm.x PUBLIC ${INC_ESMF})
 
-file (GLOB templates *.tmpl)
+file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 
 set (programs
    gcm_setup
