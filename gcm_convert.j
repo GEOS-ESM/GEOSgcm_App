@@ -27,6 +27,7 @@ limit stacksize unlimited
 setenv ARCH `uname`
 
 setenv SITE             @SITE
+setenv GEOSDIR          @GEOSDIR
 setenv GEOSBIN          @GEOSBIN 
 setenv GCMVER           @GCMVER
 
@@ -340,6 +341,7 @@ sed -r -i -e "/RESTART_TYPE:/ s/binary|pbinary|pnc4/$fromtype/" \
           -e "/CHECKPOINT_TYPE:/ s/binary|pbinary|pnc4/$totype/" \
           -e "/^ *NX:/ s/[0-9][0-9]*/@CNV_NX/" \
           -e "/^ *NY:/ s/[0-9][0-9]*/@CNV_NY/" \
+          -e "/^ *NUM_READERS:/ s/[0-9][0-9]*/1/" \
           -e "/AEROCLIM/ d" AGCM.rc
 
 # Remove any suffixes
