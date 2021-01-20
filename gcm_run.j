@@ -358,7 +358,7 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
->>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DE0@HIST_IMxPC0@HIST_JM_@OCEANtag/DE0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+>>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -670,7 +670,13 @@ endif
 if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
   echo "Saltwater internal state is already split, good to go!"
 else
- if ( ( -e $SCRDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+ if ( ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) && ( $counter == 1 ) ) then
+
+   echo "Found Saltwater internal state. Splitting..."
+
+   # If saltwater_internal_rst is in EXPDIR move to SCRDIR
+   # -----------------------------------------------------
+   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/mv $EXPDIR/saltwater_internal_rst $SCRDIR
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -710,16 +716,16 @@ else
  endif
 endif
 
-# Test Saltwater Restart for Number of tiles correctness
+# Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
 
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
-   set N_SALT_TILES_EXPECTED = `grep '^ *0' tile.data | wc -l`
-   set N_SALT_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_OPENW_TILES_EXPECTED = `grep '^ *0' tile.data | wc -l`
+   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
          
-   if ( $N_SALT_TILES_EXPECTED != $N_SALT_TILES_FOUND ) then
-      echo "Error! Found $N_SALT_TILES_FOUND tiles in openwater. Expect to find $N_SALT_TILES_EXPECTED tiles."
+   if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
+      echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
       exit 7
    endif    
