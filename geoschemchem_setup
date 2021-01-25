@@ -128,7 +128,9 @@ if ( $SITE == 'NCCS' ) then
    endif
    
 else if ( $SITE == 'NAS' ) then
-   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || ($NODE =~ maia*) ) then
+   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
+        ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*) || \
+        ($NODE =~ maia*) ) then
       goto ONCOMPUTE
    endif
 endif
