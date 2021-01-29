@@ -9,6 +9,7 @@
 #@BATCH_JOBNAME@RUN_N
 #@RUN_Q
 #@BATCH_GROUP
+#@BATCH_JOINOUTERR
 #@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
@@ -743,15 +744,6 @@ endif
 #---------------------
 python bundleParser.py
 
-# Test if at NAS and if BATCH
-# ---------------------------
-set NAS_BATCH = FALSE
-if ($SITE == NAS) then
-   if ($PBS_ENVIRONMENT == PBS_BATCH) then
-      set NAS_BATCH = TRUE
-   endif
-endif
-
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
 set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
@@ -786,11 +778,7 @@ else
    set IOSERVER_OPTIONS = ""
 endif
 
-if( $NAS_BATCH == TRUE ) then
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml' >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
-else
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
-endif
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
 @GPUEND
