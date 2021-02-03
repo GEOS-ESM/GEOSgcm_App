@@ -40,16 +40,16 @@
   fast_sat_adj = .true.
   tau_l2v  = 900.
   tau_v2l  = 150.
-  tau_g2v  = 900.
-  rthresh  = 7.e-6  ! This is a key parameter for cloud water
-  dw_land  = 0.2
-  dw_ocean = 0.2
+  tau_g2v  =   900. !orig 900. srf- tried 300
+  rthresh  =  10.e-6  ! This is a key parameter for cloud water
+  dw_land  = 0.2 ! orig=0.4  test 0.1
+  dw_ocean = 0.2 ! orig=0.4  test 0.1
+  tau_revp = 600.
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
   tau_i2s = 1000.
-  tau_revp = 450.
   c_psaci = 0.05
   c_pgacs = 0.01
   rh_inc = 0.10
