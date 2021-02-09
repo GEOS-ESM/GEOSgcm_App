@@ -4,7 +4,7 @@
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#SBATCH --time=06:00:00
+#SBATCH --time=04:00:00
 #SBATCH --nodes=@NODES --ntasks-per-node=1
 #SBATCH --job-name=quickstat
 #SBATCH --output=quickstat.out
