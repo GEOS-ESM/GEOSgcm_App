@@ -419,7 +419,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}bro (Broadwell)${CN}"
    echo "   ${C2}sky (Skylake)${CN} (default)"
    echo "   ${C2}cas (Cascade Lake)${CN}"
-   echo "   ${C2}rom (AMD Rome)${CN}"
+   #echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
    echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
    echo "       and Ivy Bridge are not supported by current GEOS"
