@@ -764,8 +764,8 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
 endif
 
-# Explicitly set OMP_NUM_THREADS=1 (in case, as FV3 has it enabled)
-# -----------------------------------------------------------------
+# Set OMP_NUM_THREADS
+# -------------------
 setenv OMP_NUM_THREADS 1
 
 # Run GEOSgcm.x
