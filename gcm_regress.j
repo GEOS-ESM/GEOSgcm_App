@@ -20,6 +20,10 @@ limit stacksize unlimited
 
 @SETENVS
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
+
 @GPUSTART
 
 #######################################################################
