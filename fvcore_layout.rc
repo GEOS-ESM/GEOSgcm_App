@@ -51,7 +51,7 @@
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
   tau_i2s = 1000.
-  tau_revp = 450.
+  tau_revp = 600.
   c_psaci = 0.05
   c_pgacs = 0.01
   rh_inc = 0.10
