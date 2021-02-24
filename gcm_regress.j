@@ -294,7 +294,7 @@ set nhmse = $date[2]
 foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.1
 end
-/bin/mv RESTART/MOM.res.nc MOM.res.nc.1
+>>>MOM6<<</bin/mv RESTART/MOM.res.nc MOM.res.nc.1
 
 ##################################################################
 ######
@@ -436,7 +436,7 @@ set nhmse = $date[2]
 foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.2
 end
-/bin/mv RESTART/MOM.res.nc MOM.res.nc.2
+>>>MOM6<<</bin/mv RESTART/MOM.res.nc MOM.res.nc.2
 
 #######################################################################
 #                          Compare Restarts
@@ -486,24 +486,23 @@ foreach chk ( $chk_file_names )
 end
 
 # check MOM.res.nc (MOM6 restart)
-set file1 = MOM.res.nc.1
-set file2 = MOM.res.nc.2
-if( -e $file1 && -e $file2 ) then
-                             set check = true
-      if( $check == true ) then
-         echo Comparing "MOM6 restarts"
-# compare binary checkpoint files
-         cmp $file1 $file2
-         if( $status == 0 ) then
-             echo Success!
-             echo " "
-         else
-             echo Failed!
-             echo " "
-             set pass = false
-         endif
-      endif
-endif
+>>>MOM6<<<set file1 = MOM.res.nc.1
+>>>MOM6<<<set file2 = MOM.res.nc.2
+>>>MOM6<<<if( -e $file1 && -e $file2 ) then
+>>>MOM6<<<                             set check = true
+>>>MOM6<<<      if( $check == true ) then
+>>>MOM6<<<         echo Comparing "MOM6 restarts"
+>>>MOM6<<<         cmp $file1 $file2
+>>>MOM6<<<         if( $status == 0 ) then
+>>>MOM6<<<             echo Success!
+>>>MOM6<<<             echo " "
+>>>MOM6<<<         else
+>>>MOM6<<<             echo Failed!
+>>>MOM6<<<             echo " "
+>>>MOM6<<<             set pass = false
+>>>MOM6<<<         endif
+>>>MOM6<<<      endif
+>>>MOM6<<<endif
 
 @GPUEND
 
