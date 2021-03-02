@@ -1,2 +1,2 @@
 # GEOSgcm_app
-Applications for GEOSagcm fixture
+Applications for GEOSgcm fixture

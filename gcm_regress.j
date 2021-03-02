@@ -20,6 +20,10 @@ limit stacksize unlimited
 
 @SETENVS
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
+
 @GPUSTART
 
 #######################################################################
@@ -280,7 +284,7 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
+$RUN_CMD $NPES ./GEOSgcm.x
                                                                                                                       
 
 set date = `cat cap_restart`
@@ -342,7 +346,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
+$RUN_CMD $NPES ./GEOSgcm.x
 
 foreach rst ( $rst_file_names )
   /bin/rm -f  $rst
@@ -422,7 +426,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
+$RUN_CMD $NPES ./GEOSgcm.x
                                                                                                                       
 set date = `cat cap_restart`
 set nymde = $date[1]
