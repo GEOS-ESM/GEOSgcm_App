@@ -128,7 +128,9 @@ if ( $SITE == 'NCCS' ) then
    endif
    
 else if ( $SITE == 'NAS' ) then
-   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || ($NODE =~ maia*) ) then
+   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
+        ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*) || \
+        ($NODE =~ maia*) ) then
       goto ONCOMPUTE
    endif
 endif
@@ -417,6 +419,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}bro (Broadwell)${CN}"
    echo "   ${C2}sky (Skylake)${CN} (default)"
    echo "   ${C2}cas (Cascade Lake)${CN}"
+   #echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
    echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
    echo "       and Ivy Bridge are not supported by current GEOS"
@@ -430,7 +433,8 @@ else if ( $SITE == 'NAS' ) then
    if( $MODEL != 'has' & \
        $MODEL != 'bro' & \
        $MODEL != 'sky' & \
-       $MODEL != 'cas' ) goto ASKPROC
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
@@ -441,6 +445,8 @@ else if ( $SITE == 'NAS' ) then
       set MODEL = 'sky_ele'
    else if ($MODEL == cas) then
       set MODEL = 'cas_ait'
+   else if ($MODEL == rom) then
+      set MODEL = 'rom_ait'
    endif
 
    if (     $MODEL == 'san') then
@@ -455,6 +461,10 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas_ait') then
       set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'rom_ait') then
+      set NCPUS_PER_NODE = 128
+      set USE_IOSERVER = 0
+      echo "WARNING WARNING: At present there are issues with IOSERVER and Rome. Turning off IOSERVER!"
    endif
 
 else
@@ -496,7 +506,6 @@ if( $OGCM == TRUE ) then
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
-    set OCEAN_PRELOAD = ""
 
     # Ocean Model
     # -----------
@@ -524,12 +533,10 @@ if( $OGCM == TRUE ) then
        set OCEAN_NAME="MOM"
        set MOM5=""
        set MOM6 = "#DELETE"
-       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom.so'
     else if ( $OCNMODEL == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set MOM6=""
        set MOM5 = "#DELETE"
-       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom6.so'
     endif
 
     # Coupled Ocean Resolution
@@ -726,7 +733,6 @@ else
 
     set DATAOCEAN = ""
     set OCEAN_NAME = ""
-    set OCEAN_PRELOAD = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
     set MOM5      = "#DELETE"
@@ -1277,7 +1283,7 @@ if( $SITE == 'NAS' ) then
               setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
               setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
               setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
-              setenv BATCH_JOINOUTERR "PBS -j oe "    # PBS Syntax for joining output and error
+              setenv BATCH_JOINOUTERR "PBS -j oe -k oed"    # PBS Syntax for joining output and error
               setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
@@ -1311,6 +1317,7 @@ if( $SITE == 'NAS' ) then
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/verification/MERRA-2            # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
@@ -1359,6 +1366,7 @@ else if( $SITE == 'NCCS' ) then
               setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
@@ -1398,6 +1406,7 @@ else if( $SITE == 'AWS' ) then
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
@@ -1439,6 +1448,7 @@ else
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
@@ -2030,7 +2040,6 @@ s?>>>EMIP_OLDLAND<<<?$EMIP_OLDLAND?g
 s?>>>EMIP_NEWLAND<<<?$EMIP_NEWLAND?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
-s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g
@@ -2041,6 +2050,7 @@ s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
 s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
+s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
 s?@OX_RELAXTIME?259200.?g
 #s?@PCHEM_CLIM_YEARS?228?g
