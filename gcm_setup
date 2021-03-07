@@ -1072,7 +1072,6 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #######################################################################
 
 # For chevronned lines in AGCM.rc.tmpl
-set GFDL_HYDRO = FALSE
 if ( "$AGCM_MP" == "GFDL" ) then
 	set MP_GFDL = ""
 else
@@ -1084,23 +1083,25 @@ else
 	set MP_MG1 = "# "
 endif
 
-# Settings for fvcore_layout.rc
-set FV_NWAT    = ""
-set FV_ZTRACER = "z_tracer    = .T."
+# Settings for hydrostatic vs non-hydrostatic
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
-	set FV_MAKENH     = "Make_NH     = .F."
-	set FV_HYDRO      = "hydrostatic = .T."
-	set FV_SATADJ     = "do_sat_adj  = .F."
+	set FV_HYDRO   = "hydrostatic = .T."
+	set FV_SATADJ  = "do_sat_adj  = .F."
+        set GFDL_HYDRO = TRUE
+        if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+           set FV_NWAT    = "nwat = 1"
+        else
+           set FV_NWAT    = "nwat = 6"
+        endif
 else
-	set FV_MAKENH     = "Make_NH     = .T."
-	set FV_HYDRO      = "hydrostatic = .F."
+	set FV_HYDRO   = "hydrostatic = .F."
+        set GFDL_HYDRO = FALSE
 	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
 		set FV_SATADJ  = "do_sat_adj = .F."
 		set FV_NWAT    = "nwat       =  3 "
 	else if ( "$AGCM_MP" == "GFDL" ) then
 		set FV_SATADJ  = "do_sat_adj = .T."
 		set FV_NWAT    = "nwat       =  6 "
-		set GFDL_HYDRO = TRUE
 	endif
 endif
 
@@ -2129,8 +2130,6 @@ s?>>>MP_MG1<<<?$MP_MG1?g
 s?>>>MP_GFDL<<<?$MP_GFDL?g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
-s?@FV_ZTRACER?$FV_ZTRACER?g
-s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
 s?@FV_SATADJ?$FV_SATADJ?g
 
