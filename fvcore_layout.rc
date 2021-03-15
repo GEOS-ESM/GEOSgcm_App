@@ -8,7 +8,7 @@
 /
 
 &test_case_nml
-  test_case = 13
+       test_case = 13
 /
 
 &fms_io_nml
@@ -42,8 +42,8 @@
   tau_v2l  = 150.
   tau_g2v  = 900.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
-  dw_land  = 0.1
-  dw_ocean = 0.1
+  dw_land  = 0.035
+  dw_ocean = 0.14
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
