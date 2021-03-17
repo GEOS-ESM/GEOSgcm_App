@@ -778,7 +778,7 @@ else
    set IOSERVER_OPTIONS = ""
 endif
 
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
+$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
