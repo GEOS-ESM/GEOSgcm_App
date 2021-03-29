@@ -304,16 +304,9 @@ endif
 
 ASKHYDRO:
 
-if( $HRCODE == 'c1440' | \
-	 $HRCODE == 'c768'  | \
-    $HRCODE == 'c1536' | \
-    $HRCODE == 'c3072' ) then
-    set DEFAULT_HYDROSTATIC = FALSE
-else
-	 set DEFAULT_HYDROSTATIC = TRUE
-endif
+set DEFAULT_HYDROSTATIC = @CFG_HYDROSTATIC@
 
-echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN} for Grid Resolutions <= C720)"
+echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
 
 if( .$USE_HYDROSTATIC == . ) then
