@@ -38,7 +38,7 @@
   do_qa = .false.
   fast_sat_adj = .true.
   sat_adj0 = 0.9
-  tau_i2s  = 600.
+  tau_i2s  = 900.
   tau_l2v  = 225.
   tau_v2l  = 150.
   tau_g2v  = 900.
@@ -50,7 +50,7 @@
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
   tau_revp = 600.
-  c_psaci = 0.075
+  c_psaci = 0.05
   c_pgacs = 0.01
   rh_inc = 0.30
   rh_inr = 0.30
