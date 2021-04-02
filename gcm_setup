@@ -285,16 +285,16 @@ ASKMP:
 #echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
  set   AGCM_MP = $<
 if( .$AGCM_MP == . ) then
-	set AGCM_MP = "1MOM"
+   set AGCM_MP = "1MOM"
 else
-	set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
-	if( "$AGCM_MP" != "1MOM" & \
+   set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
+   if( "$AGCM_MP" != "1MOM" & \
        "$AGCM_MP" != "GFDL" & \
        "$AGCM_MP" != "MG1"  ) then
        echo
        echo "${C1}Microphysics${CN} must be one of the options below!"
        goto ASKMP
-	endif
+   endif
 endif
 
 
@@ -304,23 +304,16 @@ endif
 
 ASKHYDRO:
 
-if( $HRCODE == 'c1440' | \
-	 $HRCODE == 'c768'  | \
-    $HRCODE == 'c1536' | \
-    $HRCODE == 'c3072' ) then
-    set DEFAULT_HYDROSTATIC = FALSE
-else
-	 set DEFAULT_HYDROSTATIC = TRUE
-endif
+set DEFAULT_HYDROSTATIC = @CFG_HYDROSTATIC@
 
-echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN} for Grid Resolutions <= C720)"
+echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
 
 if( .$USE_HYDROSTATIC == . ) then
-	set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
+   set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
 else
-	set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
-	if(  $USE_HYDROSTATIC == "Y"     | \
+   set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
+   if(  $USE_HYDROSTATIC == "Y"     | \
         $USE_HYDROSTATIC == "YES"   | \
         $USE_HYDROSTATIC == "T"     | \
         $USE_HYDROSTATIC == "TRUE"  ) set USE_HYDROSTATIC = TRUE
@@ -463,8 +456,8 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
       set NCPUS_PER_NODE = 128
-      set USE_IOSERVER = 0
-      echo "WARNING WARNING: At present there are issues with IOSERVER and Rome. Turning off IOSERVER!"
+      # Romes are on a different aoe
+      set MODEL='rom_ait:aoe=sles15'
    endif
 
 else
@@ -1074,34 +1067,43 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 # For chevronned lines in AGCM.rc.tmpl
 set GFDL_HYDRO = FALSE
 if ( "$AGCM_MP" == "GFDL" ) then
-	set MP_GFDL = ""
+   set MP_GFDL = ""
 else
-	set MP_GFDL = "# "
+   set MP_GFDL = "# "
 endif
 if ( "$AGCM_MP" == "MG1" ) then
-	set MP_MG1 = ""
+   set MP_MG1 = ""
 else
-	set MP_MG1 = "# "
+   set MP_MG1 = "# "
 endif
 
 # Settings for fvcore_layout.rc
 set FV_NWAT    = ""
 set FV_ZTRACER = "z_tracer    = .T."
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
-	set FV_MAKENH     = "Make_NH     = .F."
-	set FV_HYDRO      = "hydrostatic = .T."
-	set FV_SATADJ     = "do_sat_adj  = .F."
+   set FV_MAKENH     = "Make_NH     = .F."
+   set FV_HYDRO      = "hydrostatic = .T."
+   set FV_SATADJ     = "do_sat_adj  = .F."
 else
-	set FV_MAKENH     = "Make_NH     = .T."
-	set FV_HYDRO      = "hydrostatic = .F."
-	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
-		set FV_SATADJ  = "do_sat_adj = .F."
-		set FV_NWAT    = "nwat       =  3 "
-	else if ( "$AGCM_MP" == "GFDL" ) then
-		set FV_SATADJ  = "do_sat_adj = .T."
-		set FV_NWAT    = "nwat       =  6 "
-		set GFDL_HYDRO = TRUE
-	endif
+   # Logic for NH runs based on build type
+   if ( "$DEFAULT_HYDROSTATIC" == "TRUE") then
+      # If you built for hydrostatic, but want an NH run, run make_nh
+      set FV_MAKENH     = "Make_NH     = .T."
+   else
+      # If you built for non-hydrostatic and want an NH run, do not run
+      # NOTE: If you run regrid.pl it will make restarts that should trigger
+      #       make_nh automatically in FV3
+      set FV_MAKENH     = "Make_NH     = .F."
+   endif
+   set FV_HYDRO      = "hydrostatic = .F."
+   if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+      set FV_SATADJ  = "do_sat_adj = .F."
+      set FV_NWAT    = "nwat       =  3 "
+   else if ( "$AGCM_MP" == "GFDL" ) then
+      set FV_SATADJ  = "do_sat_adj = .T."
+      set FV_NWAT    = "nwat       =  6 "
+      set GFDL_HYDRO = TRUE
+   endif
 endif
 
 
