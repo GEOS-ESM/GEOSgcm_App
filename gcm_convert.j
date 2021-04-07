@@ -20,6 +20,10 @@ limit stacksize unlimited
 
 @SETENVS
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
+
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################
@@ -27,12 +31,13 @@ limit stacksize unlimited
 setenv ARCH `uname`
 
 setenv SITE             @SITE
+setenv GEOSDIR          @GEOSDIR
 setenv GEOSBIN          @GEOSBIN 
 setenv GCMVER           @GCMVER
 
 echo "Sourcing g5_modules in $GEOSBIN"
 source $GEOSBIN/g5_modules >& /dev/null
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -86,7 +91,6 @@ set AGCM_JM_Tag = `echo $AGCM_JM | awk '{printf "%4.4i", $1}'`
 set OGCM_IM_Tag = `echo $OGCM_IM | awk '{printf "%4.4i", $1}'`
 set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
 
->>>FVLATLON<<<set ATMOStag = DC${AGCM_IM_Tag}xPC${AGCM_JM_Tag}
 >>>FVCUBED<<<set ATMOStag = CF${AGCM_IM_Tag}x6C
 >>>DATAOCEAN<<<set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
 >>>COUPLED<<<set OCEANtag = TM${OGCM_IM_Tag}xTM${OGCM_JM_Tag}
@@ -101,6 +105,7 @@ cd $SCRDIR
 /bin/ln -sf $EXPDIR/RC/* .
 @CPEXEC -f  $HOMDIR/*.rc .
 @CPEXEC -f  $HOMDIR/*.nml .
+@CPEXEC -f  $HOMDIR/*.yaml .
 
 cat fvcore_layout.rc >> input.nml
 
@@ -270,7 +275,7 @@ chmod +x linkbcs
 #######################################################################
 
 if (! -e tile.bin) then
-$RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
+$GEOSBIN/binarytile.x tile.data tile.bin
 endif
 
 #######################################################################
@@ -340,6 +345,7 @@ sed -r -i -e "/RESTART_TYPE:/ s/binary|pbinary|pnc4/$fromtype/" \
           -e "/CHECKPOINT_TYPE:/ s/binary|pbinary|pnc4/$totype/" \
           -e "/^ *NX:/ s/[0-9][0-9]*/@CNV_NX/" \
           -e "/^ *NY:/ s/[0-9][0-9]*/@CNV_NY/" \
+          -e "/^ *NUM_READERS:/ s/[0-9][0-9]*/1/" \
           -e "/AEROCLIM/ d" AGCM.rc
 
 # Remove any suffixes

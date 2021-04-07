@@ -71,7 +71,7 @@ sorted_cases=($(for each in ${allowed_cases[@]}; do echo $each; done | sort))
 
 usage ()
 {
-   echo "Usage: $0 --expdir <directory> --case <case> (--num_levels <# of levels>)"
+   echo "Usage: $0 --expdir <directory> --case <case> --account <account> (--num_levels <# of levels>)"
    echo 
    echo "  Required arguments: "
    echo "    --expdir: experiment directory"
@@ -86,9 +86,10 @@ usage ()
       fi
    done
    echo
+   echo "    --account: account under which to run the job"
+   echo
    echo "  Optional argument: "
-   echo "    --num_levels: number of levels (72 or 132 allowed). NOTE: This "
-   echo "                  is fragile as some cases might not yet support 132 levels"
+   echo "    --num_levels: number of levels (72, 71, 91, 132, 137, and 181 allowed)."
    echo
    echo
 }
@@ -98,6 +99,7 @@ usage ()
 # ------------
 selected_case=NULL
 expdir=NULL
+account=NULL
 nlev=72
 
 while [ "${1+defined}" ]
@@ -111,6 +113,11 @@ do
       "--expdir")
          shift
          expdir=$1
+         shift
+         ;;
+      "--account")
+         shift
+         account=$1
          shift
          ;;
       "--num_levels")
@@ -147,15 +154,23 @@ then
    exit 1
 fi
 
+if [[ "$account" == "NULL" ]]
+then
+   echo "ERROR: Account was not passed in"
+   echo
+   usage
+   exit 1
+fi
+
 if [[ -d $expdir ]]
 then
    echo "ERROR: $expdir exists! Please select different directory"
    exit 1
 fi
 
-if [[ $nlev -ne 72 ]]  &&  [[ $nlev -ne 132 ]]
+if [[ $nlev -ne 72 ]]  &&  [[ $nlev -ne 132 ]] && [[ $nlev -ne 91 ]] && [[ $nlev -ne 137 ]] && [[ $nlev -ne 181 ]] && [[ $nlev -ne 71 ]]
 then
-   echo "ERROR: nlev needs to be 72 or 132"
+   echo "ERROR: nlev needs to be 72, 71, 91, 132, 137, or 181"
    usage
    exit 1
 fi 
@@ -183,6 +198,7 @@ fi
 echo "Using case: $selected_case"
 echo "Number of levels: $nlev"
 echo "Experiment directory: $expdir"
+echo "Account: $account"
 echo
 
 # -----------------
@@ -388,9 +404,6 @@ mkdir -p $expdir
 /bin/cp $SOURCEDIR/catch_internal_rst $expdir
 
 mkdir -p $expdir/ExtData
-/bin/ln -s $CHMDIR/g5chem $expdir/ExtData
-/bin/ln -s $CHMDIR/PIESA $expdir/ExtData
-/bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 
 /bin/cp -u $SOURCEDIR/CAP.rc $expdir
 /bin/cp $SOURCEDIR/cap_restart $expdir
@@ -417,19 +430,27 @@ awk '{ if ( $1  !~ "#DELETE") { print } }' AGCM.rc.CASE > AGCM.rc
 /bin/rm AGCM.rc.sed.general AGCM.rc.CASE
 builtin cd $CURRDIR
 
-if [ $nlev -eq 132 ]
+if [ $nlev -ne 72 ]
 then 
 
-  $ISED 's/L72/L132/g' $expdir/*.rc
+  digits=0000
+  temp=$digits$nlev
+  padlev=${temp:(-${#digits})}
 
-  $ISED '/AGCM_LM:/c\AGCM_LM: 132' $expdir/AGCM.rc
-  $ISED '/AGCM.LM:/c\AGCM.LM: 132' $expdir/AGCM.rc
-  $ISED '/SCMGRID.LM:/c\SCMGRID.LM: 132' $expdir/HISTORY.rc
-  cp $SOURCEDIR/*rst.r0001x0001x0132 $expdir
-  /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x0132 $expdir/datmodyn_internal_rst
-  /bin/mv $expdir/moist_internal_rst.r0001x0001x0132 $expdir/moist_internal_rst
+  $ISED "s/L72/L${nlev}/g" $expdir/*.rc
+
+  $ISED "/AGCM_LM:/c\AGCM_LM: ${nlev}" $expdir/AGCM.rc
+  $ISED "/AGCM.LM:/c\AGCM.LM: ${nlev}" $expdir/AGCM.rc
+  $ISED "/SCMGRID.LM:/c\SCMGRID.LM: ${nlev}" $expdir/HISTORY.rc
+  cp $SOURCEDIR/*rst.r0001x0001x${padlev} $expdir
+  /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x${padlev} $expdir/datmodyn_internal_rst
+  /bin/mv $expdir/moist_internal_rst.r0001x0001x${padlev} $expdir/moist_internal_rst
 
 fi
+
+/bin/ln -s $CHMDIR/g5chem $expdir/ExtData
+/bin/ln -s $CHMDIR/PIESA $expdir/ExtData
+/bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 
 if [[ -e $expdir/ExtData.rc ]]
 then
@@ -438,6 +459,36 @@ fi
 
 extdata_files=`/bin/ls -1 $expdir/*_ExtData.rc`
 cat $extdata_files > $expdir/ExtData.rc
+
+# Handle scm_run.j
+
+/bin/cp $INSTALLDIR/bin/scm_run.j $expdir
+
+if [[ "$SITE" == NAS ]]
+then
+   BATCH_TIME="PBS -l walltime=00:30:00"
+   BATCH_GROUP="PBS -W group_list=$account"
+   BATCH_JOBNAME="PBS -N $selected_case"
+   BATCH_TASKS="PBS -l select=1:ncpus=1:mpiprocs=1:model=cas_ait"
+else
+   BATCH_TIME="SBATCH --time=00:30:00"
+   BATCH_GROUP="SBATCH --account=$account"
+   BATCH_JOBNAME="SBATCH --job-name=$selected_case"
+   BATCH_TASKS="SBATCH --ntasks=1"
+fi
+
+cat > $expdir/sedfile << EOF
+s?@EXPDIR?$expdir?g
+s?@SITE?$SITE?g
+s?@INSTALLDIR?$INSTALLDIR?g
+s?@BATCH_TASKS?$BATCH_TASKS?g
+s?@BATCH_TIME?$BATCH_TIME?g
+s?@BATCH_GROUP?$BATCH_GROUP?g
+s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
+EOF
+
+$ISED -f $expdir/sedfile $expdir/scm_run.j
+#/bin/rm $expdir/sedfile
 
 echo "SUCCESS! The $selected_case experiment has been created in $expdir"
 echo
