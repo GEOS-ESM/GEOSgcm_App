@@ -377,6 +377,11 @@ cat << _EOF_ > $FILE
 # ----------------------------------------------------------
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 
+# S2S pre-industrial with prod/loss of stratospheric water vapor
+# (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
+# --------------------------------------------------------------
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4 species.data
+
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
 /bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
@@ -384,11 +389,11 @@ cat << _EOF_ > $FILE
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
 
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
+/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
+/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
@@ -401,15 +406,6 @@ cat << _EOF_ > $FILE
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
->>>COUPLED<<<if( $OGCM_IM == 1440 ) then
->>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
->>>COUPLED<<<endif 
-
->>>COUPLED<<</bin/ln -sf $GRIDDIR/visdf.dat visdf.dat
->>>COUPLED<<</bin/ln -sf $GRIDDIR/nirdf.dat nirdf.dat
->>>COUPLED<<</bin/ln -sf $GRIDDIR/vegdyn.data vegdyn.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/lai.dat lai.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/green.dat green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
@@ -768,6 +764,10 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
 endif
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
+
 # Run GEOSgcm.x
 # -------------
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
@@ -778,7 +778,8 @@ else
    set IOSERVER_OPTIONS = ""
 endif
 
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
+$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
+
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
 @GPUEND

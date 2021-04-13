@@ -22,7 +22,6 @@ target_link_libraries(idfupd.x OpenMP::OpenMP_Fortran)
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 
 set (programs
-   gcm_setup
    gcm_run.j
    gcm_regress.j
    gcm_post.j
@@ -33,12 +32,9 @@ set (programs
    gcm_forecast.setup
    gcm_emip.setup
    scm_setup
-   gmichem_setup
-   geoschemchem_setup
    gcm_quickstat.j
    scm_run.j
    )
-
 
 install (
    FILES ${templates}
@@ -55,8 +51,23 @@ install (
    DESTINATION etc
    )
 
-configure_file(stratchem_setup stratchem_setup @ONLY)
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/stratchem_setup DESTINATION bin)
+if(HYDROSTATIC)
+   set(CFG_HYDROSTATIC TRUE)
+else()
+   set(CFG_HYDROSTATIC FALSE)
+endif()
+
+set (setup_scripts
+   gcm_setup
+   gmichem_setup
+   geoschemchem_setup
+   stratchem_setup
+   )
+
+foreach (file ${setup_scripts})
+   configure_file(${file} ${file} @ONLY)
+   install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${file} DESTINATION bin)
+endforeach ()
 
 configure_file(.AGCM_VERSION .AGCM_VERSION @ONLY)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/.AGCM_VERSION DESTINATION etc)

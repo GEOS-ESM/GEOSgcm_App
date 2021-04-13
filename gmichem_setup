@@ -128,7 +128,9 @@ if ( $SITE == 'NCCS' ) then
    endif
    
 else if ( $SITE == 'NAS' ) then
-   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || ($NODE =~ maia*) ) then
+   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
+        ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*) || \
+        ($NODE =~ maia*) ) then
       goto ONCOMPUTE
    endif
 endif
@@ -283,16 +285,16 @@ ASKMP:
 #echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
  set   AGCM_MP = $<
 if( .$AGCM_MP == . ) then
-	set AGCM_MP = "1MOM"
+   set AGCM_MP = "1MOM"
 else
-	set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
-	if( "$AGCM_MP" != "1MOM" & \
+   set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
+   if( "$AGCM_MP" != "1MOM" & \
        "$AGCM_MP" != "GFDL" & \
        "$AGCM_MP" != "MG1"  ) then
        echo
        echo "${C1}Microphysics${CN} must be one of the options below!"
        goto ASKMP
-	endif
+   endif
 endif
 
 
@@ -302,23 +304,16 @@ endif
 
 ASKHYDRO:
 
-if( $HRCODE == 'c1440' | \
-	 $HRCODE == 'c768'  | \
-    $HRCODE == 'c1536' | \
-    $HRCODE == 'c3072' ) then
-    set DEFAULT_HYDROSTATIC = FALSE
-else
-	 set DEFAULT_HYDROSTATIC = TRUE
-endif
+set DEFAULT_HYDROSTATIC = @CFG_HYDROSTATIC@
 
-echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN} for Grid Resolutions <= C720)"
+echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
 
 if( .$USE_HYDROSTATIC == . ) then
-	set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
+   set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
 else
-	set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
-	if(  $USE_HYDROSTATIC == "Y"     | \
+   set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
+   if(  $USE_HYDROSTATIC == "Y"     | \
         $USE_HYDROSTATIC == "YES"   | \
         $USE_HYDROSTATIC == "T"     | \
         $USE_HYDROSTATIC == "TRUE"  ) set USE_HYDROSTATIC = TRUE
@@ -417,6 +412,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}bro (Broadwell)${CN}"
    echo "   ${C2}sky (Skylake)${CN} (default)"
    echo "   ${C2}cas (Cascade Lake)${CN}"
+   #echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
    echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
    echo "       and Ivy Bridge are not supported by current GEOS"
@@ -430,7 +426,8 @@ else if ( $SITE == 'NAS' ) then
    if( $MODEL != 'has' & \
        $MODEL != 'bro' & \
        $MODEL != 'sky' & \
-       $MODEL != 'cas' ) goto ASKPROC
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
@@ -441,6 +438,8 @@ else if ( $SITE == 'NAS' ) then
       set MODEL = 'sky_ele'
    else if ($MODEL == cas) then
       set MODEL = 'cas_ait'
+   else if ($MODEL == rom) then
+      set MODEL = 'rom_ait'
    endif
 
    if (     $MODEL == 'san') then
@@ -455,6 +454,10 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas_ait') then
       set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'rom_ait') then
+      set NCPUS_PER_NODE = 128
+      # Romes are on a different aoe
+      set MODEL='rom_ait:aoe=sles15'
    endif
 
 else
@@ -501,7 +504,6 @@ if( $OGCM == TRUE ) then
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
-    set OCEAN_PRELOAD = ""
 
     # Ocean Model
     # -----------
@@ -529,12 +531,10 @@ if( $OGCM == TRUE ) then
        set OCEAN_NAME="MOM"
        set MOM5=""
        set MOM6 = "#DELETE"
-       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom.so'
     else if ( $OCNMODEL == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set MOM6=""
        set MOM5 = "#DELETE"
-       set OCEAN_PRELOAD='env LD_PRELOAD=$GEOSDIR/lib/libmom6.so'
     endif
 
     # Coupled Ocean Resolution
@@ -799,7 +799,6 @@ else
 
     set DATAOCEAN = ""
     set OCEAN_NAME = ""
-    set OCEAN_PRELOAD = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
     set MOM5      = "#DELETE"
@@ -1177,34 +1176,43 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 # For chevronned lines in AGCM.rc.tmpl
 set GFDL_HYDRO = FALSE
 if ( "$AGCM_MP" == "GFDL" ) then
-	set MP_GFDL = ""
+   set MP_GFDL = ""
 else
-	set MP_GFDL = "# "
+   set MP_GFDL = "# "
 endif
 if ( "$AGCM_MP" == "MG1" ) then
-	set MP_MG1 = ""
+   set MP_MG1 = ""
 else
-	set MP_MG1 = "# "
+   set MP_MG1 = "# "
 endif
 
 # Settings for fvcore_layout.rc
 set FV_NWAT    = ""
 set FV_ZTRACER = "z_tracer    = .T."
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
-	set FV_MAKENH     = "Make_NH     = .F."
-	set FV_HYDRO      = "hydrostatic = .T."
-	set FV_SATADJ     = "do_sat_adj  = .F."
+   set FV_MAKENH     = "Make_NH     = .F."
+   set FV_HYDRO      = "hydrostatic = .T."
+   set FV_SATADJ     = "do_sat_adj  = .F."
 else
-	set FV_MAKENH     = "Make_NH     = .T."
-	set FV_HYDRO      = "hydrostatic = .F."
-	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
-		set FV_SATADJ  = "do_sat_adj = .F."
-		set FV_NWAT    = "nwat       =  3 "
-	else if ( "$AGCM_MP" == "GFDL" ) then
-		set FV_SATADJ  = "do_sat_adj = .T."
-		set FV_NWAT    = "nwat       =  6 "
-		set GFDL_HYDRO = TRUE
-	endif
+   # Logic for NH runs based on build type
+   if ( "$DEFAULT_HYDROSTATIC" == "TRUE") then
+      # If you built for hydrostatic, but want an NH run, run make_nh
+      set FV_MAKENH     = "Make_NH     = .T."
+   else
+      # If you built for non-hydrostatic and want an NH run, do not run
+      # NOTE: If you run regrid.pl it will make restarts that should trigger
+      #       make_nh automatically in FV3
+      set FV_MAKENH     = "Make_NH     = .F."
+   endif
+   set FV_HYDRO      = "hydrostatic = .F."
+   if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+      set FV_SATADJ  = "do_sat_adj = .F."
+      set FV_NWAT    = "nwat       =  3 "
+   else if ( "$AGCM_MP" == "GFDL" ) then
+      set FV_SATADJ  = "do_sat_adj = .T."
+      set FV_NWAT    = "nwat       =  6 "
+      set GFDL_HYDRO = TRUE
+   endif
 endif
 
 
@@ -1456,7 +1464,7 @@ if( $SITE == 'NAS' ) then
               setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
               setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
               setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
-              setenv BATCH_JOINOUTERR "PBS -j oe -k oed "    # PBS Syntax for joining output and error
+              setenv BATCH_JOINOUTERR "PBS -j oe -k oed"    # PBS Syntax for joining output and error
               setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
@@ -1490,6 +1498,7 @@ if( $SITE == 'NAS' ) then
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/verification/MERRA-2            # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
@@ -1538,6 +1547,7 @@ else if( $SITE == 'NCCS' ) then
               setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
@@ -1577,6 +1587,7 @@ else if( $SITE == 'AWS' ) then
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
@@ -1618,6 +1629,7 @@ else
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
@@ -2218,7 +2230,6 @@ s?>>>EMIP_OLDLAND<<<?$EMIP_OLDLAND?g
 s?>>>EMIP_NEWLAND<<<?$EMIP_NEWLAND?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
-s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g
@@ -2229,6 +2240,7 @@ s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
 s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
+s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
 s?@OX_RELAXTIME?259200.?g
 #s?@PCHEM_CLIM_YEARS?228?g
