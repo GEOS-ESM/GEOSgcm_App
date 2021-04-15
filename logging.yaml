@@ -87,8 +87,8 @@ loggers:
        
    MAPL:
        handlers: [mpi_shared]
-       level: INFO
-       root_level: DEBUG
+       level: WARNING
+       root_level: INFO
 
   # Note: When enabling another logger, make sure
   #       indentation matches that of the above 
