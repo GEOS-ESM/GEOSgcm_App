@@ -270,6 +270,11 @@ if( .$AGCM_LM == . ) then
   set AGCM_LM = 72
 endif
 
+if ( $AGCM_LM == 181 ) then
+    set NCAR_PGWV = 32
+else
+    set NCAR_PGWV = 16
+endif
 
 #######################################################################
 #                 Choose microphysics option
@@ -285,16 +290,16 @@ ASKMP:
 #echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
  set   AGCM_MP = $<
 if( .$AGCM_MP == . ) then
-   set AGCM_MP = "1MOM"
+	set AGCM_MP = "1MOM"
 else
-   set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
-   if( "$AGCM_MP" != "1MOM" & \
+	set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
+	if( "$AGCM_MP" != "1MOM" & \
        "$AGCM_MP" != "GFDL" & \
        "$AGCM_MP" != "MG1"  ) then
        echo
        echo "${C1}Microphysics${CN} must be one of the options below!"
        goto ASKMP
-   endif
+	endif
 endif
 
 
@@ -1065,45 +1070,37 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #######################################################################
 
 # For chevronned lines in AGCM.rc.tmpl
-set GFDL_HYDRO = FALSE
 if ( "$AGCM_MP" == "GFDL" ) then
-   set MP_GFDL = ""
+	set MP_GFDL = ""
 else
-   set MP_GFDL = "# "
+	set MP_GFDL = "# "
 endif
 if ( "$AGCM_MP" == "MG1" ) then
-   set MP_MG1 = ""
+	set MP_MG1 = ""
 else
-   set MP_MG1 = "# "
+	set MP_MG1 = "# "
 endif
 
-# Settings for fvcore_layout.rc
-set FV_NWAT    = ""
-set FV_ZTRACER = "z_tracer    = .T."
+# Settings for hydrostatic vs non-hydrostatic
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
-   set FV_MAKENH     = "Make_NH     = .F."
-   set FV_HYDRO      = "hydrostatic = .T."
-   set FV_SATADJ     = "do_sat_adj  = .F."
+	set FV_HYDRO   = "hydrostatic = .T."
+	set FV_SATADJ  = "do_sat_adj  = .F."
+        set GFDL_HYDRO = TRUE
+        if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+           set FV_NWAT    = "nwat = 1"
+        else
+           set FV_NWAT    = "nwat = 6"
+        endif
 else
-   # Logic for NH runs based on build type
-   if ( "$DEFAULT_HYDROSTATIC" == "TRUE") then
-      # If you built for hydrostatic, but want an NH run, run make_nh
-      set FV_MAKENH     = "Make_NH     = .T."
-   else
-      # If you built for non-hydrostatic and want an NH run, do not run
-      # NOTE: If you run regrid.pl it will make restarts that should trigger
-      #       make_nh automatically in FV3
-      set FV_MAKENH     = "Make_NH     = .F."
-   endif
-   set FV_HYDRO      = "hydrostatic = .F."
-   if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
-      set FV_SATADJ  = "do_sat_adj = .F."
-      set FV_NWAT    = "nwat       =  3 "
-   else if ( "$AGCM_MP" == "GFDL" ) then
-      set FV_SATADJ  = "do_sat_adj = .T."
-      set FV_NWAT    = "nwat       =  6 "
-      set GFDL_HYDRO = TRUE
-   endif
+	set FV_HYDRO   = "hydrostatic = .F."
+        set GFDL_HYDRO = FALSE
+	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+		set FV_SATADJ  = "do_sat_adj = .F."
+		set FV_NWAT    = "nwat       =  3 "
+	else if ( "$AGCM_MP" == "GFDL" ) then
+		set FV_SATADJ  = "do_sat_adj = .T."
+		set FV_NWAT    = "nwat       =  6 "
+	endif
 endif
 
 
@@ -2130,9 +2127,8 @@ s?@TAREXEC?$TAREXEC?g
 s?>>>MP_MG1<<<?$MP_MG1?g
 s?>>>MP_GFDL<<<?$MP_GFDL?g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
+s?@NCAR_PGWV?$NCAR_PGWV?g
 s?@FV_NWAT?$FV_NWAT?g
-s?@FV_ZTRACER?$FV_ZTRACER?g
-s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
 s?@FV_SATADJ?$FV_SATADJ?g
 

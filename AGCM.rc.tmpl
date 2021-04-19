@@ -19,6 +19,8 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 
 DYCORE: @DYCORE
 
+CONSTRAIN_DAS: 2
+
  SOLAR_DT: 3600
  IRRAD_DT: 3600
 SATSIM_DT: 1800
@@ -70,11 +72,10 @@ CLOSURE_CONGESTUS:3
 # GWD Parameterization
 # --------------------
 
-# if .FALSE., use GEOS GWD code (default); .TRUE., use new NCAR GWD code
-USE_NCAR_GWD: .FALSE.
-
-# This is only used if USE_NCAR_GWD is .TRUE.
-BERES_FILE_NAME: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
+# if .FALSE., use GEOS GWD code (default)
+# if .TRUE. use the NCAR BKG GWD in tropics combined with GEOS BKG and ORO
+USE_NCAR_GWD: .TRUE.
+NCAR_PGWV: @NCAR_PGWV
 
 # Ocean Model Configuration Parameters
 # ------------------------------------

@@ -1,9 +1,6 @@
 &fv_core_nml
-  k_split     = 2
-  @FV_MAKENH
   @FV_HYDRO
   @FV_SATADJ
-  @FV_ZTRACER
   @FV_NWAT
 /
 
@@ -11,7 +8,7 @@
 /
 
 &test_case_nml
-  test_case = 13
+       test_case = 13
 /
 
 &fms_io_nml
@@ -37,20 +34,22 @@
   vg_max = 12.
   vr_max = 12.
   qi_lim = 1.
-  prog_ccn = .false.
-  do_qa = .true.
+  prog_ccn = .true.
+  do_qa = .false.
   fast_sat_adj = .true.
-  tau_l2v = 1200.
-  tau_v2l = 150.
-  tau_g2v = 900.
-  rthresh = 7.e-6  ! This is a key parameter for cloud water
-  dw_land  = 0.16
-  dw_ocean = 0.10
+  sat_adj0 = 0.9
+  tau_i2s  = 900.
+  tau_l2v  = 150.
+  tau_v2l  = 150.
+  tau_g2v  = 900.
+  rthresh  = 10.e-6 ! This is a key parameter for cloud water
+  dw_land  = 0.035
+  dw_ocean = 0.14
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
-  tau_i2s = 1000.
+  tau_revp = 200.
   c_psaci = 0.05
   c_pgacs = 0.01
   rh_inc = 0.30
@@ -58,15 +57,16 @@
   rh_ins = 0.30
   ccn_l = 300.
   ccn_o = 100.
-  c_paut = 1.0
+  c_paut = 0.5
   c_cracw = 0.8
   use_ppm = .false.
-  use_ccn = .true.
+  use_ccn = .false.
   mono_prof = .true.
   z_slope_liq  = .true.
   z_slope_ice  = .true.
   de_ice = .false.
   fix_negative = .true.
-  icloud_f = 1
+  icloud_f = 0
   mp_time = 150.
 /
+
