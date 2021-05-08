@@ -1114,7 +1114,7 @@ endif
 # Check for Old vs New Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
-echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}1${CN} (Default: Icarus), ${C2}2${CN} (Latest Icarus-NL)"
+echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}1${CN} (Default: Icarus-NLv3), ${C2}2${CN} (Icarus)"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS  = 1
 if(  $LSM_BCS != 1   &  $LSM_BCS != 2 ) then
@@ -1124,7 +1124,7 @@ if(  $LSM_BCS != 1   &  $LSM_BCS != 2 ) then
 else
      echo
 endif
-    if( $LSM_BCS == 1 ) then
+    if( $LSM_BCS == 2 ) then
                         set LSM_BCS = "Icarus"
                         set LSM_PARMS = "#DELETE"
                         set EMIP_BCS_IN = "Ganymed-4_0"
@@ -1132,7 +1132,7 @@ endif
                         set EMIP_NEWLAND = "#DELETE"
                         set EMIP_MERRA2  = "MERRA2"
     endif
-    if( $LSM_BCS == 2 ) then
+    if( $LSM_BCS == 1 ) then
                         set LSM_BCS = "Icarus-NLv3"
                         set LSM_PARMS = ""
                         set EMIP_BCS_IN = "Icarus-NLv3"
@@ -2214,7 +2214,6 @@ foreach FILE ($FILES)
       exit 2
    endif
 
-
    sed -f $HOMDIR/sedfile $HOMDIR/tmpfile > $HOMDIR/$FILE
 
    echo "Creating ${C1}${FILE}${CN} for Experiment: $EXPID "
@@ -2372,6 +2371,18 @@ endif
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 
+# Update LAND_PARAMS Choices
+# ------------------------------------------------------------------
+if( $LSM_BCS == "Icarus-NLv3" ) then
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | \
+    awk '{ if ($1~"LAND_PARAMS:") { sub(/NRv7.2/"Icarus") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+endif
 
 # Turn on GOCART
 # --------------
@@ -2392,7 +2403,6 @@ else
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
-
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
 # ------------------------------------------------------------------
