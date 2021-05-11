@@ -19,8 +19,6 @@ umask 022
 
 limit stacksize unlimited
 
-@SETENVS
-
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################
@@ -30,7 +28,8 @@ setenv ARCH `uname`
 setenv SITE             @SITE
 setenv GEOSDIR          @GEOSDIR 
 setenv GEOSBIN          @GEOSBIN 
-setenv GEOSUTIL         @GEOSUTIL
+setenv GEOSETC          @GEOSETC 
+setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
@@ -641,6 +640,16 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
 ######
 ##################################################################
 
+# Environment variables for MPI, etc
+# ----------------------------------
+
+@SETENVS
+
+# Run bundleParser.py
+#---------------------
+python bundleParser.py
+
+
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
 set  REPLAY_MODE = `grep REPLAY_MODE: AGCM.rc | grep -v '#' | cut -d: -f2`
@@ -662,9 +671,12 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
 endif
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
+
 # Run GEOSgcm.x
 # -------------
-
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
 
 if( $USE_IOSERVER == 1) then
