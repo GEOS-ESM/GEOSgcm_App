@@ -594,10 +594,10 @@ endif
 set NX = `grep "^ *NX:" AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY:" AGCM.rc | cut -d':' -f2`
 
-if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
        @  NPES = $NX * $NY
    $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
-if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( -e EGRESS ) then
 #   /bin/rm $EXPDIR/restarts/*${nymd0}_${hour}*z.*  .
