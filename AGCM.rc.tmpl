@@ -714,7 +714,7 @@ USE_RRTMG_IRRAD: 1.0
 USE_RRTMG_SORAD: 1.0
 ISOLVAR: 2
 USE_NRLSSI2: .TRUE.
-SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2017.txt
+SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2020.txt
 
 # GOCART broadband aerosol optics tables
 # -----------------------------------------------------
@@ -799,15 +799,15 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 >>>COUPLED<<<steady_state_ocean: 0
 >>>COUPLED<<<OCEAN_PICE_SCALING: 0.0
 
-# For running coupled model in dual ocean mode, uncomment three lines below, 
+# For running MOM5 coupled model in dual ocean mode, uncomment three lines below, 
 # make sure that regular replay is enabled, proper PRECIP_FILE is chosen,
 # sst.data and fraci.data are pointing to read forcing files on tripolar grid,
 # the run starts at 21z/03z/09z/15z, 
 # HISTORY.rc collections have proper ref_time field
 # ---------------------------------------------------------------------------
-#DUAL_OCEAN: 1
-#DATA_SST_FILE: sst.data
-#DATA_FRT_FILE: fraci.data
+>>>MOM5<<<#DUAL_OCEAN: 1
+>>>MOM5<<<#DATA_SST_FILE: sst.data
+>>>MOM5<<<#DATA_FRT_FILE: fraci.data
 
 >>>COUPLED<<<
 >>>COUPLED<<<# Section for CICE 
