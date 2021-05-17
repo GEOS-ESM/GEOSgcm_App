@@ -2593,9 +2593,14 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
 else
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | \
-    awk '{ if ($1~"LAND_PARAMS:") { sub(/NRv7.2/"Icarus") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    awk '{ if ($1~"LAND_PARAMS:") { sub(/NRv7.2/,"Icarus") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | \
+    awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
 # Turn on GOCART
