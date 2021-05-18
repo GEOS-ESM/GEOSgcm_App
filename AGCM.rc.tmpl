@@ -460,7 +460,8 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # -------------------------------------------------------
 DIAGNOSE_PRECIP_TYPE: FALSE
 
-# Choice for Land Surface Model: LSM_CHOICE=1 for Catchment, LSM_CHOICE=2 for CatchmentCN
+# Choice for Land Surface Model: LSM_CHOICE=1 for Catchment, LSM_CHOICE=2 for CatchmentCN CLM40 and
+#      LSM_CHOICE=3 for CatchmentCN CLM45 
 # ---------------------------------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
@@ -522,9 +523,21 @@ CATCH_INTERNAL_RESTART_FILE:            catch_internal_rst
 CATCH_INTERNAL_CHECKPOINT_FILE:         catch_internal_checkpoint
 CATCH_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 
-CATCHCN_INTERNAL_RESTART_FILE:            catchcn_internal_rst
-CATCHCN_INTERNAL_CHECKPOINT_FILE:         catchcn_internal_checkpoint
-CATCHCN_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+CATCHCN_INTERNAL_RESTART_FILE:          catchcn_internal_rst
+CATCHCN_INTERNAL_CHECKPOINT_FILE:       catchcn_internal_checkpoint
+CATCHCN_INTERNAL_CHECKPOINT_TYPE:       @CHECKPOINT_TYPE
+
+CATCHCN40_INTERNAL_RESTART_FILE:        catchcn_internal_rst
+CATCHCN40_INTERNAL_CHECKPOINT_FILE:     catchcn_internal_checkpoint
+CATCHCN40_INTERNAL_CHECKPOINT_TYPE:     @CHECKPOINT_TYPE
+
+CATCHCN45_INTERNAL_RESTART_FILE:        catchcn_internal_rst
+CATCHCN45_INTERNAL_CHECKPOINT_FILE:     catchcn_internal_checkpoint
+CATCHCN45_INTERNAL_CHECKPOINT_TYPE:     @CHECKPOINT_TYPE
+
+IRRIGATION_INTERNAL_RESTART_FILE:       irrigation_internal_rst
+IRRIGATION_INTERNAL_CHECKPOINT_FILE:    irrigation_internal_checkpoint
+IRRIGATION_INTERNAL_CHECKPOINT_TYPE:    @CHECKPOINT_TYPE
 
 MOIST_INTERNAL_RESTART_FILE:            moist_internal_rst
 MOIST_INTERNAL_CHECKPOINT_FILE:         moist_internal_checkpoint
