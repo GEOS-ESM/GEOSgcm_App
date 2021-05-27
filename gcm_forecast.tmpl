@@ -19,8 +19,6 @@ umask 022
 
 limit stacksize unlimited
 
-@SETENVS
-
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################
@@ -30,7 +28,8 @@ setenv ARCH `uname`
 setenv SITE             @SITE
 setenv GEOSDIR          @GEOSDIR 
 setenv GEOSBIN          @GEOSBIN 
-setenv GEOSUTIL         @GEOSUTIL
+setenv GEOSETC          @GEOSETC 
+setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
@@ -110,11 +109,13 @@ chmod +x $FILE
 #                 Set Model Resolution Parameters
 #######################################################################
 
-set  AGCM_IM = `grep  AGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
-set  AGCM_JM = `grep  AGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
-set  AGCM_LM = `grep  AGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
-set  OGCM_IM = `grep  OGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
-set  OGCM_JM = `grep  OGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
+set       NX  = `grep      "^ *NX:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set       NY  = `grep      "^ *NY:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  AGCM_IM  = `grep      "AGCM_IM:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  AGCM_JM  = `grep      "AGCM_JM:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  AGCM_LM  = `grep      "AGCM_LM:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  OGCM_IM  = `grep      "OGCM\.IM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  OGCM_JM  = `grep      "OGCM\.JM_WORLD:" $HOMDIR/AGCM.rc | cut -d':' -f2`
 set USE_SHMEM = `grep USE_SHMEM: $HOMDIR/CAP.rc  | cut -d':' -f2`
 
 # Set ATMOS and OCEAN Horizontal Resolution Tags
@@ -127,6 +128,77 @@ set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
 >>>FVCUBED<<<set ATMOStag = CF${AGCM_IM_Tag}x6C
 >>>DATAOCEAN<<<set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
 >>>COUPLED<<<set OCEANtag = TM${OGCM_IM_Tag}xTM${OGCM_JM_Tag}
+
+# Calculate number of cores/nodes for IOSERVER
+# --------------------------------------------
+
+set USE_IOSERVER   = @USE_IOSERVER
+set AGCM_IOS_NODES = `grep IOSERVER_NODES: $HOMDIR/AGCM.rc | cut -d':' -f2`
+
+if ($USE_IOSERVER == 0) then
+   set IOS_NODES = 0
+else
+   set IOS_NODES = $AGCM_IOS_NODES
+endif
+
+# Check for Over-Specification of CPU Resources
+# ---------------------------------------------
+if ($?SLURM_NTASKS) then
+   set  NCPUS = $SLURM_NTASKS
+else if ($?PBS_NODEFILE) then
+   set  NCPUS = `cat $PBS_NODEFILE | wc -l`
+else
+   set  NCPUS = NULL
+endif
+
+@ MODEL_NPES = $NX * $NY
+
+if ( $NCPUS != NULL ) then
+
+   if ( $USE_IOSERVER == 1 ) then
+
+      set NCPUS_PER_NODE = @NCPUS_PER_NODE
+
+      @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
+      @ NPES   = $NODES * $NCPUS_PER_NODE
+
+      if( $NPES > $NCPUS ) then
+         echo "CPU Resources are Over-Specified"
+         echo "--------------------------------"
+         echo "Allotted  NCPUs: $NCPUS"
+         echo "Requested NCPUs: $NPES"
+         echo ""
+         echo "Specified NX: $NX"
+         echo "Specified NY: $NY"
+         echo ""
+         echo "Specified IOSERVER_NODES: $AGCM_IOS_NODES"
+         echo "Specified cores per node: $NCPUS_PER_NODE"
+         exit
+      endif
+
+   else
+
+      @ NPES = $MODEL_NPES
+
+      if( $NPES > $NCPUS ) then
+         echo "CPU Resources are Over-Specified"
+         echo "--------------------------------"
+         echo "Allotted  NCPUs: $NCPUS"
+         echo "Requested NCPUs: $NPES"
+         echo ""
+         echo "Specified NX: $NX"
+         echo "Specified NY: $NY"
+         exit
+      endif
+
+   endif
+
+else
+   # This is for the desktop path
+
+   @ NPES = $MODEL_NPES
+
+endif
 
 #######################################################################
 #            Copy and Modify RC Files from Home Directory
@@ -542,7 +614,16 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( -e $EXPDIR/saltwater_internal_rst ) then
+if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
+ if ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) then
+
+   echo "Found Saltwater internal state. Splitting..."
+
+   # If saltwater_internal_rst is in EXPDIR move to SCRDIR
+   # -----------------------------------------------------
+   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/mv $EXPDIR/saltwater_internal_rst $SCRDIR
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -550,7 +631,7 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -560,13 +641,27 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
    # --------------
    /bin/rmdir OutData
 
-   endif    
+ else
+   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
+   exit 6
+ endif    
+endif    
 
 ##################################################################
 ######
 ######                     Perform Forecast
 ######
 ##################################################################
+
+# Environment variables for MPI, etc
+# ----------------------------------
+
+@SETENVS
+
+# Run bundleParser.py
+#---------------------
+python bundleParser.py
+
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
@@ -589,14 +684,22 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
 endif
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
+
 # Run GEOSgcm.x
 # -------------
-set NX = `grep "^ *NX:" AGCM.rc | cut -d':' -f2`
-set NY = `grep "^ *NY:" AGCM.rc | cut -d':' -f2`
-
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
-       @  NPES = $NX * $NY
-   $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+if( $USE_IOSERVER == 1) then
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
+else
+   set IOSERVER_OPTIONS = ""
+endif
+
+$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
+
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( -e EGRESS ) then

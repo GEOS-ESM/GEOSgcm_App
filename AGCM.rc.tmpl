@@ -12,10 +12,10 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 
       AGCM.GRID_TYPE: @GRID_TYPE
       AGCM.GRIDNAME: @AGCM_GRIDNAME
-      >>>CUBE_AGCM<<<AGCM.NF: @AGCM_NF
+      @CUBE_AGCM AGCM.NF: @AGCM_NF
       AGCM.LM: @AGCM_LM
       AGCM.IM_WORLD: @AGCM_IM
-      >>>LATLON_AGCM<<<AGCM.JM_WORLD: @AGCM_JM
+      @LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
 
 DYCORE: @DYCORE
 
@@ -29,12 +29,12 @@ SOLARAvrg: 0
 IRRADAvrg: 0
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
->>>MP_MG1<<<CLDMICRO: 2MOMENT
+@MP_MG1CLDMICRO: 2MOMENT
 
 # UNCOMMENT to use GFDL 6-phase cloud microphysics
->>>MP_GFDL<<<CLDMICRO: GFDL
+@MP_GFDLCLDMICRO: GFDL
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
->>>MP_GFDL<<<HYDROSTATIC: @GFDL_HYDRO
+@MP_GFDLHYDROSTATIC: @GFDL_HYDRO
 
 # UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
 #USE_AEROSOL_NN: 0
@@ -88,9 +88,9 @@ NCAR_PGWV: @NCAR_PGWV
       >>>COUPLED<<<OGCM.NY: @OGCM_NY
       >>>COUPLED<<<OGCM.GRIDSPEC: MAPL_Tripolar.nc
 
-      >>>DATAOCEAN<<<>>>LATLON_OGCM<<<OGCM.POLE: 'PE'
-      >>>DATAOCEAN<<<>>>LATLON_OGCM<<<OGCM.DATELINE: 'DE'
-      >>>DATAOCEAN<<<>>>CUBE_OGCM<<<OGCM.NF: @OGCM_NF
+      >>>DATAOCEAN<<<@LATLON_OGCM OGCM.POLE: 'PE'
+      >>>DATAOCEAN<<<@LATLON_OGCM OGCM.DATELINE: 'DE'
+      >>>DATAOCEAN<<<@CUBE_OGCM OGCM.NF: @OGCM_NF
 
 OGCM_RUN_DT: @OCEAN_DT
 
@@ -293,16 +293,16 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
-#>>>4DIAUDAS<<<    AINC_FILE: @EXPID.ana.eta.%y4%m2%d2_%h2z.nc4
+#>>>4DIAUDAS<<<    AINC_FILE: @EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
 #>>>4DIAUDAS<<<    NUDGE_STATE: YES
 ##>>>4DIAUDAS<<<    TAUANL: 3600
-#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHH<<<z.bin
+#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHHMN<<<z.nc4
 #>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_TYPE:  binary
 
 #   Exact REPLAY Mode for 4D-IAU
 #   ----------------------------
 >>>4DIAUDAS<<<    REPLAY_MODE: Exact
->>>4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2z.bin
+>>>4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2%n2z.nc4
 >>>4DIAUDAS<<<    REPLAY_FILE_FREQUENCY: 7200
 >>>4DIAUDAS<<<    REPLAY_SHUTOFF: 21600.0 #  ShutOff Replay after 6-hours for G5NCEP and G5ECMWF Forecasts
 

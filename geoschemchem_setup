@@ -1150,16 +1150,17 @@ endif
 # Check for Old vs New Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
-echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}1${CN} (Default: Icarus), ${C2}2${CN} (Latest Icarus-NL)"
+echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}1${CN} (Icarus), ${C2}2${CN} (Default: Icarus-NLv3)"
 set   LSM_BCS  = $<
-if( .$LSM_BCS == . ) set LSM_BCS  = 1
+if( .$LSM_BCS == . ) set LSM_BCS  = 2
 if(  $LSM_BCS != 1   &  $LSM_BCS != 2 ) then
      echo
-     echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}1 (Icarus){CN} or ${C2}2 (Icarus-NL)${CN}!"
+     echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}1 (Icarus){CN} or ${C2}2 (Icarus-NLv3)${CN}!"
      goto LSM_BCS
 else
      echo
 endif
+
     if( $LSM_BCS == 1 ) then
                         set LSM_BCS = "Icarus"
                         set LSM_PARMS = "#DELETE"
@@ -2143,10 +2144,10 @@ s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
-s?>>>LATLON_AGCM<<<?$LATLON_AGCM?g
-s?>>>LATLON_OGCM<<<?$LATLON_OGCM?g
-s?>>>CUBE_AGCM<<<?$CUBE_AGCM?g
-s?>>>CUBE_OGCM<<<?$CUBE_OGCM?g
+s/@LATLON_AGCM/$LATLON_AGCM/g
+s?@LATLON_OGCM?$LATLON_OGCM?g
+s/@CUBE_AGCM/$CUBE_AGCM/g
+s?@CUBE_OGCM?$CUBE_OGCM?g
 s/@GRID_TYPE/$GRID_TYPE/g
 s/@AGCM_NF/$AGCM_NF/g
 s/@AGCM_IM/$AGCM_IM/g
@@ -2183,8 +2184,8 @@ s/@LSM_CHOICE/$LSM_CHOICE/g
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
 
-s?>>>MP_MG1<<<?$MP_MG1?g
-s?>>>MP_GFDL<<<?$MP_GFDL?g
+s/@MP_MG1/$MP_MG1/g
+s/@MP_GFDL/$MP_GFDL/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_ZTRACER?$FV_ZTRACER?g
@@ -2584,6 +2585,23 @@ endif
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 
+# Update LAND_PARAMS Choices
+# ------------------------------------------------------------------
+if( $LSM_BCS == "Icarus-NLv3" ) then
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | \
+    awk '{ if ($1~"LAND_PARAMS:") { sub(/NRv7.2/,"Icarus") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | \
+    awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+endif
 
 # Turn on GOCART
 # --------------
@@ -2605,11 +2623,10 @@ else
     awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
 
-
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
 # ------------------------------------------------------------------
     /bin/mv $EXPDIR/RC/GAAS_GridComp.rc $EXPDIR/RC/GAAS_GridComp.tmp
-    cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.??g' > $EXPDIR/RC/GAAS_GridComp.rc
+    cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.?aod/Y%y4/M%m2/@ANA_EXPID.?g' > $EXPDIR/RC/GAAS_GridComp.rc
 
 
 # Turn on RATS_PROVIDER
