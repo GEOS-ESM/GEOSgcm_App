@@ -22,11 +22,13 @@ program GEOS5_Main
 
    character(len=*), parameter :: Iam="GEOS5_Main"
    type (MAPL_Cap) :: cap
-   type (MAPL_FlapCapOptions) :: cap_options
+   type (MAPL_FlapCLI) :: cli
+   type (MAPL_CapOptions) :: cap_options
    integer :: status
 
-   cap_options = MAPL_FlapCapOptions(description = 'GEOS AGCM', &
+   cli = MAPL_FlapCLI(description = 'GEOS AGCM', &
                                      authors     = 'GMAO')
+   cap_options = MAPL_CapOptions(cli)
    cap = MAPL_Cap('GCM', ROOT_SetServices, cap_options = cap_options)
 
    call cap%run(_RC)
