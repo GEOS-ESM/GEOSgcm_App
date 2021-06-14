@@ -39,7 +39,7 @@
   fast_sat_adj = .true.
   sat_adj0 = 0.9
   tau_i2s  = 900.
-  tau_l2v  = 450.
+  tau_l2v  = 225.
   tau_v2l  = 150.
   tau_g2v  = 900.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
@@ -49,7 +49,7 @@
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
-  tau_revp = 200.
+  tau_revp = 450
   c_psaci = 0.05
   c_pgacs = 0.01
   rh_inc = 0.30
