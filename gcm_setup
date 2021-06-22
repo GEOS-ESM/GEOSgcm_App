@@ -441,11 +441,14 @@ else if ( $SITE == 'NAS' ) then
       endif
    endif
 
-   if( $MODEL != 'has' & \
-       $MODEL != 'bro' & \
-       $MODEL != 'sky' & \
-       $MODEL != 'cas' & \
-       $MODEL != 'rom' ) goto ASKPROC
+   if( "$BUILT_ON_ROME" != "TRUE" ) then
+      if( $MODEL != 'has' & \
+          $MODEL != 'bro' & \
+          $MODEL != 'sky' & \
+          $MODEL != 'cas' ) goto ASKPROC
+   else
+      if( $MODEL != 'rom' ) goto ASKPROC
+   endif
 
    # Some processors have weird names at NAS
    # ---------------------------------------
