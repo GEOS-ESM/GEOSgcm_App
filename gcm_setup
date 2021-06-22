@@ -407,20 +407,35 @@ if ( $SITE == 'NCCS' ) then
    endif
 
 else if ( $SITE == 'NAS' ) then
+   # At NAS, if you build on Rome, we currently limit you to run on Rome
+   # While a built-on-Rome GEOS will work on Intel processors, it will
+   # have a different output than if built on Intel due to different
+   # optimization flags.  This would violate the GEOS capability to get
+   # the same answers at NAS and NCCS
+
+   set BUILT_ON_ROME = @CFG_BUILT_ON_ROME@
+
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}has (Haswell)${CN}"
-   echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
-   echo "   ${C2}cas (Cascade Lake)${CN}"
-   #echo "   ${C2}rom (AMD Rome)${CN}"
-   echo " "
-   echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "       and Ivy Bridge are not supported by current GEOS"
+   if( "$BUILT_ON_ROME" != "TRUE" ) then
+      echo "   ${C2}has (Haswell)${CN}"
+      echo "   ${C2}bro (Broadwell)${CN}"
+      echo "   ${C2}sky (Skylake)${CN} (default)"
+      echo "   ${C2}cas (Cascade Lake)${CN}"
+      echo " "
+      echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
+      echo "       and Ivy Bridge are not supported by current GEOS"
+   else
+      echo "   ${C2}rom (AMD Rome)${CN} (default)"
+   endif
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      if( "$BUILT_ON_ROME" != "TRUE" ) then
+         set MODEL = 'sky'
+      else
+         set MODEL = 'rom'
+      endif
    endif
 
    if( $MODEL != 'has' & \
