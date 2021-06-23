@@ -1979,6 +1979,8 @@ cat > $HOMDIR/SETENV.commands << EOF
    setenv MV2_RNDV_PROTOCOL       RPUT
    setenv MV2_USE_RDMA_ONE_SIDED  1
    setenv SLURM_DISTRIBUTION block
+   setenv MV2_MPIRUN_TIMEOUT 100
+   setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else
@@ -1990,6 +1992,8 @@ cat > $HOMDIR/SETENV.commands << EOF
    #setenv MV2_USE_UD_HYBRID       0
    setenv MV2_ENABLE_AFFINITY     0
    setenv SLURM_DISTRIBUTION block
+   setenv MV2_MPIRUN_TIMEOUT 100
+   setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 endif # if GPU and mvapich2
