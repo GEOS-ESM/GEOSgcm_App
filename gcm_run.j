@@ -774,25 +774,18 @@ if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1 ) then
    set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
-   set IOSERVER_EXTRA = ""
 
-   # Rome requires some extra bits for IOSERVER as it requires
-   # multigroup server with less PEs per backend node
-   if ( -x /usr/local/bin/nas_info ) then
-      set PROCTYPE=`/usr/local/bin/nas_info --nasmodel`
-      if ( $PROCTYPE == rom ) then
-         # Per Weiyuan Jiang, the ideal number of backend PEs is based on the
-         # number of HISTORY collections and number of IO nodes
+   # Per Weiyuan Jiang, the multigroup server should always be used
+   # The ideal number of backend PEs is based on the number of HISTORY
+   # collections and number of IO nodes
 
-         # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
-         set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+   # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
+   set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
 
-         # Now we divide that number of collections by the ioserver nodes
-         set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
+   # Now we divide that number of collections by the ioserver nodes
+   set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
 
-         set IOSERVER_EXTRA = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
-      endif
-   endif
+   set IOSERVER_EXTRA = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
 else
    set IOSERVER_OPTIONS = ""
    set IOSERVER_EXTRA = ""
