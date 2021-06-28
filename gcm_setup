@@ -1162,6 +1162,11 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
     if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
     if( $LSM_CHOICE == 3 ) set GCMRUN_CATCHCN = ""
+    if( $LSM_CHOICE == 2 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM40 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    else if ( $LSM_CHOICE == 3 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM45 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    endif
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
