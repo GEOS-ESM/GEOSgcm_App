@@ -393,7 +393,7 @@ if ( $SITE == 'NCCS' ) then
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'hasw'
+      set MODEL = 'sky'
    endif
 
    if( $MODEL != 'hasw' & \
