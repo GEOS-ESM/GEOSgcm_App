@@ -8,7 +8,7 @@
 /
 
 &test_case_nml
-       test_case = 13
+  test_case = 13
 /
 
 &fms_io_nml
@@ -29,18 +29,19 @@
   const_vs = .F.
   const_vg = .F.
   const_vr = .F.
+  vi_fac = 1
   vi_max = 1.
   vs_max = 2.
   vg_max = 12.
   vr_max = 12.
   qi_lim = 1.
-  prog_ccn = .true.
+  prog_ccn = .T.
   do_qa = .false.
   fast_sat_adj = .true.
   sat_adj0 = 0.9
-  tau_i2s  = 900.
-  tau_l2v  = 225.
-  tau_v2l  = 150.
+  tau_i2s  = 900
+  tau_l2v  = 225
+  tau_v2l  = 150
   tau_g2v  = 900.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
   dw_land  = 0.035
@@ -60,7 +61,7 @@
   c_paut = 0.5
   c_cracw = 0.8
   use_ppm = .false.
-  use_ccn = .false.
+  use_ccn = .F. 
   mono_prof = .true.
   z_slope_liq  = .true.
   z_slope_ice  = .true.
@@ -69,4 +70,3 @@
   icloud_f = 0
   mp_time = 150.
 /
-

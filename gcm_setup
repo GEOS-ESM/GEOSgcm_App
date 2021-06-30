@@ -270,11 +270,6 @@ if( .$AGCM_LM == . ) then
   set AGCM_LM = 72
 endif
 
-if ( $AGCM_LM == 181 ) then
-    set NCAR_PGWV = 32
-else
-    set NCAR_PGWV = 16
-endif
 
 #######################################################################
 #                 Choose microphysics option
@@ -743,7 +738,7 @@ endif
 
 # Set DEFAULT SHMEM Parameter
 # ---------------------------
-     set USE_SHMEM = 0
+     set USE_SHMEM = 1
 
 # Set IAU-Forcing and Bias Correction OFF
 # ---------------------------------------
@@ -921,7 +916,6 @@ if( $AGCM_IM == "c500" ) then
      set ATMOS_RES = CF0500x6C
      set   CNV_NX = 8
      set POST_NDS = 12
-     set USE_SHMEM = 1
      set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c720" ) then
@@ -944,7 +938,6 @@ if( $AGCM_IM == "c720" ) then
      set ATMOS_RES = CF0720x6C
      set   CNV_NX = 8
      set POST_NDS = 16
-     set USE_SHMEM = 1
      set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
@@ -967,7 +960,6 @@ if( $AGCM_IM == "c1440" ) then
      set ATMOS_RES = CF1440x6C
      set   CNV_NX = 8
      set POST_NDS = 32
-     set USE_SHMEM = 1
      set DEF_IOS_NDS = 4
 endif
 # DYAMOND Resolutions
@@ -991,7 +983,6 @@ if( $AGCM_IM == "c768" ) then
      set ATMOS_RES = CF0768x6C
      set   CNV_NX = 8
      set POST_NDS = 16
-     set USE_SHMEM = 1
      set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1536" ) then
@@ -1014,7 +1005,6 @@ if( $AGCM_IM == "c1536" ) then
      set ATMOS_RES = CF1536x6C
      set   CNV_NX = 8
      set POST_NDS = 16
-     set USE_SHMEM = 1
      set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c3072" ) then
@@ -1037,7 +1027,6 @@ if( $AGCM_IM == "c3072" ) then
      set ATMOS_RES = CF3072x6C
      set   CNV_NX = 8
      set POST_NDS = 16
-     set USE_SHMEM = 1
      set DEF_IOS_NDS = 5
 endif
 
@@ -2128,7 +2117,6 @@ s?@TAREXEC?$TAREXEC?g
 s/@MP_MG1/$MP_MG1/g
 s/@MP_GFDL/$MP_GFDL/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
-s?@NCAR_PGWV?$NCAR_PGWV?g
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_HYDRO?$FV_HYDRO?g
 s?@FV_SATADJ?$FV_SATADJ?g
