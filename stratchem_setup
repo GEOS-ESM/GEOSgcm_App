@@ -1826,9 +1826,6 @@ else if( $MPI == mvapich2 ) then
 
 if( $GPU == "TRUE" ) then
 cat > $HOMDIR/SETENV.commands << EOF
-   #setenv MV2_ON_DEMAND_THRESHOLD 8192
-   #setenv MV2_USE_SHMEM_ALLREDUCE 0
-   #setenv MV2_USE_SHMEM_COLL      0
    setenv MV2_ENABLE_AFFINITY     0
    setenv MV2_RNDV_PROTOCOL       RPUT
    setenv MV2_USE_RDMA_ONE_SIDED  1
@@ -1840,10 +1837,6 @@ EOF
 else
 
 cat > $HOMDIR/SETENV.commands << EOF
-   #setenv MV2_ON_DEMAND_THRESHOLD 8192
-   #setenv MV2_USE_SHMEM_ALLREDUCE 0
-   #setenv MV2_USE_SHMEM_COLL      0
-   #setenv MV2_USE_UD_HYBRID       0
    setenv MV2_ENABLE_AFFINITY     0
    setenv SLURM_DISTRIBUTION block
    setenv MV2_MPIRUN_TIMEOUT 100
