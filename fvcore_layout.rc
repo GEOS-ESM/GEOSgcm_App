@@ -30,11 +30,11 @@
   const_vg = .F.
   const_vr = .F.
   vi_fac = 1
-  vi_max = 1.
-  vs_max = 2.
-  vg_max = 12.
-  vr_max = 12.
-  qi_lim = 1.
+  vi_max = 1
+  vs_max = 2
+  vg_max = 12
+  vr_max = 12
+  qi_lim = 1
   prog_ccn = .T.
   do_qa = .false.
   fast_sat_adj = .true.
@@ -42,7 +42,7 @@
   tau_i2s  = 900
   tau_l2v  = 225
   tau_v2l  = 150
-  tau_g2v  = 900.
+  tau_g2v  = 900
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
   dw_land  = 0.035
   dw_ocean = 0.14
@@ -50,7 +50,7 @@
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
-  tau_revp = 225
+  tau_revp = 450
   c_psaci = 0.05
   c_pgacs = 0.01
   rh_inc = 0.30
