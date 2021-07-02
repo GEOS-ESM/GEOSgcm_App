@@ -775,12 +775,18 @@ if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 if( $USE_IOSERVER == 1 ) then
    set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
 
-   # Per Weiyuan Jiang, the multigroup server should always be used
+   # Per SI Team, the multigroup server should always be used
    # The ideal number of backend PEs is based on the number of HISTORY
    # collections and number of IO nodes
 
    # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
    set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+
+   # Protect against divide by zero
+   if ($IOS_NODES == 0) then
+      echo "Something is wrong. IOSERVER asked for, but zero IO nodes provided"
+      exit 3
+   endif
 
    # Now we divide that number of collections by the ioserver nodes
    set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
