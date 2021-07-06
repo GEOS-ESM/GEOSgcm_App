@@ -1146,7 +1146,7 @@ endif
 # ----------------------
 if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
-    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN4.5 (CN_CLM45))"
+    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"
     set   LSM_CHOICE = $<
     if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
     if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 &  $LSM_CHOICE != 3 ) then
