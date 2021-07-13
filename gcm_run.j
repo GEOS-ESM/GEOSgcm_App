@@ -735,10 +735,10 @@ endif
 # attempt at a check to make sure you aren't using it and are past the date
 
 # Check for MERRA2OX by looking at AGCM.rc
-set PCHEM_CLIM_YEARS = `grep '^ *pchem_clim_years' AGCM.rc | awk '{print $2}'`
+set PCHEM_CLIM_YEARS = `grep -Po '^\s*pchem_clim_years\s*:\s*\K\d+' AGCM.rc`
 
 # If it is 39, we are using MERRA2OX
-if ( $PCHEM_CLEM_YEARS == 39 ) then
+if ( $PCHEM_CLIM_YEARS == 39 ) then
 
    # Grab the date from cap_restart
    set YEARMON = `cat cap_restart | cut -c1-6`
