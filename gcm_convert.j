@@ -387,10 +387,8 @@ sed -r -i -e "/VEGDYN_INTERNAL_RESTART_TYPE:/ s/$fromtype/binary/" AGCM.rc
 #endif
 
 #######################################################################
-#                    Get Executable and RESTARTS 
+#                    Get RESTARTS 
 #######################################################################
-
-@CPEXEC $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -499,7 +497,18 @@ set LOGFILE = "$CNVDIR/GEOSgcm.log"
 # Assume gcm_setup set these properly for the local platform
 /bin/rm -f EGRESS
 @SETENVS
-$RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
+
+# If there is a GEOSgcm.x in the experiment directory, use it,
+# otherwise, use the one in the install directory
+if (-x $EXPDIR/GEOSgcm.x) then
+   @CPEXEC $EXPDIR/GEOSgcm.x .
+   set GEOSGCM_EXECUTABLE = ./GEOSgcm.x
+else
+   set GEOSGCM_EXECUTABLE = $GEOSBIN/GEOSgcm.x
+endif
+
+$RUN_CMD $NPES ${GEOSGCM_EXECUTABLE} >& $LOGFILE
+
 if( -e EGRESS ) then
    set rc = 0
 else

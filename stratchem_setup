@@ -46,7 +46,7 @@ set ETCDIR   = ${GEOSDEF}/etc
 
 # Test if GEOSgcm.x is here which means you are in install directory
 if (! -x GEOSgcm.x) then
-   echo "You are trying to run $0 in the Applications/GEOSgcm_App directory"
+   echo "You are trying to run $0 in the GEOSgcm_App directory"
    echo "This is no longer supported. Please run from the bin/ directory"
    echo "in your installation"
    exit 1
@@ -59,7 +59,6 @@ endif
 # Set default behavior of switches
 set NOCVS = TRUE
 set GPU   = FALSE
-set LINKX = FALSE
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -81,11 +80,6 @@ while ( $#argv > 0 )
       # Do not archive the source
       case --nocvs:
          set NOCVS = TRUE
-         breaksw
-
-      # Symlink GEOSgcm.x
-      case --link:
-         set LINKX = TRUE
          breaksw
 
       # Here any string not above will trigger USAGE
@@ -1784,12 +1778,6 @@ echo $GROUP > $HOME/.GROUProot
      set EMISSIONS = g5chem
   endif
 
-if ( $LINKX == "TRUE" ) then
-  if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
-else
-  if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
-endif
-
 #######################################################################
 #               Set Recommended MPI Stack Settings
 #######################################################################
@@ -2272,6 +2260,7 @@ endif
 /bin/rm -f $TMPHIST
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
+echo $GEOSDIR > $EXPDIR/.GEOSDIR
 echo " "
 
 #######################################################################
@@ -2602,20 +2591,14 @@ endif
 echo "Done!"
 echo "-----"
 echo " "
-echo "Build Directory: ${C2}${GEOSDIR}${CN}"
-echo "----------------"
+echo "Install Directory: ${C2}${GEOSDIR}${CN}"
+echo "-----------------"
 echo " "
 if ( ! -e $GEOSBIN/GEOSgcm.x ) then
      echo " "
-     echo "Note:  Build directory does not contain ${C1}GEOSgcm.x${CN} !"
+     echo "Note:  Install directory does not contain ${C1}GEOSgcm.x${CN} !"
      echo "       You will need to put a copy of ${C1}GEOSgcm.x${CN} in your Experiment directory"
      echo "----------------------------------------------------------------------------"
-     echo " "
-else
-     echo " "
-     echo "The following executable has been placed in your Experiment Directory:"
-     echo "----------------------------------------------------------------------"
-     echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
      echo " "
 endif
 echo " "
@@ -3018,7 +3001,6 @@ sh $COPYSCRIPT
 # ----------------------------------------------------
 
 echo "$NEWHOMDIR" >> $NEWEXPDIR/.HOMDIR
-/bin/cp $OLDEXPDIR/GEOSgcm.x $NEWEXPDIR
 /bin/cp -a $OLDEXPDIR/RC $NEWEXPDIR/RC
 
 # -----------------------------------------------------

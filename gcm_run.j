@@ -429,10 +429,8 @@ chmod +x linkbcs
 @CPEXEC  linkbcs $EXPDIR
 
 #######################################################################
-#                    Get Executable and RESTARTS 
+#                    Get RESTARTS 
 #######################################################################
-
-@CPEXEC $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -798,7 +796,16 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+# If there is a GEOSgcm.x in the experiment directory, use it,
+# otherwise, use the one in the install directory
+if (-x $EXPDIR/GEOSgcm.x) then
+   @CPEXEC $EXPDIR/GEOSgcm.x .
+   set GEOSGCM_EXECUTABLE = ./GEOSgcm.x
+else
+   set GEOSGCM_EXECUTABLE = $GEOSBIN/GEOSgcm.x
+endif
+
+$RUN_CMD $NPES $GEOSGCM_EXECUTABLE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 

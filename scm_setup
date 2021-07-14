@@ -380,8 +380,6 @@ SOURCEDIR=$SCMDIR$selected_case
 
 mkdir -p $expdir
 
-/bin/cp $INSTALLDIR/bin/GEOSgcm.x $expdir
-
 /bin/cp $SOURCEDIR/$DATFILE $expdir
 /bin/cp $SOURCEDIR/topo_dynave.data $expdir
 /bin/cp $SOURCEDIR/fraci.data $expdir

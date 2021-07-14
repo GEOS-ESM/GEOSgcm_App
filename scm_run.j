@@ -26,4 +26,4 @@ setenv EXPDIR  @EXPDIR
 
 cd $EXPDIR
 
-$RUN_CMD 1 ./GEOSgcm.x
+$RUN_CMD 1 ${GEOSBIN}/GEOSgcm.x

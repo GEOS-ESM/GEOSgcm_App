@@ -68,8 +68,16 @@ cd $HOMDIR
     end
 cd $EXPDIR/regress
 
+# If there is a GEOSgcm.x in the experiment directory, use it,
+# otherwise, use the one in the install directory
+if (-x $EXPDIR/GEOSgcm.x) then
+   @CPEXEC $EXPDIR/GEOSgcm.x $EXPDIR/regress
+   set GEOSGCM_EXECUTABLE = ./GEOSgcm.x
+else
+   set GEOSGCM_EXECUTABLE = $GEOSBIN/GEOSgcm.x
+endif
+
 /bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
-@CPEXEC $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 @CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
 @CPEXEC $HOMDIR/*.yaml      $EXPDIR/regress
 >>>COUPLED<<<@CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
@@ -288,7 +296,7 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-$RUN_CMD $NPES ./GEOSgcm.x
+$RUN_CMD $NPES $GEOSGCM_EXECUTABLE
                                                                                                                       
 
 set date = `cat cap_restart`
@@ -351,7 +359,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-$RUN_CMD $NPES ./GEOSgcm.x
+$RUN_CMD $NPES $GEOSGCM_EXECUTABLE
 
 foreach rst ( $rst_file_names )
   /bin/rm -f  $rst
@@ -431,7 +439,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-$RUN_CMD $NPES ./GEOSgcm.x
+$RUN_CMD $NPES $GEOSGCM_EXECUTABLE
                                                                                                                       
 set date = `cat cap_restart`
 set nymde = $date[1]
