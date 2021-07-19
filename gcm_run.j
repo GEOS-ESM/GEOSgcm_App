@@ -735,7 +735,7 @@ endif
 # attempt at a check to make sure you aren't using it and are past the date
 
 # Check for MERRA2OX by looking at AGCM.rc
-set PCHEM_CLIM_YEARS = `grep -Po '^\s*pchem_clim_years\s*:\s*\K\d+' AGCM.rc`
+set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
 
 # If it is 39, we are using MERRA2OX
 if ( $PCHEM_CLIM_YEARS == 39 ) then
