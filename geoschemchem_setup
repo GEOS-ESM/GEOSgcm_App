@@ -1224,6 +1224,10 @@ endif
 if(  $GOKART == "A" ) set GOKART = TRUE    # Use Actual         Aerosols
 if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
 
+# Default setup for linkbcs emissions
+set OPS_SPECIES      = "#"
+set CMIP_SPECIES     = "#"
+set MERRA2OX_SPECIES = "#"
 
 if( $GOKART == TRUE ) then
 
@@ -1250,6 +1254,19 @@ EMISSIONS:
      endif
      endif
      if(  $EMISSIONS == OPS ) set EMISSIONS = ''
+
+     # Fix up the linkbcs species.data
+     # NOTE: If OPS is selected, EMISSIONS is blanked
+     if(  $EMISSIONS == '' ) then
+        set OPS_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 1
+     else if(  $EMISSIONS == CMIP ) then
+        set CMIP_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 228
+     else
+        set MERRA2OX_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 39
+     endif
 
 # AERO Provider
 # -------------
@@ -2085,6 +2102,9 @@ s?>>>MOM5<<<?$MOM5?g
 s?>>>MOM6<<<?$MOM6?g
 s?>>>DATAOCEAN<<<?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
+s?@OPS_SPECIES?$OPS_SPECIES?g
+s?@CMIP_SPECIES?$CMIP_SPECIES?g
+s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
 s?>>>FVCUBED<<<?$FVCUBED?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
@@ -2107,8 +2127,7 @@ s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
 s?@OX_RELAXTIME?259200.?g
-#s?@PCHEM_CLIM_YEARS?228?g
-s?@PCHEM_CLIM_YEARS?39?g
+s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g
