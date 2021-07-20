@@ -1217,6 +1217,7 @@ if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
 set OPS_SPECIES      = "#"
 set CMIP_SPECIES     = "#"
 set MERRA2OX_SPECIES = "#"
+set PCHEM_CLIM_YEARS = ""
 
 if( $GOKART == TRUE ) then
 
