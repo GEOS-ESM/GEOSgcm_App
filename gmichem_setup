@@ -1336,7 +1336,6 @@ set CMIP_SPECIES     = "#"
 set MERRA2OX_SPECIES = "#"
 set PCHEM_CLIM_YEARS = ""
 
-
 if($APNum == 1) then
  set GOKART = TRUE
  set GOKARTDATA = FALSE
@@ -1352,7 +1351,7 @@ if($APNum == 2) then
  set  HIST_GOCART     = "#DELETE"
  set AERO_PROVIDER = GOCART.data
 
- # We need to set these values for GOCART.data
+ # GOCART.data uses MERRA2OX currently
  set MERRA2OX_SPECIES = ""
  set PCHEM_CLIM_YEARS = 39
 endif
