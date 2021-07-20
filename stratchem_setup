@@ -1253,7 +1253,10 @@ if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
 set OPS_SPECIES      = "#"
 set CMIP_SPECIES     = "#"
 set MERRA2OX_SPECIES = "#"
-set PCHEM_CLIM_YEARS = ""
+
+# GOCART.data was using the MERRA2OX species file, so by
+# default we set this value to that
+set PCHEM_CLIM_YEARS = 39
 
 if( $GOKART == TRUE ) then
 
