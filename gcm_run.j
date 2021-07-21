@@ -201,7 +201,7 @@ set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 >>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
 >>>EMIP_NEWLAND<<<# ------------------------------------------------
 set RSTID = `/bin/ls *catch* | cut -d. -f1`
-set day   = `/bin/ls *catch* | cut -d. -f3 | cut -b 7-8`
+set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
 $GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
 >>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
 
