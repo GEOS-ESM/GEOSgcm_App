@@ -1330,6 +1330,12 @@ endif
 
 set  EMISSIONS       = ""
 
+# Default setup for linkbcs emissions
+set OPS_SPECIES      = "#"
+set CMIP_SPECIES     = "#"
+set MERRA2OX_SPECIES = "#"
+set PCHEM_CLIM_YEARS = ""
+
 if($APNum == 1) then
  set GOKART = TRUE
  set GOKARTDATA = FALSE
@@ -1344,6 +1350,10 @@ if($APNum == 2) then
  set  GOCART          = "#"
  set  HIST_GOCART     = "#DELETE"
  set AERO_PROVIDER = GOCART.data
+
+ # GOCART.data uses MERRA2OX currently
+ set MERRA2OX_SPECIES = ""
+ set PCHEM_CLIM_YEARS = 39
 endif
 
 if($APNum == 3) then
@@ -1353,11 +1363,6 @@ if($APNum == 3) then
  set  HIST_GOCART     = "#DELETE"
  set AERO_PROVIDER = GMICHEM
 endif
-
-# Default setup for linkbcs emissions
-set OPS_SPECIES      = "#"
-set CMIP_SPECIES     = "#"
-set MERRA2OX_SPECIES = "#"
 
 if( $GOKART == TRUE ) then
 
