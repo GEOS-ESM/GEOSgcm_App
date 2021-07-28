@@ -201,7 +201,7 @@ set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 >>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
 >>>EMIP_NEWLAND<<<# ------------------------------------------------
 set RSTID = `/bin/ls *catch* | cut -d. -f1`
-set day   = `/bin/ls *catch* | cut -d. -f3 | cut -b 7-8`
+set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
 $GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
 >>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
 
@@ -371,11 +371,11 @@ cat << _EOF_ > $FILE
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
+@OPS_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+@CMIP_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 
 # S2S pre-industrial with prod/loss of stratospheric water vapor
 # (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
@@ -384,7 +384,7 @@ cat << _EOF_ > $FILE
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
@@ -728,6 +728,30 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
 
 endif
 
+# Check for MERRA2OX Consistency
+# ------------------------------
+
+# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# attempt at a check to make sure you aren't using it and are past the date
+
+# Check for MERRA2OX by looking at AGCM.rc
+set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
+
+# If it is 39, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 39 ) then
+
+   # Grab the date from cap_restart
+   set YEARMON = `cat cap_restart | cut -c1-6`
+
+   # Set a magic date
+   set MERRA2OX_END_DATE = "201706"
+
+   # String comparison seems to work here...
+   if ( $YEARMON > $MERRA2OX_END_DATE ) then
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      exit 2
+   endif
+endif
 
 # Environment variables for MPI, etc
 # ----------------------------------
@@ -764,8 +788,8 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
 endif
 
-# Set OMP_NUM_THREADS
-# -------------------
+# Establish safe default number of OpenMP threads
+# -----------------------------------------------
 setenv OMP_NUM_THREADS 1
 
 # Run GEOSgcm.x
