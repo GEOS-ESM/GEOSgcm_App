@@ -1093,7 +1093,7 @@ else
 		set FV_SATADJ  = "do_sat_adj = .F."
 		set FV_NWAT    = "nwat       =  3 "
 	else if ( "$AGCM_MP" == "GFDL" ) then
-		set FV_SATADJ  = "do_sat_adj = .T."
+		set FV_SATADJ  = "do_sat_adj = .F."
 		set FV_NWAT    = "nwat       =  6 "
 	endif
 endif
