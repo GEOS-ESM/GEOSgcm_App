@@ -20,6 +20,10 @@ limit stacksize unlimited
 
 @SETENVS
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
+
 @GPUSTART
 
 #######################################################################
@@ -33,7 +37,7 @@ setenv GEOSDIR          @GEOSDIR
 setenv GEOSBIN          @GEOSBIN
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -67,7 +71,10 @@ cd $EXPDIR/regress
 /bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
 @CPEXEC $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 @CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
+@CPEXEC $HOMDIR/*.yaml      $EXPDIR/regress
 >>>COUPLED<<<@CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
+>>>MOM6<<<@CPEXEC $HOMDIR/MOM_input   $EXPDIR/regress
+>>>MOM6<<<@CPEXEC $HOMDIR/MOM_override $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
 
@@ -116,13 +123,16 @@ end
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
-if(! -e tile.bin) $RUN_CMD 1 $GEOSBIN/binarytile.x tile.data tile.bin
+if(! -e tile.bin) $GEOSBIN/binarytile.x tile.data tile.bin
 
 #######################################################################
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( -e $EXPDIR/saltwater_internal_rst ) then
+if ( (-e $EXPDIR/regress/openwater_internal_rst) && (-e $EXPDIR/regress/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
+ if ( -e $EXPDIR/regress/saltwater_internal_rst ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -130,7 +140,7 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/regress/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -140,6 +150,7 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
    # --------------
    /bin/rmdir OutData
 
+ endif
 endif
 
 #######################################################################
@@ -287,6 +298,7 @@ set nhmse = $date[2]
 foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.1
 end
+>>>MOM6<<</bin/mv RESTART/MOM.res.nc MOM.res.nc.1
 
 ##################################################################
 ######
@@ -411,11 +423,8 @@ cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 >>>COUPLED<<</bin/mv AGCM.rc AGCM.tmp
 >>>COUPLED<<<cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
->>>COUPLED<<<./strip input.nml
->>>COUPLED<<<set oldstring =  `cat input.nml | grep "^ *layout"`
->>>COUPLED<<<set newstring =  "layout = ${test_NY},${test_NX},"
->>>COUPLED<<</bin/mv input.nml input.nml.tmp
->>>COUPLED<<<cat input.nml.tmp | sed -e "s?$oldstring?$newstring?g" > input.nml
+>>>MOM5<<<sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
+>>>MOM6<<<sed -r -i -e "/^ *LAYOUT/ s#= ([0-9]+), *([0-9]+)#= ${test_NY}, ${test_NX}#" MOM_input
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
@@ -431,6 +440,7 @@ set nhmse = $date[2]
 foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.2
 end
+>>>MOM6<<</bin/mv RESTART/MOM.res.nc MOM.res.nc.2
 
 #######################################################################
 #                          Compare Restarts
@@ -478,6 +488,25 @@ foreach chk ( $chk_file_names )
       endif
   endif
 end
+
+# check MOM.res.nc (MOM6 restart)
+>>>MOM6<<<set file1 = MOM.res.nc.1
+>>>MOM6<<<set file2 = MOM.res.nc.2
+>>>MOM6<<<if( -e $file1 && -e $file2 ) then
+>>>MOM6<<<                             set check = true
+>>>MOM6<<<      if( $check == true ) then
+>>>MOM6<<<         echo Comparing "MOM6 restarts"
+>>>MOM6<<<         cmp $file1 $file2
+>>>MOM6<<<         if( $status == 0 ) then
+>>>MOM6<<<             echo Success!
+>>>MOM6<<<             echo " "
+>>>MOM6<<<         else
+>>>MOM6<<<             echo Failed!
+>>>MOM6<<<             echo " "
+>>>MOM6<<<             set pass = false
+>>>MOM6<<<         endif
+>>>MOM6<<<      endif
+>>>MOM6<<<endif
 
 @GPUEND
 

@@ -17,10 +17,6 @@ COLLECTIONS: 'geosgcm_prog'
 #             'geosgcm_landice'
 #             'geosgcm_meltwtr'
 #             'geosgcm_snowlayer'
-	     'geosgcm_ocn3d'
-	     'geosgcm_ocn3dT'
-	     'geosgcm_ocn2d'
-	     'geosgcm_ocn2dT'
              'geosgcm_icecat'
              'geosgcm_icesig'
     	     'geosgcm_seaice'
@@ -403,108 +399,6 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                   'UQI'           , 'DYN'         , 'UFLXQI'       ,
                                   'VQI'           , 'DYN'         , 'VFLXQI'       ,
                                   :: 
-
-
-  geosgcm_ocn3d.template:  '%y4%m2%d2_%h2%n2z.nc4',
-  geosgcm_ocn3d.archive:   '%c/Y%y4',
-  geosgcm_ocn3d.mode:      'time-averaged',
-  geosgcm_ocn3d.format: 'CFIO',	   	
-  geosgcm_ocn3d.frequency:  240000,
-  geosgcm_ocn3d.regrid_exch: 'tile_hist.bin',
-  geosgcm_ocn3d.levels: 'vgrid.ascii'
-  geosgcm_ocn3d.fields:  'DH'    , 'MOM',
-                     'T'     , 'MOM',
-                     'S'     , 'MOM',
-                     'U'     , 'MOM',
-                     'V'     , 'MOM',
-                     'RHO'   , 'MOM',
-		     'TCON'  , 'MOM',
-		     'SWHEAT', 'OCEAN',
-		     'HC', 'MOM',
-                      ::
-
-  geosgcm_ocn2d.template:  '%y4%m2%d2_%h2%n2z.nc4',
-  geosgcm_ocn2d.archive:   '%c/Y%y4',
-  geosgcm_ocn2d.mode:      'time-averaged',
-  geosgcm_ocn2d.format: 'CFIO',
-  geosgcm_ocn2d.frequency:  240000,
-  geosgcm_ocn2d.regrid_exch: 'tile_hist.bin',
-  geosgcm_ocn2d.fields:    'UW'    , 'MOM', 'US'
-  	           'VW'    , 'MOM', 'VS'
-		   'TW'    , 'MOM', 'TS'
-		   'SW'    , 'MOM', 'SS'
-		   'SSH'    , 'MOM',
-		   'SLV'    , 'MOM',
-                   'QFLUX' , 'OCEAN',
-                   'LWFLX' , 'OCEAN',
-		   'SWFLX' , 'OCEAN',
-                   'SHFLX' , 'OCEAN',
-		   'RAIN' , 'OCEAN',
-		   'SNOW' , 'OCEAN',
-		   'SFLX' , 'OCEAN',
-		   'RFLUX' , 'OCEAN',
-                   'TAUX'  , 'OCEAN',
-                   'TAUY'  , 'OCEAN',
-		   'FROCEAN'   , 'OCEAN',
-		   'MASKO'   , 'OCEAN',
-		   'AREA'   , 'MOM',
-		   'MLD'   ,    'MOM',
-		   'DISCHARGE'   ,    'OCEAN',
-		   'TS_FOUND'   ,    'OCEAN',
-		   'SS_FOUND'   ,    'OCEAN',
-		   'FRZMLT'   ,    'OCEAN',
-		   'PSI'   ,    'MOM',
-                      ::
-
-  geosgcm_ocn3dT.template:  '%y4%m2%d2_%h2%n2z.nc4',
-  geosgcm_ocn3dT.archive:   '%c/Y%y4',
-  geosgcm_ocn3dT.mode:      'time-averaged',
-  geosgcm_ocn3dT.format: 'CFIO',	   	
-  geosgcm_ocn3dT.frequency:  240000,
-  geosgcm_ocn3dT.levels: 'vgrid.ascii'
-  geosgcm_ocn3dT.fields:  'DH'    , 'MOM',
-                     'T'     , 'MOM',
-                     'S'     , 'MOM',
-                     'U'     , 'MOM',
-                     'V'     , 'MOM',
-                     'RHO'   , 'MOM',
-		     'TCON'  , 'MOM',
-		     'SWHEAT', 'OCEAN',
-		     'SWFRAC', 'MOM',
-		     'HC', 'MOM',
-                      ::
-
-  geosgcm_ocn2dT.template:  '%y4%m2%d2_%h2%n2z.nc4',
-  geosgcm_ocn2dT.archive:   '%c/Y%y4',
-  geosgcm_ocn2dT.mode:      'time-averaged',
-  geosgcm_ocn2dT.format: 'CFIO',
-  geosgcm_ocn2dT.frequency:  240000,
-  geosgcm_ocn2dT.fields:    'UW'    , 'MOM', 'US'
-  	           'VW'    , 'MOM', 'VS'
-		   'TW'    , 'MOM', 'TS'
-		   'SW'    , 'MOM', 'SS'
-		   'SSH'    , 'MOM',
-		   'SLV'    , 'MOM',
-                   'QFLUX' , 'OCEAN',
-                   'LWFLX' , 'OCEAN',
-		   'SWFLX' , 'OCEAN',
-                   'SHFLX' , 'OCEAN',
-		   'RAIN' , 'OCEAN',
-		   'SNOW' , 'OCEAN',
-		   'SFLX' , 'OCEAN',
-		   'RFLUX' , 'OCEAN',
-                   'TAUX'  , 'OCEAN',
-                   'TAUY'  , 'OCEAN',
-		   'FROCEAN'   , 'OCEAN',
-		   'MASKO'   , 'OCEAN',
-		   'AREA'   , 'MOM',
-		   'MLD'   ,    'MOM',
-		   'DISCHARGE'   ,    'OCEAN',
-		   'TS_FOUND'   ,    'OCEAN',
-		   'SS_FOUND'   ,    'OCEAN',
-		   'FRZMLT'   ,    'OCEAN',
-		   'PSI'   ,    'MOM',
-		   ::
 
    geosgcm_icecat.template:  '%y4%m2%d2_%h2%n2z.nc4',
    geosgcm_icecat.archive:   '%c/Y%y4',

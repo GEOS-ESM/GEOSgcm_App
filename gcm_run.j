@@ -9,6 +9,7 @@
 #@BATCH_JOBNAME@RUN_N
 #@RUN_Q
 #@BATCH_GROUP
+#@BATCH_JOINOUTERR
 #@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
@@ -32,8 +33,7 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv ARCH `uname`
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -186,19 +186,24 @@ chmod +x $FILE
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
 set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
-# Copy MERRA-2 Restarts
-# ---------------------
-@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
+>>>EMIP_OLDLAND<<<# Copy MERRA-2 Restarts
+>>>EMIP_OLDLAND<<<# ---------------------
+>>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+>>>EMIP_NEWLAND<<<# ----------------------------------------------
+@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
 @TAREXEC xf  restarts.${year}${month}.tar
 /bin/rm restarts.${year}${month}.tar
-/bin/rm MERRA2*bin
+>>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
 
 
-# Regrid MERRA-2 Restarts
-# -----------------------
-set RSTID = `/bin/ls *catch*bin | cut -d. -f1`
-$GEOSBIN/regrid.pl -np -ymd ${year}${month}10 -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin Ganymed-4_0 -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
-/bin/rm $RSTID.*.bin
+>>>EMIP_OLDLAND<<<# Regrid MERRA-2 Restarts
+>>>EMIP_OLDLAND<<<# -----------------------
+>>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+>>>EMIP_NEWLAND<<<# ------------------------------------------------
+set RSTID = `/bin/ls *catch* | cut -d. -f1`
+set day   = `/bin/ls *catch* | cut -d. -f3 | cut -b 7-8`
+$GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
+>>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -209,15 +214,19 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
+set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}e_${RSTID}.*catch*`
+if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
+if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
+
 $GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
-$GEOSBIN/stripname .${year}${month}10_21z.bin.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
-/bin/mv gocart_internal_rst gocart_internal_rst.merra2
-$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}10_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
+$GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
+>>>EMIP_OLDLAND<<</bin/mv gocart_internal_rst gocart_internal_rst.merra2
+>>>EMIP_OLDLAND<<<$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
 
 
 # Create CAP.rc and cap_restart
 # -----------------------------
-set   nymd = ${year}${month}10
+set   nymd = ${year}${month}${day}
 set   nhms = 210000
 echo $nymd $nhms > cap_restart
 
@@ -252,9 +261,13 @@ cd $SCRDIR
                              @CPEXEC     $EXPDIR/cap_restart .
                              @CPEXEC -f  $HOMDIR/*.rc .
                              @CPEXEC -f  $HOMDIR/*.nml .
+                             @CPEXEC -f  $HOMDIR/*.yaml .
                              @CPEXEC     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
+
+			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_input .
+			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_override .
 
 if( $GCMEMIP == TRUE ) then
     @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -325,7 +338,8 @@ setenv CHMDIR    @CHMDIR
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
->>>COUPLED<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+>>>MOM5<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+>>>MOM6<<<setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
 >>>COUPLED<<<setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 >>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
 >>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
@@ -341,10 +355,15 @@ cat << _EOF_ > $FILE
 
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Runoff.bin   runoff.bin
->>>COUPLED<<</bin/ln -sf $GRIDDIR/mit.ascii .
+>>>MIT<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Runoff.bin   runoff.bin
+>>>MIT<<</bin/ln -sf $GRIDDIR/mit.ascii .
+>>>MOM5<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+>>>MOM5<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
+>>>MOM6<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+>>>MOM6<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
->>>COUPLED<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+>>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+>>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -360,7 +379,12 @@ cat << _EOF_ > $FILE
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-#bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+
+# S2S pre-industrial with prod/loss of stratospheric water vapor
+# (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
+# --------------------------------------------------------------
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4 species.data
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
@@ -369,22 +393,23 @@ cat << _EOF_ > $FILE
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
 
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
-/bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
+/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
+/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
+/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
+/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISNIRstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODELFPARmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
+>>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
+>>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+>>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
->>>COUPLED<<<if( $OGCM_IM == 1440 ) then
->>>COUPLED<<</bin/ln -sf $GRIDDIR/ndvi.data ndvi.data
->>>COUPLED<<<endif 
-
->>>COUPLED<<</bin/ln -sf $GRIDDIR/visdf.dat visdf.dat
->>>COUPLED<<</bin/ln -sf $GRIDDIR/nirdf.dat nirdf.dat
->>>COUPLED<<</bin/ln -sf $GRIDDIR/vegdyn.data vegdyn.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/lai.dat lai.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/green.dat green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
@@ -642,7 +667,16 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
+if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
+ if ( ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) && ( $counter == 1 ) ) then
+
+   echo "Found Saltwater internal state. Splitting..."
+
+   # If saltwater_internal_rst is in EXPDIR move to SCRDIR
+   # -----------------------------------------------------
+   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/mv $EXPDIR/saltwater_internal_rst $SCRDIR
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -650,7 +684,7 @@ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -672,24 +706,32 @@ if ( ( -e $EXPDIR/saltwater_internal_rst ) && ( $counter == 1 ) ) then
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
+   
+   # Remove the saltwater internal restart
+   # -------------------------------------
+   /bin/rm $SCRDIR/saltwater_internal_rst
+ else
+   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
+   exit 6
+ endif
 endif
 
-# Test Saltwater Restart for Number of tiles correctness
+# Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
 
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
-   set N_SALT_TILES_EXPECTED = `grep '^ *0' tile.data | wc -l`
-   set N_SALT_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_OPENW_TILES_EXPECTED = `grep '^ *0' tile.data | wc -l`
+   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
          
-   if ( $N_SALT_TILES_EXPECTED != $N_SALT_TILES_FOUND ) then
-      echo "Error! Found $N_SALT_TILES_FOUND tiles in openwater. Expect to find $N_SALT_TILES_EXPECTED tiles."
+   if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
+      echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
       exit 7
    endif    
 
 endif
+
 
 # Environment variables for MPI, etc
 # ----------------------------------
@@ -701,15 +743,6 @@ endif
 # Run bundleParser.py
 #---------------------
 python bundleParser.py
-
-# Test if at NAS and if BATCH
-# ---------------------------
-set NAS_BATCH = FALSE
-if ($SITE == NAS) then
-   if ($PBS_ENVIRONMENT == PBS_BATCH) then
-      set NAS_BATCH = TRUE
-   endif
-endif
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
@@ -805,10 +838,13 @@ cd ..
 # End MITgcm restarts - before running GEOSgcm.x
 # ---------------------------------------------------
 
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS 1
 
 # Run GEOSgcm.x
 # -------------
-if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1) then
    set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
@@ -816,12 +852,9 @@ else
    set IOSERVER_OPTIONS = ""
 endif
 
-if( $NAS_BATCH == TRUE ) then
-   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS >& $HOMDIR/gcm_run.$PBS_JOBID.$nymdc.out
-else
-   $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS
-endif
-if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh
+$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS --logging_config 'logging.yaml'
+
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 @GPUEND
 
@@ -984,6 +1017,15 @@ cd $EXPDIR/restarts
     endif
 cd $SCRDIR
 
+# Move monthly collection checkpoints to restarts
+#------------------------------------------------
+set monthlies = `/bin/ls *chk` 
+if ( $#monthlies > 0 ) then
+    foreach ff (*chk)
+	    /bin/mv $ff `basename $ff chk`rst
+    end
+endif
+
 #######################################################################
 #               Move HISTORY Files to Holding Directory
 #######################################################################
@@ -1001,7 +1043,8 @@ end
 
 >>>COUPLED<<<# MOM-Specific Output Files
 >>>COUPLED<<<# -------------------------
->>>COUPLED<<< set dsets="ocean_month"
+>>>MOM5<<< set dsets="ocean_month"
+>>>MOM6<<< set dsets="ocean_state prog_z sfc_ave forcing"
 >>>COUPLED<<< foreach dset ( $dsets )
 >>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
 >>>COUPLED<<< if($num != 0) then

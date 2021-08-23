@@ -12,10 +12,10 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 
       AGCM.GRID_TYPE: @GRID_TYPE
       AGCM.GRIDNAME: @AGCM_GRIDNAME
-      >>>CUBE_AGCM<<<AGCM.NF: @AGCM_NF
+      @CUBE_AGCM AGCM.NF: @AGCM_NF
       AGCM.LM: @AGCM_LM
       AGCM.IM_WORLD: @AGCM_IM
-      >>>LATLON_AGCM<<<AGCM.JM_WORLD: @AGCM_JM
+      @LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
 
 DYCORE: @DYCORE
 
@@ -27,12 +27,12 @@ SOLARAvrg: 0
 IRRADAvrg: 0
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
-#CLDMICRO: 2MOMENT
+@MP_MG1CLDMICRO: 2MOMENT
 
 # UNCOMMENT to use GFDL 6-phase cloud microphysics
-#CLDMICRO: GFDL
+@MP_GFDLCLDMICRO: GFDL
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
-#HYDROSTATIC: FALSE
+@MP_GFDLHYDROSTATIC: @GFDL_HYDRO
 
 # UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
 #USE_AEROSOL_NN: 0
@@ -67,6 +67,15 @@ CLOSURE_DEEP:0
 CLOSURE_SHALLOW:7
 CLOSURE_CONGESTUS:3
 
+# GWD Parameterization
+# --------------------
+
+# if .FALSE., use GEOS GWD code (default); .TRUE., use new NCAR GWD code
+USE_NCAR_GWD: .FALSE.
+
+# This is only used if USE_NCAR_GWD is .TRUE.
+BERES_FILE_NAME: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
+
 # Ocean Model Configuration Parameters
 # ------------------------------------
       OGCM.GRID_TYPE: @OGCM_GRID_TYPE
@@ -76,11 +85,11 @@ CLOSURE_CONGESTUS:3
       OGCM.LM: @OGCM_LM
       >>>COUPLED<<<OGCM.NX: @OGCM_NX
       >>>COUPLED<<<OGCM.NY: @OGCM_NY
-      >>>COUPLED<<<OGCM.GRIDSPEC: @OGCM_GRIDSPEC
+      >>>COUPLED<<<OGCM.GRIDSPEC: MAPL_Tripolar.nc
 
-      >>>DATAOCEAN<<<>>>LATLON_OGCM<<<OGCM.POLE: 'PE'
-      >>>DATAOCEAN<<<>>>LATLON_OGCM<<<OGCM.DATELINE: 'DE'
-      >>>DATAOCEAN<<<>>>CUBE_OGCM<<<OGCM.NF: @OGCM_NF
+      >>>DATAOCEAN<<<@LATLON_OGCM OGCM.POLE: 'PE'
+      >>>DATAOCEAN<<<@LATLON_OGCM OGCM.DATELINE: 'DE'
+      >>>DATAOCEAN<<<@CUBE_OGCM OGCM.NF: @OGCM_NF
 
 OGCM_RUN_DT: @OCEAN_DT
 OCEAN_DIR: mitocean_run
@@ -109,9 +118,12 @@ PRINTRC: 1
 # Set the number of parallel I/O processes to use when
 # RESTART_TYPE and or CHECKPOINT_TYPE are set to pbinary or pnc4
 #---------------------------------------------------------------
-PARALLEL_READFORCING: 1
+PARALLEL_READFORCING: 0
 NUM_READERS: @NUM_READERS
 NUM_WRITERS: 1
+
+# Write restarts by oserver (Default: NO)
+WRITE_RESTART_BY_OSERVER: @RESTART_BY_OSERVER
 
 # Active observer when desired
 # ----------------------------
@@ -143,7 +155,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####         For these cases, only the CORRECTOR step is employed and is, therefore, as        ####
 ####         efficient as a stand-alone model run.                                             ####
 ####                                                                                           ####
-####         In order to guarentee reproducibility, the model and its BUILD parameters         ####
+####         In order to guarantee reproducibility, the model and its BUILD parameters         ####
 ####         (Compilers and Options) as well as all INPUT data must be identical to the        ####
 ####         original DAS experiment.  This type of REPLAY is useful when producing            ####
 ####         additional passive, diagnostic data, or when the original data is lost.           ####
@@ -216,7 +228,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####   ----------------------                                                                  ####
 ####        The current 4D-EnVar system, as previously noted, produces 7 hourly Analyses:      ####
 ####        (-03z, -02z, -01z, 00z, +01z, +02z, +03z) for each 6-hour assimilation window      ####
-####        centered around the 4 synpotic times of 00z, 06z, 12z, and 18z.  We see that the   ####
+####        centered around the 4 synoptic times of 00z, 06z, 12z, and 18z.  We see that the   ####
 ####        last Analysis (+03z) associated with each synoptic time will be over-ridden by     ####
 ####        the first Analyiss (-03z) associated with synoptic time of the next assimilation   ####
 ####        window. To prevent these over-ridden files from being lost, the GEOS-5 DAS         ####
@@ -226,7 +238,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####        used for this purpose, and is only utilized if the REPLAY configuration warrants.  ####
 ####                                                                                           ####
 ####                                                                                           ####
-####   Regualr Replay Time Interpolation:                                                      ####
+####   Regular Replay Time Interpolation:                                                      ####
 ####   ----------------------------------                                                      ####
 ####        In some instances the USER might wish to create IAU Increments at a frequency      ####
 ####        greater than the frequency of the target analysis.  For those cases additional     ####
@@ -252,7 +264,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # Typical MERRA-2 Regular REPLAY Configuration
 # --------------------------------------------
 #M2 REPLAY_ANA_EXPID:   MERRA-2
-#M2 REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2
+#M2 REPLAY_ANA_LOCATION: @M2_REPLAY_ANA_LOCATION
 #M2 REPLAY_MODE: Regular
 #M2 REPLAY_FILE: ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4
 # -----------------------------------------------------------------
@@ -281,16 +293,16 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
-#>>>4DIAUDAS<<<    AINC_FILE: @EXPID.ana.eta.%y4%m2%d2_%h2z.nc4
+#>>>4DIAUDAS<<<    AINC_FILE: @EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
 #>>>4DIAUDAS<<<    NUDGE_STATE: YES
 ##>>>4DIAUDAS<<<    TAUANL: 3600
-#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHH<<<z.bin
+#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHHMN<<<z.nc4
 #>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_TYPE:  binary
 
 #   Exact REPLAY Mode for 4D-IAU
 #   ----------------------------
 >>>4DIAUDAS<<<    REPLAY_MODE: Exact
->>>4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2z.bin
+>>>4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2%n2z.nc4
 >>>4DIAUDAS<<<    REPLAY_FILE_FREQUENCY: 7200
 >>>4DIAUDAS<<<    REPLAY_SHUTOFF: 21600.0 #  ShutOff Replay after 6-hours for G5NCEP and G5ECMWF Forecasts
 
@@ -441,9 +453,8 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # --------------------
 #USE_PP_TAPER: 1
 
-
 ##############################################################################################
-####                  CHOICE OF  Land Surface and Runoff Routing Models                   ####
+####    Land Surface Model                                                                ####
 ##############################################################################################
 
 # Option to Diagnose Precipitation Types for Land Surface
@@ -454,14 +465,24 @@ DIAGNOSE_PRECIP_TYPE: FALSE
 # ---------------------------------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
-# LSM Icarus-NL Options
-# ---------------------
-@LSM_PARMS LAND_PARAMS: NRv7.2
-@LSM_PARMS Z0_FORMULATION: 4
+# Name of file containing Surface GridComp resource parameters 
+# ------------------------------------------------------------
+# SURFRC: GEOS_SurfaceGridComp.rc
 
-# Set RUN_ROUTE to 1 to run the runoff routing model
-# -------------------------------------------------------------------------------
-RUN_ROUTE: @RUN_ROUTE
+
+# ****************************************************************
+# ******* REQUIRES MAJOR CLEAN-UP ACROSS SEVERAL GRIDCOMPs *******
+# ******* (retained to facilitate this cleanup in future)  *******
+# ******* IMPORTANT: This is merely for future reference   *******
+# *******   The model reads USE_CNNEE from CO2_GridComp.rc *******
+# *******   not from this file.                            *******
+# Atmosphere-Land CO2 coupling
+# ----------------------------	
+# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc, CMIP/CO2_GridComp.rc,	
+#                 MERRA2/CO2_GridComp.rc, MERRA2/19600101-20000331/CO2_GridComp.rc, MERRA2/20000401-present/CO2_GridComp.rc, and PIESA/CO2_GridComp.rc 	
+#                           in /GEOSchem_GridComp/GOCART_GridComp/CO2_GridComp/ before you build the model.)
+#
+# ****************************************************************
 
 ##############################################################################################
 ##############################################################################################
@@ -516,6 +537,10 @@ MOIST_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 AIAU_IMPORT_RESTART_FILE:               aiau_import_rst
 AIAU_IMPORT_CHECKPOINT_FILE:            aiau_import_checkpoint
 AIAU_IMPORT_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
+GWD_IMPORT_RESTART_FILE:                gwd_import_rst
+GWD_IMPORT_CHECKPOINT_FILE:             gwd_import_checkpoint
+GWD_IMPORT_CHECKPOINT_TYPE:             @CHECKPOINT_TYPE
 
 MOIST_IMPORT_RESTART_FILE:              moist_import_rst
 MOIST_IMPORT_CHECKPOINT_FILE:           moist_import_checkpoint
@@ -690,7 +715,7 @@ USE_RRTMG_IRRAD: 1.0
 USE_RRTMG_SORAD: 1.0
 ISOLVAR: 2
 USE_NRLSSI2: .TRUE.
-SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2017.txt
+SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2020.txt
 
 # GOCART broadband aerosol optics tables
 # -----------------------------------------------------
@@ -701,15 +726,21 @@ SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2017.txt
  BC_OPTICS: ExtData/@EMISSIONS/x/opticsBands_BC.v1_3.RRTMG.nc
  NI_OPTICS: ExtData/@EMISSIONS/x/opticsBands_NI.v2_5.RRTMG.nc
 BRC_OPTICS: ExtData/@EMISSIONS/x/opticsBands_BRC.v1_5.RRTMG.nc
+# DU_OPTICS: /discover/nobackup/mathomp4/AerosolTables-J10/RRTMGPS-RRTMGPI/opticsBands_DU.RRTMGPS-RRTMGPI.v15_3.nc
+# SS_OPTICS: /discover/nobackup/mathomp4/AerosolTables-J10/RRTMGPS-RRTMGPI/opticsBands_SS.RRTMGPS-RRTMGPI.v3_3.nc
+# SU_OPTICS: /discover/nobackup/mathomp4/AerosolTables-J10/RRTMGPS-RRTMGPI/opticsBands_SU.RRTMGPS-RRTMGPI.v1_3.nc
+# OC_OPTICS: /discover/nobackup/mathomp4/AerosolTables-J10/RRTMGPS-RRTMGPI/opticsBands_OC.RRTMGPS-RRTMGPI.v1_3.nc
+# BC_OPTICS: /discover/nobackup/mathomp4/AerosolTables-J10/RRTMGPS-RRTMGPI/opticsBands_BC.RRTMGPS-RRTMGPI.v1_3.nc
+# NI_OPTICS: /discover/nobackup/mathomp4/AerosolTables-J10/RRTMGPS-RRTMGPI/opticsBands_NI.RRTMGPS-RRTMGPI.v2_5.nc
+#BRC_OPTICS: /discover/nobackup/mathomp4/AerosolTables-J10/RRTMGPS-RRTMGPI/opticsBands_BRC.RRTMGPS-RRTMGPI.v1_5.nc
 NUM_BANDS: 30
 
 #USE_RRTMGP_IRRAD: 1.0
 #USE_RRTMGP_SORAD: 1.0
-#RRTMGP_DATA_LW: /discover/nobackup/pnorris/RRTMGP-data.new.20190201/rrtmgp/data/rrtmgp-data-lw-g256-2018-12-04.nc
-#RRTMGP_DATA_SW: /discover/nobackup/pnorris/RRTMGP-data.new.20190201/rrtmgp/data/rrtmgp-data-sw-g224-2018-12-04.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_LW: /discover/nobackup/pnorris/RRTMGP-data.new.20190201/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_SW: /discover/nobackup/pnorris/RRTMGP-data.new.20190201/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-sw.nc
-#RRTMGP_NUMERICAL_DFDTS_DELTS_IN_K: 0
+#RRTMGP_DATA_LW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/rrtmgp/data/rrtmgp-data-lw-g256-2018-12-04.nc
+#RRTMGP_DATA_SW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/rrtmgp/data/rrtmgp-data-sw-g224-2018-12-04.nc
+#RRTMGP_CLOUD_OPTICS_COEFFS_LW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc
+#RRTMGP_CLOUD_OPTICS_COEFFS_SW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-sw.nc
 
 DIURNAL_BIOMASS_BURNING: yes
 
@@ -726,10 +757,6 @@ ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOC
 # Time step for aerosol assimilation (GAAS)
 # -----------------------------------------
   GAAS_DT: 10800 # 3-hourly
-
-# Time step for Runoff Routing Model (RRM_RUN_DT)
-# -----------------------------------------
-  RRM_RUN_DT: 3600 # 1-hourly
 
 # DATAOCEAN Parameters for AMIP-Style Run
 # ----------------------------------------
@@ -773,15 +800,15 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 >>>COUPLED<<<steady_state_ocean: 0
 >>>COUPLED<<<OCEAN_PICE_SCALING: 0.0
 
-# For running coupled model in dual ocean mode, uncomment three lines below, 
+# For running MOM5 coupled model in dual ocean mode, uncomment three lines below, 
 # make sure that regular replay is enabled, proper PRECIP_FILE is chosen,
 # sst.data and fraci.data are pointing to read forcing files on tripolar grid,
 # the run starts at 21z/03z/09z/15z, 
 # HISTORY.rc collections have proper ref_time field
 # ---------------------------------------------------------------------------
-#DUAL_OCEAN: 1
-#DATA_SST_FILE: sst.data
-#DATA_FRT_FILE: fraci.data
+>>>MOM5<<<#DUAL_OCEAN: 1
+>>>MOM5<<<#DATA_SST_FILE: sst.data
+>>>MOM5<<<#DATA_FRT_FILE: fraci.data
 
 >>>COUPLED<<<
 >>>COUPLED<<<# Section for CICE 
@@ -801,3 +828,4 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 >>>COUPLED<<<ALBICEI: 0.36
 >>>COUPLED<<<ALBSNOWV: 0.98
 >>>COUPLED<<<ALBSNOWI: 0.7 
+>>>COUPLED<<<MIN_FREEZE_SALINITY: 5.0 

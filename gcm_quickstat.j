@@ -1,15 +1,13 @@
 #!/bin/csh -f
-alias MATH 'set \!:1 = `echo "\!:3-$" | bc -l`'
 
 #######################################################################
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#SBATCH --time=12:00:00
-#SBATCH --ntasks-per-node=1
+#SBATCH --time=04:00:00
+#SBATCH --nodes=@NODES --ntasks-per-node=1
 #SBATCH --job-name=quickstat
-#SBATCH --constraint=@MODEL
-#SBATCH  -o quickstat.out
+#SBATCH --output=quickstat.out
 #SBATCH --@QUEUE=@PARTITION
 #SBATCH --array=1-@NTASKS
 
