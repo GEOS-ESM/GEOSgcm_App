@@ -542,12 +542,16 @@ if( $OGCM == TRUE ) then
     # ------------------------
     CORSLV:
     if( .$OCNMODEL == .MIT ) then
-        echo "Enter the ${C1}Data_Ocean Horizontal Resolution: ${C2}llc90${CN} (1-deg, Lat-Lon-Cube) Default"
+        echo "Enter the ${C1}Ocean Horizontal Resolution: ${C2}llc90${CN} (1-deg, Lat-Lon-Cube) Default"
         echo "                                            ${C2}llc1080${CN} (1/12-deg, Lat-Lon-Cube)"
         echo "                                            ${C2}llc2160${CN} (1/24-deg, Lat-Lon-Cube)"
         echo "                                            ${C2}llc270${CN} (1/3-deg, Lat-Lon-Cube)"
         echo "                                            ${C2}cs32${CN}   (5-deg, cubed-sphere)"
         set Resolution = `echo $<`
+        if( .$Resolution == . ) then
+           set Resolution = 'llc90'
+        endif
+
         set num = $#Resolution
         if ($Resolution[1] == "cs32" ) then
             set OGCM_JM = 32
@@ -620,6 +624,7 @@ if( $OGCM == TRUE ) then
        else 
           goto CORSLV
        endif
+    endif
     endif
 
     set IMO = ${OGCM_IM}
