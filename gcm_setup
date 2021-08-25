@@ -2316,7 +2316,7 @@ set FILES = "gcm_run.j          \
              logging.yaml       "
 set FILES = `echo $FILES`
 
-if( $OGCM == TRUE ) then
+if( $OGCM == TRUE & $OCNMODEL != MIT ) then
    if ( $OCEAN_NAME == "MOM" ) then
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
@@ -2949,7 +2949,7 @@ HOMDIR/gcm_emip.setup
 HOMDIR/logging.yaml
 EOF
 
-if( $OGCM == TRUE ) then
+if( $OGCM == TRUE & $OCNMODEL != MIT ) then
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/input.nml
 HOMDIR/diag_table
