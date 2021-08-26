@@ -392,12 +392,13 @@ if ( $SITE == 'NCCS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}hasw (Haswell)${CN} (default)"
    echo "   ${C2}sky  (Skylake)${CN}"
-   echo "   ${C2}cas  (Cascade Lake)${CN}"
+   # Keep Cascade Lake hidden until in general use
+   #echo "   ${C2}cas  (Cascade Lake)${CN}"
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      set MODEL = 'hasw'
    endif
 
    if( $MODEL != 'hasw' & \
