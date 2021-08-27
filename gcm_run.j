@@ -340,7 +340,8 @@ setenv EMISSIONS @EMISSIONS
 
 >>>MOM5<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
 >>>MOM6<<<setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
->>>COUPLED<<<setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
+>>>MIT<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+>>>COUPLED<<<#setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 >>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
 >>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
 
@@ -356,7 +357,7 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
 >>>MIT<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Runoff.bin   runoff.bin
->>>MIT<<</bin/ln -sf $GRIDDIR/mit.ascii .
+>>>MIT<<</bin/ln -sf $GRIDDIR/mit.acsii
 >>>MOM5<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 >>>MOM5<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
 >>>MOM6<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
@@ -654,7 +655,9 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
->>>COUPLED<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+>>>MIT<<<#$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+>>>MOM5<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+>>>MOM6<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -676,7 +679,7 @@ else
 
    # If saltwater_internal_rst is in EXPDIR move to SCRDIR
    # -----------------------------------------------------
-   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/mv $EXPDIR/saltwater_internal_rst $SCRDIR
+   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/cp $EXPDIR/saltwater_internal_rst $SCRDIR
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------

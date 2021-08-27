@@ -527,13 +527,17 @@ if( $OGCM == TRUE ) then
        set OCEAN_NAME="MOM"
        set MOM5=""
        set MOM6 = "#DELETE"
+       set MIT  = "#DELETE"
     else if ( $OCNMODEL == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set MOM6=""
        set MOM5 = "#DELETE"
+       set MIT  = "#DELETE"
        set OCEAN_NAME="MOM6"
     else if ( $OCNMODEL == "MIT" ) then
         set OCEAN_NAME="MIT"
+        set OGCM_GRID_TYPE = llc
+	set MIT = ""
         set MOM5 = "#DELETE"
         set MOM6 = "#DELETE"
     endif
@@ -657,7 +661,9 @@ if( $OGCM == TRUE ) then
     set OGCM_NX = 36
     set OGCM_NY = 10
     @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
-    set OGCM_GRID_TYPE = Tripolar
+    if ( $OCNMODEL != "MIT" ) then
+       set OGCM_GRID_TYPE = Tripolar
+    endif
     set LATLON_OGCM = ""
     set CUBE_OGCM = "#DELETE"
     set DATAOCEAN = "#DELETE"
@@ -829,6 +835,7 @@ else
     set COUPLED   = "#DELETE"
     set MOM5      = "#DELETE"
     set MOM6      = "#DELETE"
+    set MIT       = "#DELETE"
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
@@ -1174,11 +1181,12 @@ set FVCUBED         = ""
 set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
 if( ${OGRIDTYP} == 'CF' ) then
    set OGCM_GRIDNAME   = "OC${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+else
     if( .$OCNMODEL == .MIT ) then
         set OGCM_GRIDNAME   = "${OGRIDTYP}${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+    else
+        set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
     endif
-else
-   set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
 endif
 set BCSRES          = "${ATMOS_RES}_${OCEAN_RES}"
 set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}'
@@ -2180,6 +2188,7 @@ s?@DASTUNING?#?g
 s?>>>FORCEDAS<<<?$FORCEDAS?g
 s?>>>FORCEGCM<<<?$FORCEGCM?g
 s?>>>COUPLED<<<?$COUPLED?g
+s?>>>MIT<<<?$MIT?g
 s?>>>MOM5<<<?$MOM5?g
 s?>>>MOM6<<<?$MOM6?g
 s?>>>DATAOCEAN<<<?$DATAOCEAN?g
