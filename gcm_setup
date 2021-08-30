@@ -346,6 +346,10 @@ if( $HRCODE == 'c180'  | \
 
     set DEFAULT_DO_IOS = TRUE
     echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
+# MVAPICH2 requires ioserver for history (issue with MPI_Put and MAPL)
+else if( $MPI == mvapich2 ) then
+    set DEFAULT_DO_IOS = TRUE
+    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
 else
     set DEFAULT_DO_IOS = FALSE
     echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
@@ -407,27 +411,48 @@ if ( $SITE == 'NCCS' ) then
    endif
 
 else if ( $SITE == 'NAS' ) then
+
+   # At NAS, if you build on Rome, we currently limit you to run on
+   # Rome; this is for two reasons. First, Romes are on SLES 15 and
+   # if you build on SLES 15, you can only run on SLES 15. Second,
+   # while a built-on-Rome GEOS might work on Intel processors, it
+   # will (probably) have a different output than if built on Intel
+   # due to different optimization flags.  This would violate the GEOS
+   # capability to get the same answers at NAS and NCCS
+
+   set BUILT_ON_ROME = @CFG_BUILT_ON_ROME@
+
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}has (Haswell)${CN}"
-   echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
-   echo "   ${C2}cas (Cascade Lake)${CN}"
-   #echo "   ${C2}rom (AMD Rome)${CN}"
-   echo " "
-   echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "       and Ivy Bridge are not supported by current GEOS"
+   if( "$BUILT_ON_ROME" != "TRUE" ) then
+      echo "   ${C2}has (Haswell)${CN}"
+      echo "   ${C2}bro (Broadwell)${CN}"
+      echo "   ${C2}sky (Skylake)${CN} (default)"
+      echo "   ${C2}cas (Cascade Lake)${CN}"
+      echo " "
+      echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
+      echo "       and Ivy Bridge are not supported by current GEOS"
+   else
+      echo "   ${C2}rom (AMD Rome)${CN} (default)"
+   endif
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      if( "$BUILT_ON_ROME" != "TRUE" ) then
+         set MODEL = 'sky'
+      else
+         set MODEL = 'rom'
+      endif
    endif
 
-   if( $MODEL != 'has' & \
-       $MODEL != 'bro' & \
-       $MODEL != 'sky' & \
-       $MODEL != 'cas' & \
-       $MODEL != 'rom' ) goto ASKPROC
+   if( "$BUILT_ON_ROME" != "TRUE" ) then
+      if( $MODEL != 'has' & \
+          $MODEL != 'bro' & \
+          $MODEL != 'sky' & \
+          $MODEL != 'cas' ) goto ASKPROC
+   else
+      if( $MODEL != 'rom' ) goto ASKPROC
+   endif
 
    # Some processors have weird names at NAS
    # ---------------------------------------
@@ -1195,6 +1220,11 @@ endif
 if(  $GOKART == "A" ) set GOKART = TRUE    # Use Actual         Aerosols
 if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
 
+# Default setup for linkbcs emissions
+set OPS_SPECIES      = "#"
+set CMIP_SPECIES     = "#"
+set MERRA2OX_SPECIES = "#"
+set PCHEM_CLIM_YEARS = ""
 
 if( $GOKART == TRUE ) then
 
@@ -1222,6 +1252,19 @@ EMISSIONS:
      endif
      if(  $EMISSIONS == OPS ) set EMISSIONS = ''
 
+     # Fix up the linkbcs species.data
+     # NOTE: If OPS is selected, EMISSIONS is blanked
+     if(  $EMISSIONS == '' ) then
+        set OPS_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 1
+     else if(  $EMISSIONS == CMIP ) then
+        set CMIP_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 228
+     else
+        set MERRA2OX_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 39
+     endif
+
 # AERO Provider
 # -------------
      set AERO_PROVIDER = GOCART
@@ -1248,6 +1291,10 @@ set  AERO_PROVIDER   = GOCART.data
 set  EMISSIONS       = ""
 set  GOCART          = "#"
 set  HIST_GOCART     = "#DELETE"
+
+# GOCART.data uses MERRA2OX currently
+set MERRA2OX_SPECIES = ""
+set PCHEM_CLIM_YEARS = 39
 
 endif
 
@@ -1791,24 +1838,21 @@ else if( $MPI == mvapich2 ) then
 
 if( $GPU == "TRUE" ) then
 cat > $HOMDIR/SETENV.commands << EOF
-   #setenv MV2_ON_DEMAND_THRESHOLD 8192
-   #setenv MV2_USE_SHMEM_ALLREDUCE 0
-   #setenv MV2_USE_SHMEM_COLL      0
    setenv MV2_ENABLE_AFFINITY     0
    setenv MV2_RNDV_PROTOCOL       RPUT
    setenv MV2_USE_RDMA_ONE_SIDED  1
    setenv SLURM_DISTRIBUTION block
+   setenv MV2_MPIRUN_TIMEOUT 100
+   setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else
 
 cat > $HOMDIR/SETENV.commands << EOF
-   #setenv MV2_ON_DEMAND_THRESHOLD 8192
-   #setenv MV2_USE_SHMEM_ALLREDUCE 0
-   #setenv MV2_USE_SHMEM_COLL      0
-   #setenv MV2_USE_UD_HYBRID       0
    setenv MV2_ENABLE_AFFINITY     0
    setenv SLURM_DISTRIBUTION block
+   setenv MV2_MPIRUN_TIMEOUT 100
+   setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 endif # if GPU and mvapich2
@@ -1827,6 +1871,8 @@ cat > $HOMDIR/SETENV.commands << EOF
    unsetenv MPI_NUM_MEMORY_REGIONS
    setenv MPI_XPMEM_ENABLED yes
    unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+
+   setenv MPI_LAUNCH_TIMEOUT 40
 
    # For some reason, PMI_RANK is randomly set and interferes
    # with binarytile.x and other executables.
@@ -2041,6 +2087,9 @@ s?>>>MOM5<<<?$MOM5?g
 s?>>>MOM6<<<?$MOM6?g
 s?>>>DATAOCEAN<<<?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
+s?@OPS_SPECIES?$OPS_SPECIES?g
+s?@CMIP_SPECIES?$CMIP_SPECIES?g
+s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
 s?>>>FVCUBED<<<?$FVCUBED?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
@@ -2063,8 +2112,7 @@ s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
 s?@OX_RELAXTIME?259200.?g
-#s?@PCHEM_CLIM_YEARS?228?g
-s?@PCHEM_CLIM_YEARS?39?g
+s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g

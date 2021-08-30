@@ -12,9 +12,7 @@ ecbuild_add_executable (
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
 
-#link_directories (${MKL_LIBRARIES})
-target_link_libraries (GEOSgcm.x ${OpenMP_Fortran_LIBRARIES})
-set_target_properties(GEOSgcm.x PROPERTIES LINK_FLAGS "${OpenMP_Fortran_FLAGS}")
+target_link_libraries (GEOSgcm.x OpenMP::OpenMP_Fortran)
 target_include_directories (GEOSgcm.x PUBLIC ${INC_ESMF})
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
@@ -54,6 +52,14 @@ if(HYDROSTATIC)
 else()
    set(CFG_HYDROSTATIC FALSE)
 endif()
+
+# Did we build for AMD Rome hardware (aka EPYC)?
+cmake_host_system_information(RESULT proc_decription QUERY PROCESSOR_DESCRIPTION)
+if (${proc_decription} MATCHES "EPYC")
+  set(CFG_BUILT_ON_ROME TRUE)
+else ()
+  set(CFG_BUILT_ON_ROME FALSE)
+endif ()
 
 set (setup_scripts
    gcm_setup

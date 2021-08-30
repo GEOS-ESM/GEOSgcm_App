@@ -201,7 +201,7 @@ set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 >>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
 >>>EMIP_NEWLAND<<<# ------------------------------------------------
 set RSTID = `/bin/ls *catch* | cut -d. -f1`
-set day   = `/bin/ls *catch* | cut -d. -f3 | cut -b 7-8`
+set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
 $GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
 >>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
 
@@ -371,11 +371,11 @@ cat << _EOF_ > $FILE
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
+@OPS_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+@CMIP_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 
 # S2S pre-industrial with prod/loss of stratospheric water vapor
 # (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
@@ -384,7 +384,7 @@ cat << _EOF_ > $FILE
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
@@ -729,6 +729,30 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
 
 endif
 
+# Check for MERRA2OX Consistency
+# ------------------------------
+
+# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# attempt at a check to make sure you aren't using it and are past the date
+
+# Check for MERRA2OX by looking at AGCM.rc
+set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
+
+# If it is 39, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 39 ) then
+
+   # Grab the date from cap_restart
+   set YEARMON = `cat cap_restart | cut -c1-6`
+
+   # Set a magic date
+   set MERRA2OX_END_DATE = "201706"
+
+   # String comparison seems to work here...
+   if ( $YEARMON > $MERRA2OX_END_DATE ) then
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      exit 2
+   endif
+endif
 
 # Environment variables for MPI, etc
 # ----------------------------------
@@ -765,8 +789,8 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
 endif
 
-# Set OMP_NUM_THREADS
-# -------------------
+# Establish safe default number of OpenMP threads
+# -----------------------------------------------
 setenv OMP_NUM_THREADS 1
 
 # Run GEOSgcm.x
@@ -775,25 +799,27 @@ if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1 ) then
    set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
-   set IOSERVER_EXTRA = ""
 
-   # Rome requires some extra bits for IOSERVER as it requires
-   # multigroup server with less PEs per backend node
-   if ( -x /usr/local/bin/nas_info ) then
-      set PROCTYPE=`/usr/local/bin/nas_info --nasmodel`
-      if ( $PROCTYPE == rom ) then
-         # Per Weiyuan Jiang, the ideal number of backend PEs is based on the
-         # number of HISTORY collections and number of IO nodes
+   # Per SI Team, the multigroup server should always be used
+   # The ideal number of backend PEs is based on the number of HISTORY
+   # collections and number of IO nodes
 
-         # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
-         set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+   # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
+   set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
 
-         # Now we divide that number of collections by the ioserver nodes
-         set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
-
-         set IOSERVER_EXTRA = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
-      endif
+   # Protect against divide by zero
+   if ($IOS_NODES == 0) then
+      echo "Something is wrong. IOSERVER asked for, but zero IO nodes provided"
+      exit 3
    endif
+
+   # Now we divide that number of collections by the ioserver nodes
+   set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
+
+   # Finally multigroup requires at least two backend pes
+   if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+
+   set IOSERVER_EXTRA = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
 else
    set IOSERVER_OPTIONS = ""
    set IOSERVER_EXTRA = ""
