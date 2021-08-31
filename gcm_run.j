@@ -357,7 +357,7 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
 >>>MIT<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Runoff.bin   runoff.bin
->>>MIT<<</bin/ln -sf $GRIDDIR/mit.acsii
+>>>MIT<<</bin/ln -sf $GRIDDIR/mit.ascii
 >>>MOM5<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 >>>MOM5<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
 >>>MOM6<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
