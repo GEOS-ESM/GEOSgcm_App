@@ -297,6 +297,23 @@ else
    endif
 endif
 
+ASKMOIST:
+
+ echo "Enter Choice for ${C1}Moist Grid Comp${CN}: (Default: GEOS)"
+ echo "   ${C2}GEOS  --  GEOS Moist Grid Comp${CN}"
+ echo "   ${C2}CCPP  --  GFS (culled from CCPP) Moist Grid Comp ${CN}"
+ set   MOIST_GRIDCOMP = $<
+if( .$MOIST_GRIDCOMP == . ) then
+   set MOIST_GRIDCOMP = "GEOS"
+else
+   set MOIST_GRIDCOMP = `echo $MOIST_GRIDCOMP | tr "[:lower:]" "[:upper:]"`
+   if( "$AGCM_MP" != "GEOS" & \
+       "$AGCM_MP" != "CCPP_GFS" ) then
+       echo
+       echo "${C1}MOIST Grid Comp${CN} must be one of the options below!"
+       goto ASKMOIST
+   endif
+endif
 
 #######################################################################
 #   Test to see if using hydrostatic or non-hydrostatic atmosphere
@@ -1100,6 +1117,11 @@ if ( "$AGCM_MP" == "MG1" ) then
    set MP_MG1 = ""
 else
    set MP_MG1 = "# "
+endif
+if ( "$MOIST_GRIDCOMP" == "CCPP_GFS" ) then
+   set GFS_MOIST = ""
+else
+   set GFS_MOIST = "# "
 endif
 
 # Settings for fvcore_layout.rc
