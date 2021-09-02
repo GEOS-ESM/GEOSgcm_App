@@ -301,14 +301,14 @@ ASKMOIST:
 
  echo "Enter Choice for ${C1}Moist Grid Comp${CN}: (Default: GEOS)"
  echo "   ${C2}GEOS  --  GEOS Moist Grid Comp${CN}"
- echo "   ${C2}CCPP  --  GFS (culled from CCPP) Moist Grid Comp ${CN}"
+ echo "   ${C2}CCPP_GFS  --  GFS (culled from CCPP) Moist Grid Comp ${CN}"
  set   MOIST_GRIDCOMP = $<
 if( .$MOIST_GRIDCOMP == . ) then
    set MOIST_GRIDCOMP = "GEOS"
 else
    set MOIST_GRIDCOMP = `echo $MOIST_GRIDCOMP | tr "[:lower:]" "[:upper:]"`
-   if( "$AGCM_MP" != "GEOS" & \
-       "$AGCM_MP" != "CCPP_GFS" ) then
+   if( "$MOIST_GRIDCOMP" != "GEOS" & \
+       "$MOIST_GRIDCOMP" != "CCPP_GFS" ) then
        echo
        echo "${C1}MOIST Grid Comp${CN} must be one of the options below!"
        goto ASKMOIST
@@ -2199,6 +2199,7 @@ s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
 
 s/@MP_MG1/$MP_MG1/g
+s/@GFS_MOIST/$GFS_MOIST/g
 s/@MP_GFDL/$MP_GFDL/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
