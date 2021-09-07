@@ -920,7 +920,7 @@ if( $AGCM_IM == "c500" ) then
      set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 450
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -943,7 +943,7 @@ if( $AGCM_IM == "c720" ) then
      set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 450
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
