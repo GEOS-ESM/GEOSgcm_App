@@ -26,6 +26,9 @@ SATSIM_DT: 3600
 SOLARAvrg: 0
 IRRADAvrg: 0
 
+ORBIT_ANAL2B: .TRUE.
+EOT: .TRUE.
+
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
 @MP_MG1CLDMICRO: 2MOMENT
 
@@ -34,8 +37,8 @@ IRRADAvrg: 0
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
 @MP_GFDLHYDROSTATIC: @GFDL_HYDRO
 
-# UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
-#USE_AEROSOL_NN: 0
+# Enable (1) or Disable (0) aerosol activation in 1-moment cloud microphysics
+USE_AEROSOL_NN: @USE_AEROSOL_NN
 
 ###########################################################
 # Flag for definition of the convection scheme

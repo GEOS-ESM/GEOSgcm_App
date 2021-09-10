@@ -1183,6 +1183,7 @@ if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
 
 if( $GOKART == TRUE ) then
 
+set USE_AEROSOL_NN = 1
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .false."
 
@@ -1237,6 +1238,7 @@ set  EMISSIONS       = ""
 set  GOCART          = "#"
 set  HIST_GOCART     = "#DELETE"
 
+set USE_AEROSOL_NN = 0
 set GFDL_PROG_CCN = "prog_ccn = .false."
 set GFDL_USE_CCN  = "use_ccn = .true."
 
@@ -2129,6 +2131,8 @@ s?@TAREXEC?$TAREXEC?g
 s/@MP_MG1/$MP_MG1/g
 s/@MP_GFDL/$MP_GFDL/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
+s?@USE_AEROSOL_NN?$USE_AEROSOL_NN?g
+
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_HYDRO?$FV_HYDRO?g
 s?@FV_SATADJ?$FV_SATADJ?g
