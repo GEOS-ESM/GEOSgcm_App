@@ -1198,15 +1198,15 @@ set HIST_GOCART     = ""
 # --------------
 EMISSIONS:
      set   EMISSIONS = ''
-     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}MERRA2${CN} (Default), ${C2}PIESA${CN}, ${C2}CMIP${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN} or ${C2}OPS${CN}:"
+     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} (Default), ${C2}MERRA2${CN}, ${C2}PIESA${CN}, ${C2}CMIP${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN} or ${C2}OPS${CN}:"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = MERRA2
+     set   EMISSIONS = AMIP
      else
      set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
-     if(  $EMISSIONS != CMIP & $EMISSIONS != MERRA2 & $EMISSIONS != NR &  $EMISSIONS != MERRA2-DD & $EMISSIONS != PIESA & $EMISSIONS != OPS ) then
+     if(  $EMISSIONS != CMIP & $EMISSIONS != MERRA2 & $EMISSIONS != NR &  $EMISSIONS != MERRA2-DD & $EMISSIONS != PIESA & $EMISSIONS != OPS & $EMISSIONS != AMIP) then
      echo
-     echo "${C1}Emission Files${CN} must be equal to:  ${C2}CMIP${CN}, ${C2}MERRA2${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN}, ${C2}PIESA${CN}, or ${C2}OPS${CN}!"
+     echo "${C1}Emission Files${CN} must be equal to:  ${C2}AMIP${CN}, ${C2}CMIP${CN}, ${C2}MERRA2${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN}, ${C2}PIESA${CN}, or ${C2}OPS${CN}!"
      goto EMISSIONS
      else
      echo
