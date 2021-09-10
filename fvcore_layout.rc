@@ -36,7 +36,7 @@
   vg_max = 12.
   vr_max = 12.
   qi_lim = 1.
-  prog_ccn = .true.
+  @GFDL_PROG_CCN
   do_qa = .false.
   fast_sat_adj = .true.
   sat_adj0 = 0.75
@@ -45,8 +45,8 @@
   tau_v2l  = 150
   tau_g2v  = 900.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
-  dw_land  = 0.035
-  dw_ocean = 0.14
+  dw_land  = 0.35
+  dw_ocean = 0.20
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
@@ -62,7 +62,7 @@
   c_paut = 0.5
   c_cracw = 0.8
   use_ppm = .false.
-  use_ccn = .false. 
+  @GFDL_USE_CCN
   mono_prof = .true.
   z_slope_liq  = .true.
   z_slope_ice  = .true.
