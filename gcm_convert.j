@@ -109,6 +109,11 @@ cd $SCRDIR
 
 cat fvcore_layout.rc >> input.nml
 
+@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_ExtData.rc
+@MP_NO_USE_WSUB# -----------------------------------------------------
+@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`

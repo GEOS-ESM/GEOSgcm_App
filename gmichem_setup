@@ -1201,7 +1201,7 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #           Setting for Microphysics & Hydrostatic Mode               #
 #######################################################################
 
-# For chevronned lines in AGCM.rc.tmpl
+# For @-lines in AGCM.rc.tmpl
 set GFDL_HYDRO = FALSE
 if ( "$AGCM_MP" == "GFDL" ) then
    set MP_GFDL = ""
@@ -1212,6 +1212,13 @@ if ( "$AGCM_MP" == "MG1" ) then
    set MP_MG1 = ""
 else
    set MP_MG1 = "# "
+endif
+
+# 1MOM and GFDL do not use WSUB, so this eliminates a regrid
+if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
+   set MP_NO_USE_WSUB = ""
+else
+   set MP_NO_USE_WSUB = "#DELETE#"
 endif
 
 # Settings for fvcore_layout.rc

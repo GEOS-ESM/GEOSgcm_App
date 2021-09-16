@@ -637,6 +637,12 @@ if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv       
 set   GOCART_DATA_TRUE = `grep -i "^ *ENABLE_GOCART_DATA *: *\.TRUE\."   GEOS_ChemGridComp.rc | wc -l`
 if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
 
+@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_ExtData.rc
+@MP_NO_USE_WSUB# -----------------------------------------------------
+@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+
 # Generate the complete ExtData.rc
 # --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
