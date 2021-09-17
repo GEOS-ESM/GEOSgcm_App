@@ -407,11 +407,6 @@ cat << _EOF_ > $FILE
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
->>>GCMRUN_CATCHCN<<< set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2` 
->>>GCMRUN_CATCHCN<<< if ($LSM_CHOICE == 2) then
->>>GCMRUN_CATCHCN<<<   grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
->>>GCMRUN_CATCHCN<<< endif
-
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
@@ -426,6 +421,11 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
 _EOF_
+
+>>>GCMRUN_CATCHCN<<<set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2` 
+>>>GCMRUN_CATCHCN<<<if ($LSM_CHOICE == 2) then
+>>>GCMRUN_CATCHCN<<<  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+>>>GCMRUN_CATCHCN<<<endif
 
 >>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
 >>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
