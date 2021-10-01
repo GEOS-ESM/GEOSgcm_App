@@ -391,9 +391,9 @@ ASKPROC:
 if ( $SITE == 'NCCS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}hasw (Haswell)${CN} (default)"
-   if (-e /etc/os-release) then
-      echo "   ${C2}sky  (Skylake)${CN}"
-   endif
+   echo "   ${C2}sky  (Skylake)${CN}"
+   # Keep Cascade Lake hidden until in general use
+   #echo "   ${C2}cas  (Cascade Lake)${CN}"
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -402,12 +402,15 @@ if ( $SITE == 'NCCS' ) then
    endif
 
    if( $MODEL != 'hasw' & \
-       $MODEL != 'sky' ) goto ASKPROC
+       $MODEL != 'sky'  & \
+       $MODEL != 'cas' ) goto ASKPROC
 
    if (     $MODEL == 'hasw') then
       set NCPUS_PER_NODE = 28
    else if ($MODEL == 'sky') then
       set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'cas') then
+      set NCPUS_PER_NODE = 48
    endif
 
 else if ( $SITE == 'NAS' ) then
