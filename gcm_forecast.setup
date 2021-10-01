@@ -43,12 +43,12 @@ if( .$QSUB == . ) set QSUB = FALSE
 set     NFMAX = 1
 
 
-set                  NX   = `grep "^ *NX:"                 $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set                  NY   = `grep "^ *NY:"                 $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set           ANA_EXPID   = `grep "REPLAY_ANA_EXPID:"      $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set           FCST_TYPE   = `grep "REPLAY_MODE:"           $HOMDIR/AGCM.rc | grep -v '#' | cut -d: -f2`
-set REPLAY_FILE_FREQUENCY = `grep "REPLAY_FILE_FREQUENCY:" $HOMDIR/AGCM.rc | grep -v "#" | cut -d: -f2`
-set       MKIAU_FREQUENCY = `grep       "MKIAU_FREQUENCY:" $HOMDIR/AGCM.rc | grep -v "#" | cut -d: -f2`
+set                  NX   = `grep '^\s*NX:'                    $HOMDIR/AGCM.rc | cut -d: -f2`
+set                  NY   = `grep '^\s*NY:'                    $HOMDIR/AGCM.rc | cut -d: -f2`
+set           ANA_EXPID   = `grep '^\s*REPLAY_ANA_EXPID:'      $HOMDIR/AGCM.rc | cut -d: -f2`
+set           FCST_TYPE   = `grep '^\s*REPLAY_MODE:'           $HOMDIR/AGCM.rc | cut -d: -f2`
+set REPLAY_FILE_FREQUENCY = `grep '^\s*REPLAY_FILE_FREQUENCY:' $HOMDIR/AGCM.rc | cut -d: -f2`
+set       MKIAU_FREQUENCY = `grep '^\s*MKIAU_FREQUENCY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
 
 if( .$REPLAY_FILE_FREQUENCY == '.' ) set REPLAY_FILE_FREQUENCY = 21600
 if(       .$MKIAU_FREQUENCY == '.' ) set       MKIAU_FREQUENCY = $REPLAY_FILE_FREQUENCY
