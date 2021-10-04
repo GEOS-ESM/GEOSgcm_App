@@ -390,24 +390,26 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}hasw (Haswell)${CN} (default)"
-   if (-e /etc/os-release) then
-      echo "   ${C2}sky  (Skylake)${CN}"
-   endif
+   echo "   ${C2}hasw (Haswell)${CN}"
+   echo "   ${C2}sky  (Skylake)${CN} (default)"
+   echo "   ${C2}cas  (Cascade Lake)${CN}"
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'hasw'
+      set MODEL = 'sky'
    endif
 
    if( $MODEL != 'hasw' & \
-       $MODEL != 'sky' ) goto ASKPROC
+       $MODEL != 'sky'  & \
+       $MODEL != 'cas' ) goto ASKPROC
 
    if (     $MODEL == 'hasw') then
       set NCPUS_PER_NODE = 28
    else if ($MODEL == 'sky') then
       set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'cas') then
+      set NCPUS_PER_NODE = 48
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -1125,7 +1127,7 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #           Setting for Microphysics & Hydrostatic Mode               #
 #######################################################################
 
-# For chevronned lines in AGCM.rc.tmpl
+# For @-lines in AGCM.rc.tmpl
 set GFDL_HYDRO = FALSE
 if ( "$AGCM_MP" == "GFDL" ) then
    set MP_GFDL = ""
@@ -1136,6 +1138,13 @@ if ( "$AGCM_MP" == "MG1" ) then
    set MP_MG1 = ""
 else
    set MP_MG1 = "# "
+endif
+
+# 1MOM and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
+   set MP_NO_USE_WSUB = ""
+else
+   set MP_NO_USE_WSUB = "#DELETE#"
 endif
 
 # Settings for fvcore_layout.rc
@@ -1901,6 +1910,8 @@ cat > $HOMDIR/SETENV.commands << EOF
    setenv MPI_XPMEM_ENABLED yes
    unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 
+   setenv MPI_LAUNCH_TIMEOUT 40
+
    # For some reason, PMI_RANK is randomly set and interferes
    # with binarytile.x and other executables.
    unsetenv PMI_RANK
@@ -2216,6 +2227,7 @@ s?@TAREXEC?$TAREXEC?g
 
 s/@MP_MG1/$MP_MG1/g
 s/@MP_GFDL/$MP_GFDL/g
+s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_ZTRACER?$FV_ZTRACER?g
