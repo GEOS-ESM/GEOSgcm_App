@@ -1092,7 +1092,7 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #           Setting for Microphysics & Hydrostatic Mode               #
 #######################################################################
 
-# For chevronned lines in AGCM.rc.tmpl
+# For @-lines in AGCM.rc.tmpl
 set GFDL_HYDRO = FALSE
 if ( "$AGCM_MP" == "GFDL" ) then
    set MP_GFDL = ""
@@ -1103,6 +1103,13 @@ if ( "$AGCM_MP" == "MG1" ) then
    set MP_MG1 = ""
 else
    set MP_MG1 = "# "
+endif
+
+# 1MOM and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
+   set MP_NO_USE_WSUB = ""
+else
+   set MP_NO_USE_WSUB = "#DELETE#"
 endif
 
 # Settings for fvcore_layout.rc
@@ -1174,20 +1181,27 @@ endif
 # ----------------------
 if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
-    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN: Catch-Carbon Model)"
+    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"
     set   LSM_CHOICE = $<
     if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
-    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 ) then
+    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 &  $LSM_CHOICE != 3 ) then
         echo
-        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} or ${C2}2${CN}!"
+        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} , ${C2}2${CN} or ${C2}3${CN}!"
         goto LSM_CHOICE
     else
         echo
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
+    if( $LSM_CHOICE == 3 ) set HIST_CATCHCN = ""
     if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
+    if( $LSM_CHOICE == 3 ) set GCMRUN_CATCHCN = ""
+    if( $LSM_CHOICE == 2 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM40 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    else if ( $LSM_CHOICE == 3 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM45 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    endif
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
@@ -2181,6 +2195,7 @@ s?@TAREXEC?$TAREXEC?g
 
 s/@MP_MG1/$MP_MG1/g
 s/@MP_GFDL/$MP_GFDL/g
+s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_ZTRACER?$FV_ZTRACER?g
@@ -2552,7 +2567,7 @@ rsync -ar  --exclude '*.o'    \
            --exclude 'mk_LakeLandiceSaltRestarts'  \
            --exclude 'mk_CatchRestarts'  \
            --exclude 'mk_CatchCNRestarts'  \
-           --exclude 'mk_LDASsaRestarts'  \
+           --exclude 'mk_GEOSldasRestarts'  \
            --exclude 'Scale_Catch'  \
            --exclude 'Scale_CatchCN'  \
            --exclude 'strip_vegdyn'  \
@@ -3030,7 +3045,7 @@ rsync -ar  --exclude '*.o'    \
            --exclude 'mk_LakeLandiceSaltRestarts'  \
            --exclude 'mk_CatchRestarts'  \
            --exclude 'mk_CatchCNRestarts'  \
-           --exclude 'mk_LDASsaRestarts'  \
+           --exclude 'mk_GEOSldasRestarts'  \
            --exclude 'Scale_Catch'  \
            --exclude 'Scale_CatchCN'  \
            --exclude 'strip_vegdyn'  \
