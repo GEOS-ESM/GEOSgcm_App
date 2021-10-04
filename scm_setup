@@ -373,10 +373,14 @@ case $SITE in
    *)
    echo "Unknown site $SITE. Will need to hardcode in SCMDIR, BCSDIR, and CHMDIR."
    exit 3
+   # Example using TinyBCs
+   #SCMDIR="$HOME/ModelData/TinyBCs-GitV10/scm/"
+   #BCSDIR="$HOME/ModelData/TinyBCs-GitV10/bcs/Icarus"
+   #CHMDIR="$HOME/ModelData/TinyBCs-GitV10/chem"
    ;;
 esac
 
-SOURCEDIR=$SCMDIR$selected_case
+SOURCEDIR=$SCMDIR/$selected_case
 
 mkdir -p $expdir
 
@@ -405,9 +409,9 @@ mkdir -p $expdir
 
 mkdir -p $expdir/ExtData
 
-/bin/cp -u $SOURCEDIR/CAP.rc $expdir
+/bin/cp $SOURCEDIR/CAP.rc $expdir
 /bin/cp $SOURCEDIR/cap_restart $expdir
-/bin/cp -u $SOURCEDIR/HISTORY.rc $expdir
+/bin/cp $SOURCEDIR/HISTORY.rc $expdir
 
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 $expdir/species.data
 /bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 $expdir/species.data
@@ -415,7 +419,7 @@ mkdir -p $expdir/ExtData
 /bin/cp $INSTALLDIR/etc/*.rc $expdir
 /bin/cp $SCMDIR/general/* $expdir
 
-/bin/cp -u $INSTALLDIR/etc/AGCM.rc.tmpl $expdir
+/bin/cp $INSTALLDIR/etc/AGCM.rc.tmpl $expdir
 
 /bin/cp $SOURCEDIR/sedfile.CASE $expdir
 /bin/cp $SOURCEDIR/AGCM.CASE.txt $expdir
