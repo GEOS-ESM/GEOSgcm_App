@@ -152,12 +152,11 @@ else
 endif
 
 @ MODEL_NPES = $NX * $NY
+set NCPUS_PER_NODE = @MPI_PER_NODE
 
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
-
-      set NCPUS_PER_NODE = @NCPUS_PER_NODE
 
       @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
       @ NPES   = $NODES * $NCPUS_PER_NODE
@@ -686,7 +685,16 @@ endif
 
 # Set OMP_NUM_THREADS
 # -------------------
-setenv OMP_NUM_THREADS 1
+setenv OMP_NUM_THREADS @OMP_THREADS
+if ($OMP_NUM_THREADS > 1) then
+  setenv OMP_STACKSIZE 16M
+  setenv I_MPI_PIN_DOMAIN omp
+  setenv KMP_AFFINITY compact
+  echo OMP_STACKSIZE    $OMP_STACKSIZE
+  echo I_MPI_PIN_DOMAIN $I_MPI_PIN_DOMAIN
+  echo KMP_AFFINITY     $KMP_AFFINITY
+endif
+echo OMP_NUM_THREADS $OMP_NUM_THREADS
 
 # Run GEOSgcm.x
 # -------------
