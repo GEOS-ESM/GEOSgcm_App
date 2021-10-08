@@ -329,145 +329,6 @@ else
    endif
 endif
 
-
-#######################################################################
-#            Test to see if you want to use ioserver
-#######################################################################
-
-ASKIOS:
-
-if( $HRCODE == 'c180'  | \
-    $HRCODE == 'c360'  | \
-    $HRCODE == 'c720'  | \
-    $HRCODE == 'c1440' | \
-    $HRCODE == 'c2880' | \
-    $HRCODE == 'c5760' | \
-    $HRCODE == 'c768'  | \
-    $HRCODE == 'c1536' | \
-    $HRCODE == 'c3072' ) then
-
-    set DEFAULT_DO_IOS = TRUE
-    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
-else
-    set DEFAULT_DO_IOS = FALSE
-    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
-endif
-
-set   DO_IOS  = $<
-if( .$DO_IOS == . ) then
-   set   DO_IOS  = $DEFAULT_DO_IOS
-else
-   set   DO_IOS  = `echo   $DO_IOS | tr "[:lower:]" "[:upper:]"`
-   if(  $DO_IOS == "Y"     | \
-        $DO_IOS == "YES"   | \
-        $DO_IOS == "T"     | \
-        $DO_IOS == "TRUE"  ) set DO_IOS = TRUE
-   if(  $DO_IOS == "N"     | \
-        $DO_IOS == "NO"    | \
-        $DO_IOS == "F"     | \
-        $DO_IOS == "FALSE" ) set DO_IOS = FALSE
-
-   if( $DO_IOS != "TRUE" & $DO_IOS != "FALSE" ) then
-      echo
-      echo "${C1}IOSERVER${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
-      goto ASKIOS
-   endif
-endif
-
-if ( $DO_IOS == "TRUE" ) then
-   set USE_IOSERVER = 1
-else
-   set USE_IOSERVER = 0
-endif
-
-#######################################################################
-#                 What Processor Should We Run On?
-#######################################################################
-
-ASKPROC:
-
-if ( $SITE == 'NCCS' ) then
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}has (Haswell)${CN} (default)"
-   if (-e /etc/os-release) then
-      echo "   ${C2}sky  (Skylake)${CN}"
-      echo "   ${C2}cas  (Cascadelake)${CN}"
-   endif
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      set MODEL = 'has'
-   endif
-
-   if( $MODEL != 'has' & \
-       $MODEL != 'sky' & \
-       $MODEL != 'cas' ) goto ASKPROC
-
-   set NX_FAC = 45
-   set NY_FAC = 3
-   if (     $MODEL == 'has') then
-      set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'sky') then
-      set NCPUS_PER_NODE = 36
-   else if ($MODEL == 'cas') then
-      set NCPUS_PER_NODE = 48
-  endif
-
-else if ( $SITE == 'NAS' ) then
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}has (Haswell)${CN}"
-   echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
-   echo "   ${C2}cas (Cascade Lake)${CN}"
-   #echo "   ${C2}rom (AMD Rome)${CN}"
-   echo " "
-   echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "       and Ivy Bridge are not supported by current GEOS"
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      set MODEL = 'sky'
-   endif
-
-   if( $MODEL != 'has' & \
-       $MODEL != 'bro' & \
-       $MODEL != 'sky' & \
-       $MODEL != 'cas' & \
-       $MODEL != 'rom' ) goto ASKPROC
-
-   # Some processors have weird names at NAS
-   # ---------------------------------------
-
-   if ($MODEL == bro ) then
-      set MODEL = 'bro_ele'
-   else if ($MODEL == sky) then
-      set MODEL = 'sky_ele'
-   else if ($MODEL == cas) then
-      set MODEL = 'cas_ait'
-   else if ($MODEL == rom) then
-      set MODEL = 'rom_ait'
-   endif
-
-   if      ($MODEL == 'has') then
-      set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'bro_ele') then
-      set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'sky_ele') then
-      set NCPUS_PER_NODE = 36
-   else if ($MODEL == 'cas_ait') then
-      set NCPUS_PER_NODE = 36
-   else if ($MODEL == 'rom_ait') then
-      set NCPUS_PER_NODE = 128
-      # Romes are on a different aoe
-      set MODEL='rom_ait:aoe=sles15'
-   endif
-
-else
-   set MODEL = 'UNKNOWN'
-endif
-
 #######################################################################
 #                         Check for COUPLED Ocean
 #######################################################################
@@ -607,15 +468,15 @@ else
     echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)"
     echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
     echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)"
-    set   HRCODE = `echo $<`
-    if( .$HRCODE == . ) set HRCODE = o1
-    set   HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
+    set   OCCODE = `echo $<`
+    if( .$OCCODE == . ) set OCCODE = o1
+    set   OCCODE = `echo $OCCODE | tr "[:upper:]" "[:lower:]"`
 
-    if( $HRCODE != 'o1' & \
-        $HRCODE != 'o2' & \
-        $HRCODE != 'o3' & \
-        $HRCODE != 'cs' ) goto DORSLV
-    if( $HRCODE == 'o1' ) then
+    if( $OCCODE != 'o1' & \
+        $OCCODE != 'o2' & \
+        $OCCODE != 'o3' & \
+        $OCCODE != 'cs' ) goto DORSLV
+    if( $OCCODE == 'o1' ) then
         set Resolution = `echo  360  180`
         set OGCM_IM  = $Resolution[1]
         set OGCM_JM  = $Resolution[2]
@@ -633,7 +494,7 @@ else
         set OSTIA    = "#DELETE"
         set DATAOCEAN = ""
     endif
-    if( $HRCODE == 'o2' ) then
+    if( $OCCODE == 'o2' ) then
         set Resolution = `echo 1440 720`
         set OGCM_IM  = $Resolution[1]
         set OGCM_JM  = $Resolution[2]
@@ -651,7 +512,7 @@ else
         set OSTIA    = ""
         set DATAOCEAN = ""
     endif
-    if( $HRCODE == 'o3' ) then
+    if( $OCCODE == 'o3' ) then
         set Resolution = `echo 2880 1440`
         set OGCM_IM  = $Resolution[1]
         set OGCM_JM  = $Resolution[2]
@@ -669,7 +530,7 @@ else
         set OSTIA    = ""
         set DATAOCEAN = ""
     endif
-    if( $HRCODE == 'cs' ) then
+    if( $OCCODE == 'cs' ) then
         if( $AGCM_IM == 'c90'  | \
             $AGCM_IM == 'c180' | \
             $AGCM_IM == 'c360' | \
@@ -722,7 +583,7 @@ else
          set JMO = 0$JMO
     endif
 
-    if( $HRCODE == 'cs' ) then
+    if( $OCCODE == 'cs' ) then
         set OCEAN_RES =  CF${IMO}x6C
     else
         set OCEAN_RES =  DE${IMO}xPE${JMO}
@@ -761,7 +622,7 @@ endif
 
 # Set DEFAULT IOSERVER Parameters
 # -------------------------------
-     set DEF_IOS_NDS      = 1
+     set DEF_IOS_NDS      = 0
 
 # Radiation DTs
 # -------------------------------
@@ -776,7 +637,6 @@ if( $AGCM_IM ==  "c12" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 1
      set       NX = 2
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
@@ -796,7 +656,6 @@ if( $AGCM_IM ==  "c24" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 24
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 1
      set       NX = 2
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
@@ -816,7 +675,6 @@ if( $AGCM_IM ==  "c48" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 1
      set       NX = 2
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
@@ -833,14 +691,10 @@ if( $AGCM_IM ==  "c90" ) then
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
-          set OMP_THREADS = 1
           set  NX = $OGCM_NY
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set OMP_THREADS = 2
-          set  NX = `expr $AGCM_IM \/ $NX_FAC`
-          set  NY = `expr $NX \* 6 \* $NY_FAC`
      set OCEAN_DT = $IRRAD_DT
      endif
      set  CHEM_DT = $DT
@@ -859,14 +713,10 @@ if( $AGCM_IM ==  "c180" ) then
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
-          set OMP_THREADS = 1
           set  NX = $OGCM_NY
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set OMP_THREADS = 2
-          set  NX = `expr $AGCM_IM \/ $NX_FAC`
-          set  NY = `expr $NX \* 6 \* $NY_FAC`
      set OCEAN_DT = $IRRAD_DT
      endif
      set HYDROSTATIC = $USE_HYDROSTATIC
@@ -886,9 +736,6 @@ if( $AGCM_IM == "c360" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 2
-     set  NX = `expr $AGCM_IM \/ $NX_FAC`
-     set  NY = `expr $NX \* 6 \* $NY_FAC`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -907,9 +754,6 @@ if( $AGCM_IM == "c720" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 2
-     set  NX = `expr $AGCM_IM \/ $NX_FAC`
-     set  NY = `expr $NX \* 6 \* $NY_FAC`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -928,9 +772,6 @@ if( $AGCM_IM == "c1440" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 2
-     set  NX = `expr $AGCM_IM \/ $NX_FAC`
-     set  NY = `expr $NX \* 6 \* $NY_FAC`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -949,9 +790,6 @@ if( $AGCM_IM == "c2880" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 2
-     set  NX = `expr $AGCM_IM \/ $NX_FAC`
-     set  NY = `expr $NX \* 6 \* $NY_FAC`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -970,9 +808,6 @@ if( $AGCM_IM == "c5760" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 2
-     set  NX = `expr $AGCM_IM \/ $NX_FAC`
-     set  NY = `expr $NX \* 6 \* $NY_FAC`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -992,7 +827,6 @@ if( $AGCM_IM == "c768" ) then
      set  CHEM_DT = 900
      set AGCM_IM  = 768
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 1
      set       NX = 32
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
@@ -1013,7 +847,6 @@ if( $AGCM_IM == "c1536" ) then
      set  CHEM_DT = 900
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 1
      set       NX = 64
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
@@ -1034,7 +867,6 @@ if( $AGCM_IM == "c3072" ) then
      set  CHEM_DT = 900
      set AGCM_IM  = 3072
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set OMP_THREADS = 1
      set       NX = 64
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
@@ -1048,6 +880,241 @@ if( $AGCM_IM == "c3072" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set DEF_IOS_NDS = 5
+endif
+
+#######################################################################
+#                 What Processor Should We Run On?
+#######################################################################
+
+ASKPROC:
+
+if ( $SITE == 'NCCS' ) then
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   if (-e /etc/os-release) then
+      echo "   ${C2}sky  (Skylake)${CN}"
+      echo "   ${C2}cas  (Cascadelake)${CN} (default)"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'cas'
+      endif
+   else
+      echo "   ${C2}hasw (Haswell)${CN} (default)"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'hasw'
+      endif
+   endif
+
+   if( $MODEL != 'hasw' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' ) goto ASKPROC
+
+   if (     $MODEL == 'hasw') then
+      set NCPUS_PER_NODE = 24
+   else if ($MODEL == 'sky') then
+      set NCPUS_PER_NODE = 36
+   else if ($MODEL == 'cas') then
+      set NCPUS_PER_NODE = 48
+  endif
+
+else if ( $SITE == 'NAS' ) then
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   #echo "   ${C2}rom (AMD Rome)${CN}"
+   echo " "
+   echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'sky'
+   endif
+
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
+
+   # Some processors have weird names at NAS
+   # ---------------------------------------
+
+   if ($MODEL == bro ) then
+      set MODEL = 'bro_ele'
+   else if ($MODEL == sky) then
+      set MODEL = 'sky_ele'
+   else if ($MODEL == cas) then
+      set MODEL = 'cas_ait'
+   else if ($MODEL == rom) then
+      set MODEL = 'rom_ait'
+   endif
+
+   if      ($MODEL == 'has') then
+      set NCPUS_PER_NODE = 24
+   else if ($MODEL == 'bro_ele') then
+      set NCPUS_PER_NODE = 24
+   else if ($MODEL == 'sky_ele') then
+      set NCPUS_PER_NODE = 36
+   else if ($MODEL == 'cas_ait') then
+      set NCPUS_PER_NODE = 36
+   else if ($MODEL == 'rom_ait') then
+      set NCPUS_PER_NODE = 128
+      # Romes are on a different aoe
+      set MODEL='rom_ait:aoe=sles15'
+   endif
+
+else
+   set MODEL = 'UNKNOWN'
+endif
+
+#######################################################################
+#            Test to see if you want to use ioserver
+#######################################################################
+
+if( $HRCODE == 'c180'  | \
+    $HRCODE == 'c360'  | \
+    $HRCODE == 'c720'  | \
+    $HRCODE == 'c1440' | \
+    $HRCODE == 'c2880' | \
+    $HRCODE == 'c5760' | \
+    $HRCODE == 'c768'  | \
+    $HRCODE == 'c1536' | \
+    $HRCODE == 'c3072' ) then
+   echo "Enter the ${C1}Number of IO Nodes${CN} you wish to run (default: $DEF_IOS_NDS):"
+   set IOS_NDS = `echo $<`
+   if ( .$IOS_NDS == .) then
+      set IOS_NDS = $DEF_IOS_NDS
+   endif
+   if ($IOS_NDS == 0) then
+      set DO_IOS = FALSE
+   else
+      set DO_IOS = TRUE
+   endif
+else
+   set IOS_NDS = 0
+   set DO_IOS = FALSE
+endif
+if ( $DO_IOS == "TRUE" ) then
+   set USE_IOSERVER = 1
+else
+   set USE_IOSERVER = 0
+endif
+
+echo "Enter the ${C1}Number of OpenMP Threads${CN} you wish to run:"
+echo "   ${C2}1 (default)${CN}"
+set OMP_THREADS = `echo $<`
+if ( .$OMP_THREADS == .) then
+   set OMP_THREADS = 1
+endif
+
+if( $NCPUS_PER_NODE == 48) then
+  if ($OMP_THREADS == 1) then
+   @ NCPUS_PER_NODE = 45
+  else
+   @ NCPUS_PER_NODE = 48
+  endif
+endif
+
+if( $OGCM == "FALSE" ) then
+
+if ($AGCM_IM < 90) then
+@ NX_S = `expr $AGCM_IM \/ 12`
+@ NY_S = `expr $AGCM_IM \/ 12`
+@ NPE_S = `expr $NX_S \* $NY_S \* 6`
+@ MPI_S = `echo "$NCPUS_PER_NODE/$OMP_THREADS" | bc`
+@ NDS_S = `echo "($NPE_S + $MPI_S - 1)/$MPI_S" | bc`
+@ MPI_S = `echo "($NPE_S + $NDS_S - 1)/$NDS_S" | bc`
+@ NDS_S = `echo "($NDS_S + $IOS_NDS)" | bc`
+@ TSK_S = `echo "$NDS_S * $MPI_S * $OMP_THREADS" | bc`
+echo "   ${C2}Running         ${CN} -- $NDS_S Nodes ($MPI_S-MPI x $OMP_THREADS-OMP) = $TSK_S Cores"
+
+@ NX             = $NX_S
+@ NY             = $NY_S
+@ NODES_R        = $NDS_S
+@ MPI_PER_NODE_R = $MPI_S
+@ MODEL_NPES     = $TSK_S
+
+else
+
+if ($AGCM_IM == 90) then
+@ NX_S = `expr $AGCM_IM \/ 45`
+@ NY_S = `expr $AGCM_IM \/ 15`
+else
+@ NX_S = `expr $AGCM_IM \/ 36`
+@ NY_S = `expr $AGCM_IM \/ 30`
+endif
+
+@ NX_M = `expr $AGCM_IM \/ 36`
+@ NY_M = `expr $AGCM_IM \/ 15`
+
+@ NX_L = `expr $AGCM_IM \/ 18`
+@ NY_L = `expr $AGCM_IM \/ 15`
+
+@ NPE_S = `expr $NX_S \* $NY_S \* 6`
+@ MPI_S = `echo "$NCPUS_PER_NODE/$OMP_THREADS" | bc`
+@ NDS_S = `echo "($NPE_S + $MPI_S - 1)/$MPI_S" | bc`
+@ MPI_S = `echo "($NPE_S + $NDS_S - 1)/$NDS_S" | bc`
+@ NDS_S = `echo "($NDS_S + $IOS_NDS)" | bc`
+@ TSK_S = `echo "$NDS_S * $MPI_S * $OMP_THREADS" | bc`
+
+@ NPE_M = `expr $NX_M \* $NY_M \* 6`
+@ MPI_M = `echo "$NCPUS_PER_NODE/$OMP_THREADS" | bc`
+@ NDS_M = `echo "($NPE_M + $MPI_M - 1)/$MPI_M" | bc`
+@ MPI_M = `echo "($NPE_M + $NDS_M - 1)/$NDS_M" | bc`
+@ NDS_M = `echo "($NDS_M + $IOS_NDS)" | bc`
+@ TSK_M = `echo "$NDS_M * $MPI_M * $OMP_THREADS" | bc`
+
+@ NPE_L = `expr $NX_L \* $NY_L \* 6`
+@ MPI_L = `echo "$NCPUS_PER_NODE/$OMP_THREADS" | bc`
+@ NDS_L = `echo "($NPE_L + $MPI_L - 1)/$MPI_L" | bc`
+@ MPI_L = `echo "($NPE_L + $NDS_L - 1)/$NDS_L" | bc`
+@ NDS_L = `echo "($NDS_L + $IOS_NDS)" | bc`
+@ TSK_L = `echo "$NDS_L * $MPI_L * $OMP_THREADS" | bc`
+
+ASKJOBSIZE:
+
+echo "Enter the ${C1}Job Size${CN} you wish to run:"
+echo "   ${C2}small           ${CN} -- $NDS_S Nodes ($MPI_S-MPI x $OMP_THREADS-OMP) = $TSK_S Cores"
+echo "   ${C2}medium (default)${CN} -- $NDS_M Nodes ($MPI_M-MPI x $OMP_THREADS-OMP) = $TSK_M Cores"
+echo "   ${C2}large           ${CN} -- $NDS_L Nodes ($MPI_L-MPI x $OMP_THREADS-OMP) = $TSK_L Cores"
+set JOB_SIZE = `echo $<`
+if ( .$JOB_SIZE == .) then
+   set JOB_SIZE = "MEDIUM"
+endif
+set JOB_SIZE  = `echo $JOB_SIZE | tr "[:lower:]" "[:upper:]"`
+
+if ($JOB_SIZE == "SMALL") then
+  @ NX             = $NX_S
+  @ NY             = $NY_S
+  @ NODES_R        = $NDS_S
+  @ MPI_PER_NODE_R = $MPI_S
+  @ MODEL_NPES     = $TSK_S
+else if ($JOB_SIZE == "MEDIUM") then
+  @ NX             = $NX_M
+  @ NY             = $NY_M
+  @ NODES_R        = $NDS_M
+  @ MPI_PER_NODE_R = $MPI_M
+  @ MODEL_NPES     = $TSK_M
+else if ($JOB_SIZE == "LARGE") then
+  @ NX             = $NX_M
+  @ NY             = $NY_M
+  @ NODES_R        = $NDS_M
+  @ MPI_PER_NODE_R = $MPI_M
+  @ MODEL_NPES     = $TSK_M
+else
+  goto ASKJOBSIZE:
+endif
+
+endif
+
 endif
 
 set IS_FCST = 0
@@ -1266,14 +1333,6 @@ set  RATS_PROVIDER   = PCHEM
 #                  Architecture Specific Variables
 #######################################################################
 
-@ MODEL_NPES = $NX * $NY
-
-if ( $DO_IOS == TRUE ) then
-   set IOS_NDS = $DEF_IOS_NDS
-else
-   set IOS_NDS = 0
-endif
-
 @ CNV_NPES = $CNV_NX * $CNV_NY
 # Here we need to convert POST_NDS to total tasks. 
 # Use NCPUS_PER_NODE / 2 as a good default
@@ -1314,13 +1373,11 @@ if( $SITE == 'NAS' ) then
                  set QTYPE = "normal"                 # Queue to use
               endif
 
-              @ NODES_R  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE/$OMP_THREADS) + ($IOS_NDS * $NCPUS_PER_NODE/$OMP_THREADS) - 1)/($NCPUS_PER_NODE/$OMP_THREADS)" | bc`
               @ NODES_P = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ MPI_PER_NODE = `echo "$NCPUS_PER_NODE/$OMP_THREADS" | bc`
 
               setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                              # batch queue name for gcm_run.j
-              setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${MPI_PER_NODE}:mpiprocs=${MPI_PER_NODE}:model=${MODEL}"         # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "PBS -l select=${NODES}:ncpus=${MPI_PER_NODE}:mpiprocs=${MPI_PER_NODE}:model=${MODEL}"         # PE Configuration for gcm_forecast.j
+              setenv     RUN_P  "PBS -l select=${NODES_R}:ncpus=${MPI_PER_NODE_R}:mpiprocs=${MPI_PER_NODE_R}:model=${MODEL}"   # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "PBS -l select=${NODES_R}:ncpus=${MPI_PER_NODE_R}:mpiprocs=${MPI_PER_NODE_R}:model=${MODEL}"   # PE Configuration for gcm_forecast.j
               setenv    POST_Q  "PBS -q normal"                                                                                # batch queue name for gcm_post.j
               setenv    PLOT_Q  "PBS -q normal"                                                                                # batch queue name for gcm_plot.j
               setenv    MOVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_moveplot.j
@@ -1363,18 +1420,16 @@ else if( $SITE == 'NCCS' ) then
                  set MODEL = "k40"                                               # Model of CPU
               endif
 
-              @ NODES_R  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE/$OMP_THREADS) + ($IOS_NDS * $NCPUS_PER_NODE/$OMP_THREADS) - 1)/($NCPUS_PER_NODE/$OMP_THREADS)" | bc`
               @ NODES_P = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ MPI_PER_NODE = `echo "$NCPUS_PER_NODE/$OMP_THREADS" | bc`
 
               setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
-              setenv    RUN_P   "SBATCH --nodes=${NODES_R} --ntasks-per-node=${MPI_PER_NODE}" # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "SBATCH --nodes=${NODES_R} --ntasks-per-node=${MPI_PER_NODE}" # PE Configuration for gcm_forecast.j
+              setenv    RUN_P   "SBATCH --nodes=${NODES_R} --ntasks-per-node=${MPI_PER_NODE_R}" # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "SBATCH --nodes=${NODES_R} --ntasks-per-node=${MPI_PER_NODE_R}" # PE Configuration for gcm_forecast.j
               setenv    POST_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_post.j
               setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
               setenv    MOVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_moveplot.j
               setenv ARCHIVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --nodes=${NODES_P} --ntasks-per-node=${MPI_PER_NODE}" # PE Configuration for gcm_post.j
+              setenv    POST_P  "SBATCH --nodes=${NODES_P} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_post.j
               setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
@@ -2102,7 +2157,7 @@ s/@USE_IOSERVER/$USE_IOSERVER/g
 s/@IOS_NDS/$IOS_NDS/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
-s/@MPI_PER_NODE/$MPI_PER_NODE/g
+s/@MPI_PER_NODE/$MPI_PER_NODE_R/g
 s/@OMP_THREADS/$OMP_THREADS/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
