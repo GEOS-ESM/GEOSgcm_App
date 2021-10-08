@@ -1044,19 +1044,30 @@ echo "   ${C2}Running         ${CN} -- $NDS_S Nodes ($MPI_S-MPI x $OMP_THREADS-O
 
 else
 
-if ($AGCM_IM == 90) then
-@ NX_S = `expr $AGCM_IM \/ 45`
-@ NY_S = `expr $AGCM_IM \/ 15`
+if ($OMP_THREADS == 1) then
+  if ($AGCM_IM == 90) then
+  @ NX_S = `expr $AGCM_IM \/ 45`
+  @ NY_S = `expr $AGCM_IM \/ 15`
+  else
+  @ NX_S = `expr $AGCM_IM \/ 36`
+  @ NY_S = `expr $AGCM_IM \/ 30`
+  endif
+
+  @ NX_M = `expr $AGCM_IM \/ 36`
+  @ NY_M = `expr $AGCM_IM \/ 15`
+
+  @ NX_L = `expr $AGCM_IM \/ 18`
+  @ NY_L = `expr $AGCM_IM \/ 15`
 else
-@ NX_S = `expr $AGCM_IM \/ 36`
-@ NY_S = `expr $AGCM_IM \/ 30`
+  @ NX_S = `echo "$AGCM_IM / (30 * $OMP_THREADS)" | bc`
+  @ NY_S = `echo "$AGCM_IM /  30" | bc`
+
+  @ NX_M = `echo "$AGCM_IM / (30 * $OMP_THREADS)" | bc`
+  @ NY_M = `echo "$AGCM_IM /  15" | bc`
+
+  @ NX_L = `echo "$AGCM_IM / (15 * $OMP_THREADS)" | bc`
+  @ NY_L = `echo "$AGCM_IM /  15" | bc`
 endif
-
-@ NX_M = `expr $AGCM_IM \/ 36`
-@ NY_M = `expr $AGCM_IM \/ 15`
-
-@ NX_L = `expr $AGCM_IM \/ 18`
-@ NY_L = `expr $AGCM_IM \/ 15`
 
 @ NPE_S = `expr $NX_S \* $NY_S \* 6`
 @ MPI_S = `echo "$NCPUS_PER_NODE/$OMP_THREADS" | bc`
