@@ -2500,7 +2500,7 @@ if( -e $HOMDIR/tmpfile ) /bin/rm $HOMDIR/tmpfile
 if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
 
 #######################################################################
-#                     Copy over Source Tarball
+#                     Copy over Source Tarfile
 #######################################################################
 
 # NOTE: This variable is set at CMake time depending on 

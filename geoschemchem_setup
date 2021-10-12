@@ -2721,7 +2721,7 @@ if( -e $HOMDIR/chemchem_noNRT.txt )   /bin/rm $HOMDIR/chemchem_noNRT.txt
 if( -e $HOMDIR/chemchem_exit.txt )    /bin/rm $HOMDIR/chemchem_exit.txt
 
 #######################################################################
-#                     Copy over Source Tarball
+#                     Copy over Source Tarfile
 #######################################################################
 
 # NOTE: This variable is set at CMake time depending on 
