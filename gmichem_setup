@@ -2836,20 +2836,21 @@ set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
 
 if ( $INSTALL_TARFILE == "TRUE" ) then
 
-# Make a src directory under EXPDIR to hold current Experiment files
-# ------------------------------------------------------------------
-/bin/rm -rf ${EXPDIR}/src
+   # Make a src directory under EXPDIR to hold current Experiment files
+   # ------------------------------------------------------------------
+   /bin/rm -rf ${EXPDIR}/src
    mkdir   -p  ${EXPDIR}/src
 
    echo "Copying Build Source Code into ${C2}${EXPDIR}/src${CN}"
    # -----------------------------------------------------------
    if (-e ${GEOSDEF}/src/${TARFILE_NAME}) then
       cp ${GEOSDEF}/src/${TARFILE_NAME} ${EXPDIR}/src
-    else
+   else
       echo "${GEOSDEF}/src/${TARFILE_NAME} not found yet CMake was asked to make and install a tarfile."
       echo "Something went wrong."
       exit 7
-echo ""
+   endif
+   echo ""
 
 endif
 
@@ -3188,19 +3189,20 @@ set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
 if ( $INSTALL_TARFILE == "TRUE" ) then
 
    # Make a src directory under EXPDIR to hold current Experiment files
-# ------------------------------------------------------------------
-/bin/rm -rf ${NEWEXPDIR}/src
+   # ------------------------------------------------------------------
+   /bin/rm -rf ${NEWEXPDIR}/src
    mkdir   -p  ${NEWEXPDIR}/src
 
    echo "Copying Build Source Code into ${C2}${NEWEXPDIR}/src${CN}"
    # --------------------------------------------------------------
    if (-e ${GEOSDEF}/src/${TARFILE_NAME}) then
       cp ${GEOSDEF}/src/${TARFILE_NAME} ${NEWEXPDIR}/src
-    else
+   else
       echo "${GEOSDEF}/src/${TARFILE_NAME} not found yet CMake was asked to make and install a tarfile."
       echo "Something went wrong."
       exit 7
-echo ""
+   endif
+   echo ""
 
 endif
 
