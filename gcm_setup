@@ -91,7 +91,7 @@ while ( $#argv > 0 )
 end
 
 #######################################################################
-#           CVS: Use CVS functionality only at NCCS or NAS
+#                        Determine site
 #######################################################################
 
 setenv NODE `uname -n`
@@ -2892,25 +2892,6 @@ TRAP:
 #                      Usage and Error Outputs
 #######################################################################
 
-ONCOMPUTE:
-echo
-echo "${BOLD}${RED}            ERROR: On Compute Node ${RESET}"
-echo "${BOLD}${RED}            ====================== ${RESET}"
-
-cat << EOF
-
-gcm_setup requires access to internet resources, namely
-the CVS repository. You are attempting to run gcm_setup
-on compute node ${NODE} at ${SITE}. Please re-run on a head 
-node, or supply the --nocvs option. 
-
-For more information, contact Matt Thompson or
-Larry Takacs at GMAO.
-
-EOF
-
-exit 1
-
 CONTACTMATT:
 cat <<EOF
 
@@ -2960,7 +2941,7 @@ exit 1
 
 USAGE:
 cat <<EOF
-gcm_setup, a setup script for the GEOS-5 GCM
+gcm_setup, a setup script for the GEOS GCM
 
    Usage: $0:t [optional flag]
 
@@ -2970,9 +2951,7 @@ gcm_setup, a setup script for the GEOS-5 GCM
 
    If invoked alone, the script runs as normal.
 
-   For more information, please contact Larry Takacs.
-
-   Note: gcm_setup must be run on a machine with CVS access.
+   For more information, please contact Matt Thompson or Scott Rabenhorst
 
 EOF
 exit 1
