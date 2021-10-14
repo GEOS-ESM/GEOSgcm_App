@@ -588,6 +588,34 @@ GOCART.data_INTERNAL_RESTART_FILE:      gocartdata_internal_rst
 GOCART.data_INTERNAL_CHECKPOINT_FILE:   gocartdata_internal_checkpoint
 GOCART.data_INTERNAL_CHECKPOINT_TYPE:   @CHECKPOINT_TYPE
 
+DU_INTERNAL_RESTART_FILE:               du_internal_rst
+DU_INTERNAL_CHECKPOINT_FILE:            du_internal_checkpoint
+DU_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
+SS_INTERNAL_RESTART_FILE:               ss_internal_rst
+SS_INTERNAL_CHECKPOINT_FILE:            ss_internal_checkpoint
+SS_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
+CA.oc_INTERNAL_RESTART_FILE:            caoc_internal_rst
+CA.oc_INTERNAL_CHECKPOINT_FILE:         caoc_internal_checkpoint
+CA.oc_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+
+CA.bc_INTERNAL_RESTART_FILE:            cabc_internal_rst
+CA.bc_INTERNAL_CHECKPOINT_FILE:         cabc_internal_checkpoint
+CA.bc_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+
+CA.br_INTERNAL_RESTART_FILE:            cabr_internal_rst
+CA.br_INTERNAL_CHECKPOINT_FILE:         cabr_internal_checkpoint
+CA.br_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+
+NI_INTERNAL_RESTART_FILE:               ni_internal_rst
+NI_INTERNAL_CHECKPOINT_FILE:            ni_internal_checkpoint
+NI_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
+SU_INTERNAL_RESTART_FILE:               su_internal_rst
+SU_INTERNAL_CHECKPOINT_FILE:            su_internal_checkpoint
+SU_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
 CARMA_INTERNAL_RESTART_FILE:            carma_internal_rst
 CARMA_INTERNAL_CHECKPOINT_FILE:         carma_internal_checkpoint
 CARMA_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
@@ -620,9 +648,9 @@ MAM_INTERNAL_RESTART_FILE:              mam_internal_rst
 MAM_INTERNAL_CHECKPOINT_FILE:           mam_internal_checkpoint
 MAM_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
 
-GEOSACHEM_INTERNAL_RESTART_FILE:        geosachem_internal_rst
-GEOSACHEM_INTERNAL_CHECKPOINT_FILE:     geosachem_internal_checkpoint
-GEOSACHEM_INTERNAL_CHECKPOINT_TYPE:     @CHECKPOINT_TYPE
+ACHEM_INTERNAL_RESTART_FILE:            achem_internal_rst
+ACHEM_INTERNAL_CHECKPOINT_FILE:         achem_internal_checkpoint
+ACHEM_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 
 TR_INTERNAL_RESTART_FILE:               tr_internal_rst
 TR_INTERNAL_CHECKPOINT_FILE:            tr_internal_checkpoint
@@ -745,7 +773,7 @@ NUM_BANDS: 30
 DIURNAL_BIOMASS_BURNING: yes
 
        RATS_PROVIDER: @RATS_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM (Radiatively active tracers)
-       AERO_PROVIDER: @AERO_PROVIDER   # options: GOCART.data, GOCART, MAM, None  (Radiatively active aerosols)
+       AERO_PROVIDER: @AERO_PROVIDER   # options: GOCART2G, MAM, none  (Radiatively active aerosols)
 ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOCART
 
 

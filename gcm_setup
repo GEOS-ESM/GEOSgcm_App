@@ -724,6 +724,7 @@ if( $AGCM_IM ==  "c180" ) then
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
      set NUM_READERS = 2
+     set NUM_WRITERS = 2
      set JOB_SGMT = 00000016
      set NUM_SGMT = 1
      set ATMOS_RES = CF0180x6C
@@ -741,6 +742,7 @@ if( $AGCM_IM == "c360" ) then
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
      set NUM_READERS = 4
+     set NUM_WRITERS = 4
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOS_RES = CF0360x6C
@@ -759,6 +761,7 @@ if( $AGCM_IM == "c720" ) then
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
      set NUM_READERS = 6
+     set NUM_WRITERS = 6
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOS_RES = CF0720x6C
@@ -776,7 +779,8 @@ if( $AGCM_IM == "c1440" ) then
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 6
+     set NUM_READERS = 12
+     set NUM_WRITERS = 12
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF1440x6C
@@ -794,7 +798,8 @@ if( $AGCM_IM == "c2880" ) then
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 6
+     set NUM_READERS = 24
+     set NUM_WRITERS = 24
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF2880x6C
@@ -812,7 +817,8 @@ if( $AGCM_IM == "c5760" ) then
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 6
+     set NUM_READERS = 48
+     set NUM_WRITERS = 48
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF5760x6C
@@ -834,6 +840,7 @@ if( $AGCM_IM == "c768" ) then
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
      set NUM_READERS = 6
+     set NUM_WRITERS = 6
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOS_RES = CF0768x6C
@@ -853,7 +860,8 @@ if( $AGCM_IM == "c1536" ) then
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 6
+     set NUM_READERS = 12
+     set NUM_WRITERS = 12
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOS_RES = CF1536x6C
@@ -873,7 +881,8 @@ if( $AGCM_IM == "c3072" ) then
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 6
+     set NUM_READERS = 24
+     set NUM_WRITERS = 24
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOS_RES = CF3072x6C
@@ -1037,7 +1046,7 @@ if ($AGCM_IM < 90) then
 echo "   ${C2}Running         ${CN} -- $NDS_S Nodes ($MPI_S-MPI x $OMP_THREADS-OMP) = $TSK_S Cores"
 
 @ NX             = $NX_S
-@ NY             = $NY_S
+@ NY             = `echo "$NY_S * 6" | bc`
 @ NODES_R        = $NDS_S
 @ MPI_PER_NODE_R = $MPI_S
 @ MODEL_NPES     = $TSK_S
@@ -1104,19 +1113,19 @@ set JOB_SIZE  = `echo $JOB_SIZE | tr "[:lower:]" "[:upper:]"`
 
 if ($JOB_SIZE == "SMALL") then
   @ NX             = $NX_S
-  @ NY             = $NY_S
+  @ NY             = `echo "$NY_S * 6" | bc`
   @ NODES_R        = $NDS_S
   @ MPI_PER_NODE_R = $MPI_S
   @ MODEL_NPES     = $TSK_S
 else if ($JOB_SIZE == "MEDIUM") then
   @ NX             = $NX_M
-  @ NY             = $NY_M
+  @ NY             = `echo "$NY_M * 6" | bc`
   @ NODES_R        = $NDS_M
   @ MPI_PER_NODE_R = $MPI_M
   @ MODEL_NPES     = $TSK_M
 else if ($JOB_SIZE == "LARGE") then
   @ NX             = $NX_M
-  @ NY             = $NY_M
+  @ NY             = `echo "$NY_L * 6" | bc`
   @ NODES_R        = $NDS_M
   @ MPI_PER_NODE_R = $MPI_M
   @ MODEL_NPES     = $TSK_M
@@ -1287,15 +1296,15 @@ set HIST_GOCART     = ""
 # --------------
 EMISSIONS:
      set   EMISSIONS = ''
-     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}MERRA2${CN} (Default), ${C2}PIESA${CN}, ${C2}CMIP${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN} or ${C2}OPS${CN}:"
+     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} (Default) or ${C2}OPS${CN}:"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = MERRA2
+     set   EMISSIONS = AMIP
      else
      set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
-     if(  $EMISSIONS != CMIP & $EMISSIONS != MERRA2 & $EMISSIONS != NR &  $EMISSIONS != MERRA2-DD & $EMISSIONS != PIESA & $EMISSIONS != OPS ) then
+     if(  $EMISSIONS != OPS & $EMISSIONS != AMIP) then
      echo
-     echo "${C1}Emission Files${CN} must be equal to:  ${C2}CMIP${CN}, ${C2}MERRA2${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN}, ${C2}PIESA${CN}, or ${C2}OPS${CN}!"
+     echo "${C1}Emission Files${CN} must be equal to:  ${C2}AMIP${CN} or ${C2}OPS${CN}!"
      goto EMISSIONS
      else
      echo
@@ -1305,7 +1314,7 @@ EMISSIONS:
 
 # AERO Provider
 # -------------
-     set AERO_PROVIDER = GOCART
+     set AERO_PROVIDER = GOCART2G
 #AERO:
 #echo "Enter the ${C1}AERO_PROVIDER${CN}: ${C2}GOCART${CN} (Default) or ${C2}GOCART.data${CN}:"
 #      set AERO_PROVIDER  = $<
