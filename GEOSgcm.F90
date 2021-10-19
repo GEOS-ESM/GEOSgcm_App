@@ -14,7 +14,8 @@ program GEOS5_Main
    use MPI
    use MAPL
 !!$   use GEOS_GcsGridCompMod, only:  ROOT_SetServices => SetServices
-   use GEOS_GcmGridCompMod, only:  ROOT_SetServices => SetServices
+!!$   use GEOS_GcmGridCompMod, only:  ROOT_SetServices => SetServices
+   use GEOS_AgcmSimpleGridCompMod, only:  ROOT_SetServices => SetServices
    implicit none
 !EOP
 
