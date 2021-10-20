@@ -20,8 +20,8 @@ limit stacksize unlimited
 
 @SETENVS
 
-# Set OMP_NUM_THREADS
-# -------------------
+# Establish safe default number of OpenMP threads
+# -----------------------------------------------
 setenv OMP_NUM_THREADS 1
 
 #######################################################################
@@ -109,6 +109,11 @@ cd $SCRDIR
 
 cat fvcore_layout.rc >> input.nml
 
+@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
+@MP_NO_USE_WSUB# -------------------------------------------------
+@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
@@ -222,15 +227,20 @@ cat << _EOF_ > $FILE
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
+@OPS_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-#bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+@CMIP_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+
+# S2S pre-industrial with prod/loss of stratospheric water vapor
+# (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
+# --------------------------------------------------------------
+#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4 species.data
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
@@ -282,7 +292,10 @@ endif
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( -e $EXPDIR/saltwater_internal_rst ) then
+if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
+ if ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -290,7 +303,7 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -300,6 +313,7 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
    # --------------
    /bin/rmdir OutData
 
+ endif
 endif
 
 #######################################################################

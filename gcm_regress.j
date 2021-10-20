@@ -20,8 +20,8 @@ limit stacksize unlimited
 
 @SETENVS
 
-# Set OMP_NUM_THREADS
-# -------------------
+# Establish safe default number of OpenMP threads
+# -----------------------------------------------
 setenv OMP_NUM_THREADS 1
 
 @GPUSTART
@@ -129,7 +129,10 @@ if(! -e tile.bin) $GEOSBIN/binarytile.x tile.data tile.bin
 #                Split Saltwater Restart if detected
 #######################################################################
 
-if ( -e $EXPDIR/saltwater_internal_rst ) then
+if ( (-e $EXPDIR/regress/openwater_internal_rst) && (-e $EXPDIR/regress/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
+ if ( -e $EXPDIR/regress/saltwater_internal_rst ) then
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -137,7 +140,7 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/regress/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -147,6 +150,7 @@ if ( -e $EXPDIR/saltwater_internal_rst ) then
    # --------------
    /bin/rmdir OutData
 
+ endif
 endif
 
 #######################################################################
@@ -229,6 +233,12 @@ if( @EMISSIONS =~ MERRA2* ) then
         end
     endif
 endif
+
+@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
+@MP_NO_USE_WSUB# -------------------------------------------------
+@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`

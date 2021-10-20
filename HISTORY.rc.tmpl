@@ -122,6 +122,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
              'vtx.mix'
 #            'vtx.prs'
 #            'prog.sfc+-'
+#            'traj_lcv_rst'
 # Trajectory Files
              'asm.eta'
 #            'prog.eta+-'
@@ -147,7 +148,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #            'inst3_3d_wxme_Np+-'
 #            'inst3_2d_met_Nx+-'
 # IAU increment for forecast
-#            'inst3_3d_aiau_Np+-'
+#            'tavg2_3d_aiau_Np+-'
 # Constant file
 #            'const_2d_asm_Nx'
              ::
@@ -627,8 +628,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Nv-.end_time:   >>>IOETIME<<< ,
   tavg3_3d_odt_Nv-.fields:     'PS'                 , 'DYN'        ,
                                'DELP'               , 'DYN'        ,
-                                 'MTRI%PCHEM::OXIM' , 'PHYSICS'    , 'DOXDTMST'  ,
-                                  'TRI%PCHEM::OXIT' , 'TURBULENCE' , 'DOXDTTRB'  ,
+                               'MTRI%PCHEM::OXIM'   , 'PHYSICS'    , 'DOXDTMST'  ,
+                               'TRI%PCHEM::OXIT'    , 'TURBULENCE' , 'DOXDTTRB'  ,
                                'OX_TEND'            , 'CHEMISTRY'  , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN       'TRADVI%PCHEM::OXID' , 'AGCM'       , 'DOXDTDYN'  ,
                                'DOXDTDYN'           , 'DYN'        ,
@@ -649,8 +650,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Cp-.vunit:       'hPa',
   tavg3_3d_odt_Cp-.vvars:       'log(PLE)' , 'DYN'          ,
   tavg3_3d_odt_Cp-.levels:      1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1,
-  tavg3_3d_odt_Cp-.fields:        'MTRI%PCHEM::OXIM' , 'PHYSICS'    , 'DOXDTMST'  ,
-                                   'TRI%PCHEM::OXIT' , 'TURBULENCE' , 'DOXDTTRB'  ,
+  tavg3_3d_odt_Cp-.fields:      'MTRI%PCHEM::OXIM' , 'PHYSICS'    , 'DOXDTMST'  ,
+                                'TRI%PCHEM::OXIT' , 'TURBULENCE' , 'DOXDTTRB'  ,
                                 'OX_TEND'            , 'CHEMISTRY'  , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN        'TRADVI%PCHEM::OXID' , 'AGCM'       , 'DOXDTDYN'  ,
                                 'DOXDTDYN'           , 'DYN'        ,
@@ -1056,7 +1057,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #######################################################################
 
   bkg.eta.format:      'CFIO' ,
-  bkg.eta.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<' ,
+  bkg.eta.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   bkg.eta.ref_date:    >>>IOBBKGD<<< ,
   bkg.eta.ref_time:    >>>IOBBKGT<<< ,
   bkg.eta.end_date:    >>>IOEBKGD<<< ,
@@ -1086,7 +1087,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                        ::
 
   bkg.sfc.format:      'CFIO' ,
-  bkg.sfc.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<' ,
+  bkg.sfc.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   bkg.sfc.ref_date:    >>>IOBBKGD<<< ,
   bkg.sfc.ref_time:    >>>IOBBKGT<<< ,
   bkg.sfc.end_date:    >>>IOEBKGD<<< ,
@@ -1140,6 +1141,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                        'TDROP'          , 'SURFACE'  ,
                        'TS_FOUND'       , 'SURFACE'  ,
                        'TDEL'           , 'SURFACE'  ,
+                       'EVAP'           , 'SURFACE'  ,
+                       'ZPBL'           , 'TURBULENCE', 'PBLH'     ,
                        ::
 
   abkg.eta.format:      'CFIO' ,
@@ -1182,7 +1185,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                ::
 
   cbkg.eta.format:      'CFIO' ,
-  cbkg.eta.template:    '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<',
+  cbkg.eta.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
   cbkg.eta.ref_date:    >>>IOBBKGD<<< ,
   cbkg.eta.ref_time:    >>>IOBBKGT<<< ,
   cbkg.eta.end_date:    >>>IOEBKGD<<< ,
@@ -1791,6 +1794,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_trc_Np-.vscale:     100.0,
   tavg3_3d_trc_Np-.vunit:      'hPa',
   tavg3_3d_trc_Np-.vvars:      'log(PLE)' , 'DYN'	,
+  tavg3_3d_trc_Np-.end_date:   >>>IOEDATE<<< ,
+  tavg3_3d_trc_Np-.end_time:   >>>IOETIME<<< ,
   tavg3_3d_trc_Np-.levels:     1000 975 950 925 900 850 800 750 700 650 600 550 500 450 400 350 300 250 200 150 100 85 70 50 30 20 10 7 5 3 2 1 0.7 0.5 0.3 0.2 0.1,
   tavg3_3d_trc_Np-.fields:     'PS'	      , 'DYN'	   ,
                                'AIRDENS'      , 'CHEMENV'  ,
@@ -1867,21 +1872,22 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #                         Forecast Files
 #######################################################################
 
-  inst3_3d_aiau_Np+-.format:     'CFIO' ,
-  inst3_3d_aiau_Np+-.descr:      '3d,3-Hourly,Instantaneous,Pressure-Level,IAU Forcing (wind,temperature)',
-  inst3_3d_aiau_Np+-.nbits:      10,
-  inst3_3d_aiau_Np+-.template:   '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
-  inst3_3d_aiau_Np+-.mode:       'instantaneous',
-  inst3_3d_aiau_Np+-.grid_label:  PC@HIST_IMx@HIST_JM-DC,
-  inst3_3d_aiau_Np+-.frequency:  030000 ,
-  inst3_3d_aiau_Np+-.duration:   030000 ,
-  inst3_3d_aiau_Np+-.end_date:   >>>IOEDATE<<< ,
-  inst3_3d_aiau_Np+-.end_time:   >>>IOETIME<<< ,
-  inst3_3d_aiau_Np+-.vscale:     100.0,
-  inst3_3d_aiau_Np+-.vunit:      'hPa',
-  inst3_3d_aiau_Np+-.vvars:      'log(PLE)' , 'DYN'          ,
-  inst3_3d_aiau_Np+-.levels:     1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1,
-  inst3_3d_aiau_Np+-.fields:    'DQVDTANAINT'         , 'DYN'   , 'DQDTANAINT'      ,
+  tavg2_3d_aiau_Np+-.format:     'CFIO' ,
+  tavg2_3d_aiau_Np+-.descr:      '3d,2-Hourly,Time-Averaged,Pressure-Level,IAU Forcing (wind,temperature)',
+  tavg2_3d_aiau_Np+-.nbits:      10,
+  tavg2_3d_aiau_Np+-.template:   '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
+  tavg2_3d_aiau_Np+-.mode:       'time-averaged',
+  tavg2_3d_aiau_Np+-.grid_label:  PC@HIST_IMx@HIST_JM-DC,
+  tavg2_3d_aiau_Np+-.frequency:  020000 ,
+  tavg2_3d_aiau_Np+-.duration:   020000 ,
+  tavg2_3d_aiau_Np+-.reftime:    010000 ,
+  tavg2_3d_aiau_Np+-.end_date:   >>>IOEDATE<<< ,
+  tavg2_3d_aiau_Np+-.end_time:   >>>IOETIME<<< ,
+  tavg2_3d_aiau_Np+-.vscale:     100.0,
+  tavg2_3d_aiau_Np+-.vunit:      'hPa',
+  tavg2_3d_aiau_Np+-.vvars:      'log(PLE)' , 'DYN'          ,
+  tavg2_3d_aiau_Np+-.levels:     1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1,
+  tavg2_3d_aiau_Np+-.fields:    'DQVDTANAINT'         , 'DYN'   , 'DQDTANAINT'      ,
                                 'DMDTANA'             , 'DYN'   ,
                                 'DTSDT_ANA'           , 'AGCM'  , 'DTSDTANA'        ,
                                 'DUDT_ANA;DVDT_ANA'   , 'AGCM'  , 'DUDTANA;DVDTANA' ,
@@ -2545,7 +2551,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #######################################################################
 
   asm.eta.format:     'CFIO' ,
-  asm.eta.template:   '%y4%m2%d2_%h2z.>>>NCSUFFIX<<<',
+  asm.eta.template:   '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<',
 # asm.eta.ref_date:   >>>IOBBKGD<<< ,
 # asm.eta.ref_time:   000000 ,
   asm.eta.end_date:   >>>IOEDATE<<< ,
@@ -2647,3 +2653,63 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #                       'CKQODT'  , 'TURBULENCE'  , 'ckqodt'  ,
                         ::
 
+
+# The following look like the trajectories for the ADJ model, but 
+# its purpose is to generate background files for JEDI; thus unlike
+# the adjoint-trajectory files, these are written out within the 
+# background time interval.
+ traj_lcv_rst.format:     'CFIO' ,
+ traj_lcv_rst.template:   '%y4%m2%d2_%h2%n2z.nc4',
+ traj_lcv_rst.ref_date:    >>>IOBBKGD<<< ,
+ traj_lcv_rst.ref_time:    >>>IOBBKGT<<< ,
+ traj_lcv_rst.end_date:    >>>IOEBKGD<<< ,
+ traj_lcv_rst.end_time:    >>>IOEBKGT<<< ,
+ traj_lcv_rst.frequency:   @ASYNFRQ    ,
+ traj_lcv_rst.duration:    @ASYNFRQ    ,
+ traj_lcv_rst.mode:       'instantaneous',
+ traj.lcv_rst.grid_label: PE@APERT_IMx@APERT_JM-CF,
+ traj_lcv_rst.fields:      'U_DGRID;V_DGRID'  , 'DYN'         , 'u;v'        ,
+                           'U;V'              , 'DYN'         , 'ua;va'      ,
+                           'T'                , 'DYN'         , 't'          ,
+                           'Q'                , 'MOIST'       , 'q'          ,
+                           'DELP'             , 'DYN'         , 'delp'       ,
+                           'QITOT'            , 'AGCM'        , 'qi'         ,
+                           'QLTOT'            , 'AGCM'        , 'ql'         ,
+                           'QSTOT'            , 'MOIST'       , 'qs'         ,
+                           'QRTOT'            , 'MOIST'       , 'qr'         ,
+                           'O3PPMV'           , 'CHEMISTRY'   , 'o3mr'       ,
+                           'GOCART::CO2'      , 'GOCART'      , 'co2'        ,
+                           'QCLSX0'           , 'MOIST'       , 'qls'        ,
+                           'QCCNX0'           , 'MOIST'       , 'qcn'        ,
+                           'CLCNX0'           , 'MOIST'       , 'cfcn'       ,
+                           'PS'               , 'DYN'         , 'ps'         ,
+                           'PHIS'             , 'AGCM'        , 'phis'       ,
+                           'FRLAND'           , 'SURFACE'     , 'frland'     ,
+                           'FRLANDICE'        , 'SURFACE'     , 'frlandice'  ,
+                           'FRLAKE'           , 'SURFACE'     , 'frlake'     ,
+                           'FROCEAN'          , 'SURFACE'     , 'frocean'    ,
+                           'FRACI'            , 'SURFACE'     , 'frseaice'   ,
+                           'KCBL_moist'       , 'MOIST'       , 'kcbl'       ,
+                           'TS_moist'         , 'MOIST'       , 'tsm'        ,
+                           'KHl_moist'        , 'MOIST'       , 'khl'        ,
+                           'KHu_moist'        , 'MOIST'       , 'khu'        ,
+                           'VARFLT'           , 'AGCM'        , 'varflt'     ,
+                           'USTAR'            , 'SURFACE'     , 'ustar'      ,
+                           'BSTAR'            , 'SURFACE'     , 'bstar'      ,
+                           'ZPBL'             , 'TURBULENCE'  , 'zpbl'       ,
+                           'CM'               , 'SURFACE'     , 'cm'         ,
+                           'CT'               , 'SURFACE'     , 'ct'         ,
+                           'CQ'               , 'SURFACE'     , 'cq'         ,
+                           'U10N;V10N'        , 'SURFACE'     , 'u10m;v10m'  ,
+                           'TA'               , 'DYN'         , 'ta'         ,
+                           'TS'               , 'SURFACE'     , 'ts'         ,
+                           'SNOMAS'           , 'SURFACE'     , 'sheleg'     ,
+                           'TSOIL1'           , 'SURFACE'     , 'soilt'      ,
+                           'WET1'             , 'SURFACE'     , 'soilm'      ,
+                           'DCOOL'            , 'SURFACE'     , 'dcool'      ,
+                           'DWARM'            , 'SURFACE'     , 'dwarm'      ,
+                           'TDROP'            , 'SURFACE'     , 'tdrop'      ,
+                           'TS_FOUND'         , 'SURFACE'     , 'ts_found'   ,
+                           'TDEL'             , 'SURFACE'     , 'tdel'       ,
+                           'Z0'               , 'SURFACE'     , 'z0m'        ,
+                           ::
