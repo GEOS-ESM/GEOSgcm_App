@@ -83,9 +83,9 @@ set  AGCM_LM  = `grep '^\s*AGCM_LM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_IM  = `grep '^\s*OGCM\.IM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
->>>COUPLED<<<set  OGCM_LM  = `grep '^\s*OGCM\.LM:'       $HOMDIR/AGCM.rc | cut -d: -f2`
->>>COUPLED<<<set       NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
->>>COUPLED<<<set       NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+@COUPLED set  OGCM_LM  = `grep '^\s*OGCM\.LM:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+@COUPLED set       NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+@COUPLED set       NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
@@ -300,43 +300,43 @@ done:
 #######################################################################
 
 setenv BCSDIR    @BCSDIR
->>>DATAOCEAN<<<setenv SSTDIR    @SSTDIR
+@DATAOCEAN setenv SSTDIR    @SSTDIR
 setenv CHMDIR    @CHMDIR
->>>DATAOCEAN<<<setenv BCRSLV    @ATMOStag_@OCEANtag
->>>COUPLED<<<setenv BCRSLV    @ATMOStag_DE0360xPE0180
+@DATAOCEAN setenv BCRSLV    @ATMOStag_@OCEANtag
+@COUPLED setenv BCRSLV    @ATMOStag_DE0360xPE0180
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
 >>>MOM5<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
 >>>MOM6<<<setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
->>>COUPLED<<<setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
->>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
->>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
+@COUPLED setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
+@COUPLED setenv BCTAG `basename $GRIDDIR`
+@DATAOCEAN setenv BCTAG `basename $BCSDIR`
 
 set             FILE = linkbcs
 /bin/rm -f     $FILE
 cat << _EOF_ > $FILE
 #!/bin/csh -f
 
->>>COUPLED<<</bin/mkdir -p RESTART
+@COUPLED /bin/mkdir -p RESTART
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
->>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
->>>COUPLED<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
->>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@COUPLED /bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+@COUPLED /bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
+@COUPLED /bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+@COUPLED /bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
+@COUPLED /bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 >>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
->>>DATAOCEAN<<<if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
->>>DATAOCEAN<<<endif
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
+@DATAOCEAN if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
+@DATAOCEAN endif
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
@@ -384,10 +384,10 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
->>>COUPLED<<<@CPEXEC $HOMDIR/*_table .
->>>COUPLED<<<@CPEXEC $GRIDDIR/INPUT/* INPUT
->>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
->>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
+@COUPLED @CPEXEC $HOMDIR/*_table .
+@COUPLED @CPEXEC $GRIDDIR/INPUT/* INPUT
+@COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
+@COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
 _EOF_
 
@@ -396,9 +396,9 @@ _EOF_
 >>>GCMRUN_CATCHCN<<<  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
 >>>GCMRUN_CATCHCN<<<endif
 
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
+@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
+@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
+@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
 
 chmod +x linkbcs
 @CPEXEC  linkbcs $EXPDIR
@@ -440,8 +440,8 @@ else
 endif
 wait
 
->>>COUPLED<<</bin/mkdir INPUT
->>>COUPLED<<<@CPEXEC $EXPDIR/RESTART/* INPUT
+@COUPLED /bin/mkdir INPUT
+@COUPLED @CPEXEC $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
@@ -454,12 +454,12 @@ if($numrs == 0) then
       endif
    end
    wait
->>>COUPLED<<<   @CPEXEC -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED    @CPEXEC -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
    cd $EXPDIR/restarts
-      >>>DATAOCEAN<<<@TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-      >>>COUPLED<<<@TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
+      @DATAOCEAN @TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+      @COUPLED @TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
-     >>>COUPLED<<</bin/rm -rf RESTART.${edate}
+     @COUPLED /bin/rm -rf RESTART.${edate}
    cd $SCRDIR
 endif
 
@@ -632,7 +632,7 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
->>>COUPLED<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+@COUPLED $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -826,8 +826,8 @@ echo GEOSgcm Run Status: $rc
 
 set edate  = e`awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut -c1-2`z
 
->>>COUPLED<<<@CPEXEC -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
->>>COUPLED<<<@CPEXEC RESTART/* INPUT
+@COUPLED @CPEXEC -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED @CPEXEC RESTART/* INPUT
 
 # Move Intermediate Checkpoints to RESTARTS directory
 # ---------------------------------------------------
@@ -882,10 +882,10 @@ end
 # ---------------------
 cd $EXPDIR/restarts
     if( $FSEGMENT == 00000000 ) then
-	>>>DATAOCEAN<<<@TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-        >>>COUPLED<<<@TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
+	@DATAOCEAN @TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
+        @COUPLED @TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
         /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-	>>>COUPLED<<</bin/rm -rf RESTART.${edate}
+	@COUPLED /bin/rm -rf RESTART.${edate}
     endif
 cd $SCRDIR
 
@@ -913,18 +913,18 @@ foreach collection ( $collections )
    /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
 end
 
->>>COUPLED<<<# MOM-Specific Output Files
->>>COUPLED<<<# -------------------------
+@COUPLED # MOM-Specific Output Files
+@COUPLED # -------------------------
 >>>MOM5<<< set dsets="ocean_month"
 >>>MOM6<<< set dsets="ocean_state prog_z sfc_ave forcing"
->>>COUPLED<<< foreach dset ( $dsets )
->>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
->>>COUPLED<<< if($num != 0) then
->>>COUPLED<<<    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
->>>COUPLED<<<    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
->>>COUPLED<<< endif
->>>COUPLED<<< end
->>>COUPLED<<<
+@COUPLED  foreach dset ( $dsets )
+@COUPLED  set num = `/bin/ls -1 $dset.nc | wc -l`
+@COUPLED  if($num != 0) then
+@COUPLED     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+@COUPLED     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+@COUPLED  endif
+@COUPLED  end
+@COUPLED 
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
@@ -988,7 +988,7 @@ else
      @CPEXEC cap_restart $EXPDIR/cap_restart
 endif
 
->>>COUPLED<<<@CPEXEC -rf RESTART $EXPDIR
+@COUPLED @CPEXEC -rf RESTART $EXPDIR
 
 if ( $rc == 0 ) then
       cd  $HOMDIR
