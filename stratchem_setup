@@ -409,7 +409,13 @@ if ( $SITE == 'NCCS' ) then
    else if ($MODEL == 'sky') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas') then
-      set NCPUS_PER_NODE = 48
+      # NCCS currently recommends that users do not run with
+      # 48 cores per node on SCU16 due to OS issues and 
+      # recommends that CPU-intensive works run with 46 or less
+      # cores. As 45 is a multiple of 3, it's the best value
+      # that doesn't waste too much
+      #set NCPUS_PER_NODE = 48
+      set NCPUS_PER_NODE = 45
    endif
 
 else if ( $SITE == 'NAS' ) then
