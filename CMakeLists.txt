@@ -61,6 +61,12 @@ else ()
   set(CFG_BUILT_ON_ROME FALSE)
 endif ()
 
+if(INSTALL_SOURCE_TARFILE)
+  set(CFG_INSTALL_SOURCE_TARFILE TRUE)
+else()
+  set(CFG_INSTALL_SOURCE_TARFILE FALSE)
+endif()
+
 set (setup_scripts
    gcm_setup
    gmichem_setup
