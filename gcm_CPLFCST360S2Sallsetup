@@ -439,12 +439,14 @@ else
    set VEGMERR = ""
 endif
 
+set CLDMICRO = "1MOMENT"
 if( $OGCM == TRUE ) then
 
     set COUPLED   = ""
     set FORCAST   = ""
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
+    set CLDMICRO = "2MOMENT"
 
     # Coupled Ocean Resolution
     # ------------------------
@@ -1775,11 +1777,12 @@ s?@DASTUNING?#?g
 
 s?>>>FORCEDAS<<<?$FORCEDAS?g
 s?>>>FORCEGCM<<<?$FORCEGCM?g
-s?>>>COUPLED<<<?$COUPLED?g
+s?@COUPLED?$COUPLED?g
+s?@CLDMICRO?$CLDMICRO?g
 s?>>>FORCAST<<<?$FORCAST?g
 s?>>>VEGCPLD<<<?$VEGCPLD?g
 s?>>>VEGMERR<<<?$VEGMERR?g
-s?>>>DATAOCEAN<<<?$DATAOCEAN?g
+s?@DATAOCEAN?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
 s?>>>FVCUBED<<<?$FVCUBED?g
 s?>>>FVLATLON<<<?$FVLATLON?g
