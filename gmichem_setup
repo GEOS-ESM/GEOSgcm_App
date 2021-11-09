@@ -45,7 +45,7 @@ set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
 
 # Test if GEOSgcm.x is here which means you are in install directory
-if (! -x GEOSgcm.x) then
+if (! -x ${BINDIR}/GEOSgcm.x) then
    echo "You are trying to run $0 in the Applications/GEOSgcm_App directory"
    echo "This is no longer supported. Please run from the bin/ directory"
    echo "in your installation"
@@ -2389,6 +2389,7 @@ s?@TAREXEC?$TAREXEC?g
 
 s/@MP_MG1/$MP_MG1/g
 s/@MP_GFDL/$MP_GFDL/g
+s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_ZTRACER?$FV_ZTRACER?g
