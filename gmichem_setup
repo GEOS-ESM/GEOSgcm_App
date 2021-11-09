@@ -57,7 +57,6 @@ endif
 #######################################################################
 
 # Set default behavior of switches
-set NOCVS = TRUE
 set GPU   = FALSE
 set LINKX = FALSE
 
@@ -78,11 +77,6 @@ while ( $#argv > 0 )
          set GPU = TRUE
          breaksw
 
-      # Do not archive the source
-      case --nocvs:
-         set NOCVS = TRUE
-         breaksw
-
       # Symlink GEOSgcm.x
       case --link:
          set LINKX = TRUE
@@ -97,45 +91,12 @@ while ( $#argv > 0 )
 end
 
 #######################################################################
-#           CVS: Use CVS functionality only at NCCS or NAS
+#                        Determine site
 #######################################################################
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
 setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
-
-if ( $SITE != 'NCCS' && $SITE != 'NAS' ) then
-   set NOCVS = TRUE
-endif
-
-#######################################################################
-#           CVS: Test for Environment Variable
-#######################################################################
-
-if ( $?ESMA_NOCVS ) then
-   set NOCVS = TRUE
-endif
-
-#######################################################################
-#           CVS: Test if we are on a compute node
-#######################################################################
-
-if ( $NOCVS != "TRUE" ) then
-
-if ( $SITE == 'NCCS' ) then
-   if ( ($NODE =~ borg*) || ($NODE =~ warp*) ) then
-      goto ONCOMPUTE
-   endif
-   
-else if ( $SITE == 'NAS' ) then
-   if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
-        ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*) || \
-        ($NODE =~ maia*) ) then
-      goto ONCOMPUTE
-   endif
-endif
-
-endif
 
 #######################################################################
 #                 Test for Compiler and MPI Setup
@@ -2869,157 +2830,31 @@ if( -e $HOMDIR/tmpfile ) /bin/rm $HOMDIR/tmpfile
 if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
 
 #######################################################################
-#                  Determine Experiment Specific src Files
+#                     Copy over Source Tarfile
 #######################################################################
 
-if ( $NOCVS != "TRUE" ) then
+# NOTE: This variable is set at CMake time depending on 
+#       how the build was configured.
+set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
+set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
 
-echo "ERROR! Repository managment is not supported yet in this model"
-echo "       due to the move to git. If this section is reached,"
-echo "       something has gone wrong. Please contact Matt Thompson"
-echo "       or Larry Takacs"
-exit 3
+if ( $INSTALL_TARFILE == "TRUE" ) then
 
-# Make a src directory under EXPDIR to hold current Experiment files
-# Note:  Sandbox Source Location: $GEOSDIR/src
-#        EXP TAG Source Location: $EXPDIR/src/GEOSagcm/src
-# ------------------------------------------------------------------
-/bin/rm -rf ${EXPDIR}/src
-mkdir   -p  ${EXPDIR}/src/GEOSagcm/src
-cd          ${EXPDIR}/src/GEOSagcm/src
+   # Make a src directory under EXPDIR to hold current Experiment files
+   # ------------------------------------------------------------------
+   /bin/rm -rf ${EXPDIR}/src
+   mkdir   -p  ${EXPDIR}/src
 
-echo "${C2}Copying${CN} ${C1}Sandbox Source Code${CN} ${C2}(including non-committed files) into${CN} ${C1}${EXPDIR}/src/GEOSagcm/src${CN} ${C2}...${CN}"
-# ----------------------------------------------------------------------------------------------------------------------------------
-rsync -ar  --exclude '*.o'    \
-           --exclude '*.x'    \
-           --exclude '*.xx'   \
-           --exclude '*.a'    \
-           --exclude '*.d'    \
-           --exclude '*.nc4'  \
-           --exclude '*.mod'  \
-           --exclude 'GEOSgcm.x.*' \
-           --exclude 'mk_LakeLandiceSaltRestarts'  \
-           --exclude 'mk_CatchRestarts'  \
-           --exclude 'mk_CatchCNRestarts'  \
-           --exclude 'mk_LDASsaRestarts'  \
-           --exclude 'Scale_Catch'  \
-           --exclude 'Scale_CatchCN'  \
-           --exclude 'strip_vegdyn'  \
-           --exclude 'newcatch'  \
-             ${GEOSDIR}/src/* .
-echo " "
-
-# -----------------------------------------------------------------------------
-# Create CVS TAG for Experiment
-# -----------------------------------------------------------------------------
-
-# Change Dots to Underscores in EXPID for CVS Tag
-# -----------------------------------------------
-set EXPIDTAG = `echo ${EXPID} | sed -e 's/\./_/g'`
-set tagname  = "${EXPIDTAG}__${LOGNAME}"
-
-if( ! $?ESMA_NOCOMMIT ) then
-TAGNAME:
-    echo "Enter ${C1}CVS Tag${CN} to COMMIT this Experiment (Default: ${C2}${tagname}${CN})"
-    echo "Enter ${C1}q${CN} or ${C1}quit${CN} to QUIT or SKIP the CVS COMMIT:"
-    set    TAGTMP  =  $<
-    if ( .$TAGTMP != . ) then
-       set tagname = "$TAGTMP"
-    endif
-    # Change Dots to Underscores in TAGNAME for CVS Tag
-    # -------------------------------------------------
-    set  tagname = `echo ${tagname} | sed -e 's/\./_/g'`
-    if( $tagname == 'q' | $tagname == 'quit' ) then
-        setenv ESMA_NOCOMMIT TRUE
-        set tagname = "${EXPIDTAG}__${LOGNAME}"
-        set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${EXPDIR}/src | grep COMMIT_STATUS`
-        if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${EXPDIR}/src/COMMIT_STATUS_*
-        touch                                   ${EXPDIR}/src/COMMIT_STATUS_FALSE
-    else
-        set tagtest = `cvs status -v g5_modules | grep ${tagname}`
-        if( $#tagtest != 0 ) then
-            echo "      ${C1}CVS COMMIT Tag${CN} ${C2}${tagname}${CN} already exists."
-            set tagname = "${EXPIDTAG}__${LOGNAME}"
-            goto TAGNAME
-        endif
-    endif
-else
-     set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${EXPDIR}/src | grep COMMIT_STATUS`
-     if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${EXPDIR}/src/COMMIT_STATUS_*
-     touch                                   ${EXPDIR}/src/COMMIT_STATUS_FALSE
-endif
-
-/bin/rm -f       ${EXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
-echo $tagname  > ${EXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
-
-
-# Create a list of non-committed Sandbox files (ignore updated files not included in sandbox)
-# -------------------------------------------------------------------------------------------
-cvs -nq upd | grep -v "U " > ${EXPDIR}/src/srcfiles
-
-
-echo "${C2}Non-Committed Sandbox Files:${CN}"
-echo "---------------------------------"
-
-/bin/rm -f ${EXPDIR}/src/cvs.log
-
-while( -e  ${EXPDIR}/src/srcfiles )
-  set file = `head -1 ${EXPDIR}/src/srcfiles`
-  set   bit = `echo "$file" | cut -c1`
-  if( "$bit" != "?" ) then
-         set  file = `echo "$file" | cut -d' ' -f2`
-        echo $file
-
-      # Local Copy of Differing Sandbox File from TAG file
-      # --------------------------------------------------
-        set newfile = `echo $file | sed -e "s?/?^?g"`
-        /bin/cp -f  ${EXPDIR}/src/GEOSagcm/src/$file ${EXPDIR}/src/$newfile
-
-      # CVS Commit updated Sandbox files
-      # --------------------------------
-        if( ! $?ESMA_NOCOMMIT ) then
-                          set  branchname = "BRANCH__${tagname}"
-              cvs tag    -b  ${branchname}         $file >&  ${EXPDIR}/src/cvs.log
-              cvs upd    -r  ${branchname}         $file >&  ${EXPDIR}/src/cvs.log
-              cvs commit -m "${tagname} ${EXPDSC}" $file >&  ${EXPDIR}/src/cvs.log
-        endif
-
-  endif
-  sed 1,1d -i ${EXPDIR}/src/srcfiles
-  set  nfiles = `wc -c ${EXPDIR}/src/srcfiles | cut -d" " -f 1`
-  if( $nfiles == 0 ) /bin/rm -f ${EXPDIR}/src/srcfiles
-end
-
-echo " "
-      # Tag Final EXPDIR/src/GEOSagcm/src
-      # ---------------------------------
-        if( ! $?ESMA_NOCOMMIT ) then
-              cvs tag ${tagname}  >&  ${EXPDIR}/src/cvs.log
-              if( $status == 0 ) then
-                  echo "${C2}EXP:${CN} ${C1}$EXPID${CN} ${C2}successfully committed with TAG:${CN} ${C1}${tagname}${CN}"
-                  echo "-------------------------------------------------------"
-                  set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${EXPDIR}/src | grep COMMIT_STATUS`
-                  if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${EXPDIR}/src/COMMIT_STATUS_*
-                  touch                                   ${EXPDIR}/src/COMMIT_STATUS_TRUE
-              else
-                  echo "${C2}EXP:${CN} ${C1}$EXPID${CN} ${C2}failed to be committed with TAG:${CN} ${C1}${tagname}${CN}"
-                  echo "-------------------------------------------------------"
-                  set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${EXPDIR}/src | grep COMMIT_STATUS`
-                  if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${EXPDIR}/src/COMMIT_STATUS_*
-                  if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${EXPDIR}/src/COMMIT_STATUS_*
-                  touch                                   ${EXPDIR}/src/COMMIT_STATUS_FALSE
-              endif
-        endif
-
-if( -e ${EXPDIR}/src/cvs.log ) /bin/rm -f ${EXPDIR}/src/cvs.log
-cd     ${EXPDIR}/src
-
-echo ""
-echo "${C2}Tarring${CN} Experiment Source Code into Single File ${C2}...${CN}"
-# ---------------------------------------------------------------------------
-$TAREXEC cf ${EXPID}.GEOSagcm.tar GEOSagcm
-/bin/rm -r                        GEOSagcm
-echo ""
+   echo "Copying Build Source Code into ${C2}${EXPDIR}/src${CN}"
+   # -----------------------------------------------------------
+   if (-e ${GEOSDEF}/src/${TARFILE_NAME}) then
+      cp ${GEOSDEF}/src/${TARFILE_NAME} ${EXPDIR}/src
+   else
+      echo "${GEOSDEF}/src/${TARFILE_NAME} not found yet CMake was asked to make and install a tarfile."
+      echo "Something went wrong."
+      exit 7
+   endif
+   echo ""
 
 endif
 
@@ -3346,157 +3181,32 @@ echo ""
 /bin/rm $COPYSCRIPT
 /bin/rm $SEDFILE
 
-# --------------------------------
-# Cloned Experiment Source Control
-# --------------------------------
+# ------------------------
+# Cloned Experiment Source
+# ------------------------
 
-if ( $NOCVS != "TRUE" ) then
+# NOTE: This variable is set at CMake time depending on 
+#       how the build was configured.
+set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
+set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
 
-echo "ERROR! Repository managment is not supported yet in this model"
-echo "       due to the move to git. If this section is reached,"
-echo "       something has gone wrong. Please contact Matt Thompson"
-echo "       or Larry Takacs"
-exit 3
+if ( $INSTALL_TARFILE == "TRUE" ) then
 
-# Make a src directory under NEWEXPDIR to hold current Experiment files
-# Note:  Sandbox Source Location: $GEOSDIR/src
-#        EXP TAG Source Location: $NEWEXPDIR/src/GEOSagcm/src
-# ------------------------------------------------------------------
-/bin/rm -rf ${NEWEXPDIR}/src
-mkdir   -p  ${NEWEXPDIR}/src/GEOSagcm/src
-cd          ${NEWEXPDIR}/src/GEOSagcm/src
+   # Make a src directory under EXPDIR to hold current Experiment files
+   # ------------------------------------------------------------------
+   /bin/rm -rf ${NEWEXPDIR}/src
+   mkdir   -p  ${NEWEXPDIR}/src
 
-echo "${C2}Copying${CN} ${C1}Sandbox Source Code${CN} ${C2}(including non-committed files) into${CN} ${C1}${NEWEXPDIR}/src/GEOSagcm/src${CN} ${C2}...${CN}"
-# ----------------------------------------------------------------------------------------------------------------------------------
-rsync -ar  --exclude '*.o'    \
-           --exclude '*.x'    \
-           --exclude '*.xx'   \
-           --exclude '*.a'    \
-           --exclude '*.d'    \
-           --exclude '*.nc4'  \
-           --exclude '*.mod'  \
-           --exclude 'GEOSgcm.x.*' \
-           --exclude 'mk_LakeLandiceSaltRestarts'  \
-           --exclude 'mk_CatchRestarts'  \
-           --exclude 'mk_CatchCNRestarts'  \
-           --exclude 'mk_LDASsaRestarts'  \
-           --exclude 'Scale_Catch'  \
-           --exclude 'Scale_CatchCN'  \
-           --exclude 'strip_vegdyn'  \
-           --exclude 'newcatch'  \
-             ${GEOSDIR}/src/* .
-echo " "
-
-# -----------------------------------------------------------------------------
-# Create CVS TAG for Experiment
-# -----------------------------------------------------------------------------
-
-# Change Dots to Underscores in NEWEXPID for CVS Tag
-# --------------------------------------------------
-set EXPIDTAG = `echo ${NEWEXPID} | sed -e 's/\./_/g'`
-set tagname  = "${EXPIDTAG}__${LOGNAME}"
-
-if( ! $?ESMA_NOCOMMIT ) then
-NEWTAGNAME:
-    echo "Enter ${C1}CVS Tag${CN} to COMMIT this Experiment (Default: ${C2}${tagname}${CN})"
-    echo "Enter ${C1}q${CN} or ${C1}quit${CN} to QUIT or SKIP the CVS COMMIT:"
-    set    TAGTMP  =  $<
-    if ( .$TAGTMP != . ) then
-       set tagname = "$TAGTMP"
-    endif
-    # Change Dots to Underscores in TAGNAME for CVS Tag
-    # -------------------------------------------------
-    set  tagname = `echo ${tagname} | sed -e 's/\./_/g'`
-    if( $tagname == 'q' | $tagname == 'quit' ) then
-        setenv ESMA_NOCOMMIT TRUE
-        set tagname = "${EXPIDTAG}__${LOGNAME}"
-        set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${NEWEXPDIR}/src | grep COMMIT_STATUS`
-        if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${NEWEXPDIR}/src/COMMIT_STATUS_*
-        touch                                   ${NEWEXPDIR}/src/COMMIT_STATUS_FALSE
-    else
-        set tagtest = `cvs status -v g5_modules | grep ${tagname}`
-        if( $#tagtest != 0 ) then
-            echo "      ${C1}CVS COMMIT Tag${CN} ${C2}${tagname}${CN} already exists."
-            set tagname = "${EXPIDTAG}__${LOGNAME}"
-            goto NEWTAGNAME
-        endif
-    endif
-else
-     set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${NEWEXPDIR}/src | grep COMMIT_STATUS`
-     if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${NEWEXPDIR}/src/COMMIT_STATUS_*
-     touch                                   ${NEWEXPDIR}/src/COMMIT_STATUS_FALSE
-endif
-
-/bin/rm -f       ${NEWEXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
-echo $tagname  > ${NEWEXPDIR}/src/GEOSagcm/src/Applications/GEOSgcm_App/.AGCM_VERSION
-
-
-# Create a list of non-committed Sandbox files
-# --------------------------------------------
-cvs -nq upd > ${NEWEXPDIR}/src/srcfiles
-
-
-echo "${C2}Non-Committed Sandbox Files:${CN}"
-echo "---------------------------------"
-
-/bin/rm -f ${NEWEXPDIR}/src/cvs.log
-
-while( -e  ${NEWEXPDIR}/src/srcfiles )
-  set file = `head -1 ${NEWEXPDIR}/src/srcfiles`
-  set   bit = `echo "$file" | cut -c1`
-  if( "$bit" != "?" ) then
-         set  file = `echo "$file" | cut -d' ' -f2`
-        echo $file
-
-      # Local Copy of Differing Sandbox File from TAG file
-      # --------------------------------------------------
-        set newfile = `echo $file | sed -e "s?/?^?g"`
-        /bin/cp -f  ${NEWEXPDIR}/src/GEOSagcm/src/$file ${NEWEXPDIR}/src/$newfile
-
-      # CVS Commit updated Sandbox files
-      # --------------------------------
-        if( ! $?ESMA_NOCOMMIT ) then
-                          set  branchname = "BRANCH__${tagname}"
-              cvs tag    -b  ${branchname}         $file  >&  ${NEWEXPDIR}/src/cvs.log
-              cvs upd    -r  ${branchname}         $file  >&  ${NEWEXPDIR}/src/cvs.log
-              cvs commit -m "${tagname} ${EXPDSC}" $file  >&  ${NEWEXPDIR}/src/cvs.log
-        endif
-
-  endif
-  sed 1,1d -i ${NEWEXPDIR}/src/srcfiles
-  set  nfiles = `wc -c ${NEWEXPDIR}/src/srcfiles | cut -d" " -f 1`
-  if( $nfiles == 0 ) /bin/rm -f ${NEWEXPDIR}/src/srcfiles
-end
-
-echo " "
-      # Tag Final NEWEXPDIR/src/GEOSagcm/src
-      # ---------------------------------
-        if( ! $?ESMA_NOCOMMIT ) then
-              cvs tag ${tagname}  >&  ${NEWEXPDIR}/src/cvs.log
-              if( $status == 0 ) then
-                  echo "${C2}EXP:${CN} ${C1}$NEWEXPID${CN} ${C2}successfully committed with TAG:${CN} ${C1}${tagname}${CN}"
-                  echo "-------------------------------------------------------"
-                  set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${NEWEXPDIR}/src | grep COMMIT_STATUS`
-                  if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${NEWEXPDIR}/src/COMMIT_STATUS_*
-                  touch                                   ${NEWEXPDIR}/src/COMMIT_STATUS_TRUE
-              else
-                  echo "${C2}EXP:${CN} ${C1}$NEWEXPID${CN} ${C2}failed to be committed with TAG:${CN} ${C1}${tagname}${CN}"
-                  echo "-------------------------------------------------------"
-                  set  NUM_COMMIT_STATUS =    `/bin/ls -1 ${NEWEXPDIR}/src | grep COMMIT_STATUS`
-                  if($#NUM_COMMIT_STATUS > 0 ) /bin/rm -f ${NEWEXPDIR}/src/COMMIT_STATUS_*
-                  touch                                   ${NEWEXPDIR}/src/COMMIT_STATUS_FALSE
-              endif
-        endif
-
-/bin/rm -f ${NEWEXPDIR}/src/cvs.log
-cd         ${NEWEXPDIR}/src
-
-echo ""
-echo "${C2}Tarring${CN} Experiment Source Code into Single File ${C2}...${CN}"
-# ---------------------------------------------------------------------------
-     tar cf ${NEWEXPID}.GEOSagcm.tar GEOSagcm
-/bin/rm -r                           GEOSagcm
-echo ""
+   echo "Copying Build Source Code into ${C2}${NEWEXPDIR}/src${CN}"
+   # --------------------------------------------------------------
+   if (-e ${GEOSDEF}/src/${TARFILE_NAME}) then
+      cp ${GEOSDEF}/src/${TARFILE_NAME} ${NEWEXPDIR}/src
+   else
+      echo "${GEOSDEF}/src/${TARFILE_NAME} not found yet CMake was asked to make and install a tarfile."
+      echo "Something went wrong."
+      exit 7
+   endif
+   echo ""
 
 endif
 
@@ -3513,25 +3223,6 @@ TRAP:
 #######################################################################
 #                      Usage and Error Outputs
 #######################################################################
-
-ONCOMPUTE:
-echo
-echo "${BOLD}${RED}            ERROR: On Compute Node ${RESET}"
-echo "${BOLD}${RED}            ====================== ${RESET}"
-
-cat << EOF
-
-gmichem_setup requires access to internet resources, namely
-the CVS repository. You are attempting to run gmichem_setup
-on compute node ${NODE} at ${SITE}. Please re-run on a head 
-node, or supply the --nocvs option. 
-
-For more information, contact Matt Thompson or
-Larry Takacs at GMAO.
-
-EOF
-
-exit 1
 
 CONTACTMATT:
 cat <<EOF
@@ -3592,9 +3283,7 @@ gmichem_setup, a setup script for the GEOS-5 GCM
 
    If invoked alone, the script runs as normal.
 
-   For more information, please contact Larry Takacs.
-
-   Note: gmichem_setup must be run on a machine with CVS access.
+   For more information, please contact Matt Thompson or Scott Rabenhorst
 
 EOF
 exit 1
