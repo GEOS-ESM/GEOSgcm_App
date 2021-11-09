@@ -526,12 +526,14 @@ echo
 endif
 endif
 
+set CLDMICRO = "1MOMENT"
 if( $OGCM == TRUE ) then
 
     set COUPLED   = ""
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
+    set CLDMICRO = "2MOMENT"
 
     # Ocean Model
     # -----------
@@ -2126,10 +2128,11 @@ s?@DASTUNING?#?g
 
 s?>>>FORCEDAS<<<?$FORCEDAS?g
 s?>>>FORCEGCM<<<?$FORCEGCM?g
-s?>>>COUPLED<<<?$COUPLED?g
-s?>>>MOM5<<<?$MOM5?g
-s?>>>MOM6<<<?$MOM6?g
-s?>>>DATAOCEAN<<<?$DATAOCEAN?g
+s?@COUPLED?$COUPLED?g
+s?@CLDMICRO?$CLDMICRO?g
+s?@MOM5?$MOM5?g
+s?@MOM6?$MOM6?g
+s?@DATAOCEAN?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
 s?@OPS_SPECIES?$OPS_SPECIES?g
 s?@CMIP_SPECIES?$CMIP_SPECIES?g
