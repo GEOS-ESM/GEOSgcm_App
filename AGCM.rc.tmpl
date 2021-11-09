@@ -658,17 +658,17 @@ SEAICETHERMO_INTERNAL_RESTART_FILE:     seaicethermo_internal_rst
 SEAICETHERMO_INTERNAL_CHECKPOINT_FILE:  seaicethermo_internal_checkpoint
 SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
-CICE4_IMPORT_RESTART_FILE:             seaice_import_rst
-CICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
-CICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+@COUPLEDCICE4_IMPORT_RESTART_FILE:             seaice_import_rst
+@COUPLEDCICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
+@COUPLEDCICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
 
-CICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
-CICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
-CICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
+@COUPLEDCICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
+@COUPLEDCICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
+@COUPLEDCICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
 
-OCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
-OCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
-OCEAN_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+@COUPLEDOCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
+@COUPLEDOCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
+@COUPLEDOCEAN_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
 
 # Boundary Datasets
 # -----------------
@@ -811,9 +811,9 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 # the run starts at 21z/03z/09z/15z, 
 # HISTORY.rc collections have proper ref_time field
 # ---------------------------------------------------------------------------
->>>MOM5<<<#DUAL_OCEAN: 1
->>>MOM5<<<#DATA_SST_FILE: sst.data
->>>MOM5<<<#DATA_FRT_FILE: fraci.data
+@MOM5#DUAL_OCEAN: 1
+@MOM5#DATA_SST_FILE: sst.data
+@MOM5#DATA_FRT_FILE: fraci.data
 
 @COUPLED 
 @COUPLED # Section for CICE 

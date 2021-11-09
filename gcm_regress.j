@@ -73,8 +73,8 @@ cd $EXPDIR/regress
 @CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
 @CPEXEC $HOMDIR/*.yaml      $EXPDIR/regress
 @COUPLED @CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
->>>MOM6<<<@CPEXEC $HOMDIR/MOM_input   $EXPDIR/regress
->>>MOM6<<<@CPEXEC $HOMDIR/MOM_override $EXPDIR/regress
+@MOM6@CPEXEC $HOMDIR/MOM_input   $EXPDIR/regress
+@MOM6@CPEXEC $HOMDIR/MOM_override $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
 
@@ -304,7 +304,7 @@ set nhmse = $date[2]
 foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.1
 end
->>>MOM6<<</bin/mv RESTART/MOM.res.nc MOM.res.nc.1
+@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.1
 
 ##################################################################
 ######
@@ -429,8 +429,8 @@ cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 @COUPLED /bin/mv AGCM.rc AGCM.tmp
 @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
->>>MOM5<<<sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
->>>MOM6<<<sed -r -i -e "/^ *LAYOUT/ s#= ([0-9]+), *([0-9]+)#= ${test_NY}, ${test_NX}#" MOM_input
+@MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
+@MOM6sed -r -i -e "/^ *LAYOUT/ s#= ([0-9]+), *([0-9]+)#= ${test_NY}, ${test_NX}#" MOM_input
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
@@ -446,7 +446,7 @@ set nhmse = $date[2]
 foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.2
 end
->>>MOM6<<</bin/mv RESTART/MOM.res.nc MOM.res.nc.2
+@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.2
 
 #######################################################################
 #                          Compare Restarts
@@ -496,23 +496,23 @@ foreach chk ( $chk_file_names )
 end
 
 # check MOM.res.nc (MOM6 restart)
->>>MOM6<<<set file1 = MOM.res.nc.1
->>>MOM6<<<set file2 = MOM.res.nc.2
->>>MOM6<<<if( -e $file1 && -e $file2 ) then
->>>MOM6<<<                             set check = true
->>>MOM6<<<      if( $check == true ) then
->>>MOM6<<<         echo Comparing "MOM6 restarts"
->>>MOM6<<<         cmp $file1 $file2
->>>MOM6<<<         if( $status == 0 ) then
->>>MOM6<<<             echo Success!
->>>MOM6<<<             echo " "
->>>MOM6<<<         else
->>>MOM6<<<             echo Failed!
->>>MOM6<<<             echo " "
->>>MOM6<<<             set pass = false
->>>MOM6<<<         endif
->>>MOM6<<<      endif
->>>MOM6<<<endif
+@MOM6set file1 = MOM.res.nc.1
+@MOM6set file2 = MOM.res.nc.2
+@MOM6if( -e $file1 && -e $file2 ) then
+@MOM6                             set check = true
+@MOM6      if( $check == true ) then
+@MOM6         echo Comparing "MOM6 restarts"
+@MOM6         cmp $file1 $file2
+@MOM6         if( $status == 0 ) then
+@MOM6             echo Success!
+@MOM6             echo " "
+@MOM6         else
+@MOM6             echo Failed!
+@MOM6             echo " "
+@MOM6             set pass = false
+@MOM6         endif
+@MOM6      endif
+@MOM6endif
 
 @GPUEND
 
