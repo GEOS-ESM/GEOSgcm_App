@@ -252,8 +252,8 @@ cd $SCRDIR
 
                              cat fvcore_layout.rc >> input.nml
 
-			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_input .
-			    >>>MOM6<<<@CPEXEC -f  $HOMDIR/MOM_override .
+			    @MOM6@CPEXEC -f  $HOMDIR/MOM_input .
+			    @MOM6@CPEXEC -f  $HOMDIR/MOM_override .
 
 if( $GCMEMIP == TRUE ) then
     @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -307,8 +307,8 @@ setenv CHMDIR    @CHMDIR
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
->>>MOM5<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
->>>MOM6<<<setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
+@MOM5setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+@MOM6setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
 @COUPLED setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 @COUPLED setenv BCTAG `basename $GRIDDIR`
 @DATAOCEAN setenv BCTAG `basename $BCSDIR`
@@ -327,8 +327,8 @@ cat << _EOF_ > $FILE
 @COUPLED /bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 @COUPLED /bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
 @COUPLED /bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
->>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
->>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@MOM5/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@MOM6/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -915,8 +915,8 @@ end
 
 @COUPLED # MOM-Specific Output Files
 @COUPLED # -------------------------
->>>MOM5<<< set dsets="ocean_month"
->>>MOM6<<< set dsets="ocean_state prog_z sfc_ave forcing"
+@MOM5 set dsets="ocean_month"
+@MOM6 set dsets="ocean_state prog_z sfc_ave forcing"
 @COUPLED  foreach dset ( $dsets )
 @COUPLED  set num = `/bin/ls -1 $dset.nc | wc -l`
 @COUPLED  if($num != 0) then
