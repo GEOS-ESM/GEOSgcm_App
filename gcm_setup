@@ -1104,22 +1104,22 @@ set JOB_SIZE  = `echo $JOB_SIZE | tr "[:lower:]" "[:upper:]"`
 
 if ($JOB_SIZE == "SMALL") then
   @ NX             = $NX_S
-  @ NY             = $NY_S
+  @ NY             = `expr $NY_S \* 6`
   @ NODES_R        = $NDS_S
   @ MPI_PER_NODE_R = $MPI_S
   @ MODEL_NPES     = $TSK_S
 else if ($JOB_SIZE == "MEDIUM") then
   @ NX             = $NX_M
-  @ NY             = $NY_M
+  @ NY             = `expr $NY_M \* 6`
   @ NODES_R        = $NDS_M
   @ MPI_PER_NODE_R = $MPI_M
   @ MODEL_NPES     = $TSK_M
 else if ($JOB_SIZE == "LARGE") then
-  @ NX             = $NX_M
-  @ NY             = $NY_M
-  @ NODES_R        = $NDS_M
-  @ MPI_PER_NODE_R = $MPI_M
-  @ MODEL_NPES     = $TSK_M
+  @ NX             = $NX_L
+  @ NY             = `expr $NY_L \* 6`
+  @ NODES_R        = $NDS_L
+  @ MPI_PER_NODE_R = $MPI_L
+  @ MODEL_NPES     = $TSK_L
 else
   goto ASKJOBSIZE:
 endif
