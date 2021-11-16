@@ -631,7 +631,7 @@ endif
 
 # Default Run Parameters
 # ----------------------
-if( $AGCM_IM ==  "c12" ) then
+if( $AGCM_IM == "c12" ) then
      set       DT = 900
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -650,7 +650,7 @@ if( $AGCM_IM ==  "c12" ) then
      set   CNV_NX = 1
      set   CNV_NY = 6
 endif
-if( $AGCM_IM ==  "c24" ) then
+if( $AGCM_IM == "c24" ) then
      set       DT = 900
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
@@ -669,8 +669,8 @@ if( $AGCM_IM ==  "c24" ) then
      set   CNV_NX = 1
      set   CNV_NY = 6
 endif
-if( $AGCM_IM ==  "c48" ) then
-     set       DT = 450
+if( $AGCM_IM == "c48" ) then
+     set       DT = 900
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 48
@@ -767,7 +767,7 @@ if( $AGCM_IM == "c720" ) then
      set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 300
+     set       DT = 150
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 1440
@@ -785,7 +785,7 @@ if( $AGCM_IM == "c1440" ) then
      set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c2880" ) then
-     set       DT = 300
+     set       DT = 150
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 2880
@@ -803,7 +803,7 @@ if( $AGCM_IM == "c2880" ) then
      set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 300
+     set       DT = 75
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 5760
@@ -822,7 +822,7 @@ if( $AGCM_IM == "c5760" ) then
 endif
 # DYAMOND Resolutions
 if( $AGCM_IM == "c768" ) then
-     set       DT = 180
+     set       DT = 300
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set AGCM_IM  = 768
@@ -842,7 +842,7 @@ if( $AGCM_IM == "c768" ) then
      set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1536" ) then
-     set       DT = 90
+     set       DT = 150
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set AGCM_IM  = 1536
@@ -862,7 +862,7 @@ if( $AGCM_IM == "c1536" ) then
      set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c3072" ) then
-     set       DT = 45
+     set       DT = 75
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
      set AGCM_IM  = 3072
