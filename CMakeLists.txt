@@ -47,6 +47,11 @@ install (
    DESTINATION etc
    )
 
+install (
+   FILES input_GFS_v16beta.nml
+   DESTINATION bin
+   )
+
 if(HYDROSTATIC)
    set(CFG_HYDROSTATIC TRUE)
 else()
