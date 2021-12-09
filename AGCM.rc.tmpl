@@ -28,6 +28,8 @@ IRRADAvrg: 0
 
 ORBIT_ANAL2B: .TRUE.
 EOT: .TRUE.
+# UNCOMMENT to use CCPP GFS moist grid comp
+@GFS_MOISTCCPP_GFS_MOIST: TRUE
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
 @MP_MG1CLDMICRO: 2MOMENT
@@ -654,13 +656,13 @@ SEAICETHERMO_INTERNAL_RESTART_FILE:     seaicethermo_internal_rst
 SEAICETHERMO_INTERNAL_CHECKPOINT_FILE:  seaicethermo_internal_checkpoint
 SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
->>>COUPLED<<<SEAICE_IMPORT_RESTART_FILE:             seaice_import_rst
->>>COUPLED<<<SEAICE_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
->>>COUPLED<<<SEAICE_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+>>>COUPLED<<<CICE4_IMPORT_RESTART_FILE:             seaice_import_rst
+>>>COUPLED<<<CICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
+>>>COUPLED<<<CICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
 
->>>COUPLED<<<SEAICE_INTERNAL_RESTART_FILE:           seaice_internal_rst
->>>COUPLED<<<SEAICE_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
->>>COUPLED<<<SEAICE_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
+>>>COUPLED<<<CICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
+>>>COUPLED<<<CICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
+>>>COUPLED<<<CICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
 
 >>>COUPLED<<<OCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
 >>>COUPLED<<<OCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint

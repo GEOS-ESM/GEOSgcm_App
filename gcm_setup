@@ -297,6 +297,23 @@ else
    endif
 endif
 
+ASKMOIST:
+
+ echo "Enter Choice for ${C1}Moist Grid Comp${CN}: (Default: GEOS)"
+ echo "   ${C2}GEOS  --  GEOS Moist Grid Comp${CN}"
+ echo "   ${C2}CCPP_GFS  --  GFS (culled from CCPP) Moist Grid Comp ${CN}"
+ set   MOIST_GRIDCOMP = $<
+if( .$MOIST_GRIDCOMP == . ) then
+   set MOIST_GRIDCOMP = "GEOS"
+else
+   set MOIST_GRIDCOMP = `echo $MOIST_GRIDCOMP | tr "[:lower:]" "[:upper:]"`
+   if( "$MOIST_GRIDCOMP" != "GEOS" & \
+       "$MOIST_GRIDCOMP" != "CCPP_GFS" ) then
+       echo
+       echo "${C1}MOIST Grid Comp${CN} must be one of the options below!"
+       goto ASKMOIST
+   endif
+endif
 
 #######################################################################
 #   Test to see if using hydrostatic or non-hydrostatic atmosphere
@@ -327,6 +344,165 @@ else
       echo "Use ${C1}Hydrostatic Atmosphere${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
       goto ASKHYDRO
    endif
+endif
+
+#######################################################################
+#            Test to see if you want to use ioserver
+#######################################################################
+
+ASKIOS:
+
+if( $HRCODE == 'c180'  | \
+    $HRCODE == 'c360'  | \
+    $HRCODE == 'c720'  | \
+    $HRCODE == 'c1440' | \
+    $HRCODE == 'c768'  | \
+    $HRCODE == 'c1536' | \
+    $HRCODE == 'c3072' ) then
+
+    set DEFAULT_DO_IOS = TRUE
+    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
+# MVAPICH2 requires ioserver for history (issue with MPI_Put and MAPL)
+else if( $MPI == mvapich2 ) then
+    set DEFAULT_DO_IOS = TRUE
+    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
+else
+    set DEFAULT_DO_IOS = FALSE
+    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+endif
+
+set   DO_IOS  = $<
+if( .$DO_IOS == . ) then
+   set   DO_IOS  = $DEFAULT_DO_IOS
+else
+   set   DO_IOS  = `echo   $DO_IOS | tr "[:lower:]" "[:upper:]"`
+   if(  $DO_IOS == "Y"     | \
+        $DO_IOS == "YES"   | \
+        $DO_IOS == "T"     | \
+        $DO_IOS == "TRUE"  ) set DO_IOS = TRUE
+   if(  $DO_IOS == "N"     | \
+        $DO_IOS == "NO"    | \
+        $DO_IOS == "F"     | \
+        $DO_IOS == "FALSE" ) set DO_IOS = FALSE
+
+   if( $DO_IOS != "TRUE" & $DO_IOS != "FALSE" ) then
+      echo
+      echo "${C1}IOSERVER${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
+      goto ASKIOS
+   endif
+endif
+
+if ( $DO_IOS == "TRUE" ) then
+   set USE_IOSERVER = 1
+else
+   set USE_IOSERVER = 0
+endif
+
+#######################################################################
+#                 What Processor Should We Run On?
+#######################################################################
+
+ASKPROC:
+
+if ( $SITE == 'NCCS' ) then
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}hasw (Haswell)${CN} (default)"
+   if (-e /etc/os-release) then
+      echo "   ${C2}sky  (Skylake)${CN}"
+   endif
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'hasw'
+   endif
+
+   if( $MODEL != 'hasw' & \
+       $MODEL != 'sky' ) goto ASKPROC
+
+   if (     $MODEL == 'hasw') then
+      set NCPUS_PER_NODE = 28
+   else if ($MODEL == 'sky') then
+      set NCPUS_PER_NODE = 40
+   endif
+
+else if ( $SITE == 'NAS' ) then
+
+   # At NAS, if you build on Rome, we currently limit you to run on
+   # Rome; this is for two reasons. First, Romes are on SLES 15 and
+   # if you build on SLES 15, you can only run on SLES 15. Second,
+   # while a built-on-Rome GEOS might work on Intel processors, it
+   # will (probably) have a different output than if built on Intel
+   # due to different optimization flags.  This would violate the GEOS
+   # capability to get the same answers at NAS and NCCS
+
+   set BUILT_ON_ROME = @CFG_BUILT_ON_ROME@
+
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   if( "$BUILT_ON_ROME" != "TRUE" ) then
+      echo "   ${C2}has (Haswell)${CN}"
+      echo "   ${C2}bro (Broadwell)${CN}"
+      echo "   ${C2}sky (Skylake)${CN} (default)"
+      echo "   ${C2}cas (Cascade Lake)${CN}"
+      echo " "
+      echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
+      echo "       and Ivy Bridge are not supported by current GEOS"
+   else
+      echo "   ${C2}rom (AMD Rome)${CN} (default)"
+   endif
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      if( "$BUILT_ON_ROME" != "TRUE" ) then
+         set MODEL = 'sky'
+      else
+         set MODEL = 'rom'
+      endif
+   endif
+
+   if( "$BUILT_ON_ROME" != "TRUE" ) then
+      if( $MODEL != 'has' & \
+          $MODEL != 'bro' & \
+          $MODEL != 'sky' & \
+          $MODEL != 'cas' ) goto ASKPROC
+   else
+      if( $MODEL != 'rom' ) goto ASKPROC
+   endif
+
+   # Some processors have weird names at NAS
+   # ---------------------------------------
+
+   if ($MODEL == bro ) then
+      set MODEL = 'bro_ele'
+   else if ($MODEL == sky) then
+      set MODEL = 'sky_ele'
+   else if ($MODEL == cas) then
+      set MODEL = 'cas_ait'
+   else if ($MODEL == rom) then
+      set MODEL = 'rom_ait'
+   endif
+
+   if (     $MODEL == 'san') then
+      set NCPUS_PER_NODE = 16
+   else if ($MODEL == 'ivy') then
+      set NCPUS_PER_NODE = 20
+   else if ($MODEL == 'has') then
+      set NCPUS_PER_NODE = 24
+   else if ($MODEL == 'bro_ele') then
+      set NCPUS_PER_NODE = 28
+   else if ($MODEL == 'sky_ele') then
+      set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'cas_ait') then
+      set NCPUS_PER_NODE = 40
+   else if ($MODEL == 'rom_ait') then
+      set NCPUS_PER_NODE = 128
+      # Romes are on a different aoe
+      set MODEL='rom_ait:aoe=sles15'
+   endif
+
+else
+   set MODEL = 'UNKNOWN'
 endif
 
 #######################################################################
@@ -1167,6 +1343,11 @@ if ( "$AGCM_MP" == "MG1" ) then
 else
 	set MP_MG1 = "# "
 endif
+if ( "$MOIST_GRIDCOMP" == "CCPP_GFS" ) then
+   set GFS_MOIST = ""
+else
+   set GFS_MOIST = "# "
+endif
 
 # Settings for hydrostatic vs non-hydrostatic
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
@@ -1272,6 +1453,11 @@ endif
 if(  $GOKART == "A" ) set GOKART = TRUE    # Use Actual         Aerosols
 if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
 
+# Default setup for linkbcs emissions
+set OPS_SPECIES      = "#"
+set CMIP_SPECIES     = "#"
+set MERRA2OX_SPECIES = "#"
+set PCHEM_CLIM_YEARS = ""
 
 if( $GOKART == TRUE ) then
 
@@ -1303,6 +1489,19 @@ EMISSIONS:
      endif
      if(  $EMISSIONS == OPS ) set EMISSIONS = ''
 
+     # Fix up the linkbcs species.data
+     # NOTE: If OPS is selected, EMISSIONS is blanked
+     if(  $EMISSIONS == '' ) then
+        set OPS_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 1
+     else if(  $EMISSIONS == CMIP ) then
+        set CMIP_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 228
+     else
+        set MERRA2OX_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 39
+     endif
+
 # AERO Provider
 # -------------
      set AERO_PROVIDER = GOCART
@@ -1333,6 +1532,9 @@ set  HIST_GOCART     = "#DELETE"
 set USE_AEROSOL_NN = 0
 set GFDL_PROG_CCN = "prog_ccn = .false."
 set GFDL_USE_CCN  = "use_ccn = .true."
+# GOCART.data uses MERRA2OX currently
+set MERRA2OX_SPECIES = ""
+set PCHEM_CLIM_YEARS = 39
 
 endif
 
@@ -1864,24 +2066,21 @@ else if( $MPI == mvapich2 ) then
 
 if( $GPU == "TRUE" ) then
 cat > $HOMDIR/SETENV.commands << EOF
-   #setenv MV2_ON_DEMAND_THRESHOLD 8192
-   #setenv MV2_USE_SHMEM_ALLREDUCE 0
-   #setenv MV2_USE_SHMEM_COLL      0
    setenv MV2_ENABLE_AFFINITY     0
    setenv MV2_RNDV_PROTOCOL       RPUT
    setenv MV2_USE_RDMA_ONE_SIDED  1
    setenv SLURM_DISTRIBUTION block
+   setenv MV2_MPIRUN_TIMEOUT 100
+   setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else
 
 cat > $HOMDIR/SETENV.commands << EOF
-   #setenv MV2_ON_DEMAND_THRESHOLD 8192
-   #setenv MV2_USE_SHMEM_ALLREDUCE 0
-   #setenv MV2_USE_SHMEM_COLL      0
-   #setenv MV2_USE_UD_HYBRID       0
    setenv MV2_ENABLE_AFFINITY     0
    setenv SLURM_DISTRIBUTION block
+   setenv MV2_MPIRUN_TIMEOUT 100
+   setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 endif # if GPU and mvapich2
@@ -1900,6 +2099,8 @@ cat > $HOMDIR/SETENV.commands << EOF
    unsetenv MPI_NUM_MEMORY_REGIONS
    setenv MPI_XPMEM_ENABLED yes
    unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+
+   setenv MPI_LAUNCH_TIMEOUT 40
 
    # For some reason, PMI_RANK is randomly set and interferes
    # with binarytile.x and other executables.
@@ -2114,6 +2315,9 @@ s?>>>MOM5<<<?$MOM5?g
 s?>>>MOM6<<<?$MOM6?g
 s?>>>DATAOCEAN<<<?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
+s?@OPS_SPECIES?$OPS_SPECIES?g
+s?@CMIP_SPECIES?$CMIP_SPECIES?g
+s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
 s?>>>FVCUBED<<<?$FVCUBED?g
 s?>>>HIST_GOCART<<<?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
@@ -2136,8 +2340,7 @@ s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
 s?@OX_RELAXTIME?259200.?g
-#s?@PCHEM_CLIM_YEARS?228?g
-s?@PCHEM_CLIM_YEARS?39?g
+s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g
@@ -2211,6 +2414,7 @@ s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
 
 s/@MP_MG1/$MP_MG1/g
+s/@GFS_MOIST/$GFS_MOIST/g
 s/@MP_GFDL/$MP_GFDL/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@USE_AEROSOL_NN?$USE_AEROSOL_NN?g
