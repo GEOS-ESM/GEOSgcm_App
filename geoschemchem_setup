@@ -380,54 +380,35 @@ if ( $SITE == 'NCCS' ) then
 
 else if ( $SITE == 'NAS' ) then
 
-   # At NAS, if you build on Rome, we currently limit you to run on
-   # Rome; this is for two reasons. First, Romes are on SLES 15 and
-   # if you build on SLES 15, you can only run on SLES 15. Second,
-   # while a built-on-Rome GEOS might work on Intel processors, it
-   # will (probably) have a different output than if built on Intel
-   # due to different optimization flags.  This would violate the GEOS
-   # capability to get the same answers at NAS and NCCS
-
-   set BUILT_ON_ROME = @CFG_BUILT_ON_ROME@
-
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   if( "$BUILT_ON_ROME" != "TRUE" ) then
-      echo "   ${C2}has (Haswell)${CN}"
-      echo "   ${C2}bro (Broadwell)${CN}"
-      echo "   ${C2}sky (Skylake)${CN} (default)"
-      echo "   ${C2}cas (Cascade Lake)${CN}"
-      echo " "
-      echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
-      echo "       and Ivy Bridge are not supported by current GEOS"
-   else
-      echo "   ${C2}rom (AMD Rome)${CN} (default)"
-   endif
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN}"
+   echo "   ${C2}cas (Cascade Lake)${CN} (default)"
+   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo " "
+   echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   echo " NOTE 2: GEOS is non-zero-diff when running on AMD Rome"
+   echo "         compared to the other Intel nodes."
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      if( "$BUILT_ON_ROME" != "TRUE" ) then
-         set MODEL = 'sky'
-      else
-         set MODEL = 'rom'
-      endif
+      set MODEL = 'cas'
    endif
 
-   if( "$BUILT_ON_ROME" != "TRUE" ) then
-      if( $MODEL != 'has' & \
-          $MODEL != 'bro' & \
-          $MODEL != 'sky' & \
-          $MODEL != 'cas' ) goto ASKPROC
-   else
-      if( $MODEL != 'rom' ) goto ASKPROC
-   endif
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
 
-   if ($MODEL == bro ) then
-      set MODEL = 'bro_ele'
-   else if ($MODEL == sky) then
+   if ($MODEL == sky) then
       set MODEL = 'sky_ele'
    else if ($MODEL == cas) then
       set MODEL = 'cas_ait'
@@ -441,7 +422,7 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 20
    else if ($MODEL == 'has') then
       set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'bro_ele') then
+   else if ($MODEL == 'bro') then
       set NCPUS_PER_NODE = 28
    else if ($MODEL == 'sky_ele') then
       set NCPUS_PER_NODE = 40
@@ -449,8 +430,6 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
       set NCPUS_PER_NODE = 128
-      # Romes are on a different aoe
-      set MODEL='rom_ait:aoe=sles15'
    endif
 
 else
