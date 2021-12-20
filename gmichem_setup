@@ -383,8 +383,8 @@ else if ( $SITE == 'NAS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}has (Haswell)${CN}"
    echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN}"
-   echo "   ${C2}cas (Cascade Lake)${CN} (default)"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
    echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
    echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
@@ -396,7 +396,7 @@ else if ( $SITE == 'NAS' ) then
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'cas'
+      set MODEL = 'sky'
    endif
 
    if( $MODEL != 'has' & \
