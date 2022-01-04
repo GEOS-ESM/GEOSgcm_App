@@ -475,6 +475,7 @@ if( $OGCM == TRUE ) then
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
     set CLDMICRO = "2MOMENT"
+
     # Ocean Model
     # -----------
     OCNMODEL:
