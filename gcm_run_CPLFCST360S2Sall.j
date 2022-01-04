@@ -72,11 +72,11 @@ set NUM_SGMT  = `grep     NUM_SGMT:  $HOMDIR/CAP.rc | cut -d':' -f2`
 set FSEGMENT  = `grep FCST_SEGMENT:  $HOMDIR/CAP.rc | cut -d':' -f2`
 set USE_SHMEM = `grep    USE_SHMEM:  $HOMDIR/CAP.rc | cut -d':' -f2`
 
->>>COUPLED<<<set  OGCM_LM  = `grep OGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
->>>COUPLED<<<set       NX = `grep  OGCM_NX: $HOMDIR/AGCM.rc | cut -d':' -f2`
->>>COUPLED<<<set       NY = `grep  OGCM_NY: $HOMDIR/AGCM.rc | cut -d':' -f2`
->>>COUPLED<<<set  HIST_IM = @HIST_IM
->>>COUPLED<<<set  HIST_JM = @HIST_JM
+@COUPLED set  OGCM_LM  = `grep OGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
+@COUPLED set       NX = `grep  OGCM_NX: $HOMDIR/AGCM.rc | cut -d':' -f2`
+@COUPLED set       NY = `grep  OGCM_NY: $HOMDIR/AGCM.rc | cut -d':' -f2`
+@COUPLED set  HIST_IM = @HIST_IM
+@COUPLED set  HIST_JM = @HIST_JM
 
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
@@ -100,14 +100,14 @@ set AGCM_IM_Tag = `echo $AGCM_IM | awk '{printf "%4.4i", $1}'`
 set AGCM_JM_Tag = `echo $AGCM_JM | awk '{printf "%4.4i", $1}'`
 set OGCM_IM_Tag = `echo $OGCM_IM | awk '{printf "%4.4i", $1}'`
 set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
->>>COUPLED<<<set HIST_IM_Tag = `echo $HIST_IM | awk '{printf "%4.4i", $1}'`
->>>COUPLED<<<set HIST_JM_Tag = `echo $HIST_JM | awk '{printf "%4.4i", $1}'`
+@COUPLED set HIST_IM_Tag = `echo $HIST_IM | awk '{printf "%4.4i", $1}'`
+@COUPLED set HIST_JM_Tag = `echo $HIST_JM | awk '{printf "%4.4i", $1}'`
 
 >>>FVLATLON<<<set ATMOStag = DC${AGCM_IM_Tag}xPC${AGCM_JM_Tag}
 >>>FVCUBED<<<set ATMOStag = CF${AGCM_IM_Tag}x6C
->>>DATAOCEAN<<<set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
->>>COUPLED<<<set OCEANtag = TM${OGCM_IM_Tag}xTM${OGCM_JM_Tag}
->>>COUPLED<<<set HISTtag = DC${HIST_IM_Tag}xPC${HIST_JM_Tag}
+@DATAOCEAN set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
+@COUPLED set OCEANtag = TM${OGCM_IM_Tag}xTM${OGCM_JM_Tag}
+@COUPLED set HISTtag = DC${HIST_IM_Tag}xPC${HIST_JM_Tag}
 
 #######################################################################
 #   Move to Scratch Directory and Copy RC Files from Home Directory
@@ -172,52 +172,52 @@ done:
 #######################################################################
 
 setenv BCSDIR    @BCSDIR
->>>DATAOCEAN<<<setenv SSTDIR    @SSTDIR
+@DATAOCEAN setenv SSTDIR    @SSTDIR
 setenv CHMDIR    @CHMDIR
->>>DATAOCEAN<<<setenv BCRSLV    ${ATMOStag}_${OCEANtag}
->>>COUPLED<<<setenv BCRSLV    ${ATMOStag}_DE0360xPE0180
+@DATAOCEAN setenv BCRSLV    ${ATMOStag}_${OCEANtag}
+@COUPLED setenv BCRSLV    ${ATMOStag}_DE0360xPE0180
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
->>>COUPLED<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
->>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
->>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
+@COUPLED setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+@COUPLED setenv BCTAG `basename $GRIDDIR`
+@DATAOCEAN setenv BCTAG `basename $BCSDIR`
 
 set             FILE = linkbcs
 /bin/rm -f     $FILE
 cat << _EOF_ > $FILE
 #!/bin/csh -f
 
->>>COUPLED<<</bin/mkdir -p RESTART
+@COUPLED /bin/mkdir -p RESTART
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
->>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/${ATMOStag}_${OCEANtag}-Pfafstetter.til   tile.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/${ATMOStag}_${OCEANtag}-Pfafstetter.TRN   runoff.bin
->>>COUPLED<<</bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
->>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
->>>COUPLED<<</bin/ln -s /discover/nobackup/yvikhlia/coupled/Forcings/a${HIST_IM}x${HIST_JM}_o${OGCM_IM}x${OGCM_JM}/${HISTtag}_${OCEANtag}-Pfafstetter.til tile_hist.data
+@COUPLED /bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+@COUPLED /bin/ln -sf $GRIDDIR/${ATMOStag}_${OCEANtag}-Pfafstetter.til   tile.data
+@COUPLED /bin/ln -sf $GRIDDIR/${ATMOStag}_${OCEANtag}-Pfafstetter.TRN   runoff.bin
+@COUPLED /bin/ln -sf $GRIDDIR/tripolar_${OGCM_IM}x${OGCM_JM}.ascii .
+@COUPLED /bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@COUPLED /bin/ln -s /discover/nobackup/yvikhlia/coupled/Forcings/a${HIST_IM}x${HIST_JM}_o${OGCM_IM}x${OGCM_JM}/${HISTtag}_${OCEANtag}-Pfafstetter.til tile_hist.data
 
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
->>>DATAOCEAN<<<if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
->>>DATAOCEAN<<<endif
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
+@DATAOCEAN if(     -e  $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
+@DATAOCEAN endif
 
 /bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 /bin/ln -sf $BCSDIR/Shared/*bin .
 
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
->>>DATAOCEAN<<</bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/visdf.dat visdf.dat
->>>COUPLED<<</bin/ln -sf $GRIDDIR/nirdf.dat nirdf.dat
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+@DATAOCEAN /bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
+@COUPLED /bin/ln -sf $GRIDDIR/visdf.dat visdf.dat
+@COUPLED /bin/ln -sf $GRIDDIR/nirdf.dat nirdf.dat
 >>>VEGMERR<<</bin/ln -sf /discover/nobackup/projects/gmao/t2ssp/h54/c180_o05/restart/MERRA2/OutData/vegdyn_internal_rst vegdyn.data
 >>>VEGCPLD<<</bin/ln -sf /discover/nobackup/yvikhlia/coupled/Forcings/a180x1080_o720x410/vegdyn.data vegdyn.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/lai.dat lai.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/green.dat green.data
+@COUPLED /bin/ln -sf $GRIDDIR/lai.dat lai.data
+@COUPLED /bin/ln -sf $GRIDDIR/green.dat green.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
@@ -226,16 +226,16 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
->>>COUPLED<<</bin/cp $HOMDIR/input.nml .
->>>COUPLED<<</bin/cp $HOMDIR/*_table .
->>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
->>>COUPLED<<</bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
+@COUPLED /bin/cp $HOMDIR/input.nml .
+@COUPLED /bin/cp $HOMDIR/*_table .
+@COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
+@COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
 _EOF_
 
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
->>>DATAOCEAN<<<echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
+@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
+@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
+@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
 
 chmod +x linkbcs
 /bin/cp  linkbcs $EXPDIR
@@ -283,8 +283,8 @@ foreach rst ( $rst_file_names )
 end
 wait
 
->>>COUPLED<<</bin/cp -R $GRIDDIR/INPUT .
->>>COUPLED<<</bin/cp $EXPDIR/RESTART/* INPUT
+@COUPLED /bin/cp -R $GRIDDIR/INPUT .
+@COUPLED /bin/cp $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
@@ -302,12 +302,12 @@ if($numrs == 0) then
       endif
    end
    wait
->>>COUPLED<<<   /bin/cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED    /bin/cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
    cd $EXPDIR/restarts
-      >>>DATAOCEAN<<<tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-      >>>COUPLED<<<tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
+      @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+      @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
-     >>>COUPLED<<</bin/rm -rf RESTART.${edate}
+     @COUPLED /bin/rm -rf RESTART.${edate}
    cd $SCRDIR
 endif
 
@@ -429,7 +429,7 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
->>>COUPLED<<<$GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+@COUPLED $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # Test Saltwater Restart for Number of tiles correctness
@@ -517,8 +517,8 @@ while ( $n <= $numchk )
 @ n = $n + 1
 end
 
->>>COUPLED<<</bin/cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
->>>COUPLED<<</bin/cp RESTART/* INPUT
+@COUPLED /bin/cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED /bin/cp RESTART/* INPUT
 
 # Rename and Move Intermediate Checkpoints
 # ----------------------------------------
@@ -527,10 +527,10 @@ end
 cd $EXPDIR/restarts
    $GEOSBIN/stripname _checkpoint. _rst.e
     if( $FSEGMENT == 00000000 ) then
-	>>>DATAOCEAN<<<tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-        >>>COUPLED<<<tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
+	@DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
+        @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
         /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-	>>>COUPLED<<</bin/rm -rf RESTART.${edate}
+	@COUPLED /bin/rm -rf RESTART.${edate}
     endif
 cd $SCRDIR
 
@@ -549,18 +549,18 @@ foreach collection ( $collections )
    /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
 end
 
->>>COUPLED<<<# MOM-Specific Output Files
->>>COUPLED<<<# -------------------------
->>>COUPLED<<< set dsets="ocean_month"
+@COUPLED # MOM-Specific Output Files
+@COUPLED # -------------------------
+@COUPLED  set dsets="ocean_month"
 >>>FORCAST<<< if ($SUBSEASONAL == FALSE ) set dsets="ocean_daily"
->>>COUPLED<<< foreach dset ( $dsets )
->>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
->>>COUPLED<<< if($num != 0) then
->>>COUPLED<<<    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
->>>COUPLED<<<    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
->>>COUPLED<<< endif
->>>COUPLED<<< end
->>>COUPLED<<<
+@COUPLED  foreach dset ( $dsets )
+@COUPLED  set num = `/bin/ls -1 $dset.nc | wc -l`
+@COUPLED  if($num != 0) then
+@COUPLED     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+@COUPLED     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+@COUPLED  endif
+@COUPLED  end
+@COUPLED 
 #######################################################################
 #              Submit Post-Processing and Forecasts
 #######################################################################
@@ -647,20 +647,20 @@ wait
 /bin/cp cap_restart tmprestart
 #/bin/cp cap_restart $EXPDIR/cap_restart
 
->>>COUPLED<<</bin/cp -r RESTART tmprestart
->>>COUPLED<<<#/bin/cp -rf RESTART $EXPDIR
+@COUPLED /bin/cp -r RESTART tmprestart
+@COUPLED #/bin/cp -rf RESTART $EXPDIR
 
->>>COUPLED<<<set nrstrts = `ls -1 tmprestart/RESTART/ocean_* | wc -l`
->>>COUPLED<<<if ( $nrstrts == 14 ) then
->>>COUPLED<<<   /bin/mv tmprestart/RESTART/ocean_* $EXPDIR/RESTART
+@COUPLED set nrstrts = `ls -1 tmprestart/RESTART/ocean_* | wc -l`
+@COUPLED if ( $nrstrts == 14 ) then
+@COUPLED    /bin/mv tmprestart/RESTART/ocean_* $EXPDIR/RESTART
    /bin/mv tmprestart/*_rst $EXPDIR
    /bin/mv tmprestart/cap_restart $EXPDIR
->>>COUPLED<<<   /bin/rmdir tmprestart/RESTART
->>>COUPLED<<<   /bin/rm -f tmprestart/veg*
->>>COUPLED<<<else
->>>COUPLED<<<   echo "KEEP PREVIOUS IC, START OVER: ${capdateCR}"
->>>COUPLED<<<   touch $HOMDIR/STARTOVER${capdateCR}
->>>COUPLED<<<endif
+@COUPLED    /bin/rmdir tmprestart/RESTART
+@COUPLED    /bin/rm -f tmprestart/veg*
+@COUPLED else
+@COUPLED    echo "KEEP PREVIOUS IC, START OVER: ${capdateCR}"
+@COUPLED    touch $HOMDIR/STARTOVER${capdateCR}
+@COUPLED endif
 
 if ( $rc == 0 ) then
       cd   $HOMDIR
