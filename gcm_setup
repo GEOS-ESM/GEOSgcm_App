@@ -537,14 +537,25 @@ if( $OGCM == TRUE ) then
           goto CORSLV
        endif
     endif
+
     set IMO = ${OGCM_IM}
+    if( $IMO < 10 ) then
+       set IMO = 000$IMO
+    else if($IMO < 100) then
+       set IMO = 00$IMO
+    else if($IMO < 1000) then
+       set IMO = 0$IMO
+    endif
+
     set JMO = ${OGCM_JM}
-    if( $IMO < 10   ) set IMO = 000$IMO
-    if( $IMO < 100  ) set IMO =  00$IMO
-    if( $IMO < 1000 ) set IMO =   0$IMO
-    if( $JMO < 10   ) set JMO = 000$JMO
-    if( $JMO < 100  ) set JMO =  00$JMO
-    if( $JMO < 1000 ) set JMO =   0$JMO
+    if( $JMO < 10 ) then
+       set JMO = 000$JMO
+    else if($JMO < 100) then
+       set JMO = 00$JMO
+    else if($JMO < 1000) then
+       set JMO = 0$JMO
+    endif
+
     set OCEAN_RES = TM${IMO}xTM${JMO}
     set OCEAN_TAG  = Reynolds
     set SSTNAME  = "#DELETE"
