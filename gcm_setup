@@ -571,8 +571,14 @@ if( $OGCM == TRUE ) then
     set   OGCM_LM = 50
     endif
 
-    set OGCM_NX = 36
-    set OGCM_NY = 10
+    # At the moment c12 MOM6 is default 3x2 ocean (and 1x6 atmos)
+    if( $AGCM_IM ==  "c12" ) then
+       set OGCM_NX = 3
+       set OGCM_NY = 2
+    else
+       set OGCM_NX = 36
+       set OGCM_NY = 10
+    endif
     @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
     set OGCM_GRID_TYPE = Tripolar
     set LATLON_OGCM = ""
@@ -755,7 +761,12 @@ if( $AGCM_IM ==  "c12" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
+     # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
+     if ( $OCEAN_NAME == "MOM6") then
+     set       NX = 1
+     else
      set       NX = 2
+     endif
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
