@@ -222,6 +222,13 @@ else
    set  AGCM_IM = "c$Resolution[1]"
 endif
 
+# We make a variable here so we can easily discriminate for CS ocean support below
+if ( $AGCM_IM == 'c12' || $AGCM_IM == 'c24' || $AGCM_IM == 'c48' ) then
+   set LOW_ATM_RES = TRUE
+else
+   set LOW_ATM_RES = FALSE
+endif
+
 # These are superfluous for GCM, but needed for SCM (considered latlon)
 set LATLON_AGCM = "#DELETE"
 set CUBE_AGCM = ""
@@ -641,14 +648,7 @@ else
         set DATAOCEAN = ""
     endif
     if( $HRCODE == 'cs' ) then
-        if( $AGCM_IM == 'c90'  | \
-            $AGCM_IM == 'c180' | \
-            $AGCM_IM == 'c360' | \
-            $AGCM_IM == 'c720'  | \
-            $AGCM_IM == 'c768'  | \
-            $AGCM_IM == 'c1536' | \
-            $AGCM_IM == 'c3072') then
-
+        if( $LOW_ATM_RES == 'FALSE') then
              set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
              set OGCM_JM  = `expr $OGCM_IM \* 6`
              set Resolution = `echo $OGCM_IM $OGCM_JM`
@@ -669,8 +669,8 @@ else
              set OGRIDTYP = "CF"
              set OSTIA    = ""
         else
-             print *, "Cubed-Ocean with ${AGCM_IM} not currently supported"
-             exit
+             echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
+             exit 7
         endif
     endif
 
