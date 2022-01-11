@@ -21,10 +21,13 @@ DYCORE: @DYCORE
 
  SOLAR_DT: 3600
  IRRAD_DT: 3600
-SATSIM_DT: 1800
+SATSIM_DT: 3600
 
 SOLARAvrg: 0
 IRRADAvrg: 0
+
+ORBIT_ANAL2B: .TRUE.
+EOT: .TRUE.
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
 @MP_MG1CLDMICRO: 2MOMENT
@@ -34,8 +37,8 @@ IRRADAvrg: 0
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
 @MP_GFDLHYDROSTATIC: @GFDL_HYDRO
 
-# UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
-#USE_AEROSOL_NN: 0
+# Enable (1) or Disable (0) aerosol activation in 1-moment cloud microphysics
+USE_AEROSOL_NN: @USE_AEROSOL_NN
 
 ###########################################################
 # Flag for definition of the convection scheme
@@ -70,11 +73,14 @@ CLOSURE_CONGESTUS:3
 # GWD Parameterization
 # --------------------
 
-# if .FALSE., use GEOS GWD code (default); .TRUE., use new NCAR GWD code
-USE_NCAR_GWD: .FALSE.
-
-# This is only used if USE_NCAR_GWD is .TRUE.
-BERES_FILE_NAME: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
+# if .FALSE., use GEOS GWD code (default)
+# if .TRUE. use the NCAR BKG GWD in tropics combined with GEOS BKG and ORO
+USE_NCAR_GWD: .TRUE.
+NCAR_NRDG: 16.0
+TURBULENCE_C_B: 2.0
+TURBULENCE_WSPD_MAX: 15.0
+BELJAARS_EFF_FACTOR: 0.0
+BELJAARS_MAX_WSPD: 15.0
 
 # Ocean Model Configuration Parameters
 # ------------------------------------
@@ -510,6 +516,10 @@ DYN_INTERNAL_RESTART_FILE:              fvcore_internal_rst
 DYN_INTERNAL_CHECKPOINT_FILE:           fvcore_internal_checkpoint
 DYN_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
 DYN_INTERNAL_HEADER:                    1
+
+GWD_INTERNAL_RESTART_FILE:              gwd_internal_rst
+GWD_INTERNAL_CHECKPOINT_FILE:           gwd_internal_checkpoint
+GWD_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
 
 LAKE_INTERNAL_RESTART_FILE:             lake_internal_rst
 LAKE_INTERNAL_CHECKPOINT_FILE:          lake_internal_checkpoint
