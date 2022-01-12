@@ -1425,7 +1425,7 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar
 else if( $SITE == 'AWS' ) then
@@ -2166,7 +2166,7 @@ s/@LIDAR_SATSIM/0/g
 s/@MISR_SATSIM/0/g
 s/@SATSIM/0/g
 
-s/@USE_SKIN_LAYER/1/g
+s/@USE_SKIN_LAYER/0/g
 s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
