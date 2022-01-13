@@ -2200,6 +2200,7 @@ set FILES = "gcm_run.j          \
              CAP.rc.tmpl        \
              AGCM.rc.tmpl       \
              HISTORY.rc.tmpl    \
+             input_GFS_v16beta.nml \
              logging.yaml       "
 set FILES = `echo $FILES`
 
