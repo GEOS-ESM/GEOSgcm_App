@@ -28,6 +28,8 @@ IRRADAvrg: 0
 
 # UNCOMMENT to use CCPP GFS moist grid comp
 @GFS_MOISTCCPP_GFS_MOIST: TRUE
+EOT: .TRUE.
+ORBIT_ANAL2B: .TRUE.
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
 @MP_MG1CLDMICRO: 2MOMENT
@@ -86,13 +88,13 @@ BERES_FILE_NAME: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
       OGCM.IM_WORLD: @OGCM_IM
       OGCM.JM_WORLD: @OGCM_JM
       OGCM.LM: @OGCM_LM
-      >>>COUPLED<<<OGCM.NX: @OGCM_NX
-      >>>COUPLED<<<OGCM.NY: @OGCM_NY
-      >>>COUPLED<<<OGCM.GRIDSPEC: MAPL_Tripolar.nc
+      @COUPLED OGCM.NX: @OGCM_NX
+      @COUPLED OGCM.NY: @OGCM_NY
+      @COUPLED OGCM.GRIDSPEC: MAPL_Tripolar.nc
 
-      >>>DATAOCEAN<<<@LATLON_OGCM OGCM.POLE: 'PE'
-      >>>DATAOCEAN<<<@LATLON_OGCM OGCM.DATELINE: 'DE'
-      >>>DATAOCEAN<<<@CUBE_OGCM OGCM.NF: @OGCM_NF
+      @DATAOCEAN @LATLON_OGCM OGCM.POLE: 'PE'
+      @DATAOCEAN @LATLON_OGCM OGCM.DATELINE: 'DE'
+      @DATAOCEAN @CUBE_OGCM OGCM.NF: @OGCM_NF
 
 OGCM_RUN_DT: @OCEAN_DT
 
@@ -463,7 +465,8 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # -------------------------------------------------------
 DIAGNOSE_PRECIP_TYPE: FALSE
 
-# Choice for Land Surface Model: LSM_CHOICE=1 for Catchment, LSM_CHOICE=2 for CatchmentCN
+# Choice for Land Surface Model: LSM_CHOICE=1 for Catchment, LSM_CHOICE=2 for CatchmentCN CLM40 and
+#      LSM_CHOICE=3 for CatchmentCN CLM45 
 # ---------------------------------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
@@ -525,9 +528,13 @@ CATCH_INTERNAL_RESTART_FILE:            catch_internal_rst
 CATCH_INTERNAL_CHECKPOINT_FILE:         catch_internal_checkpoint
 CATCH_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 
-CATCHCN_INTERNAL_RESTART_FILE:            catchcn_internal_rst
-CATCHCN_INTERNAL_CHECKPOINT_FILE:         catchcn_internal_checkpoint
-CATCHCN_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+CATCHCNCLM40_INTERNAL_RESTART_FILE:     catchcn_internal_rst
+CATCHCNCLM40_INTERNAL_CHECKPOINT_FILE:  catchcn_internal_checkpoint
+CATCHCNCLM40_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
+
+CATCHCNCLM45_INTERNAL_RESTART_FILE:     catchcn_internal_rst
+CATCHCNCLM45_INTERNAL_CHECKPOINT_FILE:  catchcn_internal_checkpoint
+CATCHCNCLM45_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
 MOIST_INTERNAL_RESTART_FILE:            moist_internal_rst
 MOIST_INTERNAL_CHECKPOINT_FILE:         moist_internal_checkpoint
@@ -656,17 +663,17 @@ SEAICETHERMO_INTERNAL_RESTART_FILE:     seaicethermo_internal_rst
 SEAICETHERMO_INTERNAL_CHECKPOINT_FILE:  seaicethermo_internal_checkpoint
 SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
->>>COUPLED<<<CICE4_IMPORT_RESTART_FILE:             seaice_import_rst
->>>COUPLED<<<CICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
->>>COUPLED<<<CICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+@COUPLEDCICE4_IMPORT_RESTART_FILE:             seaice_import_rst
+@COUPLEDCICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
+@COUPLEDCICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
 
->>>COUPLED<<<CICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
->>>COUPLED<<<CICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
->>>COUPLED<<<CICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
+@COUPLEDCICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
+@COUPLEDCICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
+@COUPLEDCICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
 
->>>COUPLED<<<OCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
->>>COUPLED<<<OCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
->>>COUPLED<<<OCEAN_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+@COUPLEDOCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
+@COUPLEDOCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
+@COUPLEDOCEAN_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
 
 # Boundary Datasets
 # -----------------
@@ -680,7 +687,8 @@ NDVI_FILE:                 ndvi.data
 TILING_FILE:                tile.bin 
 VISDF_FILE:                visdf.dat
 NIRDF_FILE:                nirdf.dat
->>>COUPLED<<<ROUTING_FILE:             runoff.bin
+LNFM_FILE:                 lnfm.data
+@COUPLED ROUTING_FILE:             runoff.bin
 
 VEGDYN_INTERNAL_RESTART_FILE:  vegdyn.data
 
@@ -762,11 +770,11 @@ ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOC
 
 # DATAOCEAN Parameters for AMIP-Style Run
 # ----------------------------------------
->>>DATAOCEAN<<<DATA_SST_FILE: sst.data
->>>DATAOCEAN<<<DATA_FRT_FILE: fraci.data
->>>DATAOCEAN<<<MIN_SEAICE_DEPTH: 0.07
->>>DATAOCEAN<<<MAX_SEAICE_DEPTH: 0.07
->>>DATAOCEAN<<<TAU_SIT:          86400
+@DATAOCEAN DATA_SST_FILE: sst.data
+@DATAOCEAN DATA_FRT_FILE: fraci.data
+@DATAOCEAN MIN_SEAICE_DEPTH: 0.07
+@DATAOCEAN MAX_SEAICE_DEPTH: 0.07
+@DATAOCEAN TAU_SIT:          86400
 
 # To compute skin SST over water (or to use SST Analysis Increment) set values to 1
 # ---------------------------------------------------------------------------------
@@ -788,19 +796,19 @@ USE_SATSIM_RADAR: @RADAR_SATSIM
 USE_SATSIM_LIDAR: @LIDAR_SATSIM
 USE_SATSIM_MISR:  @MISR_SATSIM
 
->>>COUPLED<<<INTERPOLATE_ATMLM: 0
->>>COUPLED<<<INTERPOLATE_ATMTAU: 1
->>>COUPLED<<<INTERPOLATE_OCEAN_ICE_CURRENTS: 0
+@COUPLED INTERPOLATE_ATMLM: 0
+@COUPLED INTERPOLATE_ATMTAU: 1
+@COUPLED INTERPOLATE_OCEAN_ICE_CURRENTS: 0
 
->>>COUPLED<<<CLDMICRO: 2MOMENT
+@COUPLED CLDMICRO: @CLDMICRO
 
->>>COUPLED<<<# Section for ocean
->>>COUPLED<<<# ----------------
->>>COUPLED<<<USE_DATASEA:0
->>>COUPLED<<<OCEAN_NAME: @OCEAN_NAME
->>>COUPLED<<<USE_DATASEAICE:0
->>>COUPLED<<<steady_state_ocean: 0
->>>COUPLED<<<OCEAN_PICE_SCALING: 0.0
+@COUPLED # Section for ocean
+@COUPLED # ----------------
+@COUPLED USE_DATASEA:0
+@COUPLED OCEAN_NAME: @OCEAN_NAME
+@COUPLED USE_DATASEAICE:0
+@COUPLED steady_state_ocean: 0
+@COUPLED OCEAN_PICE_SCALING: 0.0
 
 # For running MOM5 coupled model in dual ocean mode, uncomment three lines below, 
 # make sure that regular replay is enabled, proper PRECIP_FILE is chosen,
@@ -808,26 +816,26 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 # the run starts at 21z/03z/09z/15z, 
 # HISTORY.rc collections have proper ref_time field
 # ---------------------------------------------------------------------------
->>>MOM5<<<#DUAL_OCEAN: 1
->>>MOM5<<<#DATA_SST_FILE: sst.data
->>>MOM5<<<#DATA_FRT_FILE: fraci.data
+@MOM5#DUAL_OCEAN: 1
+@MOM5#DATA_SST_FILE: sst.data
+@MOM5#DATA_FRT_FILE: fraci.data
 
->>>COUPLED<<<
->>>COUPLED<<<# Section for CICE 
->>>COUPLED<<<# -----------------
->>>COUPLED<<<USE_CICE_Thermo: 1
->>>COUPLED<<<PRESCRIBED_ICE: 0
->>>COUPLED<<<CICE_DT: @OCEAN_DT
->>>COUPLED<<<CICE_NDTE: 300
->>>COUPLED<<<CICE_GRID: grid_cice.bin
->>>COUPLED<<<CICE_KMT: kmt_cice.bin
->>>COUPLED<<<CICE_N_ICE_CATEGORIES:5
->>>COUPLED<<<CICE_N_ICE_LAYERS:4
->>>COUPLED<<<CICE_MU_RDG: 3.0
->>>COUPLED<<<CICE_AH_MAX: 0.3
->>>COUPLED<<<CICE_STRENGTH: 0
->>>COUPLED<<<ALBICEV: 0.78
->>>COUPLED<<<ALBICEI: 0.36
->>>COUPLED<<<ALBSNOWV: 0.98
->>>COUPLED<<<ALBSNOWI: 0.7 
->>>COUPLED<<<MIN_FREEZE_SALINITY: 5.0 
+@COUPLED 
+@COUPLED # Section for CICE 
+@COUPLED # -----------------
+@COUPLED USE_CICE_Thermo: 1
+@COUPLED PRESCRIBED_ICE: 0
+@COUPLED CICE_DT: @OCEAN_DT
+@COUPLED CICE_NDTE: 300
+@COUPLED CICE_GRID: grid_cice.bin
+@COUPLED CICE_KMT: kmt_cice.bin
+@COUPLED CICE_N_ICE_CATEGORIES:5
+@COUPLED CICE_N_ICE_LAYERS:4
+@COUPLED CICE_MU_RDG: 3.0
+@COUPLED CICE_AH_MAX: 0.3
+@COUPLED CICE_STRENGTH: 0
+@COUPLED ALBICEV: 0.78
+@COUPLED ALBICEI: 0.36
+@COUPLED ALBSNOWV: 0.98
+@COUPLED ALBSNOWI: 0.7 
+@COUPLED MIN_FREEZE_SALINITY: 5.0 

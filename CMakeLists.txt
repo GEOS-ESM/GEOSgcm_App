@@ -53,13 +53,11 @@ else()
    set(CFG_HYDROSTATIC FALSE)
 endif()
 
-# Did we build for AMD Rome hardware (aka EPYC)?
-cmake_host_system_information(RESULT proc_decription QUERY PROCESSOR_DESCRIPTION)
-if (${proc_decription} MATCHES "EPYC")
-  set(CFG_BUILT_ON_ROME TRUE)
-else ()
-  set(CFG_BUILT_ON_ROME FALSE)
-endif ()
+if(INSTALL_SOURCE_TARFILE)
+  set(CFG_INSTALL_SOURCE_TARFILE TRUE)
+else()
+  set(CFG_INSTALL_SOURCE_TARFILE FALSE)
+endif()
 
 set (setup_scripts
    gcm_setup
