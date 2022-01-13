@@ -33,6 +33,7 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
+module swap mpi/impi mpi/impi/2021.2.0
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
