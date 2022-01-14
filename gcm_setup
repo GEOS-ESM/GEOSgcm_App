@@ -106,6 +106,8 @@ setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
+else if ( `echo $BASEDIR | grep -i mpich`    != '') then
+   set MPI = mpich
 else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
    set MPI = openmpi
 else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
@@ -888,15 +890,19 @@ if ( $SITE == 'NCCS' ) then
   endif
 
 else if ( $SITE == 'NAS' ) then
+
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}has (Haswell)${CN}"
    echo "   ${C2}bro (Broadwell)${CN}"
    echo "   ${C2}sky (Skylake)${CN} (default)"
    echo "   ${C2}cas (Cascade Lake)${CN}"
-   #echo "   ${C2}rom (AMD Rome)${CN}"
+   echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
-   echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "         and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   echo " NOTE 2: GEOS is non-zero-diff when running on AMD Rome"
+   echo "         compared to the other Intel nodes."
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -913,9 +919,7 @@ else if ( $SITE == 'NAS' ) then
    # Some processors have weird names at NAS
    # ---------------------------------------
 
-   if ($MODEL == bro ) then
-      set MODEL = 'bro_ele'
-   else if ($MODEL == sky) then
+   if ($MODEL == sky) then
       set MODEL = 'sky_ele'
    else if ($MODEL == cas) then
       set MODEL = 'cas_ait'
@@ -923,18 +927,20 @@ else if ( $SITE == 'NAS' ) then
       set MODEL = 'rom_ait'
    endif
 
-   if      ($MODEL == 'has') then
+   if (     $MODEL == 'san') then
+      set NCPUS_PER_NODE = 16
+   else if ($MODEL == 'ivy') then
+      set NCPUS_PER_NODE = 20
+   else if ($MODEL == 'has') then
       set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'bro_ele') then
-      set NCPUS_PER_NODE = 24
+   else if ($MODEL == 'bro') then
+      set NCPUS_PER_NODE = 28
    else if ($MODEL == 'sky_ele') then
-      set NCPUS_PER_NODE = 36
+      set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas_ait') then
-      set NCPUS_PER_NODE = 36
+      set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
       set NCPUS_PER_NODE = 128
-      # Romes are on a different aoe
-      set MODEL='rom_ait:aoe=sles15'
    endif
 
 else
