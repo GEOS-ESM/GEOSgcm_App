@@ -243,8 +243,8 @@ ASKMP:
  echo "   ${C2}1MOM  --  3-phase 1-moment Bacmeister et al${CN}"
  echo "   ${C2}GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
  echo "   ${C2}MG1   --  3-phase 2-moment Morrison & Gettleman${CN}"
-#echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
-#echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
+ echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
+ echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
  set   AGCM_MP = $<
 if( .$AGCM_MP == . ) then
    set AGCM_MP = "1MOM"
@@ -252,7 +252,9 @@ else
    set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
    if( "$AGCM_MP" != "1MOM" & \
        "$AGCM_MP" != "GFDL" & \
-       "$AGCM_MP" != "MG1"  ) then
+       "$AGCM_MP" != "MG1" & \
+       "$AGCM_MP" != "MG2" & \
+       "$AGCM_MP" != "MG3"  ) then
        echo
        echo "${C1}Microphysics${CN} must be one of the options below!"
        goto ASKMP
@@ -1134,10 +1136,22 @@ if ( "$AGCM_MP" == "GFDL" ) then
 else
 	set MP_GFDL = "# "
 endif
-if ( "$AGCM_MP" == "MG1" ) then
-	set MP_MG1 = ""
+
+if ( "$AGCM_MP" == "MG1" | "$AGCM_MP" == "MG2" | "$AGCM_MP" == "MG3" ) then
+	set MP_MG = ""
 else
-	set MP_MG1 = "# "
+	set MP_MG = "# "
+endif
+
+        set MGVERSION = ""
+if ( "$AGCM_MP" == "MG1" ) then
+        set MGVERSION = "1"
+endif
+if ( "$AGCM_MP" == "MG2" ) then
+        set MGVERSION = "2"
+endif
+if ( "$AGCM_MP" == "MG3" ) then
+        set MGVERSION = "3"
 endif
 
 # Settings for hydrostatic vs non-hydrostatic
@@ -2218,7 +2232,8 @@ s/@LSM_CHOICE/$LSM_CHOICE/g
 s?@CPEXEC?$CPEXEC?g
 s?@TAREXEC?$TAREXEC?g
 
-s/@MP_MG1/$MP_MG1/g
+s/@MP_MG/$MP_MG/g
+s/@MGVERSION/$MGVERSION/g
 s/@MP_GFDL/$MP_GFDL/g
 s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
