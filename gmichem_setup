@@ -1260,20 +1260,27 @@ endif
 # ----------------------
 if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
-    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN: Catch-Carbon Model)"
+    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"
     set   LSM_CHOICE = $<
     if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
-    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 ) then
+    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 &  $LSM_CHOICE != 3 ) then
         echo
-        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} or ${C2}2${CN}!"
+        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} , ${C2}2${CN} or ${C2}3${CN}!"
         goto LSM_CHOICE
     else
         echo
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
+    if( $LSM_CHOICE == 3 ) set HIST_CATCHCN = ""
     if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
+    if( $LSM_CHOICE == 3 ) set GCMRUN_CATCHCN = ""
+    if( $LSM_CHOICE == 2 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM40 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    else if ( $LSM_CHOICE == 3 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM45 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    endif
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
@@ -1534,7 +1541,7 @@ if( $SITE == 'NAS' ) then
               endif
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
               setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
               setenv TAREXEC    mtar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
@@ -1583,7 +1590,7 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar
 else if( $SITE == 'AWS' ) then
@@ -1619,7 +1626,7 @@ else if( $SITE == 'AWS' ) then
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
 
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
               setenv TAREXEC    tar                                                    # Tar utility for large archives
@@ -1661,7 +1668,7 @@ else
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
               set NX = 1
               set NY = 6
               set CNV_NX = ${NX}
@@ -2066,7 +2073,6 @@ setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
 setenv I_MPI_EXTRA_FILESYSTEM 1
 setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-setenv ROMIO_FSTYPE_FORCE "gpfs:"
 EOF
 
 endif # if NCCS
