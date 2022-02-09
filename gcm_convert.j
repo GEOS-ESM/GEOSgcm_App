@@ -103,9 +103,9 @@ cd $SCRDIR
 /bin/rm -rf * >& /dev/null
 
 /bin/ln -sf $EXPDIR/RC/* .
-@CPEXEC -f  $HOMDIR/*.rc .
-@CPEXEC -f  $HOMDIR/*.nml .
-@CPEXEC -f  $HOMDIR/*.yaml .
+cp -f  $HOMDIR/*.rc .
+cp -f  $HOMDIR/*.nml .
+cp -f  $HOMDIR/*.yaml .
 
 cat fvcore_layout.rc >> input.nml
 
@@ -177,7 +177,7 @@ echo "Converting from $fromformat restarts to $toformat restarts"
 echo "Copying cap_restart into $SCRDIR for BCs"
 
 if (-e $FNDDIR/cap_restart) then
-  @CPEXEC $FNDDIR/cap_restart .
+  cp $FNDDIR/cap_restart .
 else
   echo "Couldn't find cap_restart in $FNDDIR. Please place"
   echo "cap_restart in the same directory as the restarts."
@@ -269,15 +269,15 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
-@COUPLED @CPEXEC $HOMDIR/*_table .
-@COUPLED @CPEXEC $GRIDDIR/INPUT/* INPUT
+@COUPLED cp $HOMDIR/*_table .
+@COUPLED cp $GRIDDIR/INPUT/* INPUT
 @COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 @COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
 _EOF_
 
 chmod +x linkbcs
-@CPEXEC  linkbcs $CNVDIR
+cp  linkbcs $CNVDIR
        ./linkbcs
 
 #######################################################################
@@ -303,7 +303,7 @@ else
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -400,7 +400,7 @@ sed -r -i -e "/VEGDYN_INTERNAL_RESTART_TYPE:/ s/$fromtype/binary/" AGCM.rc
 #                    Get Executable and RESTARTS 
 #######################################################################
 
-@CPEXEC $EXPDIR/GEOSgcm.x .
+cp $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -439,14 +439,14 @@ echo "Copying original restarts into $ORGDIR"
 
 foreach rst ( $rst_file_names )
   if(-e $FNDDIR/$rst ) then
-    @CPEXEC $FNDDIR/$rst $ORGDIR
+    cp $FNDDIR/$rst $ORGDIR
     /bin/ln -s $ORGDIR/$rst .
   endif
 end
 
-@CPEXEC $FNDDIR/cap_restart $ORGDIR
+cp $FNDDIR/cap_restart $ORGDIR
 
-@COUPLED @CPEXEC $CNVDIR/RESTART/* INPUT
+@COUPLED cp $CNVDIR/RESTART/* INPUT
 
 #######################################################################
 #             Set Experiment Run Parameters that were altered
@@ -485,7 +485,7 @@ set       NY = `grep "^ *NY:" AGCM.rc | cut -d':' -f2`
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_SALT_TILES_EXPECTED = `grep '^ *0' tile.data | wc -l`
-   set N_SALT_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_SALT_TILES_FOUND = `@SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_SALT_TILES_EXPECTED != $N_SALT_TILES_FOUND ) then
       echo "Error! Found $N_SALT_TILES_FOUND tiles in openwater. Expect to find $N_SALT_TILES_EXPECTED tiles."
@@ -509,7 +509,7 @@ set LOGFILE = "$CNVDIR/GEOSgcm.log"
 # Assume gcm_setup set these properly for the local platform
 /bin/rm -f EGRESS
 @SETENVS
-$RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
+@SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
 if( -e EGRESS ) then
    set rc = 0
 else

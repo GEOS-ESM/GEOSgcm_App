@@ -166,7 +166,7 @@ if( $GCMEMIP == TRUE & ! -e $EXPDIR/restarts/$RSTDATE/cap_restart ) then
 
 cd $EXPDIR/restarts/$RSTDATE
 
-@CPEXEC $HOMDIR/CAP.rc CAP.rc.orig
+cp $HOMDIR/CAP.rc CAP.rc.orig
 awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
@@ -176,8 +176,8 @@ set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 >>>EMIP_OLDLAND<<<# ---------------------
 >>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
 >>>EMIP_NEWLAND<<<# ----------------------------------------------
-@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
-@TAREXEC xf  restarts.${year}${month}.tar
+cp /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
+tar xf  restarts.${year}${month}.tar
 /bin/rm restarts.${year}${month}.tar
 >>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
 
@@ -244,20 +244,20 @@ endif
 cd $SCRDIR
 /bin/rm -rf *
                              /bin/ln -sf $EXPDIR/RC/* .
-                             @CPEXEC     $EXPDIR/cap_restart .
-                             @CPEXEC -f  $HOMDIR/*.rc .
-                             @CPEXEC -f  $HOMDIR/*.nml .
-                             @CPEXEC -f  $HOMDIR/*.yaml .
-                             @CPEXEC     $GEOSBIN/bundleParser.py .
+                             cp     $EXPDIR/cap_restart .
+                             cp -f  $HOMDIR/*.rc .
+                             cp -f  $HOMDIR/*.nml .
+                             cp -f  $HOMDIR/*.yaml .
+                             cp     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
 
-			    @MOM6@CPEXEC -f  $HOMDIR/MOM_input .
-			    @MOM6@CPEXEC -f  $HOMDIR/MOM_override .
+                             @MOM6cp -f  $HOMDIR/MOM_input .
+                             @MOM6cp -f  $HOMDIR/MOM_override .
 
 if( $GCMEMIP == TRUE ) then
-    @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
-    @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
+    cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
+    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
 endif
 
 set END_DATE  = `grep '^\s*END_DATE:'     CAP.rc | cut -d: -f2`
@@ -384,8 +384,8 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
-@COUPLED @CPEXEC $HOMDIR/*_table .
-@COUPLED @CPEXEC $GRIDDIR/INPUT/* INPUT
+@COUPLED cp $HOMDIR/*_table .
+@COUPLED cp $GRIDDIR/INPUT/* INPUT
 @COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 @COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
@@ -401,13 +401,13 @@ _EOF_
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
 
 chmod +x linkbcs
-@CPEXEC  linkbcs $EXPDIR
+cp  linkbcs $EXPDIR
 
 #######################################################################
 #                    Get Executable and RESTARTS
 #######################################################################
 
-@CPEXEC $EXPDIR/GEOSgcm.x .
+cp $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -431,17 +431,17 @@ end
 # ----------------------------------
 if( $GCMEMIP == TRUE ) then
     foreach rst ( $rst_file_names )
-      if(-e $EXPDIR/restarts/$RSTDATE/$rst ) @CPEXEC $EXPDIR/restarts/$RSTDATE/$rst . &
+      if(-e $EXPDIR/restarts/$RSTDATE/$rst ) cp $EXPDIR/restarts/$RSTDATE/$rst . &
     end
 else
     foreach rst ( $rst_file_names )
-      if(-e $EXPDIR/$rst ) @CPEXEC $EXPDIR/$rst . &
+      if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
     end
 endif
 wait
 
 @COUPLED /bin/mkdir INPUT
-@COUPLED @CPEXEC $EXPDIR/RESTART/* INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
@@ -450,14 +450,14 @@ set numrs = `/bin/ls -1 ${EXPDIR}/restarts/*${edate}* | wc -l`
 if($numrs == 0) then
    foreach rst ( $rst_file_names )
       if( -e $rst & ! -e ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} ) then
-            @CPEXEC $rst ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} &
+            cp $rst ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} &
       endif
    end
    wait
-@COUPLED    @CPEXEC -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED    cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
    cd $EXPDIR/restarts
-      @DATAOCEAN @TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-      @COUPLED @TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
+      @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+      @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
      @COUPLED /bin/rm -rf RESTART.${edate}
    cd $SCRDIR
@@ -497,9 +497,9 @@ while ( $counter <= ${NUM_SGMT} )
 /bin/rm -f  EGRESS
 
 if( $GCMEMIP == TRUE ) then
-    @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
+    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
 else
-    @CPEXEC -f $HOMDIR/CAP.rc .
+    cp -f $HOMDIR/CAP.rc .
 endif
 
 /bin/mv CAP.rc CAP.rc.orig
@@ -583,13 +583,13 @@ if( ${EMISSIONS} == MERRA2 | \
     endif
 
     if( $AGCM_LM == 72 ) then
-        @CPEXEC --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+        cp --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
     else
         set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
           /bin/rm -f   `basename $file`
           /bin/rm -f    dummy
-          @CPEXEC $file dummy
+          cp $file dummy
               cat       dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
         end
     endif
@@ -662,7 +662,7 @@ else
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -674,12 +674,12 @@ else
 
    # Make decorated copies for restarts tarball
    # ------------------------------------------
-   @CPEXEC openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   @CPEXEC seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Inject decorated copies into restarts tarball
    # ---------------------------------------------
-   @TAREXEC rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Remove the decorated restarts
    # -----------------------------
@@ -700,7 +700,7 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_OPENW_TILES_FOUND = `@SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
          
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -806,7 +806,7 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
@@ -826,8 +826,8 @@ echo GEOSgcm Run Status: $rc
 
 set edate  = e`awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut -c1-2`z
 
-@COUPLED @CPEXEC -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
-@COUPLED @CPEXEC RESTART/* INPUT
+@COUPLED cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED cp RESTART/* INPUT
 
 # Move Intermediate Checkpoints to RESTARTS directory
 # ---------------------------------------------------
@@ -860,7 +860,7 @@ set restarts = `/bin/ls -1 *_rst`
 # ----------------------------------------------------
     set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
 foreach  restart ($restarts)
-@CPEXEC $restart ${EXPDIR}/restarts
+cp $restart ${EXPDIR}/restarts
 end
 
 # Remove EXPID from RESTART name
@@ -882,10 +882,10 @@ end
 # ---------------------
 cd $EXPDIR/restarts
     if( $FSEGMENT == 00000000 ) then
-	@DATAOCEAN @TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-        @COUPLED @TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
+        @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
+        @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
         /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-	@COUPLED /bin/rm -rf RESTART.${edate}
+        @COUPLED /bin/rm -rf RESTART.${edate}
     endif
 cd $SCRDIR
 
@@ -894,7 +894,7 @@ cd $SCRDIR
 set monthlies = `/bin/ls *chk`
 if ( $#monthlies > 0 ) then
     foreach ff (*chk)
-	    /bin/mv $ff `basename $ff chk`rst
+       /bin/mv $ff `basename $ff chk`rst
     end
 endif
 
@@ -972,23 +972,23 @@ if( $GCMEMIP == TRUE ) then
      end
         /bin/rm -f $EXPDIR/restarts/$RSTDATE/cap_restart
      foreach rst ( `/bin/ls -1 *_rst` )
-       @CPEXEC $rst $EXPDIR/restarts/$RSTDATE/$rst &
+       cp $rst $EXPDIR/restarts/$RSTDATE/$rst &
      end
      wait
-     @CPEXEC cap_restart $EXPDIR/restarts/$RSTDATE/cap_restart
+     cp cap_restart $EXPDIR/restarts/$RSTDATE/cap_restart
 else
      foreach rst ( `/bin/ls -1 *_rst` )
         /bin/rm -f $EXPDIR/$rst
      end
         /bin/rm -f $EXPDIR/cap_restart
      foreach rst ( `/bin/ls -1 *_rst` )
-       @CPEXEC $rst $EXPDIR/$rst &
+       cp $rst $EXPDIR/$rst &
      end
      wait
-     @CPEXEC cap_restart $EXPDIR/cap_restart
+     cp cap_restart $EXPDIR/cap_restart
 endif
 
-@COUPLED @CPEXEC -rf RESTART $EXPDIR
+@COUPLED cp -rf RESTART $EXPDIR
 
 if ( $rc == 0 ) then
       cd  $HOMDIR

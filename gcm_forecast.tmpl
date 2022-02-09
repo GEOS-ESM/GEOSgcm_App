@@ -178,10 +178,10 @@ endif
 #######################################################################
 
                              /bin/ln -sf $EXPDIR/RC/* .
-                             @CPEXEC -f  $HOMDIR/*.rc .
-                             @CPEXEC -f  $HOMDIR/*.nml .
-                             @CPEXEC -f  $HOMDIR/*.yaml .
-                             @CPEXEC     $GEOSBIN/bundleParser.py .
+                             cp -f  $HOMDIR/*.rc .
+                             cp -f  $HOMDIR/*.nml .
+                             cp -f  $HOMDIR/*.yaml .
+                             cp     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
 
@@ -189,7 +189,7 @@ echo $nymd0 $nhms0 > cap_restart
 
 # Collapse whitespace like the strip utility
 # --------------------------------------
-@CPEXEC AGCM.rc AGCM.rc.orig
+cp AGCM.rc AGCM.rc.orig
 awk '{$1=$1};1' < AGCM.rc.orig > AGCM.rc
 
 
@@ -475,8 +475,8 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
-@COUPLED @CPEXEC $HOMDIR/*_table .
-@COUPLED @CPEXEC $GRIDDIR/INPUT/* INPUT
+@COUPLED cp $HOMDIR/*_table .
+@COUPLED cp $GRIDDIR/INPUT/* INPUT
 @COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 @COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
@@ -487,13 +487,13 @@ _EOF_
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
 
 chmod +x linkbcs
-@CPEXEC  linkbcs $EXPDIR
+cp  linkbcs $EXPDIR
 
 #######################################################################
 #                    Get Executable and RESTARTS
 #######################################################################
 
-@CPEXEC $EXPDIR/GEOSgcm.x .
+cp $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -530,7 +530,7 @@ end
 
      else if( $FCST_TYPE == 'Exact' | $FCST_TYPE == 'Regular' ) then
           /bin/ln -s ${ANA_LOCATION}/rs/Y$year/M$month/${ANA_EXPID}.rst.${nymd0}_${hour}z.tar  .
-          @TAREXEC xf ${ANA_EXPID}.rst.${nymd0}_${hour}z.tar
+          tar xf ${ANA_EXPID}.rst.${nymd0}_${hour}z.tar
           if( $FCST_TYPE == 'Exact' ) /bin/ln -s ${ANA_LOCATION}/rs/Y$year/M*/${ANA_EXPID}.agcm_import_rst.*  .
           $GEOSBIN/stripname ${ANA_EXPID}.
           $GEOSBIN/stripname .${nymd0}_${hour}z.bin
@@ -543,7 +543,7 @@ endif
 
 # Re-Create Proper CAP.rc
 # -----------------------
-@CPEXEC CAP.rc CAP.rc.orig
+cp CAP.rc CAP.rc.orig
 awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 
 # Re-Create Proper CAP.rc
@@ -620,13 +620,13 @@ if( ${EMISSIONS} == MERRA2 | \
     endif
 
     if( $AGCM_LM == 72 ) then
-        @CPEXEC --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+        cp --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
     else
         set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
           /bin/rm -f   `basename $file`
           /bin/rm -f    dummy
-          @CPEXEC $file dummy
+          cp $file dummy
               cat       dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
         end
     endif
@@ -703,7 +703,7 @@ else
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -715,12 +715,12 @@ else
 
    # Make decorated copies for restarts tarball
    # ------------------------------------------
-   @CPEXEC openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   @CPEXEC seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Inject decorated copies into restarts tarball
    # ---------------------------------------------
-   @TAREXEC rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Remove the decorated restarts
    # -----------------------------
@@ -812,7 +812,7 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
@@ -874,7 +874,7 @@ set nymd = $date[1]
 @ n = $n + 1
 end
 
-$RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
+@SEVERAL_TRIES $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
                                   -ana   $ana_files \
                                   -cli $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_00z.576x361.data.nc4 \
                                        $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_06z.576x361.data.nc4 \
