@@ -222,6 +222,13 @@ else
    set  AGCM_IM = "c$Resolution[1]"
 endif
 
+# We make a variable here so we can easily discriminate for CS ocean support below
+if ( $AGCM_IM == 'c12' || $AGCM_IM == 'c24' || $AGCM_IM == 'c48' ) then
+   set LOW_ATM_RES = TRUE
+else
+   set LOW_ATM_RES = FALSE
+endif
+
 # These are superfluous for GCM, but needed for SCM (considered latlon)
 set LATLON_AGCM = "#DELETE"
 set CUBE_AGCM = ""
@@ -537,14 +544,25 @@ if( $OGCM == TRUE ) then
           goto CORSLV
        endif
     endif
+
     set IMO = ${OGCM_IM}
+    if( $IMO < 10 ) then
+       set IMO = 000$IMO
+    else if($IMO < 100) then
+       set IMO = 00$IMO
+    else if($IMO < 1000) then
+       set IMO = 0$IMO
+    endif
+
     set JMO = ${OGCM_JM}
-    if( $IMO < 10   ) set IMO = 000$IMO
-    if( $IMO < 100  ) set IMO =  00$IMO
-    if( $IMO < 1000 ) set IMO =   0$IMO
-    if( $JMO < 10   ) set JMO = 000$JMO
-    if( $JMO < 100  ) set JMO =  00$JMO
-    if( $JMO < 1000 ) set JMO =   0$JMO
+    if( $JMO < 10 ) then
+       set JMO = 000$JMO
+    else if($JMO < 100) then
+       set JMO = 00$JMO
+    else if($JMO < 1000) then
+       set JMO = 0$JMO
+    endif
+
     set OCEAN_RES = TM${IMO}xTM${JMO}
     set OCEAN_TAG  = Reynolds
     set SSTNAME  = "#DELETE"
@@ -560,8 +578,14 @@ if( $OGCM == TRUE ) then
     set   OGCM_LM = 50
     endif
 
-    set OGCM_NX = 36
-    set OGCM_NY = 10
+    # At the moment c12 MOM6 is default 3x2 ocean (and 1x6 atmos)
+    if( $AGCM_IM ==  "c12" ) then
+       set OGCM_NX = 3
+       set OGCM_NY = 2
+    else
+       set OGCM_NX = 36
+       set OGCM_NY = 10
+    endif
     @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
     set OGCM_GRID_TYPE = Tripolar
     set LATLON_OGCM = ""
@@ -641,14 +665,7 @@ else
         set DATAOCEAN = ""
     endif
     if( $HRCODE == 'cs' ) then
-        if( $AGCM_IM == 'c90'  | \
-            $AGCM_IM == 'c180' | \
-            $AGCM_IM == 'c360' | \
-            $AGCM_IM == 'c720'  | \
-            $AGCM_IM == 'c768'  | \
-            $AGCM_IM == 'c1536' | \
-            $AGCM_IM == 'c3072') then
-
+        if( $LOW_ATM_RES == 'FALSE') then
              set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
              set OGCM_JM  = `expr $OGCM_IM \* 6`
              set Resolution = `echo $OGCM_IM $OGCM_JM`
@@ -669,8 +686,8 @@ else
              set OGRIDTYP = "CF"
              set OSTIA    = ""
         else
-             print *, "Cubed-Ocean with ${AGCM_IM} not currently supported"
-             exit
+             echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
+             exit 7
         endif
     endif
 
@@ -747,7 +764,12 @@ if( $AGCM_IM ==  "c12" ) then
 #    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
+     # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
+     if ( $OCEAN_NAME == "MOM6") then
+     set       NX = 1
+     else
      set       NX = 2
+     endif
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1380,9 +1402,7 @@ if( $SITE == 'NAS' ) then
               endif
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
-              setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
-              setenv TAREXEC    mtar                                                   # Tar utility for large archives
+              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -1429,9 +1449,7 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
-              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar
+              setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
 else if( $SITE == 'AWS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
@@ -1465,10 +1483,8 @@ else if( $SITE == 'AWS' ) then
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
 
-              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar                                                    # Tar utility for large archives
               # By default on AWS, just ignore IOSERVER for now until testing
               set USE_IOSERVER = 0
               set IOS_NDS = 0
@@ -1507,13 +1523,11 @@ else
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
               set NX = 1
               set NY = 6
               set CNV_NX = ${NX}
               set CNV_NY = ${NY}
-              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar                                                    # Tar utility for large archives
               # By default on desktop, just ignore IOSERVER for now
               set USE_IOSERVER = 0
               set IOS_NDS = 0
@@ -1886,7 +1900,6 @@ EOF
 else if( $MPI == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_DAPL_UD enable
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
 
@@ -1904,7 +1917,6 @@ setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
 setenv I_MPI_EXTRA_FILESYSTEM 1
 setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-setenv ROMIO_FSTYPE_FORCE "gpfs:"
 EOF
 
 endif # if NCCS
@@ -2181,9 +2193,6 @@ s/@USE_SKIN_LAYER/1/g
 s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
-
-s?@CPEXEC?$CPEXEC?g
-s?@TAREXEC?$TAREXEC?g
 
 s/@MP_MG1/$MP_MG1/g
 s/@MP_GFDL/$MP_GFDL/g
