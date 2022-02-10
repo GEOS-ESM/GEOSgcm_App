@@ -676,7 +676,7 @@ else
 
    # Run the script
    # --------------
-   @SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -714,7 +714,7 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   set N_OPENW_TILES_FOUND = `@SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
          
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -820,7 +820,7 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-@SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 

@@ -1365,9 +1365,6 @@ endif
 # Default converter time
               setenv CONVERT_T  "0:15:00"                                              # Wallclock Time   for gcm_convert.j
 
-# several_tries only exists at NAS
-              setenv SEVERAL_TRIES  ""
-
 if( $SITE == 'NAS' ) then
               setenv BATCH_CMD "qsub"                 # PBS Batch command
               setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
@@ -1418,7 +1415,6 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
-              setenv SEVERAL_TRIES /u/scicon/tools/bin/several_tries                   # several_tries script
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -2220,8 +2216,6 @@ s?@FV_ZTRACER?$FV_ZTRACER?g
 s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
 s?@FV_SATADJ?$FV_SATADJ?g
-
-s?@SEVERAL_TRIES?$SEVERAL_TRIES?g
 
 EOF
 

@@ -140,7 +140,7 @@ else
 
    # Run the script
    # --------------
-   @SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/regress/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/regress/saltwater_internal_rst
 
    # Move restarts
    # -------------

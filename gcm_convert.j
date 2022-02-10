@@ -303,7 +303,7 @@ else
 
    # Run the script
    # --------------
-   @SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -485,7 +485,7 @@ set       NY = `grep "^ *NY:" AGCM.rc | cut -d':' -f2`
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_SALT_TILES_EXPECTED = `grep '^ *0' tile.data | wc -l`
-   set N_SALT_TILES_FOUND = `@SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_SALT_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_SALT_TILES_EXPECTED != $N_SALT_TILES_FOUND ) then
       echo "Error! Found $N_SALT_TILES_FOUND tiles in openwater. Expect to find $N_SALT_TILES_EXPECTED tiles."
@@ -509,7 +509,7 @@ set LOGFILE = "$CNVDIR/GEOSgcm.log"
 # Assume gcm_setup set these properly for the local platform
 /bin/rm -f EGRESS
 @SETENVS
-@SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
+$RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
 if( -e EGRESS ) then
    set rc = 0
 else

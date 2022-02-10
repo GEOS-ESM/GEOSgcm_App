@@ -702,7 +702,7 @@ else
 
    # Run the script
    # --------------
-   @SEVERAL_TRIES $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -811,7 +811,7 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-@SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
@@ -873,7 +873,7 @@ set nymd = $date[1]
 @ n = $n + 1
 end
 
-@SEVERAL_TRIES $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
+$RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
                                   -ana   $ana_files \
                                   -cli $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_00z.576x361.data.nc4 \
                                        $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_06z.576x361.data.nc4 \
