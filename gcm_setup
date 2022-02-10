@@ -1170,7 +1170,7 @@ else
 	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
 		set FV_SATADJ  = "do_sat_adj = .F."
 		set FV_NWAT    = "nwat       =  3 "
-	else if ( "$AGCM_MP" == "GFDL" ) then
+	else if ( "$AGCM_MP" == "GFDL" | "$AGCM_MP" == "MG2" | "$AGCM_MP" == "MG3" ) then
 		set FV_SATADJ  = "do_sat_adj = .T."
 		set FV_NWAT    = "nwat       =  6 "
 	endif
