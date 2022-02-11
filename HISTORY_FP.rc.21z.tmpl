@@ -1214,6 +1214,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_2d_aer_Nx-.template:   '%y4%m2%d2_%h2%n2z.nc4',
   tavg3_2d_aer_Nx-.mode:       'time-averaged',
   tavg3_2d_aer_Nx-.resolution: 1152 721,
+  tavg3_2d_aer_Nx-.splitField: 1,
   tavg3_2d_aer_Nx-.frequency:   030000 ,
   tavg3_2d_aer_Nx-.duration:    030000 ,
   tavg3_2d_aer_Nx-.end_date:    >>>IOEDATE<<< ,
@@ -1228,6 +1229,24 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAANGSTRCA.bc'    , 'CA.bc'      , 'BCANGSTR' ,
                                'CAFLUXUCA.bc'     , 'CA.bc'      , 'BCFLUXU'  ,
                                'CAFLUXVCA.bc'     , 'CA.bc'      , 'BCFLUXV'  ,
+# Brown Carbon
+
+                               'CAEMCA.br'        , 'CA.br'      , 'BREM001;BREM002' ,
+                               'CADPCA.br'        , 'CA.br'      , 'BRDP001;BRDP002' ,
+                               'CASVCA.br'        , 'CA.br'      , 'BRSV001;BRSV002' ,
+                               'CAWTCA.br'        , 'CA.br'      , 'BRWT001;BRWT002' ,
+                               'CASMASSCA.br'     , 'CA.br'      , 'BRSMASS',
+                               'CACMASSCA.br'     , 'CA.br'      , 'BRCMASS',
+                               'CAEXTTAUCA.br'    , 'CA.br'      , 'BREXTTAU',
+                               'CASCATAUCA.br'    , 'CA.br'      , 'BRSCATAU',
+                               'CAANGSTRCA.br'    , 'CA.br'      , 'BRANGSTR',
+                               'CAHYPHILCA.br'    , 'CA.br'      , 'BRHYPHIL',
+                               'CAEMBBCA.br'      , 'CA.br'      , 'BREMBB',
+                               'CAEMBFCA.br'      , 'CA.br'      , 'BREMBF',
+                               'CAEMANCA.br'      , 'CA.br'      , 'BREMAN',
+                               'CAFLUXUCA.br'     , 'CA.br'      , 'BRFLUXU',
+                               'CAFLUXVCA.br'     , 'CA.br'      , 'BRFLUXV',
+                               'DBRCDT'           , 'MOIST'      , 'BRSV'    ,
 # Dust
                                'DUSMASS'     , 'DU'      ,
                                'DUCMASS'     , 'DU'      ,
@@ -1240,6 +1259,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'DUSCAT25'    , 'DU'      ,
                                'DUFLUXU'     , 'DU'      ,
                                'DUFLUXV'     , 'DU'      ,
+                               'DDUDT'       , 'MOIST'   ,  'DUSV'    ,
+
 # Seasalt
                                'SSSMASS'     , 'SS'      ,
                                'SSCMASS'     , 'SS'      ,
@@ -1252,6 +1273,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SSSCAT25'    , 'SS'      ,
                                'SSFLUXU'     , 'SS'      ,
                                'SSFLUXV'     , 'SS'      ,
+                               'DSSDT'       , 'MOIST'   ,  'SSSV'    ,
+                               
 # Sulfates
                                'SO2SMASS'    , 'SU'      ,
                                'SO2CMASS'    , 'SU'      ,
@@ -1264,6 +1287,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SUANGSTR'    , 'SU'      ,
                                'SUFLUXU'     , 'SU'      ,
                                'SUFLUXV'     , 'SU'      ,
+                               'DSUDT'       , 'MOIST'   ,  'SUSV'    ,
 # Organic Carbon
                                'CASMASSCA.oc'     , 'CA.oc'      , 'OCSMASS'  ,
                                'CACMASSCA.oc'     , 'CA.oc'      , 'OCCMASS'  ,
@@ -1272,6 +1296,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAANGSTRCA.oc'    , 'CA.oc'      , 'OCANGSTR' ,
                                'CAFLUXUCA.oc'     , 'CA.oc'      , 'OCFLUXU'  ,
                                'CAFLUXVCA.oc'     , 'CA.oc'      , 'OCFLUXV'  ,
+                               'DOCDT'            , 'MOIST'      , 'OCSV'     ,
 # Nitrate
                                'HNO3SMASS'   , 'NI'      ,
                                'NH3SMASS'    , 'NI'      ,
@@ -1290,6 +1315,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'NIANGSTR'    , 'NI'      ,
                                'NIFLUXU'     , 'NI'      ,
                                'NIFLUXV'     , 'NI'      ,
+                               'DNIDT'       , 'MOIST'   ,  'NISV'    ,
+
 # Combined Aerosols
                                'TOTEXTTAU'   , 'GOCART2G'      ,
                                'TOTSCATAU'   , 'GOCART2G'      ,
@@ -1317,6 +1344,18 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAEMBFCA.bc'      , 'CA.bc'      , 'BCEMBF'   ,
                                'CAEMANCA.bc'      , 'CA.bc'      , 'BCEMAN'   ,
                                'DBCDT'            , 'MOIST'      ,  'BCSV'    ,
+
+# Brown Carbon
+                               'CAEMCA.br'        , 'CA.br'      , 'BREM001;BREM002' ,
+                               'CADPCA.br'        , 'CA.br'      , 'BRDP001;BRDP002' ,
+                               'CAWTCA.br'        , 'CA.br'      , 'BRWT001;BRWT002' ,
+                               'CAHYPHILCA.br'    , 'CA.br'      , 'BRHYPHIL' ,
+                               'CAEMBBCA.br'      , 'CA.br'      , 'BREMBB'   ,
+                               'CAEMBFCA.br'      , 'CA.br'      , 'BREMBF'   ,
+                               'CAEMANCA.br'      , 'CA.br'      , 'BREMAN'   ,
+                               'CASVCA.br'        , 'CA.br'      , 'BRSV001;BRSV002' ,
+                               'DBRCDT'          ,  'MOIST'      , 'BRSV'     ,
+
 # Dust
                                'DUEM'        , 'DU'      ,
                                'DUSD'        , 'DU'      ,
@@ -1406,6 +1445,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   inst1_2d_hwl_Nx-.template:   '%y4%m2%d2_%h2%n2z.nc4',
   inst1_2d_hwl_Nx-.mode:       'instantaneous',
   inst1_2d_hwl_Nx-.resolution: 1152 721,
+  inst1_2d_hwl_Nx-.splitField: 1,
   inst1_2d_hwl_Nx-.frequency:   010000 ,
   inst1_2d_hwl_Nx-.duration:    010000 ,
   inst1_2d_hwl_Nx-.ref_time:    000000 ,
@@ -1417,6 +1457,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                               'SSEXTTAU'       , 'SS'       ,
                               'SUEXTTAU'       , 'SU'       ,
                               'CAEXTTAUCA.bc'  , 'CA.bc'    , 'BCEXTTAU' ,
+                              'CASMASSCA.br' , 'CA.br'      , 'BRSMASS' ,
                               'CAEXTTAUCA.oc'  , 'CA.oc'    , 'OCEXTTAU' ,
                               'NIEXTTAU'       , 'NI'       ,
                               'CO2CL001'       , 'GOCART'   , 'CO2CL'      ,
@@ -1503,6 +1544,10 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                               'CAphilicCA.bc'     , 'CA.bc'      , 'BCPHILIC'     ,
                               'CAphobicCA.oc'     , 'CA.oc'      , 'OCPHOBIC'     ,
                               'CAphilicCA.oc'     , 'CA.oc'      , 'OCPHILIC'     ,
+                              'CASMASSCA.br'      , 'CA.br'      , 'BRSMASS'     ,
+                              'CAphobicCA.br'     , 'CA.br'      , 'BRPHOBIC'     ,
+                              'CAphilicCA.br'     , 'CA.br'      , 'BRPHILIC'     ,
+
 # Nitrate
                               'NH3'          , 'NI'         , 
                               'NH4a'         , 'NI'         , 'NH4A'      ,
@@ -1542,6 +1587,10 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                               'CAphilicCA.bc'     , 'CA.bc'      , 'BCPHILIC'     ,
                               'CAphobicCA.oc'     , 'CA.oc'      , 'OCPHOBIC'     ,
                               'CAphilicCA.oc'     , 'CA.oc'      , 'OCPHILIC'     ,
+                              'CASMASSCA.br'      , 'CA.br'      , 'BRSMASS'     ,
+                              'CAphobicCA.br'     , 'CA.br'      , 'BRPHOBIC'     ,
+                              'CAphilicCA.br'     , 'CA.br'      , 'BRPHILIC'     ,
+
 # Nitrate
                               'NH3'          , 'NI'         , 
                               'NH4a'         , 'NI'         , 'NH4A'      ,
@@ -2361,6 +2410,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   inst3_3d_ext_Np+-.duration:  030000 ,
   inst3_3d_ext_Np+-.mode:      'instantaneous',
   inst3_3d_ext_Np+-.resolution: 1152 721,
+  inst3_3d_ext_Np+-.splitField: 1,
   inst3_3d_ext_Np+-.vscale:    100.0,
   inst3_3d_ext_Np+-.vunit:     'hPa',
   inst3_3d_ext_Np+-.vvars:     'log(PLE)' , 'DYN'          ,
@@ -2388,6 +2438,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   inst3_3d_aer_Np+-.duration:  030000 ,
   inst3_3d_aer_Np+-.mode:      'instantaneous',
   inst3_3d_aer_Np+-.resolution: 1152 721,
+  inst3_3d_aer_Np+-.splitField: 1,
   inst3_3d_aer_Np+-.vscale:    100.0,
   inst3_3d_aer_Np+-.vunit:     'hPa',
   inst3_3d_aer_Np+-.vvars:     'log(PLE)' , 'DYN'          ,
@@ -2397,6 +2448,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                               'DUMASS'      , 'DU'         , 'DU'        ,
                               'SSMASS'      , 'SS'         , 'SS'        ,
                               'CAMASSCA.bc' , 'CA.bc'      , 'BC'        ,
+                              'CAMASSCA.br' , 'CA.br'      , 'BR'        ,
                               'CAMASSCA.oc' , 'CA.oc'      , 'OC'        ,
                               'SO2'         , 'SU'         ,
                               'SO4'         , 'SU'         ,
@@ -2453,6 +2505,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_2d_aer_Nx+-.template:   '%y4%m2%d2_%h2%n2z.nc4',
   tavg3_2d_aer_Nx+-.mode:       'time-averaged',
   tavg3_2d_aer_Nx+-.resolution: 1152 721,
+  tavg3_2d_aer_Nx+-.splitField: 1,
   tavg3_2d_aer_Nx+-.frequency:   030000 ,
   tavg3_2d_aer_Nx+-.duration:    030000 ,
   tavg3_2d_aer_Nx+-.nbits:      10,
@@ -2465,6 +2518,26 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAANGSTRCA.bc'    , 'CA.bc'      , 'BCANGSTR' ,
                                'CAFLUXUCA.bc'     , 'CA.bc'      , 'BCFLUXU'  ,
                                'CAFLUXVCA.bc'     , 'CA.bc'      , 'BCFLUXV'  ,
+
+# Brown Carbon
+
+                               'CAEMCA.br'        , 'CA.br'      , 'BREM001;BREM002' ,
+                               'CADPCA.br'        , 'CA.br'      , 'BRDP001;BRDP002' ,
+                               'CASVCA.br'        , 'CA.br'      , 'BRSV001;BRSV002' ,
+                               'CAWTCA.br'        , 'CA.br'      , 'BRWT001;BRWT002' ,
+                               'CASMASSCA.br'     , 'CA.br'      , 'BRSMASS',
+                               'CACMASSCA.br'     , 'CA.br'      , 'BRCMASS',
+                               'CAEXTTAUCA.br'    , 'CA.br'      , 'BREXTTAU',
+                               'CASCATAUCA.br'    , 'CA.br'      , 'BRSCATAU',
+                               'CAANGSTRCA.br'    , 'CA.br'      , 'BRANGSTR',
+                               'CAHYPHILCA.br'    , 'CA.br'      , 'BRHYPHIL',
+                               'CAEMBBCA.br'      , 'CA.br'      , 'BREMBB',
+                               'CAEMBFCA.br'      , 'CA.br'      , 'BREMBF',
+                               'CAEMANCA.br'      , 'CA.br'      , 'BREMAN',
+                               'CAFLUXUCA.br'     , 'CA.br'      , 'BRFLUXU',
+                               'CAFLUXVCA.br'     , 'CA.br'      , 'BRFLUXV',
+                               'DBRCDT'           , 'MOIST'      , 'BRSV'    ,
+
 # Dust
                                'DUSMASS'     , 'DU'      ,
                                'DUCMASS'     , 'DU'      ,
@@ -2477,6 +2550,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'DUSCAT25'    , 'DU'      ,
                                'DUFLUXU'     , 'DU'      ,
                                'DUFLUXV'     , 'DU'      ,
+                               'DDUDT'       , 'MOIST'   ,  'DUSV'    ,
 # Seasalt
                                'SSSMASS'     , 'SS'      ,
                                'SSCMASS'     , 'SS'      ,
@@ -2489,6 +2563,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SSSCAT25'    , 'SS'      ,
                                'SSFLUXU'     , 'SS'      ,
                                'SSFLUXV'     , 'SS'      ,
+                               'DSSDT'       , 'MOIST'   ,  'SSSV'    ,
 # Sulfates
                                'SO2SMASS'    , 'SU'      ,
                                'SO2CMASS'    , 'SU'      ,
@@ -2501,6 +2576,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SUANGSTR'    , 'SU'      ,
                                'SUFLUXU'     , 'SU'      ,
                                'SUFLUXV'     , 'SU'      ,
+                               'DSUDT'       , 'MOIST'   ,  'SUSV'    ,
+
 # Organic Carbon
                                'CASMASSCA.oc'     , 'CA.oc'      , 'OCSMASS'  ,
                                'CACMASSCA.oc'     , 'CA.oc'      , 'OCCMASS'  ,
@@ -2509,6 +2586,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAANGSTRCA.oc'    , 'CA.oc'      , 'OCANGSTR' ,
                                'CAFLUXUCA.oc'     , 'CA.oc'      , 'OCFLUXU'  ,
                                'CAFLUXVCA.oc'     , 'CA.oc'      , 'OCFLUXV'  ,
+                               'DOCDT'            , 'MOIST'      , 'OCSV'     ,
+
 # Nitrate
                                'HNO3SMASS'  , 'NI'  ,
                                'NH3SMASS'   , 'NI'  ,
@@ -2527,6 +2606,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'NIANGSTR'   , 'NI'  ,
                                'NIFLUXU'    , 'NI'  ,
                                'NIFLUXV'    , 'NI'  ,
+                               'DNIDT'       , 'MOIST'   ,  'NISV'    ,
+
 # Combined Aerosols
                                'TOTEXTTAU'   , 'GOCART2G'      ,
                                'TOTSCATAU'   , 'GOCART2G'      ,
@@ -2539,6 +2620,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   inst1_2d_wwi_Nx+-.nbits:     10,
   inst1_2d_wwi_Nx+-.mode:      'instantaneous',
   inst1_2d_wwi_Nx+-.resolution: 1152 721,
+  inst1_2d_wwi_Nx+-.splitField: 1,
   inst1_2d_wwi_Nx+-.frequency: 010000 ,
   inst1_2d_wwi_Nx+-.duration:  010000 ,
   inst1_2d_wwi_Nx+-.ref_time:  000000 ,
@@ -2551,6 +2633,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   inst1_2d_hwl_Nx+-.nbits:     10,
   inst1_2d_hwl_Nx+-.mode:      'instantaneous',
   inst1_2d_hwl_Nx+-.resolution: 1152 721,
+  inst1_2d_hwl_Nx+-.splitField: 1,
   inst1_2d_hwl_Nx+-.frequency: 010000 ,
   inst1_2d_hwl_Nx+-.duration:  010000 ,
  #inst1_2d_hwl_Nx+-.ref_date:  >>>IOBBKGD<<< ,
@@ -2561,6 +2644,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                               'SUEXTTAU'       , 'SU'       ,
                               'CAEXTTAUCA.bc'  , 'CA.bc'    , 'BCEXTTAU'   ,
                               'CAEXTTAUCA.oc'  , 'CA.oc'    , 'OCEXTTAU'   ,
+                              'CASMASSCA.br'   , 'CA.br'    , 'BRSMASS'    ,
                               'CO2CL001'       , 'GOCART'   , 'CO2CL'      ,
                               'COCL'           , 'GOCART'   ,
                               'COCLbbae'       , 'GOCART'   ,
@@ -2586,6 +2670,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                               'SSSMASS'      , 'SS'      ,
                               'SSSMASS25'    , 'SS'      ,
                               'CASMASSCA.bc' , 'CA.bc'   , 'BCSMASS',
+                              'CASMASSCA.br' , 'CA.br'   , 'BRSMASS' ,
                               'CASMASSCA.oc' , 'CA.oc'   , 'OCSMASS',
                               'SO4SMASS'     , 'SU'      ,
                               'SO2SMASS'     , 'SU'      ,
@@ -2595,6 +2680,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 # Fluxes
                               'CAFLUXUCA.bc' , 'CA.bc'   , 'BCFLUXU',
                               'CAFLUXVCA.bc' , 'CA.bc'   , 'BCFLUXV',
+                              'CAFLUXUCA.br' , 'CA.br'   , 'BRFLUXU' ,
+                              'CAFLUXVCA.br' , 'CA.br'   , 'BRFLUXV' ,
                               'DUFLUXU'      , 'DU'      ,
                               'DUFLUXV'      , 'DU'      ,
                               'CAFLUXUCA.oc' , 'CA.oc'   , 'OCFLUXU',
@@ -2604,6 +2691,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                               'SUFLUXU'      , 'SU'      ,
                               'SUFLUXV'      , 'SU'      ,
                               'CACMASSCA.bc' , 'CA.bc'   , 'BCCMASS',
+                              'CACMASSCA.br' , 'CA.br'   , 'BRCMASS' ,
                               'DUCMASS'      , 'DU'      ,
                               'CACMASSCA.oc' , 'CA.oc'   , 'OCCMASS',
                               'SO4CMASS'     , 'SU'      ,
@@ -2642,8 +2730,17 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 # Carbonaceous (main)
                               'CAphobicCA.bc'     , 'CA.bc'      , 'BCPHOBIC'     ,
                               'CAphilicCA.bc'     , 'CA.bc'      , 'BCPHILIC'     ,
+                              'CASMASSCA.br'      , 'CA.br'      , 'BRSMASS'     ,
+                              'CAphobicCA.br'     , 'CA.br'      , 'BRPHOBIC'     ,
+                              'CAphilicCA.br'     , 'CA.br'      , 'BRPHILIC'     ,
                               'CAphobicCA.oc'     , 'CA.oc'      , 'OCPHOBIC'     ,
                               'CAphilicCA.oc'     , 'CA.oc'      , 'OCPHILIC'     ,
+# Nitrate
+                              'NH3'          , 'NI'         , 
+                              'NH4a'         , 'NI'         , 'NH4A'      ,
+                              'NO3an1'       , 'NI'         , 'NO3AN1'    ,
+                              'NO3an2'       , 'NI'         , 'NO3AN2'    ,
+                              'NO3an3'       , 'NI'         , 'NO3AN3'    ,
                               ::
 
  #######################################################################

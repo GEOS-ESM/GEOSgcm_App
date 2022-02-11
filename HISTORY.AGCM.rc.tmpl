@@ -688,7 +688,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                'DUSD'        , 'DU'      ,
                                'DUDP'        , 'DU'      ,
                                'DUWT'        , 'DU'      ,
-                               'DUSV'        , 'DU'      ,
+#                              'DUSV'        , 'DU'      ,
                                'DUSMASS'     , 'DU'      ,
                                'DUCMASS'     , 'DU'      ,
                                'DUEXTTAU'    , 'DU'      ,
@@ -707,7 +707,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                'SSSD'        , 'SS'      ,
                                'SSDP'        , 'SS'      ,
                                'SSWT'        , 'SS'      ,
-                               'SSSV'        , 'SS'      ,
+#                              'SSSV'        , 'SS'      ,
                                'SSSMASS'     , 'SS'      ,
                                'SSCMASS'     , 'SS'      ,
                                'SSEXTTAU'    , 'SS'      ,
@@ -725,7 +725,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                'SUEM'        , 'SU'      ,
                                'SUDP'        , 'SU'      ,
                                'SUWT'        , 'SU'      ,
-                               'SUSV'        , 'SU'      ,
+#                              'SUSV'        , 'SU'      ,
                                'SO2SMASS'    , 'SU'      ,
                                'SO2CMASS'    , 'SU'      ,
                                'SO4SMASS'    , 'SU'      ,
@@ -815,7 +815,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                'NISD'        , 'NI'      ,
                                'NIDP'        , 'NI'      ,
                                'NIWT'        , 'NI'      ,
-                               'NISV'        , 'NI'      ,
+#                              'NISV'        , 'NI'      ,
                                'NH3EM'       , 'NI'      ,
                                'NH3DP'       , 'NI'      ,
                                'NH3WT'       , 'NI'      ,
@@ -830,6 +830,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                'DSSDT'       , 'MOIST'       ,  'SSSV'    ,
                                'DOCDT'       , 'MOIST'       ,  'OCSV'    ,
                                'DBCDT'       , 'MOIST'       ,  'BCSV'    ,
+                               'DBRCDT'      , 'MOIST'       ,  'BRSV'    ,
                                'DSUDT'       , 'MOIST'       ,  'SUSV'    ,
                                'DNIDT'       , 'MOIST'       ,  'NISV'    ,
                                ::
@@ -840,6 +841,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
  tavg3d_aer_p.frequency:  240000,
  tavg3d_aer_p.ref_time:   210000,
  tavg3d_aer_p.grid_label: PC@HIST_IMx@HIST_JM-DC
+ tavg3d_aer_p.splitField: 1,
  tavg3d_aer_p.mode:       'time-averaged',
  tavg3d_aer_p.vscale:     100.0,    
  tavg3d_aer_p.vunit:      'hPa',    
@@ -1160,4 +1162,5 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                           'MISRLYRTP16000'    , 'SATSIM'    ,
                           'MISRLYRTP18000'    , 'SATSIM'    ,
                          ::
+
 
