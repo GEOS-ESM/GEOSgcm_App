@@ -463,13 +463,21 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ##############################################################################################
 
 # Option to Diagnose Precipitation Types for Land Surface
-# -------------------------------------------------------
+# ------------------------------------------------------------
 DIAGNOSE_PRECIP_TYPE: FALSE
 
-# Choice for Land Surface Model: LSM_CHOICE=1 for Catchment, LSM_CHOICE=2 for CatchmentCN CLM40 and
-#      LSM_CHOICE=3 for CatchmentCN CLM45 
-# ---------------------------------------------------------------------------------------
+# Choice for Land Surface Model
+#      1 : Catchment 
+#      2 : CatchmentCNCLM40 
+#      3 : CatchmentCNCLM45 
+# ------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
+
+# Apply increments from LDAS?
+#      0 : no  (default)
+#      1 : yes 
+# ------------------------------------------------------------
+#LDAS_INCR: 0
 
 # Name of file containing Surface GridComp resource parameters 
 # ------------------------------------------------------------
@@ -776,10 +784,10 @@ NUM_BANDS: 30
 
 #USE_RRTMGP_IRRAD: 1.0
 #USE_RRTMGP_SORAD: 1.0
-#RRTMGP_DATA_LW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/rrtmgp/data/rrtmgp-data-lw-g256-2018-12-04.nc
-#RRTMGP_DATA_SW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/rrtmgp/data/rrtmgp-data-sw-g224-2018-12-04.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_LW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_SW: /discover/nobackup/pnorris/RRTMGP-data.new.20200503/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-sw.nc
+#RRTMGP_DATA_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/rrtmgp/data/rrtmgp-data-lw-g128-210809.nc
+#RRTMGP_DATA_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/rrtmgp/data/rrtmgp-data-sw-g112-210809.nc
+#RRTMGP_CLOUD_OPTICS_COEFFS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc
+#RRTMGP_CLOUD_OPTICS_COEFFS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-sw.nc
 
 DIURNAL_BIOMASS_BURNING: yes
 
