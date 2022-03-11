@@ -581,7 +581,7 @@ endif
 if( ${EMISSIONS} == AMIP ) then
     set AMIP_Transition_Date = 20000301
 
-    # Befor 2000-03-01, use AMIP.20C
+    # Before 2000-03-01, use AMIP.20C
     if( $nymdc < ${AMIP_Transition_Date} ) then
          set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
          if( $nymdf > ${AMIP_Transition_Date} ) then
@@ -714,7 +714,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
    set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-         
+
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
