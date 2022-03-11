@@ -636,7 +636,14 @@ if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv       
 # --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc
+
+# Switch to MODIS v6.1 data after Nov 2021
+set MODIS_Transition_Date = 20211101
+if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymdc ) then
+    cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+else
+    cat $extdata_files > ExtData.rc
+endif
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
