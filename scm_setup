@@ -421,7 +421,7 @@ mkdir -p $expdir/ExtData
 # Need to handle ExtData. At the moment, it is not known how to run
 # GOCART2G.data, so we default to GOCART2G AMIP
 
-set year=$(cat $expdir/cap_restart | cut -c1-4)
+year=$(cat $expdir/cap_restart | cut -c1-4)
 
 if [[ "$year" -lt  "2000" ]]
 then
