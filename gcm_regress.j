@@ -240,10 +240,18 @@ endif
 @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
+# Generate the complete ExtData.rc
+# --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc 
 
+# Switch to MODIS v6.1 data after Nov 2021
+set MODIS_Transition_Date = 20211101
+if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymdc ) then
+    cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+else
+    cat $extdata_files > ExtData.rc
+endif
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
