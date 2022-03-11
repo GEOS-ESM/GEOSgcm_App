@@ -2,7 +2,7 @@
 
 #######################################################################
 #                            Define Colors
-#         Note:  For No Colors, set C1 and C2 to NONE 
+#         Note:  For No Colors, set C1 and C2 to NONE
 #######################################################################
 
 set BLACK   = `tput setaf 0`
@@ -120,7 +120,7 @@ else if ( `echo $BASEDIR | grep -i mpt`      != '') then
    set MPI = mpt
 else
    # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi 
+   set MPI = intelmpi
 endif
 
 #######################################################################
@@ -175,7 +175,7 @@ else
 endif
 
 #######################################################################
-#          Continue to enter in experiment parameters 
+#          Continue to enter in experiment parameters
 #######################################################################
 
 HRCODE:
@@ -379,7 +379,7 @@ if ( $SITE == 'NCCS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas') then
       # NCCS currently recommends that users do not run with
-      # 48 cores per node on SCU16 due to OS issues and 
+      # 48 cores per node on SCU16 due to OS issues and
       # recommends that CPU-intensive works run with 46 or less
       # cores. As 45 is a multiple of 3, it's the best value
       # that doesn't waste too much
@@ -523,7 +523,7 @@ if( $OGCM == TRUE ) then
        set Resolution = `echo 360 200`
     else if ( $OCEAN_NAME == "MOM6" ) then
        set Resolution = `echo 360 210`
-    endif 
+    endif
 
     echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
     set Resolution = `echo $<`
@@ -536,12 +536,12 @@ if( $OGCM == TRUE ) then
           set Resolution = `echo 360 200`
        else if ( $OCEAN_NAME == "MOM6" ) then
           set Resolution = `echo 360 210`
-       endif 
+       endif
 
        if( $num == 0 ) then
           set OGCM_IM = $Resolution[1]
           set OGCM_JM = $Resolution[2]
-       else 
+       else
           goto CORSLV
        endif
     endif
@@ -898,7 +898,7 @@ if( $AGCM_IM == "c360" ) then
 #    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 12 
+     set       NX = 12
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -975,7 +975,7 @@ if( $AGCM_IM == "c1440" ) then
 #    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30 
+     set       NX = 30
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1455,11 +1455,11 @@ else if( $SITE == 'NCCS' ) then
               setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
-                   setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               endif
-              setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
+              setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
 else if( $SITE == 'AWS' ) then
@@ -1641,7 +1641,7 @@ while( $check == FALSE )
   else
        setenv HOMDIR  $HOMDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $HOMDIR` ) then
        echo "\!\! The ${C1}HOME${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1674,7 +1674,7 @@ while( $check == FALSE )
   else
        setenv EXPDIR  $EXPDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $EXPDIR` ) then
        echo "\!\! The ${C1}EXPERIMENT${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1729,7 +1729,7 @@ echo $EXPDIRroot > $HOME/.EXPDIRroot
 setenv CNVDIR $EXPDIR/convert
 
 #######################################################################
-#                       Locate Build Directory  
+#                       Locate Build Directory
 #######################################################################
 
 # GEOSagcm Build Directory
@@ -1889,7 +1889,7 @@ cat > $HOMDIR/SETENV.commands << EOF
 
    #setenv MPI_DISPLAY_SETTINGS 1
    #setenv MPI_VERBOSE 1
-   
+
    unsetenv MPI_MEMMAP_OFF
    unsetenv MPI_NUM_MEMORY_REGIONS
    setenv MPI_XPMEM_ENABLED yes
@@ -1954,8 +1954,8 @@ if ( $SITE == 'NCCS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`scontrol show hostnames\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID 
+setenv GPU_NODELIST \`scontrol show hostnames\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID
 
 _EOF1_
 
@@ -1963,31 +1963,31 @@ else if ( $SITE == 'NAS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID 
+setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID
 
 _EOF1_
 
 endif # if site
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF2_
-setenv CUDA_VISIBLE_DEVICES 0 
-setenv CUDA_MPS_CLIENT 1 
-setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0 
-setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0 
- 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
- 
-sleep 3 
- 
-foreach node (\$GPU_NODELIST) 
-   echo "Running MPS Server on \$node" 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash" 
-end 
- 
-sleep 3 
+setenv CUDA_VISIBLE_DEVICES 0
+setenv CUDA_MPS_CLIENT 1
+setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0
+setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0
+
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
+
+sleep 3
+
+foreach node (\$GPU_NODELIST)
+   echo "Running MPS Server on \$node"
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash"
+end
+
+sleep 3
 
 _EOF2_
 
@@ -1995,9 +1995,9 @@ cat > $HOMDIR/GPUEND.commands << _EOF3_
 # Remove the MPS Server on Each GPU Node
 # --------------------------------------
 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
 
 _EOF3_
 
@@ -2185,7 +2185,7 @@ s/@OGCM_LM/$OGCM_LM/g
 s/@OGCM_NF/$OGCM_NF/g
 s/@OGCM_GRID_TYPE/$OGCM_GRID_TYPE/g
 s/@BEG_DATE/${BEG_DATE}/g
-s/@END_DATE/${END_DATE}/g 
+s/@END_DATE/${END_DATE}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
@@ -2535,7 +2535,7 @@ if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 #/bin/rm -f    $HOMDIR/dummy
 
 #######################################################################
-#       Modify RC Directory for LM and GOCART.data/GOCART Options     
+#       Modify RC Directory for LM and GOCART.data/GOCART Options
 #######################################################################
 
 # Modify RC Files for LM
@@ -2725,7 +2725,7 @@ if( -e $HOMDIR/chemchem_exit.txt )    /bin/rm $HOMDIR/chemchem_exit.txt
 #                     Copy over Source Tarfile
 #######################################################################
 
-# NOTE: This variable is set at CMake time depending on 
+# NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
 set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
 set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
@@ -2778,7 +2778,7 @@ else if ( ! -d $CLONEDIR ) then
 endif
 
 # ------------------------------------------------------
-# To setup the clone, we need to look in a couple files, 
+# To setup the clone, we need to look in a couple files,
 # so make sure they are readable
 # ------------------------------------------------------
 
@@ -2942,7 +2942,7 @@ EOF
 
 # ------------------------------------------------
 # Create two sets of files so we can copy from one
-# directory to another. 
+# directory to another.
 # ------------------------------------------------
 
 # Then alter them
@@ -3077,7 +3077,7 @@ echo ""
 # Cloned Experiment Source
 # ------------------------
 
-# NOTE: This variable is set at CMake time depending on 
+# NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
 set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
 set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
@@ -3120,9 +3120,9 @@ CONTACTMATT:
 cat <<EOF
 
 It appears your environment is not set correctly to
-run with the GPUs. If you wish to build and run the 
+run with the GPUs. If you wish to build and run the
 model using GPUs, please contact Matt Thompson at:
-    
+
             matthew.thompson@nasa.gov
 
 EOF
