@@ -1328,7 +1328,7 @@ if($APNum == 1) then
  set GOKARTDATA = FALSE
  set GOCART          = ""
  set HIST_GOCART     = ""
- set AERO_PROVIDER   = GOCART
+ set AERO_PROVIDER   = GOCART2G
 endif
 
 if($APNum == 2) then
@@ -1361,28 +1361,16 @@ EMISSIONS:
      echo "-------------------------------------------------"
      echo "Enter the GOCART ${C1}Emission Files${CN} to use: "
      echo "-------------------------------------------------"
-     echo " ${C2}MERRA2${CN} (Default)"
-     echo " ${C2}PIESA${CN}"
-     echo " ${C2}CMIP${CN}"
-     echo " ${C2}NR${CN}"
-     echo " ${C2}MERRA2-DD${CN}"
+     echo " ${C2}AMIP${CN} (Default)"
      echo " ${C2}OPS${CN}"
-     echo " ${C2}CCMI_REF-C1${CN} (1980-2010 out-of-the-box)"
-     echo " ${C2}CCMI_REF-C2${CN} (2020-2100 out-of-the-box)"
      echo "-------------------------------------------------"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = MERRA2
+     set   EMISSIONS = AMIP
      else
      set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
-     if(  $EMISSIONS != MERRA2 & \
-          $EMISSIONS != PIESA & \
-          $EMISSIONS != CMIP &  \
-          $EMISSIONS != NR &  \
-          $EMISSIONS != MERRA2-DD & \
-          $EMISSIONS != OPS & \
-          $EMISSIONS != CCMI_REF-C1 & \
-          $EMISSIONS != CCMI_REF-C2 ) then
+     if(  $EMISSIONS != AMIP & \
+          $EMISSIONS != OPS ) then
      echo
      echo " Sorry. Invalid choice. Try again."
      goto EMISSIONS
