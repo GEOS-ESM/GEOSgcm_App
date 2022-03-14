@@ -209,22 +209,22 @@ set date = `cat cap_restart`
 set nymd0 = $date[1]
 set nhms0 = $date[2]
 
-# Select proper MERRA-2 GOCART Emission RC Files
-# ----------------------------------------------
+# Select proper AMIP GOCART Emission RC Files
+# -------------------------------------------
 setenv EMISSIONS @EMISSIONS
-if( @EMISSIONS =~ MERRA2* ) then
-    set MERRA2_Transition_Date = 20000401
+if( @EMISSIONS == AMIP ) then
+    set AMIP_Transition_Date = 20000301
 
-    if( $nymd0 < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/19600101-20000331
+    if( $nymd0 < ${AMIP_Transition_Date} ) then
+         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/20000401-present
+         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS
     endif
 
     if( $LM == 72 ) then
-        cp --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+        cp --remove-destination ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
-        set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
+        set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
           /bin/rm -f   `basename $file`
           /bin/rm -f    dummy
@@ -240,10 +240,18 @@ endif
 @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
+# Generate the complete ExtData.rc
+# --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc 
 
+# Switch to MODIS v6.1 data after Nov 2021
+set MODIS_Transition_Date = 20211101
+if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymdc ) then
+    cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+else
+    cat $extdata_files > ExtData.rc
+endif
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
