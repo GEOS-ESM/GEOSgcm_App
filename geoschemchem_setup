@@ -2,7 +2,7 @@
 
 #######################################################################
 #                            Define Colors
-#         Note:  For No Colors, set C1 and C2 to NONE 
+#         Note:  For No Colors, set C1 and C2 to NONE
 #######################################################################
 
 set BLACK   = `tput setaf 0`
@@ -106,6 +106,8 @@ setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
+else if ( `echo $BASEDIR | grep -i mpich`    != '') then
+   set MPI = mpich
 else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
    set MPI = openmpi
 else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
@@ -118,7 +120,7 @@ else if ( `echo $BASEDIR | grep -i mpt`      != '') then
    set MPI = mpt
 else
    # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi 
+   set MPI = intelmpi
 endif
 
 #######################################################################
@@ -173,7 +175,7 @@ else
 endif
 
 #######################################################################
-#          Continue to enter in experiment parameters 
+#          Continue to enter in experiment parameters
 #######################################################################
 
 HRCODE:
@@ -218,6 +220,13 @@ if (`echo $Resolution[1] | cut -b1` == "c" ) then
    set  AGCM_IM = $Resolution[1]
 else
    set  AGCM_IM = "c$Resolution[1]"
+endif
+
+# We make a variable here so we can easily discriminate for CS ocean support below
+if ( $AGCM_IM == 'c12' || $AGCM_IM == 'c24' || $AGCM_IM == 'c48' ) then
+   set LOW_ATM_RES = TRUE
+else
+   set LOW_ATM_RES = FALSE
 endif
 
 # These are superfluous for GCM, but needed for SCM (considered latlon)
@@ -370,7 +379,7 @@ if ( $SITE == 'NCCS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas') then
       # NCCS currently recommends that users do not run with
-      # 48 cores per node on SCU16 due to OS issues and 
+      # 48 cores per node on SCU16 due to OS issues and
       # recommends that CPU-intensive works run with 46 or less
       # cores. As 45 is a multiple of 3, it's the best value
       # that doesn't waste too much
@@ -380,54 +389,35 @@ if ( $SITE == 'NCCS' ) then
 
 else if ( $SITE == 'NAS' ) then
 
-   # At NAS, if you build on Rome, we currently limit you to run on
-   # Rome; this is for two reasons. First, Romes are on SLES 15 and
-   # if you build on SLES 15, you can only run on SLES 15. Second,
-   # while a built-on-Rome GEOS might work on Intel processors, it
-   # will (probably) have a different output than if built on Intel
-   # due to different optimization flags.  This would violate the GEOS
-   # capability to get the same answers at NAS and NCCS
-
-   set BUILT_ON_ROME = @CFG_BUILT_ON_ROME@
-
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   if( "$BUILT_ON_ROME" != "TRUE" ) then
-      echo "   ${C2}has (Haswell)${CN}"
-      echo "   ${C2}bro (Broadwell)${CN}"
-      echo "   ${C2}sky (Skylake)${CN} (default)"
-      echo "   ${C2}cas (Cascade Lake)${CN}"
-      echo " "
-      echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
-      echo "       and Ivy Bridge are not supported by current GEOS"
-   else
-      echo "   ${C2}rom (AMD Rome)${CN} (default)"
-   endif
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo " "
+   echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   echo " NOTE 2: GEOS is non-zero-diff when running on AMD Rome"
+   echo "         compared to the other Intel nodes."
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      if( "$BUILT_ON_ROME" != "TRUE" ) then
-         set MODEL = 'sky'
-      else
-         set MODEL = 'rom'
-      endif
+      set MODEL = 'sky'
    endif
 
-   if( "$BUILT_ON_ROME" != "TRUE" ) then
-      if( $MODEL != 'has' & \
-          $MODEL != 'bro' & \
-          $MODEL != 'sky' & \
-          $MODEL != 'cas' ) goto ASKPROC
-   else
-      if( $MODEL != 'rom' ) goto ASKPROC
-   endif
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
 
-   if ($MODEL == bro ) then
-      set MODEL = 'bro_ele'
-   else if ($MODEL == sky) then
+   if ($MODEL == sky) then
       set MODEL = 'sky_ele'
    else if ($MODEL == cas) then
       set MODEL = 'cas_ait'
@@ -441,7 +431,7 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 20
    else if ($MODEL == 'has') then
       set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'bro_ele') then
+   else if ($MODEL == 'bro') then
       set NCPUS_PER_NODE = 28
    else if ($MODEL == 'sky_ele') then
       set NCPUS_PER_NODE = 40
@@ -449,8 +439,6 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
       set NCPUS_PER_NODE = 128
-      # Romes are on a different aoe
-      set MODEL='rom_ait:aoe=sles15'
    endif
 
 else
@@ -535,7 +523,7 @@ if( $OGCM == TRUE ) then
        set Resolution = `echo 360 200`
     else if ( $OCEAN_NAME == "MOM6" ) then
        set Resolution = `echo 360 210`
-    endif 
+    endif
 
     echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
     set Resolution = `echo $<`
@@ -548,23 +536,34 @@ if( $OGCM == TRUE ) then
           set Resolution = `echo 360 200`
        else if ( $OCEAN_NAME == "MOM6" ) then
           set Resolution = `echo 360 210`
-       endif 
+       endif
 
        if( $num == 0 ) then
           set OGCM_IM = $Resolution[1]
           set OGCM_JM = $Resolution[2]
-       else 
+       else
           goto CORSLV
        endif
     endif
+
     set IMO = ${OGCM_IM}
+    if( $IMO < 10 ) then
+       set IMO = 000$IMO
+    else if($IMO < 100) then
+       set IMO = 00$IMO
+    else if($IMO < 1000) then
+       set IMO = 0$IMO
+    endif
+
     set JMO = ${OGCM_JM}
-    if( $IMO < 10   ) set IMO = 000$IMO
-    if( $IMO < 100  ) set IMO =  00$IMO
-    if( $IMO < 1000 ) set IMO =   0$IMO
-    if( $JMO < 10   ) set JMO = 000$JMO
-    if( $JMO < 100  ) set JMO =  00$JMO
-    if( $JMO < 1000 ) set JMO =   0$JMO
+    if( $JMO < 10 ) then
+       set JMO = 000$JMO
+    else if($JMO < 100) then
+       set JMO = 00$JMO
+    else if($JMO < 1000) then
+       set JMO = 0$JMO
+    endif
+
     set OCEAN_RES = TM${IMO}xTM${JMO}
     set OCEAN_TAG  = Reynolds
     set SSTNAME  = "#DELETE"
@@ -580,8 +579,14 @@ if( $OGCM == TRUE ) then
     set   OGCM_LM = 50
     endif
 
-    set OGCM_NX = 36
-    set OGCM_NY = 10
+    # At the moment c12 MOM6 is default 3x2 ocean (and 1x6 atmos)
+    if( $AGCM_IM ==  "c12" ) then
+       set OGCM_NX = 3
+       set OGCM_NY = 2
+    else
+       set OGCM_NX = 36
+       set OGCM_NY = 10
+    endif
     @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
     set OGCM_GRID_TYPE = Tripolar
     set LATLON_OGCM = ""
@@ -661,14 +666,7 @@ else
         set DATAOCEAN = ""
     endif
     if( $HRCODE == 'cs' ) then
-        if( $AGCM_IM == 'c90'  | \
-            $AGCM_IM == 'c180' | \
-            $AGCM_IM == 'c360' | \
-            $AGCM_IM == 'c720'  | \
-            $AGCM_IM == 'c768'  | \
-            $AGCM_IM == 'c1536' | \
-            $AGCM_IM == 'c3072') then
-
+        if( $LOW_ATM_RES == 'FALSE') then
              set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
              set OGCM_JM  = `expr $OGCM_IM \* 6`
              set Resolution = `echo $OGCM_IM $OGCM_JM`
@@ -689,8 +687,8 @@ else
              set OGRIDTYP = "CF"
              set OSTIA    = ""
         else
-             print *, "Cubed-Ocean with ${AGCM_IM} not currently supported"
-             exit
+             echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
+             exit 7
         endif
     endif
 
@@ -767,7 +765,12 @@ if( $AGCM_IM ==  "c12" ) then
 #    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
+     # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
+     if ( $OCEAN_NAME == "MOM6") then
+     set       NX = 1
+     else
      set       NX = 2
+     endif
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -895,7 +898,7 @@ if( $AGCM_IM == "c360" ) then
 #    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 12 
+     set       NX = 12
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -972,7 +975,7 @@ if( $AGCM_IM == "c1440" ) then
 #    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30 
+     set       NX = 30
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1184,20 +1187,27 @@ endif
 # ----------------------
 if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
-    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN: Catch-Carbon Model)"
+    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"
     set   LSM_CHOICE = $<
     if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
-    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 ) then
+    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 &  $LSM_CHOICE != 3 ) then
         echo
-        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} or ${C2}2${CN}!"
+        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} , ${C2}2${CN} or ${C2}3${CN}!"
         goto LSM_CHOICE
     else
         echo
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
+    if( $LSM_CHOICE == 3 ) set HIST_CATCHCN = ""
     if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
+    if( $LSM_CHOICE == 3 ) set GCMRUN_CATCHCN = ""
+    if( $LSM_CHOICE == 2 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM40 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    else if ( $LSM_CHOICE == 3 ) then
+      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM45 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
+    endif
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
@@ -1242,15 +1252,15 @@ set HIST_GOCART     = ""
 # --------------
 EMISSIONS:
      set   EMISSIONS = ''
-     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}MERRA2${CN} (Default), ${C2}PIESA${CN}, ${C2}CMIP${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN} or ${C2}OPS${CN}:"
+     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} (Default) or ${C2}OPS${CN}:"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = MERRA2
+     set   EMISSIONS = AMIP
      else
      set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
-     if(  $EMISSIONS != CMIP & $EMISSIONS != MERRA2 & $EMISSIONS != NR &  $EMISSIONS != MERRA2-DD & $EMISSIONS != PIESA & $EMISSIONS != OPS ) then
+     if(  $EMISSIONS != OPS & $EMISSIONS != AMIP) then
      echo
-     echo "${C1}Emission Files${CN} must be equal to:  ${C2}CMIP${CN}, ${C2}MERRA2${CN}, ${C2}NR${CN}, ${C2}MERRA2-DD${CN}, ${C2}PIESA${CN}, or ${C2}OPS${CN}!"
+     echo "${C1}Emission Files${CN} must be equal to:  ${C2}AMIP${CN} or ${C2}OPS${CN}!"
      goto EMISSIONS
      else
      echo
@@ -1273,7 +1283,7 @@ EMISSIONS:
 
 # AERO Provider
 # -------------
-     set AERO_PROVIDER = GOCART
+     set AERO_PROVIDER = GOCART2G
 #AERO:
 #echo "Enter the ${C1}AERO_PROVIDER${CN}: ${C2}GOCART${CN} (Default) or ${C2}GOCART.data${CN}:"
 #      set AERO_PROVIDER  = $<
@@ -1404,9 +1414,7 @@ if( $SITE == 'NAS' ) then
               endif
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
-              setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
-              setenv TAREXEC    mtar                                                   # Tar utility for large archives
+              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -1447,15 +1455,13 @@ else if( $SITE == 'NCCS' ) then
               setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
-                   setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               endif
-              setenv CHMDIR     $SHARE/dao_ops/fvInput_nc3                             # locations of Aerosol Chemistry BCs
+              setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  /discover/nobackup/yvikhlia/coupled/Forcings           # Coupled Ocean/Atmos Forcing
-              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar
+              setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
 else if( $SITE == 'AWS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
@@ -1489,10 +1495,8 @@ else if( $SITE == 'AWS' ) then
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
 
-              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar                                                    # Tar utility for large archives
               # By default on AWS, just ignore IOSERVER for now until testing
               set USE_IOSERVER = 0
               set IOS_NDS = 0
@@ -1531,13 +1535,11 @@ else
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/Forcings            # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
               set NX = 1
               set NY = 6
               set CNV_NX = ${NX}
               set CNV_NY = ${NY}
-              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar                                                    # Tar utility for large archives
               # By default on desktop, just ignore IOSERVER for now
               set USE_IOSERVER = 0
               set IOS_NDS = 0
@@ -1639,7 +1641,7 @@ while( $check == FALSE )
   else
        setenv HOMDIR  $HOMDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $HOMDIR` ) then
        echo "\!\! The ${C1}HOME${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1672,7 +1674,7 @@ while( $check == FALSE )
   else
        setenv EXPDIR  $EXPDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $EXPDIR` ) then
        echo "\!\! The ${C1}EXPERIMENT${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1727,7 +1729,7 @@ echo $EXPDIRroot > $HOME/.EXPDIRroot
 setenv CNVDIR $EXPDIR/convert
 
 #######################################################################
-#                       Locate Build Directory  
+#                       Locate Build Directory
 #######################################################################
 
 # GEOSagcm Build Directory
@@ -1887,7 +1889,7 @@ cat > $HOMDIR/SETENV.commands << EOF
 
    #setenv MPI_DISPLAY_SETTINGS 1
    #setenv MPI_VERBOSE 1
-   
+
    unsetenv MPI_MEMMAP_OFF
    unsetenv MPI_NUM_MEMORY_REGIONS
    setenv MPI_XPMEM_ENABLED yes
@@ -1910,7 +1912,6 @@ EOF
 else if( $MPI == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_DAPL_UD enable
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
 
@@ -1928,7 +1929,6 @@ setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
 setenv I_MPI_EXTRA_FILESYSTEM 1
 setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-setenv ROMIO_FSTYPE_FORCE "gpfs:"
 EOF
 
 endif # if NCCS
@@ -1954,8 +1954,8 @@ if ( $SITE == 'NCCS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`scontrol show hostnames\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID 
+setenv GPU_NODELIST \`scontrol show hostnames\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID
 
 _EOF1_
 
@@ -1963,31 +1963,31 @@ else if ( $SITE == 'NAS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID 
+setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID
 
 _EOF1_
 
 endif # if site
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF2_
-setenv CUDA_VISIBLE_DEVICES 0 
-setenv CUDA_MPS_CLIENT 1 
-setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0 
-setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0 
- 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
- 
-sleep 3 
- 
-foreach node (\$GPU_NODELIST) 
-   echo "Running MPS Server on \$node" 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash" 
-end 
- 
-sleep 3 
+setenv CUDA_VISIBLE_DEVICES 0
+setenv CUDA_MPS_CLIENT 1
+setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0
+setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0
+
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
+
+sleep 3
+
+foreach node (\$GPU_NODELIST)
+   echo "Running MPS Server on \$node"
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash"
+end
+
+sleep 3
 
 _EOF2_
 
@@ -1995,9 +1995,9 @@ cat > $HOMDIR/GPUEND.commands << _EOF3_
 # Remove the MPS Server on Each GPU Node
 # --------------------------------------
 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
 
 _EOF3_
 
@@ -2185,7 +2185,7 @@ s/@OGCM_LM/$OGCM_LM/g
 s/@OGCM_NF/$OGCM_NF/g
 s/@OGCM_GRID_TYPE/$OGCM_GRID_TYPE/g
 s/@BEG_DATE/${BEG_DATE}/g
-s/@END_DATE/${END_DATE}/g 
+s/@END_DATE/${END_DATE}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
@@ -2207,11 +2207,9 @@ s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
 
-s?@CPEXEC?$CPEXEC?g
-s?@TAREXEC?$TAREXEC?g
-
 s/@MP_MG1/$MP_MG1/g
 s/@MP_GFDL/$MP_GFDL/g
+s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
 s?@FV_ZTRACER?$FV_ZTRACER?g
@@ -2537,7 +2535,7 @@ if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 #/bin/rm -f    $HOMDIR/dummy
 
 #######################################################################
-#       Modify RC Directory for LM and GOCART.data/GOCART Options     
+#       Modify RC Directory for LM and GOCART.data/GOCART Options
 #######################################################################
 
 # Modify RC Files for LM
@@ -2727,7 +2725,7 @@ if( -e $HOMDIR/chemchem_exit.txt )    /bin/rm $HOMDIR/chemchem_exit.txt
 #                     Copy over Source Tarfile
 #######################################################################
 
-# NOTE: This variable is set at CMake time depending on 
+# NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
 set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
 set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
@@ -2780,7 +2778,7 @@ else if ( ! -d $CLONEDIR ) then
 endif
 
 # ------------------------------------------------------
-# To setup the clone, we need to look in a couple files, 
+# To setup the clone, we need to look in a couple files,
 # so make sure they are readable
 # ------------------------------------------------------
 
@@ -2944,7 +2942,7 @@ EOF
 
 # ------------------------------------------------
 # Create two sets of files so we can copy from one
-# directory to another. 
+# directory to another.
 # ------------------------------------------------
 
 # Then alter them
@@ -3079,7 +3077,7 @@ echo ""
 # Cloned Experiment Source
 # ------------------------
 
-# NOTE: This variable is set at CMake time depending on 
+# NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
 set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
 set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
@@ -3122,9 +3120,9 @@ CONTACTMATT:
 cat <<EOF
 
 It appears your environment is not set correctly to
-run with the GPUs. If you wish to build and run the 
+run with the GPUs. If you wish to build and run the
 model using GPUs, please contact Matt Thompson at:
-    
+
             matthew.thompson@nasa.gov
 
 EOF

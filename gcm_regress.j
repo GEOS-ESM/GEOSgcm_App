@@ -64,17 +64,17 @@ cd $HOMDIR
     set files = `ls -1 *.rc`
     foreach file ($files)
             set fname = `echo $file | cut -d "." -f1`
-           @CPEXEC $fname.rc $EXPDIR/regress
+           cp $fname.rc $EXPDIR/regress
     end
 cd $EXPDIR/regress
 
 /bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
-@CPEXEC $EXPDIR/GEOSgcm.x   $EXPDIR/regress
-@CPEXEC $EXPDIR/linkbcs     $EXPDIR/regress
-@CPEXEC $HOMDIR/*.yaml      $EXPDIR/regress
-@COUPLED @CPEXEC $HOMDIR/*.nml       $EXPDIR/regress
-@MOM6@CPEXEC $HOMDIR/MOM_input   $EXPDIR/regress
-@MOM6@CPEXEC $HOMDIR/MOM_override $EXPDIR/regress
+cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
+cp $EXPDIR/linkbcs     $EXPDIR/regress
+cp $HOMDIR/*.yaml      $EXPDIR/regress
+@COUPLED cp $HOMDIR/*.nml       $EXPDIR/regress
+@MOM6cp $HOMDIR/MOM_input   $EXPDIR/regress
+@MOM6cp $HOMDIR/MOM_override $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
 
@@ -114,12 +114,12 @@ end
 # Copy Restarts to Regress directory
 # ----------------------------------
 foreach rst ( $rst_file_names )
-       @CPEXEC $EXPDIR/$rst $EXPDIR/regress
+       cp $EXPDIR/$rst $EXPDIR/regress
 end
-@CPEXEC $EXPDIR/cap_restart $EXPDIR/regress
+cp $EXPDIR/cap_restart $EXPDIR/regress
 
 @COUPLED /bin/mkdir INPUT
-@COUPLED @CPEXEC $EXPDIR/RESTART/* INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
@@ -209,26 +209,26 @@ set date = `cat cap_restart`
 set nymd0 = $date[1]
 set nhms0 = $date[2]
 
-# Select proper MERRA-2 GOCART Emission RC Files
-# ----------------------------------------------
+# Select proper AMIP GOCART Emission RC Files
+# -------------------------------------------
 setenv EMISSIONS @EMISSIONS
-if( @EMISSIONS =~ MERRA2* ) then
-    set MERRA2_Transition_Date = 20000401
+if( @EMISSIONS == AMIP ) then
+    set AMIP_Transition_Date = 20000301
 
-    if( $nymd0 < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/19600101-20000331
+    if( $nymd0 < ${AMIP_Transition_Date} ) then
+         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS/20000401-present
+         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS
     endif
 
     if( $LM == 72 ) then
-        @CPEXEC --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+        cp --remove-destination ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
-        set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
+        set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
           /bin/rm -f   `basename $file`
           /bin/rm -f    dummy
-          @CPEXEC $file dummy
+          cp $file dummy
               cat       dummy | sed -e "s|/L72/|/L${LM}/|g" | sed -e "s|z72|z${LM}|g" > `basename $file`
         end
     endif
@@ -240,10 +240,18 @@ endif
 @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
+# Generate the complete ExtData.rc
+# --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc 
 
+# Switch to MODIS v6.1 data after Nov 2021
+set MODIS_Transition_Date = 20211101
+if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymd0 ) then
+    cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+else
+    cat $extdata_files > ExtData.rc
+endif
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
@@ -275,9 +283,9 @@ endif
 
 set test_duration = 240000
 
-@CPEXEC     CAP.rc      CAP.rc.orig
-@CPEXEC    AGCM.rc     AGCM.rc.orig
-@CPEXEC HISTORY.rc0 HISTORY.rc
+cp     CAP.rc      CAP.rc.orig
+cp    AGCM.rc     AGCM.rc.orig
+cp HISTORY.rc0 HISTORY.rc
 
 set           NX0 = `grep "^ *NX:" AGCM.rc.orig | cut -d':' -f2`
 set           NY0 = `grep "^ *NY:" AGCM.rc.orig | cut -d':' -f2`
@@ -332,9 +340,9 @@ set test_duration = 180000
 /bin/rm              cap_restart
 echo $nymd0 $nhms0 > cap_restart
 
-@CPEXEC     CAP.rc.orig  CAP.rc
-@CPEXEC    AGCM.rc.orig AGCM.rc
-@CPEXEC HISTORY.rc0  HISTORY.rc
+cp     CAP.rc.orig  CAP.rc
+cp    AGCM.rc.orig AGCM.rc
+cp HISTORY.rc0  HISTORY.rc
 
 ./strip CAP.rc
 set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
@@ -385,7 +393,7 @@ while ( $n <= $numchk )
 @ n = $n + 1
 end
 
-@COUPLED @CPEXEC RESTART/* INPUT
+@COUPLED cp RESTART/* INPUT
 
 ##################################################################
 ######
