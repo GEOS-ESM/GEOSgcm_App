@@ -32,7 +32,6 @@ handlers:
 
    console:
       class: streamhandler
-#      formatter: legacy
       formatter: basic
       unit: OUTPUT_UNIT
       level: INFO
@@ -87,6 +86,12 @@ loggers:
        
    MAPL:
        handlers: [mpi_shared]
+       level: WARNING
+       root_level: INFO
+
+   MAPL.PROF:
+       handlers: [console_plain]
+       propagate: FALSE
        level: WARNING
        root_level: INFO
 
