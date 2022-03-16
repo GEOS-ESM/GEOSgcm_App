@@ -576,30 +576,29 @@ if( @OCEANtag != DE0360xPE0180 ) then
     endif
 endif
 
-# Select proper MERRA-2 GOCART Emission RC Files
-# (NOTE: MERRA2-DD has same transition date)
-# ----------------------------------------------
-if( ${EMISSIONS} == MERRA2 | \
-    ${EMISSIONS} == MERRA2-DD ) then
-    set MERRA2_Transition_Date = 20000401
+# Select proper AMIP GOCART Emission RC Files
+# -------------------------------------------
+if( ${EMISSIONS} == AMIP ) then
+    set AMIP_Transition_Date = 20000301
 
-    if( $nymdc < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/19600101-20000331
-         if( $nymdf > ${MERRA2_Transition_Date} ) then
-          set nymdf = ${MERRA2_Transition_Date}
+    # Before 2000-03-01, use AMIP.20C
+    if( $nymdc < ${AMIP_Transition_Date} ) then
+         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
+         if( $nymdf > ${AMIP_Transition_Date} ) then
+          set nymdf = ${AMIP_Transition_Date}
           set oldstring = `grep '^\s*END_DATE:' CAP.rc`
           set newstring = "END_DATE: $nymdf $nhmsf"
           /bin/mv CAP.rc CAP.tmp
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/20000401-present
+         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS
     endif
 
     if( $AGCM_LM == 72 ) then
-        cp --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+        cp --remove-destination ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
-        set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
+        set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
           /bin/rm -f   `basename $file`
           /bin/rm -f    dummy
@@ -637,7 +636,14 @@ if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv       
 # --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc
+
+# Switch to MODIS v6.1 data after Nov 2021
+set MODIS_Transition_Date = 20211101
+if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymdc ) then
+    cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+else
+    cat $extdata_files > ExtData.rc
+endif
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -715,7 +721,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
    set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-         
+
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
