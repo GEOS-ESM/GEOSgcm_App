@@ -1,6 +1,5 @@
 &fv_core_nml
   k_split     = 2
-  @FV_N_SPLIT
   @FV_MAKENH
   @FV_HYDRO
   @FV_SATADJ
