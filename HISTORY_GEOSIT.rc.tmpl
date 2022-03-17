@@ -86,12 +86,16 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
              'trb_tavg_3hr_glo_C180x180x6_v73_NCKS'
              'tdt_tavg_3hr_glo_L576x361_v72_NCKS'
              'tdt_tavg_3hr_glo_C180x180x6_v72_NCKS'
-             'udt_tavg_3hr_glo_L576x361_v72_NCKS'
-             'udt_tavg_3hr_glo_C180x180x6_v72_NCKS'
-             'qdt_tavg_3hr_glo_L576x361_v72_NCKS'
-             'qdt_tavg_3hr_glo_C180x180x6_v72_NCKS'
-             'odt_tavg_3hr_glo_L576x361_v72_NCKS'
-             'odt_tavg_3hr_glo_C180x180x6_v72_NCKS'
+
+#  The following 6 files were dropped from the GEOS-IT spec.
+#  No subscribed users.
+#            'udt_tavg_3hr_glo_L576x361_v72_NCKS'
+#            'udt_tavg_3hr_glo_C180x180x6_v72_NCKS'
+#            'qdt_tavg_3hr_glo_L576x361_v72_NCKS'
+#            'qdt_tavg_3hr_glo_C180x180x6_v72_NCKS'
+#            'odt_tavg_3hr_glo_L576x361_v72_NCKS'
+#            'odt_tavg_3hr_glo_C180x180x6_v72_NCKS'
+
              'slv_tavg_1hr_glo_L576x361_slv_NCKS'
              'slv_tavg_1hr_glo_C180x180x6_slv_NCKS'
              'flx_tavg_1hr_glo_L576x361_slv_NCKS'
@@ -245,6 +249,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                   'ZL'     , 'DYN'        , 'H'   ,
                                                   'O3'     , 'CHEMISTRY'  ,
                                                   'EPV'    , 'DYN'        ,
+                                                  'FCLD'   , 'MOIST'      ,  'CLOUD' ,
                                                   ::
 
   asm_inst_3hr_glo_C180x180x6_v72_NCKS.format:     'CFIO' ,
@@ -273,6 +278,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                    'ZL'     , 'DYN'        , 'H'   ,
                                                    'O3'     , 'CHEMISTRY'  ,
                                                    'EPV'    , 'DYN'        ,
+                                                   'FCLD'   , 'MOIST'      ,  'CLOUD' ,
                                                    ::
 
   asm_tavg_3hr_glo_L576x361_v72_NCKS.format:      'CFIO' ,
@@ -1105,6 +1111,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                   'TQI'            , 'AGCM'     ,
                                                   'TQL'            , 'AGCM'     ,
                                                   'TOX'            , 'AGCM'     ,
+                                                  'TO3'            , 'PCHEM'      ,
+                                                  'PPBL'           , 'TURBULENCE' , 'PBLTOP'   ,
                                                   ::
 
   slv_tavg_1hr_glo_C180x180x6_slv_NCKS.format:     'CFIO' ,
@@ -1152,6 +1160,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                    'TQI'            , 'AGCM'     ,
                                                    'TQL'            , 'AGCM'     ,
                                                    'TOX'            , 'AGCM'     ,
+                                                   'TO3'            , 'PCHEM'      ,
+                                                   'PPBL'           , 'TURBULENCE' , 'PBLTOP'   ,
                                                    ::
 
   flx_tavg_1hr_glo_L576x361_slv_NCKS.format:      'CFIO' ,
@@ -1199,10 +1209,11 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                   'TPREC'                              , 'MOIST'       , 'PRECTOT'    ,
                                                   'PGENTOT'                            , 'MOIST'       ,
                                                   'PREVTOT'                            , 'MOIST'       ,
-                                                  'CU2DRAINMOVE'                       , 'MOIST'       ,
-                                                  'CU2DSNOWMOVE'                       , 'MOIST'       ,
-                                                  'LS_PRCP+CU2DRAINMOVE+CU2DSNOWMOVE'  , 'MOIST'       , 'LSORIG'     ,
-                                                  'CN_PRCP-CU2DRAINMOVE-CU2DSNOWMOVE'  , 'MOIST'       , 'CNORIG'     ,
+                                                  'LS_ARF'                             , 'MOIST'       , 'FRCLS'      ,
+                                                  'AN_ARF'                             , 'MOIST'       , 'FRCAN'      ,
+                                                  'CN_ARF'                             , 'MOIST'       , 'FRCCN'      ,
+                                                  'DFNIR'                              , 'SOLAR'       , 'NIRDF'      ,
+                                                  'DRNIR'                              , 'SOLAR'       , 'NIRDR'      ,
                                                   ::
 
   flx_tavg_1hr_glo_C180x180x6_slv_NCKS.format:     'CFIO' ,
@@ -1249,10 +1260,11 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                    'TPREC'                              , 'MOIST'       , 'PRECTOT'    ,
                                                    'PGENTOT'                            , 'MOIST'       ,
                                                    'PREVTOT'                            , 'MOIST'       ,
-                                                   'CU2DRAINMOVE'                       , 'MOIST'       ,
-                                                   'CU2DSNOWMOVE'                       , 'MOIST'       ,
-                                                   'LS_PRCP+CU2DRAINMOVE+CU2DSNOWMOVE'  , 'MOIST'       , 'LSORIG'     ,
-                                                   'CN_PRCP-CU2DRAINMOVE-CU2DSNOWMOVE'  , 'MOIST'       , 'CNORIG'     ,
+                                                   'LS_ARF'                             , 'MOIST'       , 'FRCLS'      ,
+                                                   'AN_ARF'                             , 'MOIST'       , 'FRCAN'      ,
+                                                   'CN_ARF'                             , 'MOIST'       , 'FRCCN'      ,
+                                                   'DFNIR'                              , 'SOLAR'       , 'NIRDF'      ,
+                                                   'DRNIR'                              , 'SOLAR'       , 'NIRDR'      ,
                                                    ::
 
   rad_tavg_1hr_glo_L576x361_slv_NCKS.format:      'CFIO' ,
@@ -1578,7 +1590,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                   'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE'  ,
                                                   'FRACI'        , 'SURFACE'  , 'FRSEAICE'         ,
                                                   'TSKINW'       , 'SURFACE'  , 'TSKINWTR'         ,
-                                                  'TSKINI'       , 'SURFACE'  , 'TSKINICE'         ,
+                                                  'TSKINICE'     , 'SURFACE'  ,
 # additonal exports for skin SST
                                                   'EVAPOUT'      , 'SURFACE'  ,
                                                   'FRLAND'       , 'SURFACE'  ,
@@ -1633,7 +1645,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                    'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE'  ,
                                                    'FRACI'        , 'SURFACE'  , 'FRSEAICE'         ,
                                                    'TSKINW'       , 'SURFACE'  , 'TSKINWTR'         ,
-                                                   'TSKINI'       , 'SURFACE'  , 'TSKINICE'         ,
+                                                   'TSKINICE'     , 'SURFACE'  ,
 # additonal exports for skin SST
                                                    'EVAPOUT'      , 'SURFACE'  ,
                                                    'FRLAND'       , 'SURFACE'  ,
@@ -1690,7 +1702,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE'  ,
                                'FRACI'        , 'SURFACE'  , 'FRSEAICE'         ,
                                'TSKINW'       , 'SURFACE'  , 'TSKINWTR'         ,
-                               'TSKINI'       , 'SURFACE'  , 'TSKINICE'         ,
+                               'TSKINICE'     , 'SURFACE'  ,
 # additonal exports for skin SST
                                'EVAPOUT'      , 'SURFACE'  ,
                                'FRLAND'       , 'SURFACE'  ,
@@ -3079,6 +3091,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                     'ZL'     , 'DYN'        , 'H'   ,
                                                     'O3'     , 'CHEMISTRY'  ,
                                                     'EPV'    , 'DYN'        ,
+                                                    'FCLD'       , 'MOIST'      ,  'CLOUD' ,
                                                     ::
 
   slv_tavg_1hr_glo_L576x361_slv_NCKS+-.format:      'CFIO' ,
@@ -3127,6 +3140,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42_NCKS'
                                                     'TQI'            , 'AGCM'     ,
                                                     'TQL'            , 'AGCM'     ,
                                                     'TOX'            , 'AGCM'     ,
+                                                    'TO3'            , 'PCHEM'      ,
+                                                    'PPBL'           , 'TURBULENCE' , 'PBLTOP'   ,
                                                     ::
 
   flx_tavg_1hr_glo_L576x361_slv_NCKS+-.format:      'CFIO' ,
