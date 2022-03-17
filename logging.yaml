@@ -8,7 +8,7 @@ locks:
 
 ###############################      
 formatters:
-   legacy:
+   plain:
       class: Formatter
       format:  '%(message)a'
 
@@ -35,7 +35,13 @@ handlers:
       formatter: basic
       unit: OUTPUT_UNIT
       level: INFO
-      
+ 
+   console_plain:
+      class: streamhandler
+      formatter: plain
+      unit: OUTPUT_UNIT
+      level: INFO
+ 
       
    warnings:
       class:  FileHandler
