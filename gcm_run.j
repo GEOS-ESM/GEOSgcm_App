@@ -52,6 +52,9 @@ setenv  HOMDIR  @HOMDIR
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
 
+# Run GSI?
+set RUN_GSI = 0
+
 #######################################################################
 #                 Create Experiment Sub-Directories
 #######################################################################
@@ -251,6 +254,12 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 endif
 
+# submit GSI standalone run, will run in parallel 
+if ( $RUN_GSI == 1 ) then
+   echo "submitting gsi job to run in parallel..."
+   sbatch gsi_sa.j
+endif
+
 #######################################################################
 #   Move to Scratch Directory and Copy RC Files from Home Directory
 #######################################################################
@@ -296,6 +305,30 @@ done < \$1.tmp
 exit
 EOF
 chmod +x $FILE
+
+#######################################################################
+#                  Setup the Analysis 
+#######################################################################
+if ( $RUN_GSI == 1 ) then
+   # Specify second HISTORY instance to output background files and turn on GSI coupling
+   echo 'REPLAY_HISTORY_RC: HISTORY_predictor.rc' >> AGCM.rc
+   echo ' ' >> AGCM.rc
+   echo 'GSI_COUPLING: 1' >> AGCM.rc
+   echo 'GSI_INTERVAL_SEC: 30' >> AGCM.rc
+   echo 'GSI_MAXCHECKS: 120' >> AGCM.rc
+
+   # Create a fake restart entry for the background and increment files
+   # ------------------------------------------------------------------
+   echo 'CODAS_BACKGROUND_RESTART_FILE:           codas_background_rst'        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_RESTART_TYPE:           ptar'                        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_FILE:        codas_background_checkpoint' >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_TYPE:        ptar'                        >> AGCM.rc
+
+   echo 'CODAS_INCREMENT_RESTART_FILE:            codas_increment_rst'         >> AGCM.rc
+   echo 'CODAS_INCREMENT_RESTART_TYPE:            pnc4'                        >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_FILE:         codas_increment_checkpoint'  >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_TYPE:         pnc4'                        >> AGCM.rc
+endif
 
 #######################################################################
 #              Create HISTORY Collection Directories
@@ -810,6 +843,13 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
+
+# write geos complete file (this tells the GSI run to stop)
+if ( $RUN_GSI == 1 ) then
+   set geos_done = "geos_run.done"
+   touch ${geos_done}
+   echo "written geos checkpoint file: ${geos_done}"
+endif
  
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
