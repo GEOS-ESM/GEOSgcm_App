@@ -18,8 +18,10 @@
 /
 
 &fms_nml
-  print_memory_usage=.false.
+  print_memory_usage=.true.
   domains_stack_size = 24000000
+  clock_grain='MODULE',
+  clock_flags='DETAILED',
 /
 
 &gfdl_cloud_microphysics_nml
