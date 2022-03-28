@@ -15,10 +15,11 @@
  &fms_io_nml
 /
 
- &fms_nml
-       clock_grain = 'ROUTINE'
-       domains_stack_size = 24000000
-       print_memory_usage = .false.
+&fms_nml
+  print_memory_usage=.true.
+  domains_stack_size = 24000000
+  clock_grain='MODULE',
+  clock_flags='DETAILED',
 /
 
 &gfdl_cloud_microphysics_nml
