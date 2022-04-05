@@ -227,8 +227,10 @@ while ( ! -f $geos_done )
    ./ana2inc.x
 
    # Copy increment file to holding directory and rename to full date stamp for proper reference
-   /bin/cp ana.eta.nc4 $EXPDIR/holding/ana2inc/$EXPID.ana.eta.${nymdm}_${hourm}00z.nc4
-   /bin/cp inc.eta.nc4 $EXPDIR/holding/ana2inc/$EXPID.inc.eta.${nymdm}_${hourm}00z.nc4
+   #/bin/cp ana.eta.nc4 $EXPDIR/holding/ana2inc/$EXPID.ana.eta.${nymdm}_${hourm}00z.nc4
+   #/bin/cp inc.eta.nc4 $EXPDIR/holding/ana2inc/$EXPID.inc.eta.${nymdm}_${hourm}00z.nc4
+   /usr/local/other/nco/5.0.1/bin/ncks -4 -L 1 ana.eta.nc4 $EXPDIR/holding/ana2inc/$EXPID.ana.eta.${nymdm}_${hourm}00z.nc4
+   /usr/local/other/nco/5.0.1/bin/ncks -4 -L 1 inc.eta.nc4 $EXPDIR/holding/ana2inc/$EXPID.inc.eta.${nymdm}_${hourm}00z.nc4
    /bin/mv inc.eta.nc4 $GEOSDIR/$EXPID.inc.eta.${nymdm}_${hourm}00z.nc4
 
    # Accumulate statistics and diagnostics 
