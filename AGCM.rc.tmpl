@@ -33,11 +33,11 @@ EOT: .TRUE.
 ORBIT_ANAL2B: .TRUE.
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
-@MP_MGCLDMICRO: 2MOMENT
+@MP_MGCLDMICRO: MGB2_2M
 @MP_MGMGVERSION: @MGVERSION
 
 # UNCOMMENT to use GFDL 6-phase cloud microphysics
-@MP_GFDLCLDMICRO: GFDL
+@MP_GFDLCLDMICRO: GFDL_1M
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
 @MP_GFDLHYDROSTATIC: @GFDL_HYDRO
 
@@ -49,6 +49,9 @@ USE_AEROSOL_NN: @USE_AEROSOL_NN
 # The options are RAS or GF
 # ----------------------------------------
 CONVPAR_OPTION: GF
+
+# UW shallow cumulus settings
+SHALLOW_OPTION: UW
 
 # Override default aerosol convective scavenging and use dz method
 USE_TRACER_SCAVEN: 1
@@ -64,9 +67,6 @@ DICYCLE: 1
 DEEP: 1
 SHALLOW: 0
 CONGESTUS: 1
-
-# UW shallow cumulus settings
-DOSHLW: 1
 
 # Choice for the closures:
 # ----------------------------------------
