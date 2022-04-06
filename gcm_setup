@@ -1074,7 +1074,7 @@ if ($AGCM_IM < 90) then
 echo "   ${C2}Running         ${CN} -- $NDS_S Nodes ($MPI_S-MPI x $OMP_THREADS-OMP) = $TSK_S Cores"
 
 @ NX             = $NX_S
-@ NY             = $NY_S
+@ NY             = `expr $NY_S \* 6`
 @ NODES_R        = $NDS_S
 @ MPI_PER_NODE_R = $MPI_S
 @ MODEL_NPES     = $TSK_S
