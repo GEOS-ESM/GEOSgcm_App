@@ -1336,7 +1336,7 @@ set PCHEM_CLIM_YEARS = ""
 
 if( $GOKART == TRUE ) then
 
-set USE_AEROSOL_NN = 1
+set USE_AEROSOL_NN = ".true."
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .false."
 
@@ -1404,7 +1404,7 @@ set  EMISSIONS       = ""
 set  GOCART          = "#"
 set  HIST_GOCART     = "#DELETE"
 
-set USE_AEROSOL_NN = 0
+set USE_AEROSOL_NN = ".false."
 set GFDL_PROG_CCN = "prog_ccn = .false."
 set GFDL_USE_CCN  = "use_ccn = .true."
 # GOCART.data uses MERRA2OX currently
