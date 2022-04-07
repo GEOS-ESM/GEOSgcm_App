@@ -527,7 +527,12 @@ if( $OGCM == TRUE ) then
     if ( $OCEAN_NAME == "MOM" ) then
        set Resolution = `echo 360 200`
     else if ( $OCEAN_NAME == "MOM6" ) then
-       set Resolution = `echo 360 210`
+       # c12 MOM6 is default 72x36
+       if( $AGCM_IM ==  "c12" ) then
+          set Resolution = `echo 72 36`
+       else
+          set Resolution = `echo 360 210`
+       endif
     endif
 
     echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
@@ -540,7 +545,12 @@ if( $OGCM == TRUE ) then
        if ( $OCEAN_NAME == "MOM" ) then
           set Resolution = `echo 360 200`
        else if ( $OCEAN_NAME == "MOM6" ) then
-          set Resolution = `echo 360 210`
+          # c12 MOM6 is default 72x36
+          if( $AGCM_IM ==  "c12" ) then
+             set Resolution = `echo 72 36`
+          else
+             set Resolution = `echo 360 210`
+          endif
        endif
 
        if( $num == 0 ) then
