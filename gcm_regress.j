@@ -118,6 +118,11 @@ foreach rst ( $rst_file_names )
 end
 cp $EXPDIR/cap_restart $EXPDIR/regress
 
+# Get proper ridge scheme GWD internal restart
+# --------------------------------------------
+/bin/rm $EXPDIR/regress/gwd_internal_rst
+/bin/cp /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE/gwd_internal_c${IM} $EXPDIR/regress/gwd_internal_rst
+
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
@@ -154,7 +159,7 @@ else
 endif
 
 #######################################################################
-#                 Create Simple History for Efficiency 
+#                 Create Simple History for Efficiency
 #######################################################################
 
 set         FILE = HISTORY.rc0
@@ -272,7 +277,7 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
-endif 
+endif
 
 ##################################################################
 ######
@@ -303,7 +308,7 @@ set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
 $RUN_CMD $NPES ./GEOSgcm.x
-                                                                                                                      
+
 
 set date = `cat cap_restart`
 set nymde = $date[1]
@@ -446,7 +451,7 @@ set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
 $RUN_CMD $NPES ./GEOSgcm.x
-                                                                                                                      
+
 set date = `cat cap_restart`
 set nymde = $date[1]
 set nhmse = $date[2]
@@ -469,7 +474,7 @@ foreach chk ( $chk_file_names )
   set file1 = ${chk}.${nymde}_${nhmse}.1
   set file2 = ${chk}.${nymde}_${nhmse}.2
   if( -e $file1 && -e $file2 ) then
-                               set check = true 
+                               set check = true
       foreach exempt (${EXEMPT_chk})
          if( $chk == $exempt ) set check = false
       end
