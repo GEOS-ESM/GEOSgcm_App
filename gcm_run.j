@@ -796,7 +796,7 @@ setenv OMP_NUM_THREADS 1
 
 # Create new ExtData.yaml file
 # ----------------------------
-cat << _EOF_ > make_extdata_yaml
+cat << '_EOF_' > make_extdata_yaml
 #!/usr/bin/env bash
 
 yaml_files=`ls *_ExtData.yaml`
@@ -806,7 +806,7 @@ for file in $yaml_files;
 do
     printf "  - $file\n" >> extdata.yaml
 done
-_EOF_
+'_EOF_'
 
 chmod +x make_extdata_yaml
 ./make_extdata_yaml
