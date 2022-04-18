@@ -1778,8 +1778,10 @@ echo $GROUP > $HOME/.GROUProot
 
   mkdir -p                                                $EXPDIR/RC
   rsync -ax                  $GEOSDIR/etc/*.rc            $EXPDIR/RC
+  rsync -ax                  $GEOSDIR/etc/*.yaml          $EXPDIR/RC
   if( .$EMISSIONS != . ) then
                      /bin/cp $GEOSDIR/etc/$EMISSIONS/*.rc $EXPDIR/RC
+                     /bin/cp $GEOSDIR/etc/$EMISSIONS/*.yaml $EXPDIR/RC
   else
      set EMISSIONS = g5chem
   endif
