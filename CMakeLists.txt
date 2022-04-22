@@ -4,6 +4,9 @@ ecbuild_add_executable (
   LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
   )
 
+target_link_libraries(GEOSgcm.x -L/discover/swdev/gmao_SIteam/other/SLES12.3/xgboost/0.81/ifort_18.0.5.274/lib)
+set_target_properties(GEOSgcm.x PROPERTIES LINK_FLAGS "-lxgboost")
+
 ecbuild_add_executable (
   TARGET idfupd.x
   SOURCES idfupd.F90
