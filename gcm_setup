@@ -1240,16 +1240,13 @@ EMISSIONS:
      echo
      endif
      endif
-     if(  $EMISSIONS == OPS ) set EMISSIONS = ''
+     if(  $EMISSIONS == OPS ) set EMISSIONS = OPS
 
      # Fix up the linkbcs species.data
      # NOTE: If OPS is selected, EMISSIONS is blanked
-     if(  $EMISSIONS == '' ) then
+     if(  $EMISSIONS == OPS ) then
         set OPS_SPECIES = ''
         set PCHEM_CLIM_YEARS = 1
-     else if(  $EMISSIONS == CMIP ) then
-        set CMIP_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 228
      else
         set MERRA2OX_SPECIES = ''
         set PCHEM_CLIM_YEARS = 39
@@ -1776,18 +1773,13 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                                $EXPDIR/RC
-  rsync -ax                  $GEOSDIR/etc/*.rc            $EXPDIR/RC
-  if( .$EMISSIONS != . ) then
-                     /bin/cp $GEOSDIR/etc/$EMISSIONS/*.rc $EXPDIR/RC
-  else
-     set EMISSIONS = g5chem
-  endif
+  mkdir -p                                             $EXPDIR/RC
+  cp -RP                     $GEOSDIR/etc/*            $EXPDIR/RC
 
 if ( $LINKX == "TRUE" ) then
   if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
 else
-  if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
+  if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
 endif
 
 #######################################################################

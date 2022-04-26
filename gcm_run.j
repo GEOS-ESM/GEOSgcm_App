@@ -583,7 +583,7 @@ if( ${EMISSIONS} == AMIP ) then
 
     # Before 2000-03-01, use AMIP.20C
     if( $nymdc < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
          if( $nymdf > ${AMIP_Transition_Date} ) then
           set nymdf = ${AMIP_Transition_Date}
           set oldstring = `grep '^\s*END_DATE:' CAP.rc`
@@ -592,11 +592,11 @@ if( ${EMISSIONS} == AMIP ) then
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS
+         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/RC/AMIP
     endif
 
     if( $AGCM_LM == 72 ) then
-        cp --remove-destination ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
         set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
@@ -639,7 +639,7 @@ set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 
 # Switch to MODIS v6.1 data after Nov 2021
 set MODIS_Transition_Date = 20211101
-if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymdc ) then
+if ( ${EMISSIONS} == OPS && ${MODIS_Transition_Date} <= $nymdc ) then
     cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
 else
     cat $extdata_files > ExtData.rc
