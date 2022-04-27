@@ -1242,9 +1242,11 @@ EMISSIONS:
      endif
      if(  $EMISSIONS == OPS ) set EMISSIONS = OPS
 
+     set EMISSIONS = ${EMISSIONS}_EMISSIONS
+
      # Fix up the linkbcs species.data
      # NOTE: If OPS is selected, EMISSIONS is blanked
-     if(  $EMISSIONS == OPS ) then
+     if(  $EMISSIONS == OPS_EMISSIONS ) then
         set OPS_SPECIES = ''
         set PCHEM_CLIM_YEARS = 1
      else

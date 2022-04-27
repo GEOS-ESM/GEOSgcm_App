@@ -212,7 +212,7 @@ set nhms0 = $date[2]
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 setenv EMISSIONS @EMISSIONS
-if( @EMISSIONS == AMIP ) then
+if( @EMISSIONS == AMIP_EMISSIONS ) then
     set AMIP_Transition_Date = 20000301
 
     if( $nymd0 < ${AMIP_Transition_Date} ) then
@@ -224,12 +224,12 @@ if( @EMISSIONS == AMIP ) then
     if( $LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
-        set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
-          /bin/rm -f   `basename $file`
-          /bin/rm -f    dummy
+          /bin/rm -f `basename $file`
+          /bin/rm -f dummy
           cp $file dummy
-              cat       dummy | sed -e "s|/L72/|/L${LM}/|g" | sed -e "s|z72|z${LM}|g" > `basename $file`
+          cat dummy | sed -e "s|/L72/|/L${LM}/|g" | sed -e "s|z72|z${LM}|g" > `basename $file`
         end
     endif
 endif
@@ -247,7 +247,7 @@ set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 
 # Switch to MODIS v6.1 data after Nov 2021
 set MODIS_Transition_Date = 20211101
-if ( ${EMISSIONS} == OPS && ${MODIS_Transition_Date} <= $nymd0 ) then
+if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
     cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
 else
     cat $extdata_files > ExtData.rc
