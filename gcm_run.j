@@ -592,7 +592,7 @@ if( ${EMISSIONS} == AMIP ) then
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/RC/AMIP
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
     if( $AGCM_LM == 72 ) then
