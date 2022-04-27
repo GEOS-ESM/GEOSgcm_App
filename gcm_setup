@@ -1773,8 +1773,13 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                             $EXPDIR/RC
-  cp -RP                     $GEOSDIR/etc/*            $EXPDIR/RC
+  mkdir -p  $EXPDIR/RC
+
+  # Copy over all files and subdirs in install/etc, keeping symlinks
+  cp -RP $GEOSDIR/etc/* $EXPDIR/RC
+
+  # Remove template files in RC as they are unneeded for experiments
+  rm -f $EXPDIR/RC/*.tmpl
 
 if ( $LINKX == "TRUE" ) then
   if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
