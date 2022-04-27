@@ -1778,8 +1778,9 @@ echo $GROUP > $HOME/.GROUProot
   # Copy over all files and subdirs in install/etc, keeping symlinks
   cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 
-  # Remove template files in RC as they are unneeded for experiments
+  # Remove templated files in RC as they are unneeded and confusing for experiments
   rm -f $EXPDIR/RC/*.tmpl
+  rm -f $EXPDIR/RC/fvcore_layout.rc
 
 if ( $LINKX == "TRUE" ) then
   if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
