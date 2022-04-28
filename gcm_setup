@@ -1240,7 +1240,6 @@ EMISSIONS:
      echo
      endif
      endif
-     if(  $EMISSIONS == OPS ) set EMISSIONS = OPS
 
      set EMISSIONS = ${EMISSIONS}_EMISSIONS
 
