@@ -29,6 +29,7 @@ COLLECTIONS: 'geosgcm_prog'
 #             'geosgcm_radar'
 #             'geosgcm_isccp'
 #             'geosgcm_misr'
+#             'geosgcm_raddiag'
              ::
 
 ##################################################
@@ -1214,3 +1215,76 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                           'MISRLYRTP18000'    , 'SATSIM'    ,
                          ::
 
+# ---------------------------------------------------------------------------
+# specialized radiation diagnostics ...
+# (1) variations on cos(SZA)
+# (2) subcolumn generated super-layer cloud fractions and optical thicknesses
+# (3) Advanced Flux Update (AFU) analysis and application variables
+# see code for thorough explanation
+# ---------------------------------------------------------------------------
+  geosgcm_raddiag.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_raddiag.archive:   '%c/Y%y4',
+  geosgcm_raddiag.format:    'CFIO',
+  geosgcm_raddiag.mode:      'time-averaged',
+  geosgcm_raddiag.frequency:  030000,
+  geosgcm_raddiag.ref_time:   210000,
+  geosgcm_raddiag.grid_label: PC@HIST_IMx@HIST_JM-DC
+  geosgcm_raddiag.fields:    'COSZ'          , 'SOLAR' ,
+                             'MCOSZ'         , 'SOLAR' ,
+                             'COSZSW'        , 'SOLAR' ,
+                             'CLDTT'         , 'SOLAR' ,
+                             'CLDHI'         , 'SOLAR' ,
+                             'CLDMD'         , 'SOLAR' ,
+                             'CLDLO'         , 'SOLAR' ,
+                             'CLDTTSW'       , 'SOLAR' ,
+                             'CLDHISW'       , 'SOLAR' ,
+                             'CLDMDSW'       , 'SOLAR' ,
+                             'CLDLOSW'       , 'SOLAR' ,
+                             'TAUTTX'        , 'SOLAR' ,
+                             'TAUHI'         , 'SOLAR' ,
+                             'TAUMD'         , 'SOLAR' ,
+                             'TAULO'         , 'SOLAR' ,
+                             'TAUTTPAR'      , 'SOLAR' ,
+                             'TAUHIPAR'      , 'SOLAR' ,
+                             'TAUMDPAR'      , 'SOLAR' ,
+                             'TAULOPAR'      , 'SOLAR' ,
+                             'UVR_TDN'       , 'SOLAR' ,
+                             'UVR_TAUE'      , 'SOLAR' ,
+                             'UVR_SSAEC'     , 'SOLAR' ,
+                             'UVR_ASYED'     , 'SOLAR' ,
+                             'UVR_FRAY'      , 'SOLAR' ,
+                             'UVR_MCOSZ_REF' , 'SOLAR' ,
+                             'UVR_AINFO'     , 'SOLAR' ,
+                             'UVR_FRMSE'     , 'SOLAR' ,
+                             'UVR_MCOSZ_AFU' , 'SOLAR' ,
+                             'PAR_TDN'       , 'SOLAR' ,
+                             'PAR_TAUE'      , 'SOLAR' ,
+                             'PAR_SSAEC'     , 'SOLAR' ,
+                             'PAR_ASYED'     , 'SOLAR' ,
+                             'PAR_FRAY'      , 'SOLAR' ,
+                             'PAR_MCOSZ_REF' , 'SOLAR' ,
+                             'PAR_AINFO'     , 'SOLAR' ,
+                             'PAR_FRMSE'     , 'SOLAR' ,
+                             'PAR_MCOSZ_AFU' , 'SOLAR' ,
+                             'NIR_TDN'       , 'SOLAR' ,
+                             'NIR_TAUE'      , 'SOLAR' ,
+                             'NIR_SSAEC'     , 'SOLAR' ,
+                             'NIR_ASYED'     , 'SOLAR' ,
+                             'NIR_FRAY'      , 'SOLAR' ,
+                             'NIR_MCOSZ_REF' , 'SOLAR' ,
+                             'NIR_AINFO'     , 'SOLAR' ,
+                             'NIR_FRMSE'     , 'SOLAR' ,
+                             'NIR_MCOSZ_AFU' , 'SOLAR' ,
+                             'DRUVR'         , 'SOLAR' ,
+                             'DFUVR'         , 'SOLAR' ,
+                             'DRPAR'         , 'SOLAR' ,
+                             'DFPAR'         , 'SOLAR' ,
+                             'DRNIR'         , 'SOLAR' ,
+                             'DFNIR'         , 'SOLAR' ,
+                             'DRUVR_AFU',    , 'SOLAR' ,
+                             'DFUVR_AFU',    , 'SOLAR' ,
+                             'DRPAR_AFU',    , 'SOLAR' ,
+                             'DFPAR_AFU',    , 'SOLAR' ,
+                             'DRNIR_AFU',    , 'SOLAR' ,
+                             'DFNIR_AFU',    , 'SOLAR' ,
+                            ::
