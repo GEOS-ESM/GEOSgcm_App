@@ -200,7 +200,7 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
-set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}e_${RSTID}.*catch*`
+set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}[cef]_${RSTID}.*catch*`
 if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
 if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
@@ -429,6 +429,8 @@ set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v 
 set chk_files      = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set chk_file_names = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" -f2`
 
+set monthly_chk_names = `cat $EXPDIR/HISTORY.rc | grep -v '^[\t ]*#' | sed -n 's/\([^\t ]\+\).monthly:[\t ]*1.*/\1/p' | sed 's/$/_rst/' `
+
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
 set dummy = `echo $rst_file_names`
@@ -444,11 +446,11 @@ end
 # Copy Restarts to Scratch Directory
 # ----------------------------------
 if( $GCMEMIP == TRUE ) then
-    foreach rst ( $rst_file_names )
+    foreach rst ( $rst_file_names $monthly_chk_names )
       if(-e $EXPDIR/restarts/$RSTDATE/$rst ) cp $EXPDIR/restarts/$RSTDATE/$rst . &
     end
 else
-    foreach rst ( $rst_file_names )
+    foreach rst ( $rst_file_names $monthly_chk_names )
       if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
     end
 endif
@@ -648,7 +650,7 @@ set MODIS_Transition_Date = 20211101
 if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
     cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
 else
-    cat $extdata_files > ExtData.rc
+cat $extdata_files > ExtData.rc
 endif
 
 # Link Boundary Conditions for Appropriate Date
@@ -710,7 +712,7 @@ else
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
+   
    # Remove the saltwater internal restart
    # -------------------------------------
    /bin/rm $SCRDIR/saltwater_internal_rst
@@ -727,7 +729,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
    set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-
+         
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
@@ -844,7 +846,8 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
-
+if ( $rc == -1 ) exit -1
+ 
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
 #        Note: cap_restart contains the current NYMD and NHMS
@@ -907,34 +910,21 @@ end
 # TAR ARCHIVED RESTARTS
 # ---------------------
 cd $EXPDIR/restarts
-    if( $FSEGMENT == 00000000 ) then
+if( $FSEGMENT == 00000000 ) then
         @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
         @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
-        /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
+     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
         @COUPLED /bin/rm -rf RESTART.${edate}
-    endif
-cd $SCRDIR
-
-# Move monthly collection checkpoints to restarts
-#------------------------------------------------
-set monthlies = `/bin/ls *chk`
-if ( $#monthlies > 0 ) then
-    foreach ff (*chk)
-       /bin/mv $ff `basename $ff chk`rst
-    end
 endif
+
 
 #######################################################################
 #               Move HISTORY Files to Holding Directory
 #######################################################################
 
-# Check for files waiting in /holding
-# -----------------------------------
-set     waiting_files = `/bin/ls -1 $EXPDIR/holding/*/*nc4`
-set num_waiting_files = $#waiting_files
-
 # Move current files to /holding
 # ------------------------------
+cd $SCRDIR
 foreach collection ( $collections )
    /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
 end
@@ -956,7 +946,7 @@ end
 #######################################################################
 
 $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
-
+ 
 if( $FSEGMENT != 00000000 ) then
      set REPLAY_BEG_DATE = `grep '^\s*BEG_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
      set REPLAY_END_DATE = `grep '^\s*END_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
@@ -986,7 +976,7 @@ else
 @ counter = ${NUM_SGMT} + 1
 endif
 
-end
+end   # end of segment loop; remain in $SCRDIR
 
 #######################################################################
 #                              Re-Submit Job
@@ -1018,9 +1008,9 @@ endif
 
 if ( $rc == 0 ) then
       cd  $HOMDIR
-      if( $GCMEMIP == TRUE ) then
+      if ( $GCMEMIP == TRUE ) then
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
-      else
+          else
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif
