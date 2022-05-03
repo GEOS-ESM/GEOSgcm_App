@@ -653,6 +653,17 @@ else
 cat $extdata_files > ExtData.rc
 endif
 
+# Move GOCART to use RRTMGP Bands
+# -------------------------------
+# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
+#
+#set instance_files = `/bin/ls -1 *_instance*.rc`
+#foreach instance ($instance_files)
+#   /bin/mv $instance $instance.tmp
+#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+#   /bin/rm $instance.tmp
+#end
+
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
