@@ -522,7 +522,12 @@ if( $OGCM == TRUE ) then
     if ( $OCEAN_NAME == "MOM" ) then
        set Resolution = `echo 360 200`
     else if ( $OCEAN_NAME == "MOM6" ) then
-       set Resolution = `echo 360 210`
+       # c12 MOM6 is default 72x36
+       if( $AGCM_IM ==  "c12" ) then
+          set Resolution = `echo 72 36`
+       else
+          set Resolution = `echo 360 210`
+       endif
     endif
 
     echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
@@ -535,7 +540,12 @@ if( $OGCM == TRUE ) then
        if ( $OCEAN_NAME == "MOM" ) then
           set Resolution = `echo 360 200`
        else if ( $OCEAN_NAME == "MOM6" ) then
-          set Resolution = `echo 360 210`
+          # c12 MOM6 is default 72x36
+          if( $AGCM_IM ==  "c12" ) then
+             set Resolution = `echo 72 36`
+          else
+             set Resolution = `echo 360 210`
+          endif
        endif
 
        if( $num == 0 ) then
@@ -1230,16 +1240,14 @@ EMISSIONS:
      echo
      endif
      endif
-     if(  $EMISSIONS == OPS ) set EMISSIONS = ''
+
+     set EMISSIONS = ${EMISSIONS}_EMISSIONS
 
      # Fix up the linkbcs species.data
      # NOTE: If OPS is selected, EMISSIONS is blanked
-     if(  $EMISSIONS == '' ) then
+     if(  $EMISSIONS == OPS_EMISSIONS ) then
         set OPS_SPECIES = ''
         set PCHEM_CLIM_YEARS = 1
-     else if(  $EMISSIONS == CMIP ) then
-        set CMIP_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 228
      else
         set MERRA2OX_SPECIES = ''
         set PCHEM_CLIM_YEARS = 39
@@ -1766,18 +1774,19 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                                $EXPDIR/RC
-  rsync -ax                  $GEOSDIR/etc/*.rc            $EXPDIR/RC
-  if( .$EMISSIONS != . ) then
-                     /bin/cp $GEOSDIR/etc/$EMISSIONS/*.rc $EXPDIR/RC
-  else
-     set EMISSIONS = g5chem
-  endif
+  mkdir -p  $EXPDIR/RC
+
+  # Copy over all files and subdirs in install/etc, keeping symlinks
+  cp -RP $GEOSDIR/etc/* $EXPDIR/RC
+
+  # Remove templated files in RC as they are unneeded and confusing for experiments
+  rm -f $EXPDIR/RC/*.tmpl
+  rm -f $EXPDIR/RC/fvcore_layout.rc
 
 if ( $LINKX == "TRUE" ) then
   if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
 else
-  if ( -e $GEOSBIN/GEOSgcm.x ) rsync -avx $GEOSBIN/GEOSgcm.x $EXPDIR
+  if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
 endif
 
 #######################################################################
