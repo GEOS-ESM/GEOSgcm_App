@@ -177,7 +177,7 @@ endif
 #            Copy and Modify RC Files from Home Directory
 #######################################################################
 
-                             /bin/ln -sf $EXPDIR/RC/* .
+                             cp -f  $EXPDIR/RC/* .
                              cp -f  $HOMDIR/*.rc .
                              cp -f  $HOMDIR/*.nml .
                              cp -f  $HOMDIR/*.yaml .
@@ -742,7 +742,7 @@ else
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   
+
    # Remove the saltwater internal restart
    # -------------------------------------
    /bin/rm $SCRDIR/saltwater_internal_rst
@@ -841,7 +841,7 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
- 
+
 #######################################################################
 #               Move HISTORY Files to Holding Directory
 #######################################################################
