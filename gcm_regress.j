@@ -68,7 +68,7 @@ cd $HOMDIR
     end
 cd $EXPDIR/regress
 
-/bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
+cp $EXPDIR/RC/*.rc     $EXPDIR/regress
 cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 cp $EXPDIR/linkbcs     $EXPDIR/regress
 cp $HOMDIR/*.yaml      $EXPDIR/regress
@@ -154,7 +154,7 @@ else
 endif
 
 #######################################################################
-#                 Create Simple History for Efficiency 
+#                 Create Simple History for Efficiency
 #######################################################################
 
 set         FILE = HISTORY.rc0
@@ -283,7 +283,7 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
-endif 
+endif
 
 ##################################################################
 ######
@@ -314,7 +314,7 @@ set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
 $RUN_CMD $NPES ./GEOSgcm.x
-                                                                                                                      
+
 
 set date = `cat cap_restart`
 set nymde = $date[1]
@@ -457,7 +457,7 @@ set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
 $RUN_CMD $NPES ./GEOSgcm.x
-                                                                                                                      
+
 set date = `cat cap_restart`
 set nymde = $date[1]
 set nhmse = $date[2]
@@ -480,7 +480,7 @@ foreach chk ( $chk_file_names )
   set file1 = ${chk}.${nymde}_${nhmse}.1
   set file2 = ${chk}.${nymde}_${nhmse}.2
   if( -e $file1 && -e $file2 ) then
-                               set check = true 
+                               set check = true
       foreach exempt (${EXEMPT_chk})
          if( $chk == $exempt ) set check = false
       end

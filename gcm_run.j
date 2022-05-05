@@ -243,7 +243,7 @@ endif
 
 cd $SCRDIR
 /bin/rm -rf *
-                             /bin/ln -sf $EXPDIR/RC/* .
+                             cp -f  $EXPDIR/RC/* .
                              cp     $EXPDIR/cap_restart .
                              cp -f  $HOMDIR/*.rc .
                              cp -f  $HOMDIR/*.nml .
@@ -587,7 +587,7 @@ if( ${EMISSIONS} == AMIP_EMISSIONS ) then
     # emissions (HFED instead of QFED) valid before 2000-03-01. Note
     # that if you make a change to anything in $EXPDIR/RC/AMIP or
     # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
-    # directory to be consistent. Some files in AMIP.20C are symlinks to 
+    # directory to be consistent. Some files in AMIP.20C are symlinks to
     # that in AMIP but others are not.
 
     if( $nymdc < ${AMIP_Transition_Date} ) then
@@ -723,7 +723,7 @@ else
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   
+
    # Remove the saltwater internal restart
    # -------------------------------------
    /bin/rm $SCRDIR/saltwater_internal_rst
@@ -740,7 +740,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
    set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-         
+
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
@@ -858,7 +858,7 @@ else
 endif
 echo GEOSgcm Run Status: $rc
 if ( $rc == -1 ) exit -1
- 
+
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
 #        Note: cap_restart contains the current NYMD and NHMS
@@ -957,7 +957,7 @@ end
 #######################################################################
 
 $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
- 
+
 if( $FSEGMENT != 00000000 ) then
      set REPLAY_BEG_DATE = `grep '^\s*BEG_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
      set REPLAY_END_DATE = `grep '^\s*END_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
