@@ -806,6 +806,19 @@ ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOC
 # -------------------------------------------------------------------------------
     IS_FCST: @IS_FCST
 
+# Relaxed zonal mean PCHEM species do not need to be advected
+# and for FV3+ADV core we FV3 will only advect water species
+# AdvCore will handle the rest.
+# -------------------------------------------------------------------------------
+EXCLUDE_ADVECTION_TRACERS: ALWAYS
+EXCLUDE_ADVECTION_TRACERS_LIST:
+PCHEM::OX
+PCHEM::N2O
+PCHEM::CFC11
+PCHEM::CFC12
+PCHEM::HCFC22
+PCHEM::CH4
+::
 
 # Time step for aerosol assimilation (GAAS)
 # -----------------------------------------

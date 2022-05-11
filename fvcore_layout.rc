@@ -2,7 +2,6 @@
   @FV_HYDRO
   @FV_SATADJ
   @FV_NWAT
-  Beljaars_TOFD = .F.
 /
 
  &main_nml
