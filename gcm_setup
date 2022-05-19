@@ -1228,7 +1228,7 @@ endif
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
 	set FV_HYDRO   = "hydrostatic = .T."
 	set FV_SATADJ  = "do_sat_adj  = .F."
-        set GFDL_HYDRO = TRUE
+        set GFDL_HYDRO = ".TRUE."
         if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MG1" ) then
            set FV_NWAT    = "nwat = 1"
         else
@@ -1236,7 +1236,7 @@ if ( "$USE_HYDROSTATIC" == "TRUE" ) then
         endif
 else
 	set FV_HYDRO   = "hydrostatic = .F."
-        set GFDL_HYDRO = FALSE
+        set GFDL_HYDRO = ".FALSE."
 	if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MG1" ) then
 		set FV_SATADJ  = "do_sat_adj = .F."
 		set FV_NWAT    = "nwat       =  3 "
