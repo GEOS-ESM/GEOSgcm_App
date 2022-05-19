@@ -239,7 +239,7 @@ if( @EMISSIONS == AMIP ) then
     endif
 endif
 
-@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
+@MP_NO_USE_WSUB# BACM and GFDL microphysics do not use WSUB_NATURE
 @MP_NO_USE_WSUB# -------------------------------------------------
 @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
 @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc

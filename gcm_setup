@@ -247,18 +247,18 @@ endif
 
 ASKMP:
 
- echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: 1MOM)"
- echo "   ${C2}1MOM  --  3-phase 1-moment Bacmeister et al${CN}"
+ echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: BACM)"
+ echo "   ${C2}BACM  --  3-phase 1-moment Bacmeister et al${CN}"
  echo "   ${C2}GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
  echo "   ${C2}MG1   --  3-phase 2-moment Morrison & Gettleman${CN}"
  echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
  echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
  set   AGCM_MP = $<
 if( .$AGCM_MP == . ) then
-   set AGCM_MP = "1MOM"
+   set AGCM_MP = "BACM"
 else
    set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
-   if( "$AGCM_MP" != "1MOM" & \
+   if( "$AGCM_MP" != "BACM" & \
        "$AGCM_MP" != "GFDL" & \
        "$AGCM_MP" != "MG1" & \
        "$AGCM_MP" != "MG2" & \
@@ -269,8 +269,8 @@ else
    endif
 endif
 
-# 1MOM and GFDL do not use WSUB_NATURE, so this eliminates a regrid
-if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
+# BACM and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "GFDL" ) then
    set MP_NO_USE_WSUB = ""
 else
    set MP_NO_USE_WSUB = "#DELETE#"
@@ -1195,6 +1195,12 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #######################################################################
 
 # For chevronned lines in AGCM.rc.tmpl
+if ( "$AGCM_MP" == "BACM" ) then
+        set MP_BACM = ""
+else
+        set MP_BACM = "# "
+endif
+
 if ( "$AGCM_MP" == "GFDL" ) then
 	set MP_GFDL = ""
 else
@@ -1223,7 +1229,7 @@ if ( "$USE_HYDROSTATIC" == "TRUE" ) then
 	set FV_HYDRO   = "hydrostatic = .T."
 	set FV_SATADJ  = "do_sat_adj  = .F."
         set GFDL_HYDRO = TRUE
-        if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+        if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MG1" ) then
            set FV_NWAT    = "nwat = 1"
         else
            set FV_NWAT    = "nwat = 6"
@@ -1231,7 +1237,7 @@ if ( "$USE_HYDROSTATIC" == "TRUE" ) then
 else
 	set FV_HYDRO   = "hydrostatic = .F."
         set GFDL_HYDRO = FALSE
-	if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+	if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MG1" ) then
 		set FV_SATADJ  = "do_sat_adj = .F."
 		set FV_NWAT    = "nwat       =  3 "
 	else
