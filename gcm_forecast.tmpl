@@ -177,7 +177,7 @@ endif
 #            Copy and Modify RC Files from Home Directory
 #######################################################################
 
-                             /bin/ln -sf $EXPDIR/RC/* .
+                             cp -f  $EXPDIR/RC/* .
                              cp -f  $HOMDIR/*.rc .
                              cp -f  $HOMDIR/*.nml .
                              cp -f  $HOMDIR/*.yaml .
@@ -600,11 +600,11 @@ set yearf = `echo $nymdf | cut -c1-4`
 
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
-if( ${EMISSIONS} == AMIP) then
+if( ${EMISSIONS} == AMIP_EMISSIONS) then
     set AMIP_Transition_Date = 20000301
 
     if( $nymdc < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
          if( $nymdf > ${AMIP_Transition_Date} ) then
           set nymdf = ${AMIP_Transition_Date}
           set oldstring = `grep '^\s*END_DATE:' CAP.rc`
@@ -613,18 +613,18 @@ if( ${EMISSIONS} == AMIP) then
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
     if( $AGCM_LM == 72 ) then
-        cp --remove-destination ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
-        set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
-          /bin/rm -f   `basename $file`
-          /bin/rm -f    dummy
+          /bin/rm -f `basename $file`
+          /bin/rm -f dummy
           cp $file dummy
-              cat       dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
+          cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
         end
     endif
 
@@ -666,11 +666,22 @@ set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 
 # Switch to MODIS v6.1 data after Nov 2021
 set MODIS_Transition_Date = 20211101
-if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymdc ) then
+if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
     cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
 else
     cat $extdata_files > ExtData.rc
 endif
+
+# Move GOCART to use RRTMGP Bands
+# -------------------------------
+# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
+#
+#set instance_files = `/bin/ls -1 *_instance*.rc`
+#foreach instance ($instance_files)
+#   /bin/mv $instance $instance.tmp
+#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+#   /bin/rm $instance.tmp
+#end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -731,7 +742,7 @@ else
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   
+
    # Remove the saltwater internal restart
    # -------------------------------------
    /bin/rm $SCRDIR/saltwater_internal_rst
@@ -830,7 +841,7 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
- 
+
 #######################################################################
 #               Move HISTORY Files to Holding Directory
 #######################################################################
