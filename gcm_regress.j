@@ -68,7 +68,7 @@ cd $HOMDIR
     end
 cd $EXPDIR/regress
 
-/bin/ln -s $EXPDIR/RC/*.rc  $EXPDIR/regress
+cp $EXPDIR/RC/*.rc     $EXPDIR/regress
 cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 cp $EXPDIR/linkbcs     $EXPDIR/regress
 cp $HOMDIR/*.yaml      $EXPDIR/regress
@@ -154,7 +154,7 @@ else
 endif
 
 #######################################################################
-#                 Create Simple History for Efficiency 
+#                 Create Simple History for Efficiency
 #######################################################################
 
 set         FILE = HISTORY.rc0
@@ -212,24 +212,24 @@ set nhms0 = $date[2]
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 setenv EMISSIONS @EMISSIONS
-if( @EMISSIONS == AMIP ) then
+if( @EMISSIONS == AMIP_EMISSIONS ) then
     set AMIP_Transition_Date = 20000301
 
     if( $nymd0 < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
     else
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/@EMISSIONS
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
     if( $LM == 72 ) then
-        cp --remove-destination ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
-        set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
-          /bin/rm -f   `basename $file`
-          /bin/rm -f    dummy
+          /bin/rm -f `basename $file`
+          /bin/rm -f dummy
           cp $file dummy
-              cat       dummy | sed -e "s|/L72/|/L${LM}/|g" | sed -e "s|z72|z${LM}|g" > `basename $file`
+          cat dummy | sed -e "s|/L72/|/L${LM}/|g" | sed -e "s|z72|z${LM}|g" > `basename $file`
         end
     endif
 endif
@@ -247,11 +247,22 @@ set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 
 # Switch to MODIS v6.1 data after Nov 2021
 set MODIS_Transition_Date = 20211101
-if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymd0 ) then
+if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
     cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
 else
     cat $extdata_files > ExtData.rc
 endif
+
+# Move GOCART to use RRTMGP Bands
+# -------------------------------
+# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
+#
+#set instance_files = `/bin/ls -1 *_instance*.rc`
+#foreach instance ($instance_files)
+#   /bin/mv $instance $instance.tmp
+#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+#   /bin/rm $instance.tmp
+#end
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
@@ -272,7 +283,7 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
-endif 
+endif
 
 ##################################################################
 ######
@@ -303,7 +314,7 @@ set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
 $RUN_CMD $NPES ./GEOSgcm.x
-                                                                                                                      
+
 
 set date = `cat cap_restart`
 set nymde = $date[1]
@@ -446,7 +457,7 @@ set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
 $RUN_CMD $NPES ./GEOSgcm.x
-                                                                                                                      
+
 set date = `cat cap_restart`
 set nymde = $date[1]
 set nhmse = $date[2]
@@ -469,7 +480,7 @@ foreach chk ( $chk_file_names )
   set file1 = ${chk}.${nymde}_${nhmse}.1
   set file2 = ${chk}.${nymde}_${nhmse}.2
   if( -e $file1 && -e $file2 ) then
-                               set check = true 
+                               set check = true
       foreach exempt (${EXEMPT_chk})
          if( $chk == $exempt ) set check = false
       end

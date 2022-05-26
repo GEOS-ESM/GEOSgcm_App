@@ -200,7 +200,7 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
-set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}e_${RSTID}.*catch*`
+set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}[cef]_${RSTID}.*catch*`
 if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
 if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
@@ -243,7 +243,7 @@ endif
 
 cd $SCRDIR
 /bin/rm -rf *
-                             /bin/ln -sf $EXPDIR/RC/* .
+                             cp -f  $EXPDIR/RC/* .
                              cp     $EXPDIR/cap_restart .
                              cp -f  $HOMDIR/*.rc .
                              cp -f  $HOMDIR/*.nml .
@@ -429,6 +429,8 @@ set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v 
 set chk_files      = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set chk_file_names = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" -f2`
 
+set monthly_chk_names = `cat $EXPDIR/HISTORY.rc | grep -v '^[\t ]*#' | sed -n 's/\([^\t ]\+\).monthly:[\t ]*1.*/\1/p' | sed 's/$/_rst/' `
+
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
 set dummy = `echo $rst_file_names`
@@ -444,11 +446,11 @@ end
 # Copy Restarts to Scratch Directory
 # ----------------------------------
 if( $GCMEMIP == TRUE ) then
-    foreach rst ( $rst_file_names )
+    foreach rst ( $rst_file_names $monthly_chk_names )
       if(-e $EXPDIR/restarts/$RSTDATE/$rst ) cp $EXPDIR/restarts/$RSTDATE/$rst . &
     end
 else
-    foreach rst ( $rst_file_names )
+    foreach rst ( $rst_file_names $monthly_chk_names )
       if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
     end
 endif
@@ -578,12 +580,18 @@ endif
 
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
-if( ${EMISSIONS} == AMIP ) then
+if( ${EMISSIONS} == AMIP_EMISSIONS ) then
     set AMIP_Transition_Date = 20000301
 
-    # Before 2000-03-01, use AMIP.20C
+    # Before 2000-03-01, we need to use AMIP.20C which has different
+    # emissions (HFED instead of QFED) valid before 2000-03-01. Note
+    # that if you make a change to anything in $EXPDIR/RC/AMIP or
+    # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
+    # directory to be consistent. Some files in AMIP.20C are symlinks to
+    # that in AMIP but others are not.
+
     if( $nymdc < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/AMIP.20C
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
          if( $nymdf > ${AMIP_Transition_Date} ) then
           set nymdf = ${AMIP_Transition_Date}
           set oldstring = `grep '^\s*END_DATE:' CAP.rc`
@@ -592,18 +600,18 @@ if( ${EMISSIONS} == AMIP ) then
                      cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
          endif
     else
-         set AMIP_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
     if( $AGCM_LM == 72 ) then
-        cp --remove-destination ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
     else
-        set files =      `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
         foreach file ($files)
-          /bin/rm -f   `basename $file`
-          /bin/rm -f    dummy
+          /bin/rm -f `basename $file`
+          /bin/rm -f dummy
           cp $file dummy
-              cat       dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
+          cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
         end
     endif
 
@@ -646,11 +654,22 @@ set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 
 # Switch to MODIS v6.1 data after Nov 2021
 set MODIS_Transition_Date = 20211101
-if ( ${EMISSIONS} == g5chem && ${MODIS_Transition_Date} <= $nymdc ) then
+if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
     cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
 else
-    cat $extdata_files > ExtData.rc
+cat $extdata_files > ExtData.rc
 endif
+
+# Move GOCART to use RRTMGP Bands
+# -------------------------------
+# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
+#
+#set instance_files = `/bin/ls -1 *_instance*.rc`
+#foreach instance ($instance_files)
+#   /bin/mv $instance $instance.tmp
+#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+#   /bin/rm $instance.tmp
+#end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -863,6 +882,7 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
+if ( $rc == -1 ) exit -1
 
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
@@ -926,34 +946,21 @@ end
 # TAR ARCHIVED RESTARTS
 # ---------------------
 cd $EXPDIR/restarts
-    if( $FSEGMENT == 00000000 ) then
+if( $FSEGMENT == 00000000 ) then
         @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
         @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
-        /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
+     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
         @COUPLED /bin/rm -rf RESTART.${edate}
-    endif
-cd $SCRDIR
-
-# Move monthly collection checkpoints to restarts
-#------------------------------------------------
-set monthlies = `/bin/ls *chk`
-if ( $#monthlies > 0 ) then
-    foreach ff (*chk)
-       /bin/mv $ff `basename $ff chk`rst
-    end
 endif
+
 
 #######################################################################
 #               Move HISTORY Files to Holding Directory
 #######################################################################
 
-# Check for files waiting in /holding
-# -----------------------------------
-set     waiting_files = `/bin/ls -1 $EXPDIR/holding/*/*nc4`
-set num_waiting_files = $#waiting_files
-
 # Move current files to /holding
 # ------------------------------
+cd $SCRDIR
 foreach collection ( $collections )
    /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
 end
@@ -1005,7 +1012,7 @@ else
 @ counter = ${NUM_SGMT} + 1
 endif
 
-end
+end   # end of segment loop; remain in $SCRDIR
 
 #######################################################################
 #                              Re-Submit Job
@@ -1037,9 +1044,9 @@ endif
 
 if ( $rc == 0 ) then
       cd  $HOMDIR
-      if( $GCMEMIP == TRUE ) then
+      if ( $GCMEMIP == TRUE ) then
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
-      else
+          else
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif
