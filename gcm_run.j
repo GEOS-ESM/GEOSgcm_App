@@ -613,18 +613,25 @@ endif
 # --------------------------------------------
 set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
 if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
+if (          $SC_TRUE == 0 && -e StratChem_ExtData.yaml          ) /bin/mv          StratChem_ExtData.yaml          StratChem_ExtData.yaml.NOT_USED
 set           GMI_TRUE = `grep -i '^\s*ENABLE_GMICHEM:\s*\.TRUE\.'       GEOS_ChemGridComp.rc | wc -l`
 if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
+if (         $GMI_TRUE == 0 && -e GMI_ExtData.yaml                ) /bin/mv                GMI_ExtData.yaml                GMI_ExtData.yaml.NOT_USED
 set           GCC_TRUE = `grep -i '^\s*ENABLE_GEOSCHEM:\s*\.TRUE\.'      GEOS_ChemGridComp.rc | wc -l`
 if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
+if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.yaml       ) /bin/mv       GEOSCHEMchem_ExtData.yaml       GEOSCHEMchem_ExtData.yaml.NOT_USED
 set         CARMA_TRUE = `grep -i '^\s*ENABLE_CARMA:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
 if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
+if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.yaml ) /bin/mv CARMAchem_GridComp_ExtData.yaml CARMAchem_GridComp_ExtData.yaml.NOT_USED
 set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
 if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
+if (         $DNA_TRUE == 0 && -e DNA_ExtData.yaml                ) /bin/mv                DNA_ExtData.yaml                DNA_ExtData.yaml.NOT_USED
 set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
 if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
+if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.yaml          ) /bin/mv          GEOSachem_ExtData.yaml          GEOSachem_ExtData.yaml.NOT_USED
 set   GOCART_DATA_TRUE = `grep -i '^\s*ENABLE_GOCART_DATA:\s*\.TRUE\.'   GEOS_ChemGridComp.rc | wc -l`
 if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
+if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.yaml         ) /bin/mv         GOCARTdata_ExtData.yaml         GOCARTdata_ExtData.yaml.NOT_USED
 
 @MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
 @MP_NO_USE_WSUB# -------------------------------------------------
