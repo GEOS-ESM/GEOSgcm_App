@@ -578,35 +578,43 @@ if( @OCEANtag != DE0360xPE0180 ) then
     endif
 endif
 
+# Which ExtData are we using
+set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
+
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 if( ${EMISSIONS} == AMIP_EMISSIONS ) then
-    set AMIP_Transition_Date = 20000301
+    if( $EXTDATA2G_TRUE == 0 ) then
+       set AMIP_Transition_Date = 20000301
 
-    # Before 2000-03-01, we need to use AMIP.20C which has different
-    # emissions (HFED instead of QFED) valid before 2000-03-01. Note
-    # that if you make a change to anything in $EXPDIR/RC/AMIP or
-    # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
-    # directory to be consistent. Some files in AMIP.20C are symlinks to
-    # that in AMIP but others are not.
+       # Before 2000-03-01, we need to use AMIP.20C which has different
+       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
+       # that if you make a change to anything in $EXPDIR/RC/AMIP or
+       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
+       # directory to be consistent. Some files in AMIP.20C are symlinks to
+       # that in AMIP but others are not.
 
-    if( $nymdc < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-         if( $nymdf > ${AMIP_Transition_Date} ) then
-          set nymdf = ${AMIP_Transition_Date}
-          set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-          set newstring = "END_DATE: $nymdf $nhmsf"
-          /bin/mv CAP.rc CAP.tmp
-                     cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-         endif
+       if( $nymdc < ${AMIP_Transition_Date} ) then
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+            if( $nymdf > ${AMIP_Transition_Date} ) then
+             set nymdf = ${AMIP_Transition_Date}
+             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
+             set newstring = "END_DATE: $nymdf $nhmsf"
+             /bin/mv CAP.rc CAP.tmp
+                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+            endif
+       else
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+       endif
     else
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
     if( $AGCM_LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.yaml .
     else
-        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
         foreach file ($files)
           /bin/rm -f `basename $file`
           /bin/rm -f dummy
@@ -621,31 +629,31 @@ endif
 # --------------------------------------------
 set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
 if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
-if (          $SC_TRUE == 0 && -e StratChem_ExtData.yaml          ) /bin/mv          StratChem_ExtData.yaml          StratChem_ExtData.yaml.NOT_USED
 set           GMI_TRUE = `grep -i '^\s*ENABLE_GMICHEM:\s*\.TRUE\.'       GEOS_ChemGridComp.rc | wc -l`
 if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
-if (         $GMI_TRUE == 0 && -e GMI_ExtData.yaml                ) /bin/mv                GMI_ExtData.yaml                GMI_ExtData.yaml.NOT_USED
 set           GCC_TRUE = `grep -i '^\s*ENABLE_GEOSCHEM:\s*\.TRUE\.'      GEOS_ChemGridComp.rc | wc -l`
 if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
-if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.yaml       ) /bin/mv       GEOSCHEMchem_ExtData.yaml       GEOSCHEMchem_ExtData.yaml.NOT_USED
 set         CARMA_TRUE = `grep -i '^\s*ENABLE_CARMA:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
 if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
-if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.yaml ) /bin/mv CARMAchem_GridComp_ExtData.yaml CARMAchem_GridComp_ExtData.yaml.NOT_USED
 set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
 if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
-if (         $DNA_TRUE == 0 && -e DNA_ExtData.yaml                ) /bin/mv                DNA_ExtData.yaml                DNA_ExtData.yaml.NOT_USED
 set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
 if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
-if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.yaml          ) /bin/mv          GEOSachem_ExtData.yaml          GEOSachem_ExtData.yaml.NOT_USED
 set   GOCART_DATA_TRUE = `grep -i '^\s*ENABLE_GOCART_DATA:\s*\.TRUE\.'   GEOS_ChemGridComp.rc | wc -l`
 if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
-if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.yaml         ) /bin/mv         GOCARTdata_ExtData.yaml         GOCARTdata_ExtData.yaml.NOT_USED
 
 @MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
 @MP_NO_USE_WSUB# -------------------------------------------------
-@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+if ($EXTDATA2G_TRUE == 0 ) then
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+else
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' > WSUB_ExtData.yaml
+endif
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+
+
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -653,11 +661,20 @@ if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 
 # Switch to MODIS v6.1 data after Nov 2021
-set MODIS_Transition_Date = 20211101
-if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
-    cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-else
-cat $extdata_files > ExtData.rc
+if( $EXTDATA2G_TRUE == 0 ) then
+   set MODIS_Transition_Date = 20211101
+   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
+       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+   else
+   cat $extdata_files > ExtData.rc
+   endif
+endif
+
+if( $EXTDATA2G_TRUE == 1 ) then
+
+  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
+  touch ExtData.rc
+
 endif
 
 # Move GOCART to use RRTMGP Bands
@@ -819,24 +836,6 @@ endif
 # Establish safe default number of OpenMP threads
 # -----------------------------------------------
 setenv OMP_NUM_THREADS 1
-
-# Create new ExtData.yaml file
-# ----------------------------
-cat << '_EOF_' > make_extdata_yaml
-#!/usr/bin/env bash
-
-yaml_files=`ls *_ExtData.yaml`
-
-printf "subconfigs:\n" >> extdata.yaml
-for file in $yaml_files;
-do
-    printf "  - $file\n" >> extdata.yaml
-done
-'_EOF_'
-
-chmod +x make_extdata_yaml
-./make_extdata_yaml
-
 
 # Run GEOSgcm.x
 # -------------
