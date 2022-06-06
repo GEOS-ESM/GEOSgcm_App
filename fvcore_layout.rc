@@ -2,6 +2,7 @@
   @FV_HYDRO
   @FV_SATADJ
   @FV_NWAT
+ range_warn = .T.
 /
 
  &main_nml
@@ -24,14 +25,12 @@
 &gfdl_cloud_microphysics_nml
   sedi_transport = .true.
   do_sedi_heat = .false.
-  rad_snow = .true.
-  rad_graupel = .true.
-  rad_rain = .true.
+  preciprad = .false.
   const_vi = .F.
   const_vs = .F.
   const_vg = .F.
   const_vr = .F.
-  vi_fac = 1
+  vi_fac = 1.
   vi_max = 1.
   vs_max = 2.
   vg_max = 12.
@@ -41,18 +40,26 @@
   do_qa = .false.
   fast_sat_adj = .true.
   sat_adj0 = 0.75
-  tau_i2s  = 900
-  tau_l2v  = 300
-  tau_v2l  = 150
+  tau_r2g  = 900.
+  tau_smlt = 900.
+  tau_g2r  = 900.
+  tau_imlt = 900.
+  tau_i2s  = 900.
+  tau_l2r  = 150.
+  tau_v2l  = 150.
+  tau_l2v  = 150.
+  tau_i2v  = 150.
   tau_g2v  = 900.
+  tau_v2g  = 21600.
+  tau_revp = 150.
+  tau_frz  = 150.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
-  dw_land  = 0.35
+  dw_land  = 0.05
   dw_ocean = 0.20
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
-  tau_revp = 300
   c_psaci = 0.05
   c_pgacs = 0.01
   rh_inc = 0.30
@@ -60,7 +67,7 @@
   rh_ins = 0.30
   ccn_l = 300.
   ccn_o = 100.
-  c_paut = 0.5
+  c_paut = 0.9
   c_cracw = 0.8
   use_ppm = .false.
   @GFDL_USE_CCN
