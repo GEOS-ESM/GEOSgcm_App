@@ -227,7 +227,7 @@ if ( $AGCM_IM == 'c12' || $AGCM_IM == 'c24' || $AGCM_IM == 'c48' ) then
    set DYCORE  = "FV3"
 else
    set LOW_ATM_RES = FALSE
-   set DYCORE  = "FV3+ADV"
+   set DYCORE  = "FV3"
 endif
 
 # These are superfluous for GCM, but needed for SCM (considered latlon)
@@ -683,9 +683,9 @@ endif
 if( $AGCM_IM ==  "c90" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
-     set GOCART_DT = 1200
-     set  MOIST_DT = 1200
-     set HEARTBEAT = 1200
+     set GOCART_DT = 900
+     set  MOIST_DT = 900
+     set HEARTBEAT = 900
      set    SYNCTQ = 1
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -708,9 +708,9 @@ endif
 if( $AGCM_IM ==  "c180" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600 
-     set GOCART_DT = 900
-     set  MOIST_DT = 900
-     set HEARTBEAT = 900
+     set GOCART_DT = 600
+     set  MOIST_DT = 600
+     set HEARTBEAT = 600
      set    SYNCTQ = 1
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -758,9 +758,9 @@ if( $AGCM_IM == "c720" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
      set  OCEAN_DT = 3600
-     set GOCART_DT = 450
-     set  MOIST_DT = 450
-     set HEARTBEAT = 225
+     set GOCART_DT = 300
+     set  MOIST_DT = 300
+     set HEARTBEAT = 300
      set    SYNCTQ = 1
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -780,9 +780,9 @@ if( $AGCM_IM == "c1440" ) then
      set  SOLAR_DT = 1800
      set  IRRAD_DT = 1800
      set  OCEAN_DT = 1800
-     set GOCART_DT = 300
-     set  MOIST_DT = 300
-     set HEARTBEAT = 150
+     set GOCART_DT = 225
+     set  MOIST_DT = 225
+     set HEARTBEAT = 225
      set    SYNCTQ = 1
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -804,7 +804,7 @@ if( $AGCM_IM == "c2880" ) then
      set  OCEAN_DT = 1800
      set GOCART_DT = 150
      set  MOIST_DT = 150
-     set HEARTBEAT = 75
+     set HEARTBEAT = 150
      set    SYNCTQ = 1
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -824,9 +824,9 @@ if( $AGCM_IM == "c5760" ) then
      set  SOLAR_DT = 1800
      set  IRRAD_DT = 1800
      set  OCEAN_DT = 1800
-     set GOCART_DT = 90
-     set  MOIST_DT = 90
-     set HEARTBEAT = 45
+     set GOCART_DT = 75
+     set  MOIST_DT = 75
+     set HEARTBEAT = 75
      set    SYNCTQ = 1
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
