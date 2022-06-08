@@ -2791,6 +2791,7 @@ end
 
 #sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${NEWEXPID}_clonedfrom_${OLDEXPID}_by_${OLDUSER}#" $NEWHOMDIR/HISTORY.rc
  sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${EXPDSC}#" $NEWHOMDIR/HISTORY.rc
+ sed -i -e "/^EXPID:/ s#\(EXPID: \)\(.*\)#\1${NEWEXPID}#" $NEWHOMDIR/HISTORY.rc
 
 # -------------------------
 # Construct the new job ids
