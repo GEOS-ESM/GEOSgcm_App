@@ -27,6 +27,7 @@ set (programs
    scm_setup
    gcm_quickstat.j
    scm_run.j
+   construct_extdata_yaml_list.py
    )
 
 install (

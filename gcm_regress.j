@@ -69,6 +69,7 @@ cd $HOMDIR
 cd $EXPDIR/regress
 
 cp $EXPDIR/RC/*.rc     $EXPDIR/regress
+cp $EXPDIR/RC/*.yaml   $EXPDIR/regress
 cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 cp $EXPDIR/linkbcs     $EXPDIR/regress
 cp $HOMDIR/*.yaml      $EXPDIR/regress
@@ -209,22 +210,29 @@ set date = `cat cap_restart`
 set nymd0 = $date[1]
 set nhms0 = $date[2]
 
+set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
+
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 setenv EMISSIONS @EMISSIONS
 if( @EMISSIONS == AMIP_EMISSIONS ) then
-    set AMIP_Transition_Date = 20000301
+    if( $EXTDATA2G_TRUE == 0 ) then
+       set AMIP_Transition_Date = 20000301
 
-    if( $nymd0 < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+       if( $nymd0 < ${AMIP_Transition_Date} ) then
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+       else
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+       endif
     else
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
     if( $LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.yaml .
     else
-        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
         foreach file ($files)
           /bin/rm -f `basename $file`
           /bin/rm -f dummy
@@ -236,8 +244,13 @@ endif
 
 @MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
 @MP_NO_USE_WSUB# -------------------------------------------------
-@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+if ($EXTDATA2G_TRUE == 0 ) then
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+else
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' > WSUB_ExtData.yaml
+endif
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
@@ -246,11 +259,20 @@ if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
 
 # Switch to MODIS v6.1 data after Nov 2021
-set MODIS_Transition_Date = 20211101
-if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
-    cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-else
-    cat $extdata_files > ExtData.rc
+if( $EXTDATA2G_TRUE == 0 ) then
+   set MODIS_Transition_Date = 20211101
+   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
+       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+   else
+       cat $extdata_files > ExtData.rc
+   endif
+endif
+
+if( $EXTDATA2G_TRUE == 1 ) then
+
+  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
+  touch ExtData.rc
+
 endif
 
 # Move GOCART to use RRTMGP Bands
