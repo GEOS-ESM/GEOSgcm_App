@@ -247,22 +247,22 @@ endif
 
 ASKMP:
 
- echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: BACM)"
+ echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: GFDL)"
  echo "   ${C2}BACM  --  3-phase 1-moment Bacmeister et al${CN}"
  echo "   ${C2}GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
- echo "   ${C2}MG1   --  3-phase 2-moment Morrison & Gettleman${CN}"
- echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
- echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
+ echo "   ${C2}MGB1  --  3-phase 2-moment Morrison Gettleman Barahona${CN}"
+ echo "   ${C2}MGB2  --  5-phase 2-moment Morrison Gettleman Barahona${CN}"
+ echo "   ${C2}MGB3  --  6-phase 2-moment Morrison Gettleman Barahona${CN}"
  set   AGCM_MP = $<
 if( .$AGCM_MP == . ) then
-   set AGCM_MP = "BACM"
+   set AGCM_MP = "GFDL"
 else
    set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
    if( "$AGCM_MP" != "BACM" & \
        "$AGCM_MP" != "GFDL" & \
-       "$AGCM_MP" != "MG1" & \
-       "$AGCM_MP" != "MG2" & \
-       "$AGCM_MP" != "MG3"  ) then
+       "$AGCM_MP" != "MGB1" & \
+       "$AGCM_MP" != "MGB2" & \
+       "$AGCM_MP" != "MGB3"  ) then
        echo
        echo "${C1}Microphysics${CN} must be one of the options below!"
        goto ASKMP
@@ -1207,20 +1207,20 @@ else
 	set MP_GFDL = "# "
 endif
 
-if ( "$AGCM_MP" == "MG1" | "$AGCM_MP" == "MG2" | "$AGCM_MP" == "MG3" ) then
+if ( "$AGCM_MP" == "MGB1" | "$AGCM_MP" == "MGB2" | "$AGCM_MP" == "MGB3" ) then
 	set MP_MG = ""
 else
 	set MP_MG = "# "
 endif
 
         set MGVERSION = ""
-if ( "$AGCM_MP" == "MG1" ) then
+if ( "$AGCM_MP" == "MGB1" ) then
         set MGVERSION = "1"
 endif
-if ( "$AGCM_MP" == "MG2" ) then
+if ( "$AGCM_MP" == "MGB2" ) then
         set MGVERSION = "2"
 endif
-if ( "$AGCM_MP" == "MG3" ) then
+if ( "$AGCM_MP" == "MGB3" ) then
         set MGVERSION = "3"
 endif
 
@@ -1229,7 +1229,7 @@ if ( "$USE_HYDROSTATIC" == "TRUE" ) then
 	set FV_HYDRO   = "hydrostatic = .T."
 	set FV_SATADJ  = "do_sat_adj  = .F."
         set GFDL_HYDRO = ".TRUE."
-        if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MG1" ) then
+        if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MGB1" ) then
            set FV_NWAT    = "nwat = 1"
         else
            set FV_NWAT    = "nwat = 6"
@@ -1237,7 +1237,7 @@ if ( "$USE_HYDROSTATIC" == "TRUE" ) then
 else
 	set FV_HYDRO   = "hydrostatic = .F."
         set GFDL_HYDRO = ".FALSE."
-	if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MG1" ) then
+	if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" =~ "MGB*" ) then
 		set FV_SATADJ  = "do_sat_adj = .F."
 		set FV_NWAT    = "nwat       =  3 "
 	else
@@ -2293,7 +2293,7 @@ s/@ANALYZE_TS/0/g
 s/@LSM_CHOICE/$LSM_CHOICE/g
 
 s/@MP_BACM/$MP_BACM/g
-s/@MP_MG/$MP_MG/g
+s/@MP_MGB/$MP_MGB/g
 s/@MGVERSION/$MGVERSION/g
 s/@MP_GFDL/$MP_GFDL/g
 s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
