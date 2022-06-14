@@ -1208,9 +1208,9 @@ else
 endif
 
 if ( "$AGCM_MP" == "MGB1" | "$AGCM_MP" == "MGB2" | "$AGCM_MP" == "MGB3" ) then
-	set MP_MG = ""
+	set MP_MGB = ""
 else
-	set MP_MG = "# "
+	set MP_MGB = "# "
 endif
 
         set MGVERSION = ""
