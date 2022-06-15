@@ -624,6 +624,7 @@ else
     echo "    ${C2}o4${CN} 1  -deg,  360x 180 Hadley (1949-2006)"
     echo "    ${C2}o5${CN} 1  -deg,  360x 180 CCSM_4.0 (1850-2005)"
     echo "    ${C2}o6${CN} 1  -deg,  360x 180 CCSM_4.0 (2006-2100)"
+    echo "    ${C2}o7${CN} 1  -deg,  360x 180 HadISST (1870-2020)"
     echo "    ${C2}CS${CN}                    Cubed-Sphere OSTIA"
     echo "------------------------------------------------"
     set   HRCODE = `echo $<`
@@ -636,7 +637,11 @@ else
         $HRCODE != 'o4' & \
         $HRCODE != 'o5' & \
         $HRCODE != 'o6' & \
+        $HRCODE != 'o7' & \
         $HRCODE != 'cs' ) goto DORSLV
+
+    set SST_REALTIME = TRUE
+
     if( $HRCODE == 'o1' ) then
         set Resolution = `echo  360  180`
         set OGCM_IM  = $Resolution[1]
@@ -743,6 +748,25 @@ else
         set SSTNAME  = SST
         set SSTFILE  = dataoceanfile_CCSM4.0_rcp6.0_run1_sst_2006-2100.360x180.LE
         set ICEFILE  = dataoceanfile_CCSM4.0_rcp6.0_run1_fraci_2006-2100.360x180.LE
+        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+        set OGRIDTYP = "DE"
+        set OSTIA    = "#DELETE"
+        set DATAOCEAN = ""
+    endif
+    if( $HRCODE == 'o7' ) then
+	set SST_REALTIME = FALSE
+	set Resolution = `echo  360  180`
+        set OGCM_IM  = $Resolution[1]
+        set OGCM_JM  = $Resolution[2]
+        set OGCM_GRID_TYPE = LatLon
+        set OGCM_NF = 1
+        set LATLON_OGCM = ""
+        set CUBE_OGCM = "#DELETE"
+        set OCEAN_TAG = Reynolds
+        set OCEANOUT = UNDEFINED
+        set SSTNAME  = SST
+        set SSTFILE  = dataoceanfile_HadISST_sst_1870-2020.360x180.bin
+        set ICEFILE  = dataoceanfile_HadISST_ice_1870-2020.360x180.bin
         set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
         set OGRIDTYP = "DE"
         set OSTIA    = "#DELETE"
@@ -1549,7 +1573,7 @@ if( $SITE == 'NAS' ) then
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/verification/MERRA-2            # Default Analysis Location   for M2 REPLAY
 
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" | $SST_REALTIME == "FALSE" ) then
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
@@ -1596,7 +1620,7 @@ else if( $SITE == 'NCCS' ) then
               setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
 
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" | $SST_REALTIME == "FALSE" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
