@@ -624,6 +624,7 @@ else
     echo "    ${C2}o4${CN} 1  -deg,  360x 180 Hadley (1949-2006)"
     echo "    ${C2}o5${CN} 1  -deg,  360x 180 CCSM_4.0 (1850-2005)"
     echo "    ${C2}o6${CN} 1  -deg,  360x 180 CCSM_4.0 (2006-2100)"
+    echo "    ${C2}o7${CN} 1  -deg,  360x 180 HadISST (1870-2020)"
     echo "    ${C2}CS${CN}                    Cubed-Sphere OSTIA"
     echo "------------------------------------------------"
     set   HRCODE = `echo $<`
@@ -636,7 +637,11 @@ else
         $HRCODE != 'o4' & \
         $HRCODE != 'o5' & \
         $HRCODE != 'o6' & \
+        $HRCODE != 'o7' & \
         $HRCODE != 'cs' ) goto DORSLV
+
+    set SST_REALTIME = TRUE
+
     if( $HRCODE == 'o1' ) then
         set Resolution = `echo  360  180`
         set OGCM_IM  = $Resolution[1]
@@ -743,6 +748,25 @@ else
         set SSTNAME  = SST
         set SSTFILE  = dataoceanfile_CCSM4.0_rcp6.0_run1_sst_2006-2100.360x180.LE
         set ICEFILE  = dataoceanfile_CCSM4.0_rcp6.0_run1_fraci_2006-2100.360x180.LE
+        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+        set OGRIDTYP = "DE"
+        set OSTIA    = "#DELETE"
+        set DATAOCEAN = ""
+    endif
+    if( $HRCODE == 'o7' ) then
+	set SST_REALTIME = FALSE
+	set Resolution = `echo  360  180`
+        set OGCM_IM  = $Resolution[1]
+        set OGCM_JM  = $Resolution[2]
+        set OGCM_GRID_TYPE = LatLon
+        set OGCM_NF = 1
+        set LATLON_OGCM = ""
+        set CUBE_OGCM = "#DELETE"
+        set OCEAN_TAG = Reynolds
+        set OCEANOUT = UNDEFINED
+        set SSTNAME  = SST
+        set SSTFILE  = dataoceanfile_HadISST_sst_1870-2020.360x180.bin
+        set ICEFILE  = dataoceanfile_HadISST_ice_1870-2020.360x180.bin
         set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
         set OGRIDTYP = "DE"
         set OSTIA    = "#DELETE"
@@ -1301,6 +1325,7 @@ endif
 #                   Check for AEROSOL/Chemistry Models
 #######################################################################
 
+
 # Check for GOCART
 # ----------------
 GOCART:
@@ -1308,7 +1333,8 @@ echo
 echo "------------------------------------"
 echo "Specify the AERO_PROVIDER by number:"
 echo "------------------------------------"
-echo " ${C2}1${CN} GOCART (Default)"
+echo " ${C2}0${CN} none"
+echo " ${C2}1${CN} GOCART2G (Default)"
 echo " ${C2}2${CN} GOCART.data"
 echo " ${C2}3${CN} GMI Chemistry"
 echo "------------------------------------"
@@ -1319,7 +1345,7 @@ set APNum = $<
 if( .$APNum == . ) then
  set APNum = 1
 else
- if( $APNum < 1 | $APNum > 3 ) then
+ if( $APNum < 0 | $APNum > 3 ) then
   echo " Sorry. Invalid choice. Try again."
   goto AP
  endif
@@ -1333,20 +1359,37 @@ set CMIP_SPECIES     = "#"
 set MERRA2OX_SPECIES = "#"
 set PCHEM_CLIM_YEARS = ""
 
+if($APNum == 0) then
+ set AERO_PROVIDER   = none
+
+ set GOKART2G   = FALSE
+ set GOKART     = FALSE
+ set GOKARTDATA = FALSE
+ set GOCART          = "#"
+ set HIST_GOCART     = "#DELETE"
+ set USE_AEROSOL_NN  = "USE_AEROSOL_NN"
+endif
+
 if($APNum == 1) then
- set GOKART = TRUE
+ set AERO_PROVIDER   = GOCART2G
+
+ set GOKART2G   = TRUE
+ set GOKART     = FALSE
  set GOKARTDATA = FALSE
  set GOCART          = ""
  set HIST_GOCART     = ""
- set AERO_PROVIDER   = GOCART2G
+ set USE_AEROSOL_NN  = "#USE_AEROSOL_NN"
 endif
 
 if($APNum == 2) then
- set GOKART = FALSE
+ set AERO_PROVIDER   = GOCART.data
+
+ set GOKART2G   = FALSE
+ set GOKART     = FALSE
  set GOKARTDATA = TRUE
- set  GOCART          = "#"
- set  HIST_GOCART     = "#DELETE"
- set AERO_PROVIDER = GOCART.data
+ set GOCART          = "#"
+ set HIST_GOCART     = "#DELETE"
+ set USE_AEROSOL_NN  = "#USE_AEROSOL_NN"
 
  # GOCART.data uses MERRA2OX currently
  set MERRA2OX_SPECIES = ""
@@ -1354,14 +1397,18 @@ if($APNum == 2) then
 endif
 
 if($APNum == 3) then
- set GOKART = FALSE
+ set AERO_PROVIDER   = GMICHEM
+
+ set GOKART2G   = FALSE
+ set GOKART     = FALSE
  set GOKARTDATA = FALSE
- set  GOCART          = "#"
- set  HIST_GOCART     = "#DELETE"
- set AERO_PROVIDER = GMICHEM
+ set GOCART          = "#"
+ set HIST_GOCART     = "#DELETE"
+ set USE_AEROSOL_NN  = "#USE_AEROSOL_NN"
 endif
 
-if( $GOKART == TRUE ) then
+
+if( $GOKART2G == TRUE ) then
 
 # Emission Files
 # --------------
@@ -1376,17 +1423,17 @@ EMISSIONS:
      echo "-------------------------------------------------"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = AMIP
+       set   EMISSIONS = AMIP
      else
-     set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
-     if(  $EMISSIONS != AMIP & \
-          $EMISSIONS != OPS ) then
-     echo
-     echo " Sorry. Invalid choice. Try again."
-     goto EMISSIONS
-     else
-     echo
-     endif
+       set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
+       if(  $EMISSIONS != AMIP & \
+            $EMISSIONS != OPS ) then
+         echo
+         echo " Sorry. Invalid choice. Try again."
+         goto EMISSIONS
+       else
+         echo
+       endif
      endif
 
      set EMISSIONS = ${EMISSIONS}_EMISSIONS
@@ -1416,18 +1463,16 @@ GMIEXP:
      echo " ${C2}CCMI_REF-C2${CN} (2021-2098 out-of-the-box)"
      echo "-------------------------------------------------"
      set   GMIEXP = $<
-     if( .$GMIEXP == . )  set GMIEXP = Current
+     if( .$GMIEXP == . )  set GMIEXP = CURRENT
      set   GMIEXP = `echo   $GMIEXP | tr "[:lower:]" "[:upper:]"`
      if(  $GMIEXP != CURRENT  & $GMIEXP != CCMI_REF-C1 & $GMIEXP != CCMI_REF-C2 ) then
-     echo
-     echo " Sorry. Invalid choice. Try again."
-     goto GMIEXP
+       echo
+       echo " Sorry. Invalid choice. Try again."
+       goto GMIEXP
      else
-     echo
+       echo
      endif
      if(  $GMIEXP == CURRENT ) set GMIEXP = ''
-
-endif
 
 # Should we run HEMCO for MEGAN emissions?
 # ----------------------------------------
@@ -1440,16 +1485,14 @@ echo "   ${C2}1${CN} MEGAN via GMI  (Default)"
 echo "   ${C2}2${CN} MEGAN via HEMCO"
 echo "--------------------------------------------------"
 set   MEG  = $<
-if( .$MEG == . ) then
-set   MEG  = 1
-endif
+if( .$MEG == . ) set   MEG  = 1
 
 if( $MEG != 1 & $MEG != 2 ) then
-echo
-echo "${C1} MEGAN ISOP emissions ${CN} must be set equal to ${C2}1${CN} or ${C2}2${CN}!"
-goto MEGANviaHEMCO
+  echo
+  echo "${C1} MEGAN ISOP emissions ${CN} must be set equal to ${C2}1${CN} or ${C2}2${CN}!"
+  goto MEGANviaHEMCO
 else
-echo
+  echo
 endif
 
 # RATS Provider
@@ -1530,7 +1573,7 @@ if( $SITE == 'NAS' ) then
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/verification/MERRA-2            # Default Analysis Location   for M2 REPLAY
 
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" | $SST_REALTIME == "FALSE" ) then
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
@@ -1577,7 +1620,7 @@ else if( $SITE == 'NCCS' ) then
               setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
 
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" | $SST_REALTIME == "FALSE" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
@@ -2271,6 +2314,10 @@ s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g
+
+#.sds.. need to comment out if AERO_PROVIDER=none
+s?^#USE_AEROSOL_NN?$USE_AEROSOL_NN?g
+
 s?@OANA_PROVIDER?GMICHEM?g
 s?@EMISSIONS?$EMISSIONS?g
 
@@ -2454,22 +2501,54 @@ echo " "
 
 # Comment or UN-Comment RESTARTS based on EXP Configuration
 # ---------------------------------------------------------
-set LH2O          = FALSE
-set LMAM          = FALSE
-set LCARMA        = FALSE
+
+set LTR           =       TRUE
+
 set LPCHEM        = FALSE
 set LSTRATCHEM    = FALSE
-set LGMICHEM      = TRUE
+set LGMICHEM      =       TRUE
 set LGEOSCHEMCHEM = FALSE
-set LHEMCO        = FALSE
+
+set LGAAS         = FALSE
+set LH2O          = FALSE
+set LCARMA        = FALSE
+set LMATRIX       = FALSE
+set LMAM          = FALSE
+set LDNA          = FALSE
+
+set LGOCART_DATA  = $GOKARTDATA
 set LGOCART       = $GOKART
-if( $GOKART == TRUE )  then
- set LGOCART_DATA = FALSE
-else
- set LGOCART_DATA = TRUE
+set LGOCART2G     = $GOKART2G
+set LDU           = $GOKART2G
+set LSS           = $GOKART2G
+set LCA_OC        = $GOKART2G
+set LCA_BC        = $GOKART2G
+set LCA_BR        = $GOKART2G
+set LNI           = $GOKART2G
+set LSU           = $GOKART2G
+set LACHEM        = $GOKART2G
+
+# Use HEMCO for GOCART2G, GMI, or both
+set LHEMCO = FALSE
+@ HEMCOinst = 0
+
+if ( $GOKART2G == TRUE ) then
+  set LHEMCO  = TRUE
+  @ HEMCOinst = $HEMCOinst + 1
 endif
 
-set RSNAMES = "LH2O LMAM LCARMA LPCHEM LSTRATCHEM LGMICHEM LGEOSCHEMCHEM LHEMCO LGOCART LGOCART_DATA"
+if ( $MEG == 2 ) then
+  set LHEMCO  = TRUE
+  @ HEMCOinst = $HEMCOinst + 1
+endif
+
+
+set RSNAMES = `echo          TR PCHEM STRATCHEM GMICHEM GEOSCHEMCHEM`
+set RSNAMES = `echo $RSNAMES GAAS H2O CARMA MATRIX MAM DNA`
+set RSNAMES = `echo $RSNAMES GOCART_DATA GOCART GOCART2G`
+set RSNAMES = `echo $RSNAMES DU SS CA_OC CA_BC CA_BR NI SU ACHEM`
+set RSNAMES = `echo $RSNAMES HEMCO`
+
 set RSTYPES = "INTERNAL IMPORT"
 
 set FILE = AGCM.rc.tmpl
@@ -2478,10 +2557,13 @@ if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
 if( -e $EXPDIR/$FILE ) set LOCDIR = $EXPDIR
 
 foreach rsname ($RSNAMES)
-   set  name = `echo $rsname | cut -b2-`
-   set  test = `eval echo \$$rsname`
+   set  name = $rsname
+   set  test = `eval echo \$L$rsname`
 
    if( $name == GOCART_DATA ) set name = GOCART.data
+   if( $name == CA_OC       ) set name = CA.oc
+   if( $name == CA_BC       ) set name = CA.bc
+   if( $name == CA_BR       ) set name = CA.br
 
    foreach type ($RSTYPES)
       set  TMPCMD = `mktemp`
@@ -2610,7 +2692,7 @@ cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $f
 /bin/rm -f    $HOMDIR/dummy
 
 #######################################################################
-#       Modify RC Directory for LM and GOCART.data/GOCART Options
+#       Modify RC Directory for LM and GOCART.data/GOCART2G Options
 #######################################################################
 
 # Modify RC Files for LM
@@ -2652,37 +2734,106 @@ else
     awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
+# Turn on GOCART.data
+# -------------------
+if( $LGOCART_DATA == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
 # Turn on GOCART
 # --------------
-if( $GOKART == TRUE ) then
+if( $LGOCART == TRUE ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 
+# Coupling aerosols with GMI now must be done w/ GOCART2G
+#   /bin/mv $EXPDIR/RC/GMI_GridComp.rc $EXPDIR/RC/GMI_GridComp.tmp
+#   cat $EXPDIR/RC/GMI_GridComp.tmp | \
+#   awk '{ if ($1~"usingGOCART_") { sub(/F/,"T") }; print }' > $EXPDIR/RC/GMI_GridComp.rc
+else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 
-    /bin/mv $EXPDIR/RC/GMI_GridComp.rc $EXPDIR/RC/GMI_GridComp.tmp
-    cat $EXPDIR/RC/GMI_GridComp.tmp | \
-    awk '{ if ($1~"usingGOCART_") { sub(/F/,"T") }; print }' > $EXPDIR/RC/GMI_GridComp.rc
-
+# the only GOCART species on by default right now are CO, CO2, CFC
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing_CO:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_NI:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-else
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    awk '{ if ( $1 ~ "doing_CO2:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+    awk '{ if ( $1 ~ "doing_CFC:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
+
+# Turn on GOCART2G
+# ----------------
+if( $LGOCART2G == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART2G:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART2G:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
+# Turn on ACHEM
+# -------------
+if( $LACHEM == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_ACHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
+    cat $EXPDIR/RC/Chem_Registry.tmp | \
+    awk '{ if ( $1 ~ "doing_OCS:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_ACHEM:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
+    cat $EXPDIR/RC/Chem_Registry.tmp | \
+    awk '{ if ( $1 ~ "doing_OCS:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+endif
+
+# Turn on HEMCO
+# -------------
+if( $LHEMCO == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_HEMCO:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+    /bin/mv $EXPDIR/RC/HEMCO_GridComp.rc $EXPDIR/RC/HEMCO_GridComp.tmp
+    cat $EXPDIR/RC/HEMCO_GridComp.tmp | \
+    awk '{ if ($1~"HEMCO_Instances:") { print "HEMCO_Instances: " xx; next; }; print }' xx="$HEMCOinst" \
+    > $EXPDIR/RC/HEMCO_GridComp.rc
+
+    if ( $GOKART2G == FALSE ) then
+#     Set GOCART to be instance 999, and GMI to be instance 1
+#     (by default the G2G instance is 1, and GMI instance is 2)
+      sed -e 's/001/999/' $EXPDIR/RC/HEMCO_GridComp.rc > $EXPDIR/RC/HEMCO_GridComp.tmp
+      /bin/mv -f $EXPDIR/RC/HEMCO_GridComp.tmp $EXPDIR/RC/HEMCO_GridComp.rc
+      sed -e 's/002/001/' $EXPDIR/RC/HEMCO_GridComp.rc > $EXPDIR/RC/HEMCO_GridComp.tmp
+      /bin/mv -f $EXPDIR/RC/HEMCO_GridComp.tmp $EXPDIR/RC/HEMCO_GridComp.rc
+    endif
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_HEMCO:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
 
 # Turn on GMICHEM
 # ---------------
@@ -2698,19 +2849,19 @@ endif
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing_XX:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 
-# Turn on GOCART.data if it is the AERO_PROVIDER
-# ----------------------------------------------
-if( $AERO_PROVIDER == GOCART.data ) then
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-endif
-
-if( $AERO_PROVIDER == GMICHEM ) then
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-endif
+# # Turn on GOCART.data if it is the AERO_PROVIDER
+# # ----------------------------------------------
+# if( $AERO_PROVIDER == GOCART.data ) then
+#     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+#     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+#     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+# endif
+# 
+# if( $AERO_PROVIDER == GMICHEM ) then
+#     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+#     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+#     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+# endif
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
 # ------------------------------------------------------------------
@@ -2736,25 +2887,8 @@ endif
 # Turn on HEMCO GMI instance
 # --------------------------
   if ( $MEG == 2 ) then
-
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_HEMCO:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    # Set GOCART to be instance 999, and GMI to be instance 1
-    sed -e 's/001/999/' $EXPDIR/RC/HEMCO_GridComp.rc > $EXPDIR/RC/HEMCO_GridComp.tmp
-    /bin/mv -f $EXPDIR/RC/HEMCO_GridComp.tmp $EXPDIR/RC/HEMCO_GridComp.rc
-    sed -e 's/002/001/' $EXPDIR/RC/HEMCO_GridComp.rc > $EXPDIR/RC/HEMCO_GridComp.tmp
-    /bin/mv -f $EXPDIR/RC/HEMCO_GridComp.tmp $EXPDIR/RC/HEMCO_GridComp.rc
-
     sed -e 's/doMEGANviaHEMCO: F/doMEGANviaHEMCO: T/' $EXPDIR/RC/GMI_GridComp.rc > $EXPDIR/RC/GMI_GridComp.tmp
     /bin/mv -f $EXPDIR/RC/GMI_GridComp.tmp $EXPDIR/RC/GMI_GridComp.rc
-
-    sed -e 's/#HEMCO_INTERNAL/HEMCO_INTERNAL/' $HOMDIR/AGCM.rc > $HOMDIR/AGCM.rc.tmp
-    /bin/mv -f $HOMDIR/AGCM.rc.tmp $HOMDIR/AGCM.rc
-    sed -e 's/#HEMCO_IMPORT/HEMCO_IMPORT/'     $HOMDIR/AGCM.rc > $HOMDIR/AGCM.rc.tmp
-    /bin/mv -f $HOMDIR/AGCM.rc.tmp $HOMDIR/AGCM.rc
-
   endif
 
 ##################################################################
