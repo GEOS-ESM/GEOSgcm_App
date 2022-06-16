@@ -282,7 +282,14 @@ endif
 
 ASKHYDRO:
 
-set DEFAULT_HYDROSTATIC = @CFG_HYDROSTATIC@
+set DEFAULT_HYDROSTATIC = TRUE
+if( $HRCODE != 'c720'  & \
+    $HRCODE != 'c1440' & \
+    $HRCODE != 'c2880' & \
+    $HRCODE != 'c5760' & \
+    $HRCODE != 'c768'  & \
+    $HRCODE != 'c1536' & \
+    $HRCODE != 'c3072' ) set DEFAULT_HYDROSTATIC = FALSE
 
 echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
@@ -617,7 +624,7 @@ if( $AGCM_IM == "c12" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
      set  OCEAN_DT = 3600
-     set GOCART_DT = 1800
+     set GOCART_DT = 3600
      set  MOIST_DT = 1800
      set HEARTBEAT = 1800
      set    SYNCTQ = 1
@@ -640,7 +647,7 @@ if( $AGCM_IM == "c24" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
      set  OCEAN_DT = 3600
-     set GOCART_DT = 1800
+     set GOCART_DT = 3600
      set  MOIST_DT = 1800
      set HEARTBEAT = 1800
      set    SYNCTQ = 1
@@ -663,7 +670,7 @@ if( $AGCM_IM == "c48" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
      set  OCEAN_DT = 3600
-     set GOCART_DT = 1800
+     set GOCART_DT = 3600
      set  MOIST_DT = 1800
      set HEARTBEAT = 1800
      set    SYNCTQ = 1
@@ -680,10 +687,11 @@ if( $AGCM_IM == "c48" ) then
      set ATMOS_RES = CF0048x6C
      set POST_NDS = 4
 endif
-if( $AGCM_IM ==  "c90" ) then
+if( $AGCM_IM == "c90" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
-     set GOCART_DT = 900
+     set  OCEAN_DT = 3600
+     set GOCART_DT = 1800
      set  MOIST_DT = 900
      set HEARTBEAT = 900
      set    SYNCTQ = 1
@@ -705,12 +713,13 @@ if( $AGCM_IM ==  "c90" ) then
      set ATMOS_RES = CF0090x6C
      set POST_NDS = 8
 endif
-if( $AGCM_IM ==  "c180" ) then
+if( $AGCM_IM == "c180" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600 
-     set GOCART_DT = 600
-     set  MOIST_DT = 600
-     set HEARTBEAT = 600
+     set  OCEAN_DT = 3600
+     set GOCART_DT = 1800
+     set  MOIST_DT = 900
+     set HEARTBEAT = 900
      set    SYNCTQ = 1
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -736,8 +745,8 @@ if( $AGCM_IM == "c360" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
      set  OCEAN_DT = 3600
-     set GOCART_DT = 450
-     set  MOIST_DT = 450
+     set GOCART_DT = 1800
+     set  MOIST_DT = 900
      set HEARTBEAT = 450
      set    SYNCTQ = 1
      set AGCM_IM  = 360
@@ -758,8 +767,8 @@ if( $AGCM_IM == "c720" ) then
      set  SOLAR_DT = 3600
      set  IRRAD_DT = 3600
      set  OCEAN_DT = 3600
-     set GOCART_DT = 300
-     set  MOIST_DT = 300
+     set GOCART_DT = 1200
+     set  MOIST_DT = 600
      set HEARTBEAT = 300
      set    SYNCTQ = 1
      set AGCM_IM  = 720
@@ -780,9 +789,9 @@ if( $AGCM_IM == "c1440" ) then
      set  SOLAR_DT = 1800
      set  IRRAD_DT = 1800
      set  OCEAN_DT = 1800
-     set GOCART_DT = 225
-     set  MOIST_DT = 225
-     set HEARTBEAT = 225
+     set GOCART_DT = 600
+     set  MOIST_DT = 300
+     set HEARTBEAT = 150
      set    SYNCTQ = 1
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -799,12 +808,12 @@ if( $AGCM_IM == "c1440" ) then
      set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c2880" ) then
-     set  SOLAR_DT = 1800
-     set  IRRAD_DT = 1800
-     set  OCEAN_DT = 1800
-     set GOCART_DT = 150
+     set  SOLAR_DT = 900
+     set  IRRAD_DT = 900
+     set  OCEAN_DT = 900
+     set GOCART_DT = 300
      set  MOIST_DT = 150
-     set HEARTBEAT = 150
+     set HEARTBEAT = 75
      set    SYNCTQ = 1
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -821,12 +830,12 @@ if( $AGCM_IM == "c2880" ) then
      set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c5760" ) then
-     set  SOLAR_DT = 1800
-     set  IRRAD_DT = 1800
-     set  OCEAN_DT = 1800
-     set GOCART_DT = 75
-     set  MOIST_DT = 75
-     set HEARTBEAT = 75
+     set  SOLAR_DT = 900
+     set  IRRAD_DT = 900
+     set  OCEAN_DT = 900
+     set GOCART_DT = 180
+     set  MOIST_DT = 90
+     set HEARTBEAT = 45
      set    SYNCTQ = 1
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1229,24 +1238,19 @@ if ( "$USE_HYDROSTATIC" == "TRUE" ) then
 	set FV_HYDRO   = "hydrostatic = .T."
 	set FV_SATADJ  = "do_sat_adj  = .F."
         set GFDL_HYDRO = ".TRUE."
-        if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MGB1" ) then
-           set FV_NWAT    = "nwat = 1"
-        else
-           set FV_NWAT    = "nwat = 6"
-        endif
 else
 	set FV_HYDRO   = "hydrostatic = .F."
-        set GFDL_HYDRO = ".FALSE."
-	if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MGB1" ) then
-		set FV_NWAT    = "nwat       =  3 "
-	else
-		set FV_NWAT    = "nwat       =  6 "
-	endif
         if ( "$AGCM_MP" == "GFDL" ) then
                 set FV_SATADJ  = "do_sat_adj = .T."
         else
                 set FV_SATADJ  = "do_sat_adj = .F."
         endif
+        set GFDL_HYDRO = ".FALSE."
+endif
+if ( "$AGCM_MP" == "BACM" | "$AGCM_MP" == "MGB1" ) then
+        set FV_NWAT    = "nwat       =  3 "
+else
+        set FV_NWAT    = "nwat       =  6 "
 endif
 
 
