@@ -281,13 +281,13 @@ endif
 #######################################################################
 
 set USE_HYDROSTATIC = TRUE
-if( $HRCODE != 'c720'  & \
-    $HRCODE != 'c1440' & \
-    $HRCODE != 'c2880' & \
-    $HRCODE != 'c5760' & \
-    $HRCODE != 'c768'  & \
-    $HRCODE != 'c1536' & \
-    $HRCODE != 'c3072' ) set USE_HYDROSTATIC = FALSE
+if( $HRCODE == 'c720'  & \
+    $HRCODE == 'c1440' & \
+    $HRCODE == 'c2880' & \
+    $HRCODE == 'c5760' & \
+    $HRCODE == 'c768'  & \
+    $HRCODE == 'c1536' & \
+    $HRCODE == 'c3072' ) set USE_HYDROSTATIC = FALSE
 
 #######################################################################
 #                         Check for COUPLED Ocean

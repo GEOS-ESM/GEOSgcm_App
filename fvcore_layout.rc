@@ -1,5 +1,6 @@
 &fv_core_nml
  range_warn = .T.
+ fv_debug = .F.
 /
 
  &main_nml
@@ -22,12 +23,12 @@
 &gfdl_cloud_microphysics_nml
   sedi_transport = .true.
   do_sedi_heat = .false.
-  preciprad = .false.
+  preciprad = .true.
   const_vi = .F.
   const_vs = .F.
   const_vg = .F.
   const_vr = .F.
-  vi_fac = 1.
+  vi_fac = 0.8
   vi_max = 1.
   vs_max = 2.
   vg_max = 12.
@@ -37,19 +38,11 @@
   do_qa = .false.
   fast_sat_adj = .true.
   sat_adj0 = 0.75
-  tau_r2g  = 900.
-  tau_smlt = 900.
-  tau_g2r  = 900.
-  tau_imlt = 900.
   tau_i2s  = 900.
-  tau_l2r  = 900.
-  tau_v2l  = 300.
-  tau_l2v  = 900.
-  tau_i2v  = 900.
+  tau_l2v  = 300.
+  tau_i2v  = 300.
   tau_g2v  = 900.
-  tau_v2g  = 21600.
-  tau_revp = 300.
-  tau_frz  = 300.
+  tau_revp = 600.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
   dw_land  = 0.05
   dw_ocean = 0.20
@@ -73,7 +66,7 @@
   z_slope_ice  = .true.
   de_ice = .false.
   fix_negative = .true.
-  icloud_f = 2
+  icloud_f = 0
   mp_time = 150.
 /
 
