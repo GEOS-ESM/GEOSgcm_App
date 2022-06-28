@@ -28,7 +28,7 @@
   const_vs = .F.
   const_vg = .F.
   const_vr = .F.
-  vi_fac = 0.8
+  vi_fac = 1.
   vi_max = 1.
   vs_max = 2.
   vg_max = 12.
@@ -42,10 +42,11 @@
   tau_l2v  = 300.
   tau_i2v  = 300.
   tau_g2v  = 900.
-  tau_revp = 600.
+  tau_revp = 300.
+  tau_frz  = 450.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
-  dw_land  = 0.05
-  dw_ocean = 0.20
+  dw_land  = 0.035
+  dw_ocean = 0.140
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5

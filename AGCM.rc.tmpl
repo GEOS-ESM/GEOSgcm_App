@@ -19,6 +19,14 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 
 DYCORE: @DYCORE
 
+# uncomment here to enable MERRA-2 like FV3 dynamics config:
+#               -monotonic advection schemes
+#               -2nd order divergence damping
+#               -remap TE in logP with GMAO cubic)
+#      WARNING: these can still be overrided by fvcore_layout.rc
+#               but with the stock fvcore_layout.rc file this will work
+#FV3_CONFIG: MERRA-2
+
    SOLAR_DT: @SOLAR_DT
    IRRAD_DT: @IRRAD_DT
   SATSIM_DT: @SATSIM_DT
