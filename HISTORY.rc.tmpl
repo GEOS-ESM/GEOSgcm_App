@@ -1290,7 +1290,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAANGSTRCA.bc'    , 'CA.bc'      , 'BCANGSTR' ,
                                'CAFLUXUCA.bc'     , 'CA.bc'      , 'BCFLUXU'  ,
                                'CAFLUXVCA.bc'     , 'CA.bc'      , 'BCFLUXV'  ,
-                               'DBCDT'            , 'MOIST'      ,  'BCSV'    ,
+
 
 # Brown Carbon
 
@@ -1309,7 +1309,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAEMANCA.br'      , 'CA.br'      , 'BREMAN',
                                'CAFLUXUCA.br'     , 'CA.br'      , 'BRFLUXU',
                                'CAFLUXVCA.br'     , 'CA.br'      , 'BRFLUXV',
-                               'DBRCDT'           , 'MOIST'      , 'BRSV'    ,
+
 # Dust
                                'DUSMASS'     , 'DU'      ,
                                'DUCMASS'     , 'DU'      ,
@@ -1326,7 +1326,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'DUSD'        , 'DU'      ,
                                'DUDP'        , 'DU'      ,
                                'DUWT'        , 'DU'      ,
-                               'DDUDT'       , 'MOIST'   ,  'DUSV'    ,
+
 
 # Seasalt
                                'SSSMASS'     , 'SS'      ,
@@ -1340,7 +1340,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SSSCAT25'    , 'SS'      ,
                                'SSFLUXU'     , 'SS'      ,
                                'SSFLUXV'     , 'SS'      ,
-                               'DSSDT'       , 'MOIST'   ,  'SSSV'    ,
 # Sulfates
                                'SO2SMASS'    , 'SU'      ,
                                'SO2CMASS'    , 'SU'      ,
@@ -1353,7 +1352,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SUANGSTR'    , 'SU'      ,
                                'SUFLUXU'     , 'SU'      ,
                                'SUFLUXV'     , 'SU'      ,
-                               'DSUDT'       , 'MOIST'   ,  'SUSV'    ,
+
 # Organic Carbon
                                'CASMASSCA.oc'     , 'CA.oc'      , 'OCSMASS'  ,
                                'CACMASSCA.oc'     , 'CA.oc'      , 'OCCMASS'  ,
@@ -1362,7 +1361,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAANGSTRCA.oc'    , 'CA.oc'      , 'OCANGSTR' ,
                                'CAFLUXUCA.oc'     , 'CA.oc'      , 'OCFLUXU'  ,
                                'CAFLUXVCA.oc'     , 'CA.oc'      , 'OCFLUXV'  ,
-                               'DOCDT'            , 'MOIST'       ,  'OCSV'    ,
+
 # Nitrate
                                'HNO3SMASS'   , 'NI'      ,
                                'NH3SMASS'    , 'NI'      ,
@@ -1381,7 +1380,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'NIANGSTR'    , 'NI'      ,
                                'NIFLUXU'     , 'NI'      ,
                                'NIFLUXV'     , 'NI'      ,
-                               'DNIDT'       , 'MOIST'   ,  'NISV'    ,
+
 # Combined Aerosols
                                'TOTEXTTAU'  , 'GOCART2G'  ,
                                'TOTSCATAU'  , 'GOCART2G'  ,
@@ -1408,9 +1407,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAEMBBCA.bc'      , 'CA.bc'      , 'BCEMBB'   ,
                                'CAEMBFCA.bc'      , 'CA.bc'      , 'BCEMBF'   ,
                                'CAEMANCA.bc'      , 'CA.bc'      , 'BCEMAN'   ,
-#                              'DBCDT'            , 'MOIST'      , 'BCSV001;BCSV002'     ,
-                               'CASVCA.bc'        , 'CA.bc'      , 'BCSV001;BCSV002' ,
-                               'DBCDT'            , 'MOIST'      ,  'BCSV'
+                               'DBC2gDT'            , 'MOIST'      ,  'BCSV'
 
 # Brown Carbon
                                'CAEMCA.br'        , 'CA.br'      , 'BREM001;BREM002' ,
@@ -1420,8 +1417,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAEMBBCA.br'      , 'CA.br'      , 'BREMBB'   ,
                                'CAEMBFCA.br'      , 'CA.br'      , 'BREMBF'   ,
                                'CAEMANCA.br'      , 'CA.br'      , 'BREMAN'   ,
-                               'CASVCA.br'        , 'CA.br'      , 'BRSV001;BRSV002' ,
-                               'DBRCDT'          ,  'MOIST'      , 'BRSV'     ,
+                               'DBR2gCDT'          ,  'MOIST'      , 'BRSV'     ,
 
 
 # Dust
@@ -1432,7 +1428,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'DUEXTTFM'    , 'DU'      ,
                                'DUSCATFM'    , 'DU'      ,
                                'DUAERIDX'    , 'DU'      ,
-                               'DDUDT'       , 'MOIST'   , 'DUSV'  ,
+                               'DDU2gDT'       , 'MOIST'   , 'DUSV'  ,
 # Seasalt
                                'SSEM'        , 'SS'      ,
                                'SSSD'        , 'SS'      ,
@@ -1441,7 +1437,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SSEXTTFM'    , 'SS'      ,
                                'SSSCATFM'    , 'SS'      ,
                                'SSAERIDX'    , 'SS'      ,
-                               'DSSDT'       , 'MOIST'   , 'SSSV'  ,
+                               'DSS2gDT'       , 'MOIST'   , 'SSSV'  ,
 # Sulfates
                                'SUEM'        , 'SU'      ,
                                'SUDP'        , 'SU'      ,
@@ -1456,7 +1452,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'SO2EMBB'     , 'SU'      ,
                                'SO2EMVN'     , 'SU'      ,
                                'SO2EMVE'     , 'SU'      ,
-                               'DSUDT'       , 'MOIST'   , 'SUSV'  ,
+                               'DSU2gDT'       , 'MOIST'   , 'SUSV'  ,
 # Organic Carbon
                                'CAEMCA.oc'      , 'CA.oc'      , 'OCEM001;OCEM002'     ,
                                'CADPCA.oc'      , 'CA.oc'      , 'OCDP001;OCDP002'     ,
@@ -1466,7 +1462,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'CAEMANCA.oc'    , 'CA.oc'      , 'OCEMAN'   ,
                                'CAEMBGCA.oc'    , 'CA.oc'      , 'OCEMBG'   ,
                                'CAHYPHILCA.oc'  , 'CA.oc'      , 'OCHYPHIL' ,
-                               'DOCDT'          , 'MOIST'      , 'OCSV'  ,
+                               'DOC2gDT'          , 'MOIST'      , 'OCSV'  ,
 # Nitrate
                                'NIPNO3AQ'  , 'NI'  ,
                                'NIPNH4AQ'  , 'NI'  ,
@@ -1478,12 +1474,12 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'NH3EM'     , 'NI'  ,
                                'NH3DP'     , 'NI'  ,
                                'NH3WT'     , 'NI'  ,
-                               'NH3SV'     , 'NI'  ,
+                               'NH32gSV'     , 'MOIST'  , 'NH3SV'  ,
                                'NH4SD'     , 'NI'  ,
                                'NH4DP'     , 'NI'  ,
                                'NH4WT'     , 'NI'  ,
-                               'NH4SV'     , 'NI'  ,
-                               'DNIDT'     , 'MOIST'   , 'NISV'  ,
+                               'DNH42gDT'     , 'MOIST'   , 'NH4SV'  ,
+                               'DNI2gDT'     , 'MOIST'   , 'NISV'  ,
                                ::
 
   tavg3_2d_chm_Nx-.format:     'CFIO' ,
