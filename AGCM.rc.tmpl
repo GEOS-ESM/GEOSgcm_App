@@ -40,15 +40,15 @@ IRRADAvrg: 0
 EOT: .TRUE.
 ORBIT_ANAL2B: .TRUE.
 
-# UNCOMMENT to use Bacmeister 1-moment cloud microphysics 
-@MP_BACMCLDMICRO_OPTION: BACM_1M
+# UNCOMMENT to use Bacmeister 1-moment cloud microphysics
+@MP_BACMCLDMICR_OPTION: BACM_1M
 
 # UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
-@MP_MGBCLDMICRO_OPTION: MGB2_2M
+@MP_MGBCLDMICR_OPTION: MGB2_2M
 @MP_MGBMGVERSION: @MGVERSION
 
 # UNCOMMENT to use GFDL 6-phase cloud microphysics
-@MP_GFDLCLDMICRO_OPTION: GFDL_1M
+@MP_GFDLCLDMICR_OPTION: GFDL_1M
 # UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
 @MP_GFDLHYDROSTATIC: @GFDL_HYDRO
 
@@ -279,7 +279,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
 #   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
- 
+
 # Typical MERRA-2 Regular REPLAY Configuration
 # --------------------------------------------
 #M2 REPLAY_ANA_EXPID:   MERRA-2
@@ -416,7 +416,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ##REPLAY_REF_TIME: >>>ANATIME<<<
 ##REPLAY_REF_TGAP: 001500
 
-#REPLAY_MODE: Intermittent 
+#REPLAY_MODE: Intermittent
 #REPLAY_FILE: /discover/nobackup/projects/gmao/iesa/aerosol/Data/MERRA/iReplay/576x361/Y%y4/M%m2/d5_merra_jan98.bkg.eta.%y4%m2%d2_%h2z.nc4
 #REPLAY_IM:    576            # Required for Intermittent Replay on Cube
 #REPLAY_JM:    361            # Required for Intermittent Replay on Cube
@@ -481,19 +481,19 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 DIAGNOSE_PRECIP_TYPE: TRUE
 
 # Choice for Land Surface Model
-#      1 : Catchment 
-#      2 : CatchmentCNCLM40 
-#      3 : CatchmentCNCLM45 
+#      1 : Catchment
+#      2 : CatchmentCNCLM40
+#      3 : CatchmentCNCLM45
 # ------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
 # Apply increments from LDAS?
 #      0 : no  (default)
-#      1 : yes 
+#      1 : yes
 # ------------------------------------------------------------
 #LDAS_INCR: 0
 
-# Name of file containing Surface GridComp resource parameters 
+# Name of file containing Surface GridComp resource parameters
 # ------------------------------------------------------------
 # SURFRC: GEOS_SurfaceGridComp.rc
 
@@ -505,8 +505,8 @@ LSM_CHOICE: @LSM_CHOICE
 # *******   The model reads USE_CNNEE from CO2_GridComp.rc *******
 # *******   not from this file.                            *******
 # Atmosphere-Land CO2 coupling
-# ----------------------------	
-# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc and AMIP/CO2_GridComp.rc,	
+# ----------------------------
+# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc and AMIP/CO2_GridComp.rc,
 #                           in GOCART/ESMF/GOCART_GridComp/CO2_GridComp/ before you build the model.)
 #
 # ****************************************************************
@@ -738,7 +738,7 @@ TOPO_TRBVAR_FILE:   topo_trbvar.data
 LAI_FILE:                   lai.data
 GREEN_FILE:               green.data
 NDVI_FILE:                 ndvi.data
-TILING_FILE:                tile.bin 
+TILING_FILE:                tile.bin
 VISDF_FILE:                visdf.dat
 NIRDF_FILE:                nirdf.dat
 LNFM_FILE:                 lnfm.data
@@ -877,18 +877,18 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 @COUPLED steady_state_ocean: 0
 @COUPLED OCEAN_PICE_SCALING: 0.0
 
-# For running MOM5 coupled model in dual ocean mode, uncomment three lines below, 
+# For running MOM5 coupled model in dual ocean mode, uncomment three lines below,
 # make sure that regular replay is enabled, proper PRECIP_FILE is chosen,
 # sst.data and fraci.data are pointing to read forcing files on tripolar grid,
-# the run starts at 21z/03z/09z/15z, 
+# the run starts at 21z/03z/09z/15z,
 # HISTORY.rc collections have proper ref_time field
 # ---------------------------------------------------------------------------
 @MOM5#DUAL_OCEAN: 1
 @MOM5#DATA_SST_FILE: sst.data
 @MOM5#DATA_FRT_FILE: fraci.data
 
-@COUPLED 
-@COUPLED # Section for CICE 
+@COUPLED
+@COUPLED # Section for CICE
 @COUPLED # -----------------
 @COUPLED USE_CICE_Thermo: 1
 @COUPLED PRESCRIBED_ICE: 0
@@ -904,5 +904,5 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 @COUPLED ALBICEV: 0.78
 @COUPLED ALBICEI: 0.36
 @COUPLED ALBSNOWV: 0.98
-@COUPLED ALBSNOWI: 0.7 
-@COUPLED MIN_FREEZE_SALINITY: 5.0 
+@COUPLED ALBSNOWI: 0.7
+@COUPLED MIN_FREEZE_SALINITY: 5.0
