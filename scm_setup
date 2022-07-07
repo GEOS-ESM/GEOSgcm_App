@@ -452,6 +452,10 @@ $SED -f sedfile.SCM AGCM.rc.tmpl > AGCM.rc.sed.general
 $SED -f sedfile.CASE AGCM.rc.sed.general > AGCM.rc.CASE
 awk '{ if ( $1  !~ "#DELETE") { print } }' AGCM.rc.CASE > AGCM.rc
 /bin/rm AGCM.rc.sed.general AGCM.rc.CASE
+
+$SED -f sedfile.SCM fvcore_layout.rc > tmp
+mv tmp fvcore_layout.rc
+cat fvcore_layout.rc >> input.nml
 builtin cd $CURRDIR
 
 if [ $nlev -ne 72 ]
