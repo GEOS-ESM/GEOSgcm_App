@@ -280,14 +280,38 @@ endif
 #   Test to see if using hydrostatic or non-hydrostatic atmosphere
 #######################################################################
 
-set USE_HYDROSTATIC = TRUE
-if( $HRCODE == 'c720'  & \
-    $HRCODE == 'c1440' & \
+ASKHYDRO:
+
+set DEFAULT_HYDROSTATIC = TRUE
+if( $HRCODE == 'c1440' & \
     $HRCODE == 'c2880' & \
     $HRCODE == 'c5760' & \
     $HRCODE == 'c768'  & \
     $HRCODE == 'c1536' & \
-    $HRCODE == 'c3072' ) set USE_HYDROSTATIC = FALSE
+    $HRCODE == 'c3072' ) set DEFAULT_HYDROSTATIC = FALSE
+
+echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
+set   USE_HYDROSTATIC = $<
+
+if( .$USE_HYDROSTATIC == . ) then
+   set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
+else
+   set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
+   if(  $USE_HYDROSTATIC == "Y"     | \
+        $USE_HYDROSTATIC == "YES"   | \
+        $USE_HYDROSTATIC == "T"     | \
+        $USE_HYDROSTATIC == "TRUE"  ) set USE_HYDROSTATIC = TRUE
+   if(  $USE_HYDROSTATIC == "N"     | \
+        $USE_HYDROSTATIC == "NO"    | \
+        $USE_HYDROSTATIC == "F"     | \
+        $USE_HYDROSTATIC == "FALSE" ) set USE_HYDROSTATIC = FALSE
+     
+   if( "$USE_HYDROSTATIC" != "TRUE" & "$USE_HYDROSTATIC" != "FALSE" ) then
+      echo
+      echo "Use ${C1}Hydrostatic Atmosphere${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
+      goto ASKHYDRO
+   endif
+endif
 
 #######################################################################
 #                         Check for COUPLED Ocean
@@ -1198,8 +1222,10 @@ endif
 # Settings for hydrostatic vs non-hydrostatic
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
         set GFDL_HYDRO = ".TRUE."
+        set FV_HYDRO   = "hydrostatic = .T."
 else
         set GFDL_HYDRO = ".FALSE."
+        set FV_HYDRO   = "hydrostatic = .F."
 endif
 
 #######################################################################
@@ -2255,6 +2281,7 @@ s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@USE_AEROSOL_NN?$USE_AEROSOL_NN?g
 
+s?@FV_HYDRO?$FV_HYDRO?g
 s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
 s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
 

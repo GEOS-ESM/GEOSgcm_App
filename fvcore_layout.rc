@@ -1,4 +1,5 @@
 &fv_core_nml
+ @FV_HYDRO
  range_warn = .T.
  fv_debug = .F.
 /
@@ -46,7 +47,7 @@
   tau_frz  = 450.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
   dw_land  = 0.035
-  dw_ocean = 0.140
+  dw_ocean = 0.200
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5

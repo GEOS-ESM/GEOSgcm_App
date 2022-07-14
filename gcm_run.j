@@ -251,6 +251,14 @@ cd $SCRDIR
                              cp     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
+                             if (-z input.nml) then
+                                 echo "try cat for input.nml again"
+                                 cat fvcore_layout.rc >> input.nml
+                             endif
+                             if (-z input.nml) then
+                                 echo "input.nml is zero-length"
+                                 exit 0
+                             endif
 
                              @MOM6cp -f  $HOMDIR/MOM_input .
                              @MOM6cp -f  $HOMDIR/MOM_override .
