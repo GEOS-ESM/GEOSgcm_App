@@ -4,7 +4,7 @@
 #@BATCH_JOBNAME
 #@BATCH_GROUP
 
-umask 022 
+umask 022
 limit stacksize unlimited
 
 setenv ARCH `uname`
@@ -25,5 +25,7 @@ echo   VERSION: $GCMVER
 setenv EXPDIR  @EXPDIR
 
 cd $EXPDIR
+
+@EXTDATA2G $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
 $RUN_CMD 1 ./GEOSgcm.x
