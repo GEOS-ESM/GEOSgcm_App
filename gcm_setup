@@ -481,6 +481,7 @@ if( $OGCM == TRUE ) then
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
+    set OCEAN_PRELOAD = ""
     set CLDMICRO = "2MOMENT"
 
     # Ocean Model
@@ -507,10 +508,12 @@ if( $OGCM == TRUE ) then
 
     if ( $OCNMODEL == "MOM5" ) then
        set OCEAN_NAME="MOM"
+       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom.so'
        set MOM5=""
        set MOM6 = "#DELETE"
     else if ( $OCNMODEL == "MOM6" ) then
        set OCEAN_NAME="MOM6"
+       set OCEAN_PRELOAD = ""
        set MOM6=""
        set MOM5 = "#DELETE"
     endif
@@ -729,6 +732,7 @@ else
 
     set DATAOCEAN = ""
     set OCEAN_NAME = ""
+    set OCEAN_PRELOAD = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
     set MOM5      = "#DELETE"
@@ -2079,6 +2083,7 @@ s?>>>EMIP_OLDLAND<<<?$EMIP_OLDLAND?g
 s?>>>EMIP_NEWLAND<<<?$EMIP_NEWLAND?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
+s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?>>>4DIAUDAS<<<?#DELETE?g
 s?>>>REGULAR_REPLAY<<<?#?g

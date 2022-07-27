@@ -509,7 +509,7 @@ set LOGFILE = "$CNVDIR/GEOSgcm.log"
 # Assume gcm_setup set these properly for the local platform
 /bin/rm -f EGRESS
 @SETENVS
-$RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
 if( -e EGRESS ) then
    set rc = 0
 else
