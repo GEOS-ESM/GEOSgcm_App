@@ -518,7 +518,7 @@ if( $OGCM == TRUE ) then
        set MOM6 = "#DELETE"
     else if ( $OCNMODEL == "MOM6" ) then
        set OCEAN_NAME="MOM6"
-       set OCEAN_PRELOAD = ""
+       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6.so'
        set MOM6=""
        set MOM5 = "#DELETE"
     endif
