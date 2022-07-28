@@ -506,14 +506,16 @@ if( $OGCM == TRUE ) then
        endif
     endif
 
+    # NOTE: We use a CMake variable here because the shared library
+    # suffix is different on Linux and macOS. This is set by configure_file()
     if ( $OCNMODEL == "MOM5" ) then
        set OCEAN_NAME="MOM"
-       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom.so'
+       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
     else if ( $OCNMODEL == "MOM6" ) then
        set OCEAN_NAME="MOM6"
-       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6.so'
+       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
     endif
