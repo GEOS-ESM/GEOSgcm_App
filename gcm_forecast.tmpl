@@ -177,11 +177,11 @@ endif
 #            Copy and Modify RC Files from Home Directory
 #######################################################################
 
-                             /bin/ln -sf $EXPDIR/RC/* .
-                             @CPEXEC -f  $HOMDIR/*.rc .
-                             @CPEXEC -f  $HOMDIR/*.nml .
-                             @CPEXEC -f  $HOMDIR/*.yaml .
-                             @CPEXEC     $GEOSBIN/bundleParser.py .
+                             cp -f  $EXPDIR/RC/* .
+                             cp -f  $HOMDIR/*.rc .
+                             cp -f  $HOMDIR/*.nml .
+                             cp -f  $HOMDIR/*.yaml .
+                             cp     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
 
@@ -189,7 +189,7 @@ echo $nymd0 $nhms0 > cap_restart
 
 # Collapse whitespace like the strip utility
 # --------------------------------------
-@CPEXEC AGCM.rc AGCM.rc.orig
+cp AGCM.rc AGCM.rc.orig
 awk '{$1=$1};1' < AGCM.rc.orig > AGCM.rc
 
 
@@ -420,7 +420,6 @@ cat << _EOF_ > $FILE
 @COUPLED /bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
 @COUPLED /bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 @MOM5/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
-@MOM6/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -475,8 +474,8 @@ cat << _EOF_ > $FILE
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
-@COUPLED @CPEXEC $HOMDIR/*_table .
-@COUPLED @CPEXEC $GRIDDIR/INPUT/* INPUT
+@COUPLED cp $HOMDIR/*_table .
+@COUPLED cp $GRIDDIR/INPUT/* INPUT
 @COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
 @COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
 
@@ -487,13 +486,13 @@ _EOF_
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
 
 chmod +x linkbcs
-@CPEXEC  linkbcs $EXPDIR
+cp  linkbcs $EXPDIR
 
 #######################################################################
 #                    Get Executable and RESTARTS
 #######################################################################
 
-@CPEXEC $EXPDIR/GEOSgcm.x .
+cp $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -530,7 +529,7 @@ end
 
      else if( $FCST_TYPE == 'Exact' | $FCST_TYPE == 'Regular' ) then
           /bin/ln -s ${ANA_LOCATION}/rs/Y$year/M$month/${ANA_EXPID}.rst.${nymd0}_${hour}z.tar  .
-          @TAREXEC xf ${ANA_EXPID}.rst.${nymd0}_${hour}z.tar
+          tar xf ${ANA_EXPID}.rst.${nymd0}_${hour}z.tar
           if( $FCST_TYPE == 'Exact' ) /bin/ln -s ${ANA_LOCATION}/rs/Y$year/M*/${ANA_EXPID}.agcm_import_rst.*  .
           $GEOSBIN/stripname ${ANA_EXPID}.
           $GEOSBIN/stripname .${nymd0}_${hour}z.bin
@@ -543,7 +542,7 @@ endif
 
 # Re-Create Proper CAP.rc
 # -----------------------
-@CPEXEC CAP.rc CAP.rc.orig
+cp CAP.rc CAP.rc.orig
 awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 
 # Re-Create Proper CAP.rc
@@ -599,35 +598,41 @@ endif
 set yearc = `echo $nymdc | cut -c1-4`
 set yearf = `echo $nymdf | cut -c1-4`
 
-# Select proper MERRA-2 GOCART Emission RC Files
-# (NOTE: MERRA2-DD has same transition date)
-# ----------------------------------------------
-if( ${EMISSIONS} == MERRA2 | \
-    ${EMISSIONS} == MERRA2-DD ) then
-    set MERRA2_Transition_Date = 20000401
+# Which ExtData are we using
+set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l
 
-    if( $nymdc < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/19600101-20000331
-         if( $nymdf > ${MERRA2_Transition_Date} ) then
-          set nymdf = ${MERRA2_Transition_Date}
-          set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-          set newstring = "END_DATE: $nymdf $nhmsf"
-          /bin/mv CAP.rc CAP.tmp
-                     cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-         endif
+# Select proper AMIP GOCART Emission RC Files
+# -------------------------------------------
+if( ${EMISSIONS} == AMIP_EMISSIONS) then
+    set AMIP_Transition_Date = 20000301
+    if( $EXTDATA2G_TRUE == 0 ) then
+       if( $nymdc < ${AMIP_Transition_Date} ) then
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+            if( $nymdf > ${AMIP_Transition_Date} ) then
+             set nymdf = ${AMIP_Transition_Date}
+             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
+             set newstring = "END_DATE: $nymdf $nhmsf"
+             /bin/mv CAP.rc CAP.tmp
+                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+            endif
+       else
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+       endif
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/20000401-present
+       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
+
     if( $AGCM_LM == 72 ) then
-        @CPEXEC --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.yaml .
     else
-        set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
         foreach file ($files)
-          /bin/rm -f   `basename $file`
-          /bin/rm -f    dummy
-          @CPEXEC $file dummy
-              cat       dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
+          /bin/rm -f `basename $file`
+          /bin/rm -f dummy
+          cp $file dummy
+          cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
         end
     endif
 
@@ -658,13 +663,47 @@ if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv       
 
 @MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
 @MP_NO_USE_WSUB# -------------------------------------------------
-@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+if ($EXTDATA2G_TRUE == 0 ) then
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+else
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' > WSUB_ExtData.yaml
+endif
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
+# Generate the complete ExtData.rc
+# --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc
+
+# Switch to MODIS v6.1 data after Nov 2021
+if( $EXTDATA2G_TRUE == 0 ) then
+   set MODIS_Transition_Date = 20211101
+   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
+       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+   else
+       cat $extdata_files > ExtData.rc
+   endif
+endif
+
+if( $EXTDATA2G_TRUE == 1 ) then
+
+  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
+  touch ExtData.rc
+
+endif
+
+# Move GOCART to use RRTMGP Bands
+# -------------------------------
+# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
+#
+#set instance_files = `/bin/ls -1 *_instance*.rc`
+#foreach instance ($instance_files)
+#   /bin/mv $instance $instance.tmp
+#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+#   /bin/rm $instance.tmp
+#end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -673,7 +712,7 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-@COUPLED $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -715,17 +754,17 @@ else
 
    # Make decorated copies for restarts tarball
    # ------------------------------------------
-   @CPEXEC openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   @CPEXEC seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Inject decorated copies into restarts tarball
    # ---------------------------------------------
-   @TAREXEC rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   
+
    # Remove the saltwater internal restart
    # -------------------------------------
    /bin/rm $SCRDIR/saltwater_internal_rst
@@ -824,7 +863,7 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
- 
+
 #######################################################################
 #               Move HISTORY Files to Holding Directory
 #######################################################################

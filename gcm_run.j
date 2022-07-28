@@ -166,7 +166,7 @@ if( $GCMEMIP == TRUE & ! -e $EXPDIR/restarts/$RSTDATE/cap_restart ) then
 
 cd $EXPDIR/restarts/$RSTDATE
 
-@CPEXEC $HOMDIR/CAP.rc CAP.rc.orig
+cp $HOMDIR/CAP.rc CAP.rc.orig
 awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
@@ -176,8 +176,8 @@ set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 >>>EMIP_OLDLAND<<<# ---------------------
 >>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
 >>>EMIP_NEWLAND<<<# ----------------------------------------------
-@CPEXEC /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
-@TAREXEC xf  restarts.${year}${month}.tar
+cp /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
+tar xf  restarts.${year}${month}.tar
 /bin/rm restarts.${year}${month}.tar
 >>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
 
@@ -200,7 +200,7 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
-set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}e_${RSTID}.*catch*`
+set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}[cef]_${RSTID}.*catch*`
 if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
 if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
@@ -243,21 +243,21 @@ endif
 
 cd $SCRDIR
 /bin/rm -rf *
-                             /bin/ln -sf $EXPDIR/RC/* .
-                             @CPEXEC     $EXPDIR/cap_restart .
-                             @CPEXEC -f  $HOMDIR/*.rc .
-                             @CPEXEC -f  $HOMDIR/*.nml .
-                             @CPEXEC -f  $HOMDIR/*.yaml .
-                             @CPEXEC     $GEOSBIN/bundleParser.py .
+                             cp -f  $EXPDIR/RC/* .
+                             cp     $EXPDIR/cap_restart .
+                             cp -f  $HOMDIR/*.rc .
+                             cp -f  $HOMDIR/*.nml .
+                             cp -f  $HOMDIR/*.yaml .
+                             cp     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
 
-			    @MOM6@CPEXEC -f  $HOMDIR/MOM_input .
-			    @MOM6@CPEXEC -f  $HOMDIR/MOM_override .
+                             @MOM6cp -f  $HOMDIR/MOM_input .
+                             @MOM6cp -f  $HOMDIR/MOM_override .
 
 if( $GCMEMIP == TRUE ) then
-    @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
-    @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
+    cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
+    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
 endif
 
 set END_DATE  = `grep '^\s*END_DATE:'     CAP.rc | cut -d: -f2`
@@ -307,11 +307,13 @@ setenv CHMDIR    @CHMDIR
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
-@MOM5setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
-@MOM6setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
-@COUPLED setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
-@COUPLED setenv BCTAG `basename $GRIDDIR`
-@DATAOCEAN setenv BCTAG `basename $BCSDIR`
+@MOM5setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM5/@ATMOStag_@OCEANtag
+@MOM5setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM5/${OGCM_IM}x${OGCM_JM}
+@MOM6setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM6/@ATMOStag_@OCEANtag
+@MOM6setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM6/${OGCM_IM}x${OGCM_JM}
+@COUPLEDsetenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
+@COUPLEDsetenv BCTAG `basename $ABCSDIR`
+@DATAOCEANsetenv BCTAG `basename $BCSDIR`
 
 set             FILE = linkbcs
 /bin/rm -f     $FILE
@@ -322,13 +324,13 @@ cat << _EOF_ > $FILE
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
-@COUPLED /bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@COUPLED /bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
-@COUPLED /bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
-@COUPLED /bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
-@COUPLED /bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MOM5/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
-@MOM6/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@COUPLED/bin/ln -sf $OBCSDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+@COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
+@COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+@COUPLED/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
+@COUPLED/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MOM5#/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@MOM6#/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -358,12 +360,20 @@ cat << _EOF_ > $FILE
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
 
-/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
-/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
-/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
-/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
-/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
-/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+
+@COUPLED/bin/ln -sf $ABCSDIR/visdf_@RES_DATELINE.dat visdf.dat
+@COUPLED/bin/ln -sf $ABCSDIR/nirdf_@RES_DATELINE.dat nirdf.dat
+@COUPLED/bin/ln -sf $ABCSDIR/vegdyn_@RES_DATELINE.dat vegdyn.data
+@COUPLED/bin/ln -sf $ABCSDIR/lai_clim_@RES_DATELINE.data lai.data
+@COUPLED/bin/ln -sf $ABCSDIR/green_clim_@RES_DATELINE.data green.data
+@COUPLED/bin/ln -sf $ABCSDIR/ndvi_clim_@RES_DATELINE.data ndvi.data
+
 >>>GCMRUN_CATCHCN<<<if ( -f $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data lnfm.data
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
@@ -376,22 +386,26 @@ cat << _EOF_ > $FILE
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+
+@COUPLED/bin/ln -sf $ABCSDIR/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
+@COUPLED/bin/ln -sf $ABCSDIR/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
+@COUPLED/bin/ln -sf $ABCSDIR/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
 
 >>>FVCUBED<<<if(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
-@COUPLED @CPEXEC $HOMDIR/*_table .
-@COUPLED @CPEXEC $GRIDDIR/INPUT/* INPUT
-@COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
-@COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
+@COUPLED cp $HOMDIR/*_table .
+@COUPLED cp $OBCSDIR/INPUT/* INPUT
+@COUPLED /bin/ln -sf $OBCSDIR/cice/kmt_cice.bin .
+@COUPLED /bin/ln -sf $OBCSDIR/cice/grid_cice.bin .
 
 _EOF_
 
->>>GCMRUN_CATCHCN<<<set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2` 
+>>>GCMRUN_CATCHCN<<<set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
 >>>GCMRUN_CATCHCN<<<if ($LSM_CHOICE == 2) then
 >>>GCMRUN_CATCHCN<<<  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
 >>>GCMRUN_CATCHCN<<<endif
@@ -401,19 +415,21 @@ _EOF_
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
 
 chmod +x linkbcs
-@CPEXEC  linkbcs $EXPDIR
+cp  linkbcs $EXPDIR
 
 #######################################################################
 #                    Get Executable and RESTARTS
 #######################################################################
 
-@CPEXEC $EXPDIR/GEOSgcm.x .
+cp $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
 
 set chk_files      = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set chk_file_names = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" -f2`
+
+set monthly_chk_names = `cat $EXPDIR/HISTORY.rc | grep -v '^[\t ]*#' | sed -n 's/\([^\t ]\+\).monthly:[\t ]*1.*/\1/p' | sed 's/$/_rst/' `
 
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
@@ -430,18 +446,18 @@ end
 # Copy Restarts to Scratch Directory
 # ----------------------------------
 if( $GCMEMIP == TRUE ) then
-    foreach rst ( $rst_file_names )
-      if(-e $EXPDIR/restarts/$RSTDATE/$rst ) @CPEXEC $EXPDIR/restarts/$RSTDATE/$rst . &
+    foreach rst ( $rst_file_names $monthly_chk_names )
+      if(-e $EXPDIR/restarts/$RSTDATE/$rst ) cp $EXPDIR/restarts/$RSTDATE/$rst . &
     end
 else
-    foreach rst ( $rst_file_names )
-      if(-e $EXPDIR/$rst ) @CPEXEC $EXPDIR/$rst . &
+    foreach rst ( $rst_file_names $monthly_chk_names )
+      if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
     end
 endif
 wait
 
 @COUPLED /bin/mkdir INPUT
-@COUPLED @CPEXEC $EXPDIR/RESTART/* INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
@@ -450,14 +466,14 @@ set numrs = `/bin/ls -1 ${EXPDIR}/restarts/*${edate}* | wc -l`
 if($numrs == 0) then
    foreach rst ( $rst_file_names )
       if( -e $rst & ! -e ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} ) then
-            @CPEXEC $rst ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} &
+            cp $rst ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} &
       endif
    end
    wait
-@COUPLED    @CPEXEC -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED    cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
    cd $EXPDIR/restarts
-      @DATAOCEAN @TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-      @COUPLED @TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
+      @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+      @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
      @COUPLED /bin/rm -rf RESTART.${edate}
    cd $SCRDIR
@@ -497,9 +513,9 @@ while ( $counter <= ${NUM_SGMT} )
 /bin/rm -f  EGRESS
 
 if( $GCMEMIP == TRUE ) then
-    @CPEXEC -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
+    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
 else
-    @CPEXEC -f $HOMDIR/CAP.rc .
+    cp -f $HOMDIR/CAP.rc .
 endif
 
 /bin/mv CAP.rc CAP.rc.orig
@@ -562,35 +578,48 @@ if( @OCEANtag != DE0360xPE0180 ) then
     endif
 endif
 
-# Select proper MERRA-2 GOCART Emission RC Files
-# (NOTE: MERRA2-DD has same transition date)
-# ----------------------------------------------
-if( ${EMISSIONS} == MERRA2 | \
-    ${EMISSIONS} == MERRA2-DD ) then
-    set MERRA2_Transition_Date = 20000401
+# Which ExtData are we using
+set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
 
-    if( $nymdc < ${MERRA2_Transition_Date} ) then
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/19600101-20000331
-         if( $nymdf > ${MERRA2_Transition_Date} ) then
-          set nymdf = ${MERRA2_Transition_Date}
-          set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-          set newstring = "END_DATE: $nymdf $nhmsf"
-          /bin/mv CAP.rc CAP.tmp
-                     cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-         endif
+# Select proper AMIP GOCART Emission RC Files
+# -------------------------------------------
+if( ${EMISSIONS} == AMIP_EMISSIONS ) then
+    if( $EXTDATA2G_TRUE == 0 ) then
+       set AMIP_Transition_Date = 20000301
+
+       # Before 2000-03-01, we need to use AMIP.20C which has different
+       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
+       # that if you make a change to anything in $EXPDIR/RC/AMIP or
+       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
+       # directory to be consistent. Some files in AMIP.20C are symlinks to
+       # that in AMIP but others are not.
+
+       if( $nymdc < ${AMIP_Transition_Date} ) then
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+            if( $nymdf > ${AMIP_Transition_Date} ) then
+             set nymdf = ${AMIP_Transition_Date}
+             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
+             set newstring = "END_DATE: $nymdf $nhmsf"
+             /bin/mv CAP.rc CAP.tmp
+                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+            endif
+       else
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+       endif
     else
-         set MERRA2_EMISSIONS_DIRECTORY = $GEOSDIR/etc/$EMISSIONS/20000401-present
+       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
 
     if( $AGCM_LM == 72 ) then
-        @CPEXEC --remove-destination ${MERRA2_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.yaml .
     else
-        set files =      `/bin/ls -1 ${MERRA2_EMISSIONS_DIRECTORY}/*.rc`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
         foreach file ($files)
-          /bin/rm -f   `basename $file`
-          /bin/rm -f    dummy
-          @CPEXEC $file dummy
-              cat       dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
+          /bin/rm -f `basename $file`
+          /bin/rm -f dummy
+          cp $file dummy
+          cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
         end
     endif
 
@@ -615,15 +644,49 @@ if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv       
 
 @MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
 @MP_NO_USE_WSUB# -------------------------------------------------
-@MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+if ($EXTDATA2G_TRUE == 0 ) then
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+else
+   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' > WSUB_ExtData.yaml
+endif
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+
+
 
 # Generate the complete ExtData.rc
 # --------------------------------
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
 set  extdata_files = `/bin/ls -1 *_ExtData.rc`
-cat $extdata_files > ExtData.rc
+
+# Switch to MODIS v6.1 data after Nov 2021
+if( $EXTDATA2G_TRUE == 0 ) then
+   set MODIS_Transition_Date = 20211101
+   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
+       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+   else
+   cat $extdata_files > ExtData.rc
+   endif
+endif
+
+if( $EXTDATA2G_TRUE == 1 ) then
+
+  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
+  touch ExtData.rc
+
+endif
+
+# Move GOCART to use RRTMGP Bands
+# -------------------------------
+# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
+#
+#set instance_files = `/bin/ls -1 *_instance*.rc`
+#foreach instance ($instance_files)
+#   /bin/mv $instance $instance.tmp
+#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+#   /bin/rm $instance.tmp
+#end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -632,14 +695,14 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-@COUPLED $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
 #set yy  = `cat cap_restart | cut -c1-4`
 #echo $yy
-#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
-#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
+#ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
+#ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
 #######################################################################
 #                Split Saltwater Restart if detected
@@ -674,17 +737,17 @@ else
 
    # Make decorated copies for restarts tarball
    # ------------------------------------------
-   @CPEXEC openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   @CPEXEC seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Inject decorated copies into restarts tarball
    # ---------------------------------------------
-   @TAREXEC rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Remove the decorated restarts
    # -----------------------------
    /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   
+
    # Remove the saltwater internal restart
    # -------------------------------------
    /bin/rm $SCRDIR/saltwater_internal_rst
@@ -701,7 +764,7 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
    set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-         
+
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
@@ -818,7 +881,8 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
- 
+if ( $rc == -1 ) exit -1
+
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
 #        Note: cap_restart contains the current NYMD and NHMS
@@ -826,8 +890,8 @@ echo GEOSgcm Run Status: $rc
 
 set edate  = e`awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut -c1-2`z
 
-@COUPLED @CPEXEC -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
-@COUPLED @CPEXEC RESTART/* INPUT
+@COUPLED cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
+@COUPLED cp RESTART/* INPUT
 
 # Move Intermediate Checkpoints to RESTARTS directory
 # ---------------------------------------------------
@@ -860,7 +924,7 @@ set restarts = `/bin/ls -1 *_rst`
 # ----------------------------------------------------
     set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
 foreach  restart ($restarts)
-@CPEXEC $restart ${EXPDIR}/restarts
+cp $restart ${EXPDIR}/restarts
 end
 
 # Remove EXPID from RESTART name
@@ -881,34 +945,21 @@ end
 # TAR ARCHIVED RESTARTS
 # ---------------------
 cd $EXPDIR/restarts
-    if( $FSEGMENT == 00000000 ) then
-	@DATAOCEAN @TAREXEC cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-        @COUPLED @TAREXEC cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
-        /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-	@COUPLED /bin/rm -rf RESTART.${edate}
-    endif
-cd $SCRDIR
-
-# Move monthly collection checkpoints to restarts
-#------------------------------------------------
-set monthlies = `/bin/ls *chk`
-if ( $#monthlies > 0 ) then
-    foreach ff (*chk)
-	    /bin/mv $ff `basename $ff chk`rst
-    end
+if( $FSEGMENT == 00000000 ) then
+        @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
+        @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
+     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
+        @COUPLED /bin/rm -rf RESTART.${edate}
 endif
+
 
 #######################################################################
 #               Move HISTORY Files to Holding Directory
 #######################################################################
 
-# Check for files waiting in /holding
-# -----------------------------------
-set     waiting_files = `/bin/ls -1 $EXPDIR/holding/*/*nc4`
-set num_waiting_files = $#waiting_files
-
 # Move current files to /holding
 # ------------------------------
+cd $SCRDIR
 foreach collection ( $collections )
    /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
 end
@@ -924,13 +975,13 @@ end
 @COUPLED     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
 @COUPLED  endif
 @COUPLED  end
-@COUPLED 
+@COUPLED
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
 
 $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
- 
+
 if( $FSEGMENT != 00000000 ) then
      set REPLAY_BEG_DATE = `grep '^\s*BEG_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
      set REPLAY_END_DATE = `grep '^\s*END_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
@@ -960,7 +1011,7 @@ else
 @ counter = ${NUM_SGMT} + 1
 endif
 
-end
+end   # end of segment loop; remain in $SCRDIR
 
 #######################################################################
 #                              Re-Submit Job
@@ -972,29 +1023,29 @@ if( $GCMEMIP == TRUE ) then
      end
         /bin/rm -f $EXPDIR/restarts/$RSTDATE/cap_restart
      foreach rst ( `/bin/ls -1 *_rst` )
-       @CPEXEC $rst $EXPDIR/restarts/$RSTDATE/$rst &
+       cp $rst $EXPDIR/restarts/$RSTDATE/$rst &
      end
      wait
-     @CPEXEC cap_restart $EXPDIR/restarts/$RSTDATE/cap_restart
+     cp cap_restart $EXPDIR/restarts/$RSTDATE/cap_restart
 else
      foreach rst ( `/bin/ls -1 *_rst` )
         /bin/rm -f $EXPDIR/$rst
      end
         /bin/rm -f $EXPDIR/cap_restart
      foreach rst ( `/bin/ls -1 *_rst` )
-       @CPEXEC $rst $EXPDIR/$rst &
+       cp $rst $EXPDIR/$rst &
      end
      wait
-     @CPEXEC cap_restart $EXPDIR/cap_restart
+     cp cap_restart $EXPDIR/cap_restart
 endif
 
-@COUPLED @CPEXEC -rf RESTART $EXPDIR
+@COUPLED cp -rf RESTART $EXPDIR
 
 if ( $rc == 0 ) then
       cd  $HOMDIR
-      if( $GCMEMIP == TRUE ) then
+      if ( $GCMEMIP == TRUE ) then
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
-      else
+          else
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif
