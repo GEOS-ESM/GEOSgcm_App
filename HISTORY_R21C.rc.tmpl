@@ -769,10 +769,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'TO3'            , 'PCHEM'       ,
                                                     'PPBL'           , 'TURBULENCE'  , 'PBLTOP'  ,
 #Additional variables
-#X                                                  'CLDBASEHGT'     , 'MOIST'       ,
-#X                                                  'ZPBLRFRCT'      , 'TURBULENCE'  , 'PBLHRFRCT' ,
-#?                                                  'TCZPBL'         , 'TURBULENCE'  , 'PBLHRI'    ,
-#?                                                  'ZPBL10p'        , 'TURBULENCE'  , 'PBLHKH'    ,
+                                                    'CLDBASEHGT'     , 'MOIST'       ,
+                                                    'ZPBLRFRCT'      , 'TURBULENCE'  , 'PBLHRFRCT' ,
+                                                    'TCZPBL'         , 'TURBULENCE'  , 'PBLHRI'    ,
+                                                    'ZPBL10p'        , 'TURBULENCE'  , 'PBLHKH'    ,
 #
                                                      ::
 
@@ -824,10 +824,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'TO3'            , 'PCHEM'       ,
                                                     'PPBL'           , 'TURBULENCE'  , 'PBLTOP'  ,
 #Additional variables
-#X                                                  'CLDBASEHGT'     , 'MOIST'       ,
-#X                                                  'ZPBLRFRCT'      , 'TURBULENCE'  , 'PBLHRFRCT' ,
-#?                                                  'TCZPBL'         , 'TURBULENCE'  , 'PBLHRI'    ,
-#?                                                  'ZPBL10p'        , 'TURBULENCE'  , 'PBLHKH'    ,
+                                                    'CLDBASEHGT'     , 'MOIST'       ,
+                                                    'ZPBLRFRCT'      , 'TURBULENCE'  , 'PBLHRFRCT' ,
+                                                    'TCZPBL'         , 'TURBULENCE'  , 'PBLHRI'    ,
+                                                    'ZPBL10p'        , 'TURBULENCE'  , 'PBLHKH'    ,
 #
                                                      ::
 
@@ -3800,19 +3800,22 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.end_date:      >>>IOEDATE<<< ,
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.end_time:      >>>IOETIME<<< ,
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.vunit:        'm' ,
-  pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.vvars:        'ZLE' , 'DYN' ,
+  pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.vvars:        'ZLES' , 'TURBULENCE' ,
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.levels:        100 200 300 400 600 800 1000 1200 1400 1600 1800 2000 2300 2600 3000 3500 4000 ,
-  pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.fields:       'U;V'    , 'DYN'         ,
-                                                    'Q'      , 'MOIST'       , 'QV'  ,
-                                                    'QITOT'  , 'AGCM'        , 'QI'  ,
-                                                    'QLTOT'  , 'AGCM'        , 'QL'  ,
-                                                    'FCLD'   , 'MOIST'       ,
-                                                    'PL'     , 'DYN'         ,
-                                                    'T'      , 'DYN'         ,
-                                                    'THX0'   , 'MOIST'       , 'TH'  ,
-#X                                                  'SL'     , 'TURBULENCE'  ,
-#X                                                  'QT'     , 'TURBULENCE'  ,
-                                                    'KH'     , 'TURBULENCE'  ,
+  pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.fields:       'U;V'           , 'DYN'        ,
+                                                    'Q'             , 'MOIST'      , 'QV' ,
+                                                    'QLLSX1+QLCNX1' , 'MOIST'      , 'QL' ,
+                                                    'QILSX1+QICNX1' , 'MOIST'      , 'QI' ,
+#                                                   'QITOT'         , 'AGCM'       , 'QI' ,
+#                                                   'QLTOT'         , 'AGCM'       , 'QL' ,
+                                                    'FCLD'          , 'MOIST'      ,
+                                                    'PL'            , 'DYN'        ,
+                                                    'T'             , 'DYN'        ,
+                                                    'THX0'          , 'MOIST'      , 'TH' ,
+                                                    'SL'            , 'TURBULENCE' , 
+#                                                   'QT'            , 'TURBULENCE' , 
+                                                    'KH'            , 'TURBULENCE' ,
+                                                    'KM'            , 'TURBULENCE',
                                                      ::
 
   pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.format:       'CFIO' ,
@@ -3827,13 +3830,13 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.end_date:      >>>IOEDATE<<< ,
   pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.end_time:      >>>IOETIME<<< ,
   pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.vunit:        'm' ,
-  pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.vvars:        'ZLE' , 'DYN' ,
+  pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.vvars:        'ZLES' , 'TURBULENCE' ,
   pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.levels:        100 200 300 400 600 800 1000 1200 1400 1600 1800 2000 2300 2600 3000 3500 4000 ,
-  pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.fields:       'RADLW'         , 'RADIATION'    , 'DTDTLW' ,
-                                                    'RADSW'         , 'RADIATION'    , 'DTDTSW' ,
-#X                                                  'SLFLXTRB'      , 'TURBULENCE'   ,
-#X                                                  'QTFLXTRB'      , 'TURBULENCE'   ,
-#X                                                  'UFLXTRB'       , 'TURBULENCE'   ,
-#X                                                  'VFLXTRB'       , 'TURBULENCE'   ,
+  pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17_NCKS.fields:      'SLFLXTRB'      , 'TURBULENCE'   , 
+                                                    'QTFLXTRB'      , 'TURBULENCE'   ,
+                                                    'UFLXTRB'       , 'TURBULENCE'   ,
+                                                    'VFLXTRB'       , 'TURBULENCE'   ,
+                                                    'RADLW'         , 'RADIATION'    , 'DTDTLW'
+                                                    'RADSW'         , 'RADIATION'    , 'DTDTSW'
                                                      ::
 
