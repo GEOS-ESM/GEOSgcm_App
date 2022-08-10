@@ -1,26 +1,26 @@
 VERSION: 1
-EXPID:  @EXPID
+EXPID:  BENCHMARK
 EXPDSC: @EXPDSC
 EXPSRC: @EXPSRC
 
 
 COLLECTIONS: 'geosgcm_prog'
 #             'prog.eta'
-             'geosgcm_surf'
-             'geosgcm_ocn'
-             'geosgcm_moist'
-             'geosgcm_turb'
-             'geosgcm_gwd'
-             'geosgcm_tend'
-             'geosgcm_budi'
-             'geosgcm_buda'
-             'geosgcm_landice'
-             'geosgcm_meltwtr'
-             'geosgcm_snowlayer'
-             'geosgcm_tracer'
->>>HIST_GOCART<<<             'tavg2d_aer_x'
->>>HIST_GOCART<<<             'tavg3d_aer_p'
-#             'geosgcm_iau'
+#             'geosgcm_surf'
+#             'geosgcm_ocn'
+#             'geosgcm_moist'
+#             'geosgcm_turb'
+#             'geosgcm_gwd'
+#             'geosgcm_tend'
+#             'geosgcm_budi'
+#             'geosgcm_buda'
+#             'geosgcm_landice'
+#             'geosgcm_meltwtr'
+#             'geosgcm_snowlayer'
+#             'geosgcm_tracer'
+#             'tavg2d_aer_x'
+#             'tavg3d_aer_p'
+             'geosgcm_iau'
 #             'geosgcm_conv'
 #             'goswim_catch'
 #             'goswim_land'
@@ -38,22 +38,66 @@ COLLECTIONS: 'geosgcm_prog'
 #  list of COLLECTIONS for scripting purposes.   #
 ##################################################
 
-GRID_LABELS: PC@HIST_IMx@HIST_JM-DC
+GRID_LABELS: @HIRES_LATLON
 ::
 
-PC@HIST_IMx@HIST_JM-DC.GRID_TYPE: LatLon
-PC@HIST_IMx@HIST_JM-DC.IM_WORLD: @HIST_IM
-PC@HIST_IMx@HIST_JM-DC.JM_WORLD: @HIST_JM
-PC@HIST_IMx@HIST_JM-DC.POLE: PC
-PC@HIST_IMx@HIST_JM-DC.DATELINE: DC
-PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
+PC360x181-DC.GRID_TYPE: LatLon
+PC360x181-DC.IM_WORLD: 360
+PC360x181-DC.JM_WORLD: 181
+PC360x181-DC.POLE: PC
+PC360x181-DC.DATELINE: DC
+PC360x181-DC.LM: 181
+
+PC720x361-DC.GRID_TYPE: LatLon
+PC720x361-DC.IM_WORLD: 720
+PC720x361-DC.JM_WORLD: 361
+PC720x361-DC.POLE: PC
+PC720x361-DC.DATELINE: DC
+PC720x361-DC.LM: 181
+
+PC1440x721-DC.GRID_TYPE: LatLon
+PC1440x721-DC.IM_WORLD: 1440
+PC1440x721-DC.JM_WORLD: 721
+PC1440x721-DC.POLE: PC
+PC1440x721-DC.DATELINE: DC
+PC1440x721-DC.LM: 181
+
+PC2880x1441-DC.GRID_TYPE: LatLon
+PC2880x1441-DC.IM_WORLD: 2880
+PC2880x1441-DC.JM_WORLD: 1441
+PC2880x1441-DC.POLE: PC
+PC2880x1441-DC.DATELINE: DC
+PC2880x1441-DC.LM: 181
+
+PC5760x2881-DC.GRID_TYPE: LatLon
+PC5760x2881-DC.IM_WORLD: 5760
+PC5760x2881-DC.JM_WORLD: 2881
+PC5760x2881-DC.POLE: PC
+PC5760x2881-DC.DATELINE: DC
+PC5760x2881-DC.LM: 181
+
+PC11520x5761-DC.GRID_TYPE: LatLon
+PC11520x5761-DC.IM_WORLD: 11520
+PC11520x5761-DC.JM_WORLD: 5761
+PC11520x5761-DC.POLE: PC
+PC11520x5761-DC.DATELINE: DC
+PC11520x5761-DC.LM: 181
+
+PC23040x11521-DC.GRID_TYPE: LatLon
+PC23040x11521-DC.IM_WORLD: 23040
+PC23040x11521-DC.JM_WORLD: 11521
+PC23040x11521-DC.POLE: PC
+PC23040x11521-DC.DATELINE: DC
+PC23040x11521-DC.LM: 181
 
   geosgcm_prog.template:       '%y4%m2%d2_%h2%n2z.nc4',
   geosgcm_prog.archive:        '%c/Y%y4',
   geosgcm_prog.format:         'CFIO',
+  geosgcm_prog.nbits:           12,
   geosgcm_prog.deflate:         1,
-  geosgcm_prog.grid_label:      PC@HIST_IMx@HIST_JM-DC,
+  geosgcm_prog.grid_label:      @HIRES_LATLON,
   geosgcm_prog.frequency:       060000,
+  geosgcm_prog.duration:        000000,
   geosgcm_prog.vscale:          100.0,
   geosgcm_prog.vunit:          'hPa',
   geosgcm_prog.vvars:          'log(PLE)' , 'DYN'          ,
@@ -605,21 +649,79 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_iau.archive:         '%c/Y%y4',
   geosgcm_iau.format:          'CFIO',
   geosgcm_iau.deflate:          1,
-  geosgcm_iau.grid_label:       PC@HIST_IMx@HIST_JM-DC,
+  geosgcm_iau.grid_label:       @HIRES_LATLON,
   geosgcm_iau.mode:            'time-averaged',
-# geosgcm_iau.monthly:          1,
-  geosgcm_iau.frequency:        060000,
-  geosgcm_iau.ref_time:         030000,
+  geosgcm_iau.frequency:        240000,
+  geosgcm_iau.ref_time:         210000,
+  geosgcm_iau.duration:         000000,
   geosgcm_iau.vscale:           100.0,
   geosgcm_iau.vunit:           'hPa',
   geosgcm_iau.vvars:           'log(PLE)'    , 'DYN'          ,
-  geosgcm_iau.levels:           1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.2 0.1 0.07 0.05 0.04 0.03 0.02,
+  geosgcm_iau.levels:          1000 990 980 970 960 950 940 930 920 910 900 890 880 870 860 850 840 830 820 810 800 790 780 770 760 750 740 730 720 710 700 690 680 670 660 650 640 630 620 610 600 590 580 570 560 550 540 530 520 510 500 490 480 470 460 450 440 430 420 410 400 390 380 370 360 350 340 330 320 310 300 290 280 270 260 250 240 230 220 210 200 190 180 170 160 150 140 130 120 110 100 90  80  70  60  50  40  30  20  10  9   8   7   6   5   4   3   2   1   0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1 0.09 0.08 0.07 0.06 0.05 0.04 0.03 0.02 0.01,
   geosgcm_iau.fields:          'DUDT_ANA;DVDT_ANA' , 'AGCM'   , 'DUDTANA;DVDTANA' ,
                                'DTDT_ANA'    , 'AGCM'         , 'DTDTANA'    ,
                                'DQVDT_ANA'   , 'AGCM'         , 'DQDTANA'    ,
                                'DMDTANA'     , 'DYN'          , 'DMDTANA'    ,
                                'DPSDT_CON'   , 'AGCM'         , 'DPDTCON'    ,
                                'DQVDT_CON'   , 'AGCM'         , 'DQDTCON'    ,
+## Other tendencies
+                          'DUDTDYN;DVDTDYN'  , 'DYN'     ,
+                          'UIT;VIT'          , 'PHYSICS' , 'DUDTTRB;DVDTTRB' ,
+                          'DUDT;DVDT'        , 'MOIST'   , 'DUDTMST;DVDTMST' ,
+                          'DUDT;DVDT'        , 'GWD'     , 'DUDTGWD;DVDTGWD' ,
+                          'TTMGW'            , 'GWD'     , 'DTDTGWD' ,
+                          'DUDT_BKG;DVDT_BKG', 'GWD'     , 'DUDTBKG;DVDTBKG' ,
+                          'DTDT_BKG'         , 'GWD'     , 'DTDTBKG' ,
+                          'DUDT_RAY;DVDT_RAY', 'GWD'     , 'DUDTRAY;DVDTRAY' ,
+                          'DTDT_RAY'         , 'GWD'     , 'DTDTRAY' ,
+                          'DUDT_ORO;DVDT_ORO', 'GWD'     , 'DUDTORO;DVDTORO' ,
+                          'DTDT_ORO',          'GWD'     , 'DTDTORO' ,
+##                        'DUDT_TFD;DVDT_TFD', 'GWD'     , 'DUDTTFD;DVDTTFD' ,
+                          'DTDTDYN'  , 'DYN'           ,
+                          'TIM'      , 'PHYSICS'       ,  'DTDTMST'    ,
+                          'TIT'      , 'PHYSICS'       ,  'DTDTTRB'    ,
+                          'EKH'      , 'TURBULENCE'    ,
+                          'RADLW'    , 'RADIATION'     ,  'DTDTLW'     ,
+                          'RADLWC'   , 'RADIATION'     ,  'DTDTLWC'    ,
+                          'RADLWCNA' , 'RADIATION'     ,  'DTDTLWCNA'  ,
+                          'RADSW'    , 'RADIATION'     ,  'DTDTSW'     ,
+                          'RADSWC'   , 'RADIATION'     ,  'DTDTSWC'    ,
+                          'RADSWNA'  , 'RADIATION'     ,  'DTDTSWNA'   ,
+                          'RADSWCNA' , 'RADIATION'     ,  'DTDTSWCNA'  ,
+                          'TIF'      , 'PHYSICS'       ,  'DTDTFRI'    ,
+                          'DQVDTDYN' , 'DYN'           ,
+## Other Exports
+                          'QITOT'    , 'AGCM'          , 'QI'  ,
+                          'QLTOT'    , 'AGCM'          , 'QL'  ,
+                          'FCLD'    , 'MOIST'    ,
+                          'CLLS'    , 'MOIST'    ,
+                          'CLCN'    , 'MOIST'    ,
+                          'QLLS'    , 'MOIST'    ,
+                          'QLCN'    , 'MOIST'    ,
+                          'QILS'    , 'MOIST'    ,
+                          'QICN'    , 'MOIST'    ,
+                          'RI'      , 'MOIST'    , 'RICE'   ,
+                          'RL'      , 'MOIST'    , 'RLIQ'   ,
+                          'TBISCCP' , 'SATSIM'   ,
+                          'CNV_FRC' , 'MOIST'    ,
+                          'TPREC'     , 'MOIST'    , 'PRECTOT' ,
+                          'SNO'       , 'MOIST'    , 'PRECSNO' ,
+                          'ICE'       , 'MOIST'    ,
+                          'FRZR'      , 'MOIST'    ,
+##                        'RAIN'      , 'MOIST'    ,
+                          'PTYPE'     , 'MOIST'    ,
+                          'PCU' , 'MOIST'    , 'PRECCON' ,
+                          'PLS' , 'MOIST'    , 'PRECLSC' ,
+                          'ALBEDO'    , 'SOLAR'        ,
+                          'OLR'     , 'IRRAD'    ,
+                          'OSR'     , 'SOLAR'    ,
+                          'ZPBL'    , 'TURBULENCE' ,  'PBLH' ,
+                          'TQV'        , 'AGCM'     ,
+                          'TQI'        , 'AGCM'     ,
+                          'TQL'        , 'AGCM'     ,
+                          'CNV_MF0' , 'MOIST'         , 'CNVMF0' ,
+                          'CNV_MFD' , 'MOIST'         , 'CNVMFD' ,
+                          'CNV_MFC' , 'MOIST'         , 'CNVMFC' ,
                                 ::
 
 # Note: Be Sure to ADD: USE_SATSIM_MODIS: 1 in AGCM.rc for this Collection

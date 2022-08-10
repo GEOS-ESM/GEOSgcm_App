@@ -22,6 +22,14 @@ DYCORE: @DYCORE
  SOLAR_DT: 3600
  IRRAD_DT: 3600
 SATSIM_DT: 1800
+AdvCore_Advection: 0
+
+     SOLAR_DT: 3600
+     IRRAD_DT: 3600
+    SATSIM_DT: 1800
+### GOCART_DT: 450
+  GOCART2G_DT: 450
+     MOIST_DT: 450
 
 SOLARAvrg: 0
 IRRADAvrg: 0
@@ -29,16 +37,11 @@ IRRADAvrg: 0
 EOT: .TRUE.
 ORBIT_ANAL2B: .TRUE.
 
-# UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
-@MP_MG1CLDMICRO: 2MOMENT
-
-# UNCOMMENT to use GFDL 6-phase cloud microphysics
-@MP_GFDLCLDMICRO: GFDL
-# UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
-@MP_GFDLHYDROSTATIC: @GFDL_HYDRO
-
+CLDMICRO: 1MOMENT
+SYNCTQ: 1
+HYDROSTATIC: TRUE
 # UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
-#USE_AEROSOL_NN: 0
+USE_AEROSOL_NN: 1
 
 ###########################################################
 # Flag for definition of the convection scheme
@@ -276,8 +279,17 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   ANA EXPID and LOCATION used for REPLAY
 #   --------------------------------------
-#   REPLAY_ANA_EXPID:    @REPLAY_ANA_EXPID
-#   REPLAY_ANA_LOCATION: @REPLAY_ANA_LOCATION
+#X_EXP  REPLAY_ANA_EXPID:    @X_EXPID
+#X_EXP  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@X_EXPID
+#X_EXP  REPLAY_MODE: Regular
+#X_EXP  REPLAY_FILE: ana/Y%y4/M%m2/${ANAexpid}.asm.eta.%y4%m2%d2_%h2%n2z.nc4
+
+#   Regular REPLAY to ERA5
+#   ----------------------
+#ERA5  REPLAY_ANA_EXPID: era5_eta2eta_L137
+#ERA5  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/osse2/Ops12KM_R/forecasts_EC/ERA5/UV
+#ERA5  REPLAY_MODE: Regular
+#ERA5  REPLAY_FILE: /discover/nobackup/projects/gmao/osse2/Ops12KM_R/forecasts_EC/ERA5/UV/%y4%m2%d2_%h20000/era5_eta2eta_L137.%y4%m2%d2_%h2z.nc4
 
 #   Typical Exact REPLAY Configuration
 #   ----------------------------------

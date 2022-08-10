@@ -4,13 +4,13 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#@BATCH_TIME@RUN_T
-#@RUN_P
-#@BATCH_JOBNAME@RUN_N
-#@RUN_Q
-#@BATCH_GROUP
-#@BATCH_JOINOUTERR
-#@BATCH_NAME -o gcm_run.o@RSTDATE
+#SBATCH --time=06:00:00
+#SBATCH --nodes=@NODES
+#SBATCH --tasks-per-node=@TASKS_PER_NODE
+#SBATCH --job-name=@EXPID
+#SBATCH --output=@BENCH_DIR/%x.o%j
+#SBATCH --nice --no-requeue
+#SBATCH @SYSTEM
 
 #######################################################################
 #                         System Settings
@@ -46,8 +46,8 @@ echo   VERSION: $GCMVER
 
 
 setenv  EXPID   @EXPID
-setenv  EXPDIR  @EXPDIR
-setenv  HOMDIR  @HOMDIR
+setenv  EXPDIR  @BENCH_DIR/@EXPID
+setenv  HOMDIR  @BENCH_DIR/@EXPID
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
@@ -68,6 +68,9 @@ if( $GCMEMIP == TRUE ) then
 else
     setenv  SCRDIR  $EXPDIR/scratch
 endif
+
+set STATS_ONLY = @STATS_ONLY
+if ($STATS_ONLY == 0) then
 
 if (! -e $SCRDIR ) mkdir -p $SCRDIR
 
@@ -110,12 +113,11 @@ else
 endif
 
 @ MODEL_NPES = $NX * $NY
+@ NCPUS_PER_NODE = @TASKS_PER_NODE
 
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
-
-      set NCPUS_PER_NODE = @NCPUS_PER_NODE
 
       @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
       @ NPES   = $NODES * $NCPUS_PER_NODE
@@ -569,12 +571,12 @@ set yearf = `echo $nymdf | cut -c1-4`
 # --------------------------------------------------------------------------------------------------
 if( @OCEANtag != DE0360xPE0180 ) then
     if( $yearf > $yearc ) then
-       @ yearf = $yearc + 1
-       @ nymdf = $yearf * 10000 + 0101
-        set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-        set newstring = "END_DATE: $nymdf $nhmsf"
-        /bin/mv CAP.rc CAP.tmp
-        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+      #@ yearf = $yearc + 1
+      #@ nymdf = $yearf * 10000 + 0101
+      # set oldstring = `grep '^\s*END_DATE:' CAP.rc`
+      # set newstring = "END_DATE: $nymdf $nhmsf"
+      # /bin/mv CAP.rc CAP.tmp
+      # cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
     endif
 endif
 
@@ -882,6 +884,90 @@ else
 endif
 echo GEOSgcm Run Status: $rc
 if ( $rc == -1 ) exit -1
+endif # STATS_ONLY
+
+if ($EXPID =~ '*RFCST*') then
+
+echo Running Stats
+
+foreach CLIM_SRC ('MERRA-2' 'ERA5')
+
+cd $SCRDIR
+
+set nDAYS = `cat CAP.rc | grep JOB_SGMT: | cut -d: -f2 | cut -c7-9`
+@ nMAX = $nDAYS + 1
+@ fHOURS = 24 * $nDAYS
+@ nSECS = -60 * 60 * $fHOURS
+
+set nymdc = `cat cap_restart | cut -c1-8`
+set nhmsc = `cat cap_restart | cut -c10-15`
+set dateV  = `$GEOSBIN/tick $nymdc $nhmsc $nSECS`
+set nymd =  $dateV[1]
+set yyyymm   = `echo $nymd | cut -b1-6`
+set FDAYS  = `printf "%02d" $nDAYS`
+
+set statsdir = $SCRDIR/GEOS-${CLIM_SRC}.stats.$yyyymm.f${FDAYS}day
+mkdir -p $statsdir
+cd       $statsdir
+
+set year0      = `echo $nymd | cut -b1-4`
+set month0     = `echo $nymd | cut -b5-6`
+set fcst_files = `/bin/ls -1 ../*geosgcm_prog*nc4`
+
+# Set Climatology
+# ------------
+if ( "$CLIM_SRC" == 'ERA5' ) then
+   set clim_files = `/bin/ls -1 /discover/nobackup/projects/gmao/g6dev/sdrabenh/valdat/era5/clim_data/era5_mnth.mrg1_avg.1440x0721.Y1985-2014.T[01][0268]z.nc4`
+   set levs_clim  = `echo 1000 975 950 925 900 875 850 825 800 775 750 700 650 600 550 500 450 400 350 300 250 225 200 175 150 125 100 70 50 30 20 10 7 5 3 2 1`
+else
+   set clim_files = `/bin/ls -1 $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_[01][0268]z.576x361.data.nc4`
+   set levs_clim  = `echo 1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1`
+endif
+
+set ana_files = ''
+@ n = 1
+while ($n <= $nMAX)
+set year  = `echo $nymd | cut -b1-4`
+set month = `echo $nymd | cut -b5-6`
+if ( "$CLIM_SRC" == 'ERA5' ) then
+ set next = `/bin/ls -1 /discover/nobackup/projects/gmao/g6dev/sdrabenh/valdat/era5/pres_levels_daily/Y$year/M$month/era5_pl-allvar.${nymd}*z.nc4`
+else
+ set next = `/bin/ls -1 /discover/nobackup/projects/gmao/dadev/dao_it/archive/@X_EXPID/diag/Y${year}/M${month}/@X_EXPID.inst3_3d_asm_Np.${nymd}*.nc4`
+endif
+set ana_files = `echo $ana_files $next`
+set date = `$GEOSUTIL/post/tick $nymd 0 86400`
+set nymd = $date[1]
+echo $n $date $nMAX
+@ n = $n + 1
+end
+
+cat > stats_$CLIM_SRC.j << EOF
+#!/bin/csh -f
+#SBATCH --time=03:00:00
+#SBATCH --nodes=1
+#SBATCH --job-name=@EXPID
+#SBATCH --output=${EXPDIR}_STATS_${CLIM_SRC}.o%j
+#SBATCH --no-requeue
+#SBATCH @SYSTEM
+setenv GEOSDIR   $GEOSDIR
+setenv GEOSBIN   $GEOSBIN
+setenv GEOSETC   $GEOSETC
+setenv GEOSUTIL  $GEOSUTIL
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+echo $LD_LIBRARY_PATH
+cd $statsdir
+$RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files -ana $ana_files -cli $clim_files -rc $GEOSUTIL/post/stats.rc \
+                                 -levs $levs_clim -tag $EXPID -nfreq 060000 -fhour $fHOURS
+exit 0
+EOF
+sbatch stats_$CLIM_SRC.j
+
+cd $SCRDIR
+
+end
+endif
+exit 0
 
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
