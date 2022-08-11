@@ -13,6 +13,7 @@ ecbuild_add_executable (
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
 
 target_link_libraries (GEOSgcm.x OpenMP::OpenMP_Fortran)
+target_link_libraries (GEOSgcm.x -fopenacc -foffload="-lgfortran -lgomp -lm" -foffload=nvptx-none)
 target_include_directories (GEOSgcm.x PUBLIC ${INC_ESMF})
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
