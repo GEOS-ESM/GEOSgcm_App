@@ -183,18 +183,20 @@ echo "Enter the ${C1}Atmospheric Horizontal Resolution${CN} code:"
 echo "--------------------------------------"
 echo "            Cubed-Sphere"
 echo "--------------------------------------"
-echo "   ${C2}c12  --  8   deg ${CN}"
-echo "   ${C2}c24  --  4   deg ${CN}"
-echo "   ${C2}c48  --  2   deg ${CN}"
-echo "   ${C2}c90  --  1   deg ${CN}"
-echo "   ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
-echo "   ${C2}c360 -- 1/4  deg (${C1}28-km${C2}) ${CN} "
-echo "   ${C2}c720 -- 1/8  deg (${C1}14-km${C2}) ${CN}"
-echo "   ${C2}c1440 - 1/16 deg (${C1} 7-km${C2}) ${CN}"
-echo "   ${C2}          DYAMOND Grids                 "
-echo "   ${C2}c768 -- 1/8  deg (${C1}12-km${C2}) ${CN}"
-echo "   ${C2}c1536 - 1/16 deg (${C1} 6-km${C2}) ${CN}"
-echo "   ${C2}c3072 - 1/32 deg (${C1} 3-km${C2}) ${CN}"
+echo "   ${C2}c12  -- 8    deg (${C1}750.0    km${C2}) ${CN}"
+echo "   ${C2}c24  -- 4    deg (${C1}375.0    km${C2}) ${CN}"
+echo "   ${C2}c48  -- 2    deg (${C1}187.5    km${C2}) ${CN}"
+echo "   ${C2}c90  -- 1    deg (${C1}100.0    km${C2}) ${CN}"
+echo "   ${C2}c180 -- 1/2  deg (${C1} 50.0    km${C2}) ${CN}"
+echo "   ${C2}c360 -- 1/4  deg (${C1} 25.0    km${C2}) ${CN} "
+echo "   ${C2}c720 -- 1/8  deg (${C1} 12.5    km${C2}) ${CN}"
+echo "   ${C2}c1440 - 1/16 deg (${C1}  6.25   km${C2}) ${CN}"
+echo "   ${C2}c2880 - 1/32 deg (${C1}  3.125  km${C2}) ${CN}"
+echo "   ${C2}c5760 - 1/64 deg (${C1}  1.5625 km${C2}) ${CN}"
+echo "   ${C2}             DYAMOND Grids                    "
+echo "   ${C2}c768 -- 1/8  deg (${C1} 12.0    km${C2}) ${CN}"
+echo "   ${C2}c1536 - 1/16 deg (${C1}  6.0    km${C2}) ${CN}"
+echo "   ${C2}c3072 - 1/32 deg (${C1}  3.0    km${C2}) ${CN}"
 echo " "
 set HRCODE = `echo $<`
 set HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
@@ -207,6 +209,8 @@ if( $HRCODE != 'c12'   & \
     $HRCODE != 'c360'  & \
     $HRCODE != 'c720'  & \
     $HRCODE != 'c1440' & \
+    $HRCODE != 'c2880' & \
+    $HRCODE != 'c5760' & \
     $HRCODE != 'c768'  & \
     $HRCODE != 'c1536' & \
     $HRCODE != 'c3072' ) goto HRCODE
@@ -273,7 +277,7 @@ endif
 
 ASKHYDRO:
 
-set DEFAULT_HYDROSTATIC = @CFG_HYDROSTATIC@
+set DEFAULT_HYDROSTATIC = TRUE
 
 echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
@@ -765,7 +769,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 900
+     set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -791,7 +795,7 @@ if( $AGCM_IM ==  "c12" ) then
      set   CNV_NY = 6
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 900
+     set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -812,7 +816,7 @@ if( $AGCM_IM ==  "c24" ) then
      set   CNV_NY = 6
 endif
 if( $AGCM_IM ==  "c48" ) then
-     set       DT = 450
+     set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -831,7 +835,7 @@ if( $AGCM_IM ==  "c48" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c90" ) then
-     set       DT = 450
+     set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
@@ -856,7 +860,7 @@ if( $AGCM_IM ==  "c90" ) then
      set POST_NDS = 8
 endif
 if( $AGCM_IM ==  "c180" ) then
-     set       DT = 450
+     set       DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set  CHEM_DT = $DT
@@ -904,31 +908,8 @@ if( $AGCM_IM == "c360" ) then
      set POST_NDS = 12
      set DEF_IOS_NDS = 2
 endif
-if( $AGCM_IM == "c500" ) then
-     set       DT = 450
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
-     set AGCM_IM  = 500
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 12
-     set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 4
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0500x6C
-     set   CNV_NX = 8
-     set POST_NDS = 12
-     set USE_SHMEM = 1
-     set DEF_IOS_NDS = 2
-endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 450
+     set       DT = 225
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -951,7 +932,7 @@ if( $AGCM_IM == "c720" ) then
      set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 450
+     set       DT = 150
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -968,6 +949,52 @@ if( $AGCM_IM == "c1440" ) then
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF1440x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set DEF_IOS_NDS = 4
+endif
+if( $AGCM_IM == "c2880" ) then
+     set       DT = 75
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 2880
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 30
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF2880x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set DEF_IOS_NDS = 4
+endif
+if( $AGCM_IM == "c5760" ) then
+     set       DT = 150
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 5760
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 60
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF5760x6C
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
@@ -1074,6 +1101,8 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 
 # For @-lines in AGCM.rc.tmpl
 set GFDL_HYDRO = FALSE
+set GFDL_PROG_CCN = "prog_ccn = .true."
+set GFDL_USE_CCN  = "use_ccn = .false."
 if ( "$AGCM_MP" == "GFDL" ) then
    set MP_GFDL = ""
 else
@@ -2169,6 +2198,9 @@ s?@FV_ZTRACER?$FV_ZTRACER?g
 s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
 s?@FV_SATADJ?$FV_SATADJ?g
+
+s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
+s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
 
 EOF
 

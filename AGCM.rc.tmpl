@@ -27,9 +27,9 @@ AdvCore_Advection: 0
      SOLAR_DT: 3600
      IRRAD_DT: 3600
     SATSIM_DT: 1800
-### GOCART_DT: 450
-  GOCART2G_DT: 450
-     MOIST_DT: 450
+###   GOCART_DT: 450
+##  GOCART2G_DT: 450
+##     MOIST_DT: 450
 
 SOLARAvrg: 0
 IRRADAvrg: 0
@@ -39,7 +39,7 @@ ORBIT_ANAL2B: .TRUE.
 
 CLDMICRO: 1MOMENT
 SYNCTQ: 1
-HYDROSTATIC: TRUE
+HYDROSTATIC: @GFDL_HYDRO
 # UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
 USE_AEROSOL_NN: 1
 
@@ -78,12 +78,6 @@ CLOSURE_CONGESTUS:3
 
 # GWD Parameterization
 # --------------------
-
-# if .FALSE., use GEOS GWD code (default); .TRUE., use new NCAR GWD code
-USE_NCAR_GWD: .FALSE.
-
-# This is only used if USE_NCAR_GWD is .TRUE.
-BERES_FILE_NAME: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
 
 # Ocean Model Configuration Parameters
 # ------------------------------------
