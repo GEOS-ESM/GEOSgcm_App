@@ -91,7 +91,7 @@ set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 # --------------------------------------------
 
 set USE_IOSERVER      = @USE_IOSERVER
-set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:' $HOMDIR/AGCM.rc | cut -d: -f2`
+set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:'  $HOMDIR/AGCM.rc | cut -d: -f2`
 set NUM_BACKEND_PES   = `grep '^\s*NUM_BACKEND_PES:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Check for Over-Specification of CPU Resources
@@ -106,13 +106,16 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
+set NCPUS_PER_NODE = @NCPUS_PER_NODE
+set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
 
-      set NCPUS_PER_NODE = @NCPUS_PER_NODE
+      @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
 
-      set TOTAL_PES = @TOTAL_MODEL_PLUS_OSERVER_PES
+      @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
 
       if( $TOTAL_PES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
@@ -123,7 +126,8 @@ if ( $NCPUS != NULL ) then
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
          echo ""
-         echo "Specified IOSERVER_NODES: $AGCM_IOS_NODES"
+         echo "Specified model nodes: $NUM_MODEL_NODES"
+         echo "Specified oserver nodes: $NUM_OSERVER_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
@@ -140,6 +144,9 @@ if ( $NCPUS != NULL ) then
          echo ""
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
+         echo ""
+         echo "Specified model nodes: $NUM_MODEL_NODES"
+         echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
