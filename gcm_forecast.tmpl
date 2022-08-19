@@ -105,14 +105,9 @@ set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
 
-set USE_IOSERVER   = @USE_IOSERVER
-set AGCM_IOS_NODES = `grep '^\s*IOSERVER_NODES:' $HOMDIR/AGCM.rc | cut -d: -f2`
-
-if ($USE_IOSERVER == 0) then
-   set IOS_NODES = 0
-else
-   set IOS_NODES = $AGCM_IOS_NODES
-endif
+set USE_IOSERVER      = @USE_IOSERVER
+set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:'  $HOMDIR/AGCM.rc | cut -d: -f2`
+set NUM_BACKEND_PES   = `grep '^\s*NUM_BACKEND_PES:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
@@ -126,41 +121,47 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
+set NCPUS_PER_NODE = @NCPUS_PER_NODE
+set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
 
-      set NCPUS_PER_NODE = @NCPUS_PER_NODE
+      @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
 
-      @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
-      @ NPES   = $NODES * $NCPUS_PER_NODE
+      @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
 
-      if( $NPES > $NCPUS ) then
+      if( $TOTAL_PES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
          echo "--------------------------------"
          echo "Allotted  NCPUs: $NCPUS"
-         echo "Requested NCPUs: $NPES"
+         echo "Requested NCPUs: $TOTAL_PES"
          echo ""
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
          echo ""
-         echo "Specified IOSERVER_NODES: $AGCM_IOS_NODES"
+         echo "Specified model nodes: $NUM_MODEL_NODES"
+         echo "Specified oserver nodes: $NUM_OSERVER_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
    else
 
-      @ NPES = $MODEL_NPES
+      @ TOTAL_PES = $MODEL_NPES
 
-      if( $NPES > $NCPUS ) then
+      if( $TOTAL_PES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
          echo "--------------------------------"
          echo "Allotted  NCPUs: $NCPUS"
-         echo "Requested NCPUs: $NPES"
+         echo "Requested NCPUs: $TOTAL_PES"
          echo ""
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
+         echo ""
+         echo "Specified model nodes: $NUM_MODEL_NODES"
+         echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
@@ -169,7 +170,7 @@ if ( $NCPUS != NULL ) then
 else
    # This is for the desktop path
 
-   @ NPES = $MODEL_NPES
+   @ TOTAL_PES = $MODEL_NPES
 
 endif
 
@@ -399,10 +400,12 @@ setenv CHMDIR    @CHMDIR
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
-@MOM5setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
-@MOM6setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
-@COUPLED setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
-@COUPLED setenv BCTAG `basename $GRIDDIR`
+@MOM5setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM5/@ATMOStag_@OCEANtag
+@MOM5setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM5/${OGCM_IM}x${OGCM_JM}
+@MOM6setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM6/@ATMOStag_@OCEANtag
+@MOM6setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM6/${OGCM_IM}x${OGCM_JM}
+@COUPLEDsetenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
+@COUPLEDsetenv BCTAG `basename $ABCSDIR`
 @DATAOCEAN setenv BCTAG `basename $BCSDIR`
 
 set             FILE = linkbcs
@@ -414,12 +417,13 @@ cat << _EOF_ > $FILE
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
-@COUPLED /bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@COUPLED /bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
-@COUPLED /bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
-@COUPLED /bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
-@COUPLED /bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MOM5/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@COUPLED/bin/ln -sf $OBCSDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+@COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
+@COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+@COUPLED/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
+@COUPLED/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MOM5#/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@MOM6#/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -449,12 +453,21 @@ cat << _EOF_ > $FILE
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
 
-/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
-/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
-/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
-/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
-/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
-/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/green_clim_@RES_DATELINE.data green.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
+
+@COUPLED/bin/ln -sf $ABCSDIR/visdf_@RES_DATELINE.dat visdf.dat
+@COUPLED/bin/ln -sf $ABCSDIR/nirdf_@RES_DATELINE.dat nirdf.dat
+@COUPLED/bin/ln -sf $ABCSDIR/vegdyn_@RES_DATELINE.dat vegdyn.data
+@COUPLED/bin/ln -sf $ABCSDIR/lai_clim_@RES_DATELINE.data lai.data
+@COUPLED/bin/ln -sf $ABCSDIR/green_clim_@RES_DATELINE.data green.data
+@COUPLED/bin/ln -sf $ABCSDIR/ndvi_clim_@RES_DATELINE.data ndvi.data
+
+>>>GCMRUN_CATCHCN<<<if ( -f $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data lnfm.data
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
@@ -466,20 +479,29 @@ cat << _EOF_ > $FILE
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
 >>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
-/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
+@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+
+@COUPLED/bin/ln -sf $ABCSDIR/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
+@COUPLED/bin/ln -sf $ABCSDIR/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
+@COUPLED/bin/ln -sf $ABCSDIR/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
 
 >>>FVCUBED<<<if(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
 >>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
 >>>FVCUBED<<<endif
 
 @COUPLED cp $HOMDIR/*_table .
-@COUPLED cp $GRIDDIR/INPUT/* INPUT
-@COUPLED /bin/ln -sf $GRIDDIR/cice/kmt_cice.bin .
-@COUPLED /bin/ln -sf $GRIDDIR/cice/grid_cice.bin .
+@COUPLED cp $OBCSDIR/INPUT/* INPUT
+@COUPLED /bin/ln -sf $OBCSDIR/cice/kmt_cice.bin .
+@COUPLED /bin/ln -sf $OBCSDIR/cice/grid_cice.bin .
 
 _EOF_
+
+>>>GCMRUN_CATCHCN<<<set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
+>>>GCMRUN_CATCHCN<<<if ($LSM_CHOICE == 2) then
+>>>GCMRUN_CATCHCN<<<  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+>>>GCMRUN_CATCHCN<<<endif
 
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
@@ -598,14 +620,35 @@ endif
 set yearc = `echo $nymdc | cut -c1-4`
 set yearf = `echo $nymdf | cut -c1-4`
 
+# For Non-Reynolds SST, Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
+# --------------------------------------------------------------------------------------------------
+if( @OCEANtag != DE0360xPE0180 ) then
+    if( $yearf > $yearc ) then
+       @ yearf = $yearc + 1
+       @ nymdf = $yearf * 10000 + 0101
+        set oldstring = `grep '^\s*END_DATE:' CAP.rc`
+        set newstring = "END_DATE: $nymdf $nhmsf"
+        /bin/mv CAP.rc CAP.tmp
+        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+    endif
+endif
+
 # Which ExtData are we using
 set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l
 
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 if( ${EMISSIONS} == AMIP_EMISSIONS) then
-    set AMIP_Transition_Date = 20000301
     if( $EXTDATA2G_TRUE == 0 ) then
+    set AMIP_Transition_Date = 20000301
+
+       # Before 2000-03-01, we need to use AMIP.20C which has different
+       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
+       # that if you make a change to anything in $EXPDIR/RC/AMIP or
+       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
+       # directory to be consistent. Some files in AMIP.20C are symlinks to
+       # that in AMIP but others are not.
+
        if( $nymdc < ${AMIP_Transition_Date} ) then
             set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
             if( $nymdf > ${AMIP_Transition_Date} ) then
@@ -621,7 +664,6 @@ if( ${EMISSIONS} == AMIP_EMISSIONS) then
     else
        set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
     endif
-
 
     if( $AGCM_LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -655,12 +697,6 @@ if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv       
 set   GOCART_DATA_TRUE = `grep -i '^\s*ENABLE_GOCART_DATA:\s*\.TRUE\.'   GEOS_ChemGridComp.rc | wc -l`
 if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
 
-# Generate the complete ExtData.rc
-# --------------------------------
-#######################################################################
-#                 Create Binary Tile File from ASCII
-#######################################################################
-
 @MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
 @MP_NO_USE_WSUB# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
@@ -671,6 +707,8 @@ else
    @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' > WSUB_ExtData.yaml
 endif
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+
+
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -718,8 +756,8 @@ endif
 # If running in dual ocean mode, link sst and fraci data here
 #set yy  = `cat cap_restart | cut -c1-4`
 #echo $yy
-#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
-#ln -sf $GRIDDIR2/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
+#ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
+#ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
 #######################################################################
 #                Split Saltwater Restart if detected
@@ -774,6 +812,46 @@ else
  endif
 endif
 
+# Test Openwater Restart for Number of tiles correctness
+# ------------------------------------------------------
+
+if ( -x $GEOSBIN/rs_numtiles.x ) then
+
+   set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
+   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+
+   if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
+      echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
+      echo "Your restarts are probably for a different ocean."
+      exit 7
+   endif
+
+endif
+
+# Check for MERRA2OX Consistency
+# ------------------------------
+
+# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# attempt at a check to make sure you aren't using it and are past the date
+
+# Check for MERRA2OX by looking at AGCM.rc
+set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
+
+# If it is 39, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 39 ) then
+
+   # Grab the date from cap_restart
+   set YEARMON = `cat cap_restart | cut -c1-6`
+
+   # Set a magic date
+   set MERRA2OX_END_DATE = "201706"
+
+   # String comparison seems to work here...
+   if ( $YEARMON > $MERRA2OX_END_DATE ) then
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      exit 2
+   endif
+endif
 ##################################################################
 ######
 ######                     Perform Forecast
@@ -822,34 +900,14 @@ setenv OMP_NUM_THREADS 1
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1 ) then
-   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
-
-   # Per SI Team, the multigroup server should always be used
-   # The ideal number of backend PEs is based on the number of HISTORY
-   # collections and number of IO nodes
-
-   # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
-   set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
-
-   # Protect against divide by zero
-   if ($IOS_NODES == 0) then
-      echo "Something is wrong. IOSERVER asked for, but zero IO nodes provided"
-      exit 3
-   endif
-
-   # Now we divide that number of collections by the ioserver nodes
-   set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
-
-   # Finally multigroup requires at least two backend pes
-   if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
-
-   set IOSERVER_EXTRA = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $NUM_OSERVER_NODES"
+   set IOSERVER_EXTRA   = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
 else
    set IOSERVER_OPTIONS = ""
    set IOSERVER_EXTRA = ""
 endif
 
-$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@OCEAN_PRELOAD $RUN_CMD $TOTAL_PES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
