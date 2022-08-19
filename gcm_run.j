@@ -804,8 +804,6 @@ endif
 
 @SETENVS
 
-@GPUSTART
-
 # Run bundleParser.py
 #---------------------
 python bundleParser.py
@@ -853,8 +851,6 @@ endif
 @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
-
-@GPUEND
 
 if( -e EGRESS ) then
    set rc = 0
