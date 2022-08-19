@@ -1381,17 +1381,17 @@ if ( $DO_IOS == TRUE ) then
    if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
    echo "Number of backend PEs: $NUM_BACKEND_PES"
 
+   # Calculate the total number of nodes to request from batch
+   @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
+   @ TOTAL_MODEL_PLUS_OSERVER_PES=$NODES * $NCPUS_PER_NODE
+
 else
-   # First we calculate the number of model nodes
-   set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   # Calculate the number of model nodes
+   set NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
    set NUM_OSERVER_NODES = 0
    set NUM_BACKEND_PES   = 0
 endif
-
-# Calculate the total number of nodes to request from batch
-@ NODES=$NUM_MODEL_NODES+$NUM_OSERVER_NODES
-@ TOTAL_PES=$NODES * $NCPUS_PER_NODE
 
 @ CNV_NPES = $CNV_NX * $CNV_NY
 # Here we need to convert POST_NDS to total tasks. Using 16 cores
@@ -2039,7 +2039,7 @@ s/@USE_SHMEM/$USE_SHMEM/g
 s/@USE_IOSERVER/$USE_IOSERVER/g
 s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
 s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
-s/@TOTAL_PES/$TOTAL_PES/g
+s/@TOTAL_MODEL_PLUS_OSERVER_PES/$TOTAL_MODEL_PLUS_OSERVER_PES/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
