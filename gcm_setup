@@ -1382,6 +1382,9 @@ if ( $DO_IOS == TRUE ) then
    echo "Number of backend PEs: $NUM_BACKEND_PES"
 
 else
+   # First we calculate the number of model nodes
+   set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
    set NUM_OSERVER_NODES = 0
    set NUM_BACKEND_PES   = 0
 endif
