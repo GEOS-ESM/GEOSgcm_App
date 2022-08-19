@@ -1275,7 +1275,6 @@ endif
 # -------------
 set  RATS_PROVIDER   = PCHEM
 
-
 #######################################################################
 #                    Create Desired HISTORY template
 #         Note: Default HISTORY will be kept in $HOME/.HISTORYrc
@@ -1341,7 +1340,6 @@ while( $check == FALSE )
        endif
   endif
 end
-
 
 #######################################################################
 #                  Architecture Specific Variables
@@ -2845,7 +2843,6 @@ gcm_setup, a setup script for the GEOS GCM
    Usage: $0:t [optional flag]
 
    -c --color      Set the colors for $0:t
-   -g --gpu        Run the model using the GPUs
    -h --help       Show usage
 
    If invoked alone, the script runs as normal.
