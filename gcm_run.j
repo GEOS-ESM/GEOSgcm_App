@@ -112,7 +112,7 @@ if ( $NCPUS != NULL ) then
 
       set NCPUS_PER_NODE = @NCPUS_PER_NODE
 
-      @ TOTAL_PES=$MODEL_NPES + ($NUM_OSERVER_NODES * $NCPUS_PER_NODE)
+      set TOTAL_PES = @TOTAL_PES
 
       if( $TOTAL_PES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
