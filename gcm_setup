@@ -57,7 +57,6 @@ endif
 #######################################################################
 
 # Set default behavior of switches
-set GPU   = FALSE
 set LINKX = FALSE
 
 while ( $#argv > 0 )
@@ -68,14 +67,6 @@ while ( $#argv > 0 )
       case -[Cc]:
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
-
-      # Run the gpu code
-      case -[Gg]:
-      case --[Gg][Pp][Uu]:
-
-         # If we get here, the environment is (probably) right for GPUs
-         set GPU = TRUE
-         breaksw
 
       # Symlink GEOSgcm.x
       case --link:
@@ -764,10 +755,6 @@ endif
      set NUM_READERS = 1
      set NUM_WRITERS = 1
 
-# Set DEFAULT IOSERVER Parameters
-# -------------------------------
-     set DEF_IOS_NDS      = 1
-
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
@@ -886,7 +873,6 @@ if( $AGCM_IM ==  "c180" ) then
      set NUM_SGMT = 1
      set ATMOS_RES = CF0180x6C
      set POST_NDS = 8
-     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c360" ) then
      set       DT = 450
@@ -908,7 +894,6 @@ if( $AGCM_IM == "c360" ) then
      set ATMOS_RES = CF0360x6C
      set   CNV_NX = 4
      set POST_NDS = 12
-     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c500" ) then
      set       DT = 450
@@ -931,7 +916,6 @@ if( $AGCM_IM == "c500" ) then
      set   CNV_NX = 8
      set POST_NDS = 12
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 450
@@ -954,7 +938,6 @@ if( $AGCM_IM == "c720" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
      set       DT = 450
@@ -977,7 +960,6 @@ if( $AGCM_IM == "c1440" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
 endif
 # DYAMOND Resolutions
 if( $AGCM_IM == "c768" ) then
@@ -1001,7 +983,6 @@ if( $AGCM_IM == "c768" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1536" ) then
      set       DT = 90
@@ -1024,7 +1005,6 @@ if( $AGCM_IM == "c1536" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c3072" ) then
      set       DT = 45
@@ -1047,7 +1027,6 @@ if( $AGCM_IM == "c3072" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 5
 endif
 
 set IS_FCST = 0
@@ -1296,219 +1275,6 @@ endif
 # -------------
 set  RATS_PROVIDER   = PCHEM
 
-#######################################################################
-#                  Architecture Specific Variables
-#######################################################################
-
-@ MODEL_NPES = $NX * $NY
-
-if ( $DO_IOS == TRUE ) then
-   set IOS_NDS = $DEF_IOS_NDS
-else
-   set IOS_NDS = 0
-endif
-
-@ CNV_NPES = $CNV_NX * $CNV_NY
-# Here we need to convert POST_NDS to total tasks. Using 16 cores
-# per task as a good default
-@ POST_NPES = $POST_NDS * 16
-
-# Longer job names are now supported with SLURM and PBS. Limits seem to be 1024 characters with SLURM
-# and 230 with PBS. To be safe, we will limit to 200
-
-              setenv     RUN_N  `echo $EXPID | cut -b1-200`_RUN                         # RUN      Job Name
-              setenv     RUN_FN `echo $EXPID | cut -b1-200`_FCST                        # Forecast Job Name
-              setenv    POST_N  `echo $EXPID | cut -b1-199`_POST                        # POST     Job Name
-              setenv    PLOT_N  `echo $EXPID | cut -b1-200`_PLT                         # PLOT     Job Name
-              setenv    MOVE_N  `echo $EXPID | cut -b1-200`_MOVE                        # MOVE     Job Name
-              setenv ARCHIVE_N  `echo $EXPID | cut -b1-199`_ARCH                        # ARCHIVE  Job Name
-              setenv REGRESS_N  `echo $EXPID | cut -b1-199`_RGRS                        # REGRESS  Job Name
-              setenv CONVERT_N  `echo $EXPID | cut -b1-200`_CNV                         # CONVERT  Job Name
-
-# Default converter time
-              setenv CONVERT_T  "0:15:00"                                              # Wallclock Time   for gcm_convert.j
-
-if( $SITE == 'NAS' ) then
-              setenv BATCH_CMD "qsub"                 # PBS Batch command
-              setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
-              setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
-              setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
-              setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
-              setenv BATCH_JOINOUTERR "PBS -j oe -k oed"    # PBS Syntax for joining output and error
-              setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
-              setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
-              if( $GPU == "TRUE" ) then
-                 set NCPUS_PER_NODE = 16              # CPUS per node
-                 set MODEL = "san_gpu"                # Model of CPU
-                 set QTYPE = "gpu_k40"                # Queue to use
-              else
-                 set QTYPE = "normal"                 # Queue to use
-              endif
-
-              #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
-              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-
-              setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                              # batch queue name for gcm_run.j
-              setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "PBS -l select=24:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"           # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "PBS -q normal"                                                                                # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "PBS -q normal"                                                                                # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_archive.j
-              setenv    POST_P  "PBS -l select=${NPCUS}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=1:model=${MODEL}"                            # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"            # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
-              setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
-
-              setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/verification/MERRA-2            # Default Analysis Location   for M2 REPLAY
-
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              else
-                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              endif
-              setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
-else if( $SITE == 'NCCS' ) then
-              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
-              setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
-              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
-              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
-              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
-              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
-              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
-              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
-              if( $GPU == "TRUE" ) then
-                 set NCPUS_PER_NODE = 16                                         # CPUS per node
-                 set MODEL = "k40"                                               # Model of CPU
-              endif
-
-              #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
-              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-
-              setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
-              setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --nodes=${NPCUS} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
-              setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
-
-              setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
-
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
-              else
-                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
-              endif
-              setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
-else if( $SITE == 'AWS' ) then
-              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
-              setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
-              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
-              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
-              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
-              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
-              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
-              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv  RUN_Q     DELETE                                                 # batch queue name for gcm_run.j
-              setenv  RUN_P   "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_run.j
-              setenv  RUN_FP  "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
-              setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  NULL                                                   # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
-              setenv    MOVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_moveplot.j
-
-              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
-
-              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
-
-              # By default on AWS, just ignore IOSERVER for now until testing
-              set USE_IOSERVER = 0
-              set IOS_NDS = 0
-              set NCPUS_PER_NODE = 0
-else
-# These are defaults for the desktop
-              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
-              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
-              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
-              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
-              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
-              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
-              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
-              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
-              setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
-              setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
-              setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  NULL                                                   # batch queue name for gcm_archive.j
-              setenv    POST_P  NULL                                                   # PE Configuration for gcm_run.j
-              setenv    PLOT_P  NULL                                                   # PE Configuration for gcm_post.j
-              setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
-              setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
-
-              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
-
-              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
-              set NX = 1
-              set NY = 6
-              set CNV_NX = ${NX}
-              set CNV_NY = ${NY}
-              # By default on desktop, just ignore IOSERVER for now
-              set USE_IOSERVER = 0
-              set IOS_NDS = 0
-              set NCPUS_PER_NODE = 0
-endif
-
 
 #######################################################################
 #                    Create Desired HISTORY template
@@ -1575,6 +1341,241 @@ while( $check == FALSE )
        endif
   endif
 end
+
+
+#######################################################################
+#                  Architecture Specific Variables
+#######################################################################
+
+@ MODEL_NPES = $NX * $NY
+
+# Calculate OSERVER nodes based on recommended algorithm
+if ( $DO_IOS == TRUE ) then
+
+   # In the calculations below, the weird bc-awk command is to round up the floating point calcs
+
+   # First we calculate the number of model nodes
+   set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   echo "Number of model nodes: $NUM_MODEL_NODES"
+
+   # Next the number of frontend PEs is 10% of the model PEs
+   set NUM_FRONTEND_PES=`echo "scale=1;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   echo "Number of frontend PEs: $NUM_FRONTEND_PES"
+
+   # Now we roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
+   set NUM_HIST_COLLECTIONS=`cat $TMPHIST | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+   echo "Number of History Collections: $NUM_HIST_COLLECTIONS"
+
+   # And the total number of oserver PEs is frontend PEs plus number of history collections
+   @ NUM_OSERVER_PES=$NUM_FRONTEND_PES + $NUM_HIST_COLLECTIONS
+   echo "Number of oserver PEs: $NUM_OSERVER_PES"
+
+   # Now calculate the number of oserver nodes
+   set NUM_OSERVER_NODES=`echo "scale=1;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   echo "Number of oserver nodes: $NUM_OSERVER_NODES"
+
+   # And then the number of backend PEs is the number of history collections divided by the number of oserver nodes
+   set NUM_BACKEND_PES=`echo "scale=1;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+   # multigroup requires at least two backend pes
+   if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+   echo "Number of backend PEs: $NUM_BACKEND_PES"
+
+else
+   set NUM_OSERVER_NODES = 0
+   set NUM_BACKEND_PES   = 0
+endif
+
+@ CNV_NPES = $CNV_NX * $CNV_NY
+# Here we need to convert POST_NDS to total tasks. Using 16 cores
+# per task as a good default
+@ POST_NPES = $POST_NDS * 16
+
+# Longer job names are now supported with SLURM and PBS. Limits seem to be 1024 characters with SLURM
+# and 230 with PBS. To be safe, we will limit to 200
+
+              setenv     RUN_N  `echo $EXPID | cut -b1-200`_RUN                         # RUN      Job Name
+              setenv     RUN_FN `echo $EXPID | cut -b1-200`_FCST                        # Forecast Job Name
+              setenv    POST_N  `echo $EXPID | cut -b1-199`_POST                        # POST     Job Name
+              setenv    PLOT_N  `echo $EXPID | cut -b1-200`_PLT                         # PLOT     Job Name
+              setenv    MOVE_N  `echo $EXPID | cut -b1-200`_MOVE                        # MOVE     Job Name
+              setenv ARCHIVE_N  `echo $EXPID | cut -b1-199`_ARCH                        # ARCHIVE  Job Name
+              setenv REGRESS_N  `echo $EXPID | cut -b1-199`_RGRS                        # REGRESS  Job Name
+              setenv CONVERT_N  `echo $EXPID | cut -b1-200`_CNV                         # CONVERT  Job Name
+
+# Default converter time
+              setenv CONVERT_T  "0:15:00"                                              # Wallclock Time   for gcm_convert.j
+
+if( $SITE == 'NAS' ) then
+              setenv BATCH_CMD "qsub"                 # PBS Batch command
+              setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
+              setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
+              setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
+              setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
+              setenv BATCH_JOINOUTERR "PBS -j oe -k oed"    # PBS Syntax for joining output and error
+              setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
+              set QTYPE = "normal"                 # Queue to use
+
+              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($NUM_OSERVER_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc `
+              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+
+              setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                              # batch queue name for gcm_run.j
+              setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "PBS -l select=24:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"           # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  "PBS -q normal"                                                                                # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "PBS -q normal"                                                                                # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_archive.j
+              setenv    POST_P  "PBS -l select=${NPCUS}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=1:model=${MODEL}"                            # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"            # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
+
+              setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/verification/MERRA-2            # Default Analysis Location   for M2 REPLAY
+
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              else
+                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              endif
+              setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
+              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
+else if( $SITE == 'NCCS' ) then
+              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
+              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
+
+              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($NUM_OSERVER_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
+              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+
+              setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
+              setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_archive.j
+              setenv    POST_P  "SBATCH --nodes=${NPCUS} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
+
+              setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
+
+              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+              else
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+              endif
+              setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
+              setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
+else if( $SITE == 'AWS' ) then
+              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
+              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
+              setenv  RUN_Q     DELETE                                                 # batch queue name for gcm_run.j
+              setenv  RUN_P   "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_run.j
+              setenv  RUN_FP  "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
+              setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  NULL                                                   # batch queue name for gcm_archive.j
+              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_moveplot.j
+
+              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
+
+              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
+
+              # By default on AWS, just ignore IOSERVER for now until testing
+              set USE_IOSERVER = 0
+              set NUM_OSERVER_NODES = 0
+              set NUM_BACKEND_PES = 0
+              set NCPUS_PER_NODE = 0
+else
+# These are defaults for the desktop
+              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
+              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
+              setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
+              setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
+              setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
+              setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  NULL                                                   # batch queue name for gcm_archive.j
+              setenv    POST_P  NULL                                                   # PE Configuration for gcm_run.j
+              setenv    PLOT_P  NULL                                                   # PE Configuration for gcm_post.j
+              setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
+              setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
+
+              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
+
+              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
+              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
+              set NX = 1
+              set NY = 6
+              set CNV_NX = ${NX}
+              set CNV_NY = ${NY}
+              # By default on desktop, just ignore IOSERVER for now
+              set USE_IOSERVER = 0
+              set NUM_OSERVER_NODES = 0
+              set NUM_BACKEND_PES = 0
+              set NCPUS_PER_NODE = 0
+endif
 
 #######################################################################
 #                 Create Paths for HOME and EXP Directories
@@ -1823,26 +1824,12 @@ EOF
 
 else if( $MPI == mvapich2 ) then
 
-if( $GPU == "TRUE" ) then
-cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY     0
-   setenv MV2_RNDV_PROTOCOL       RPUT
-   setenv MV2_USE_RDMA_ONE_SIDED  1
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
-EOF
-
-else
-
 cat > $HOMDIR/SETENV.commands << EOF
    setenv MV2_ENABLE_AFFINITY     0
    setenv SLURM_DISTRIBUTION block
    setenv MV2_MPIRUN_TIMEOUT 100
    setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
-
-endif # if GPU and mvapich2
 
 else if( $MPI == mpt ) then
 
@@ -1900,74 +1887,6 @@ endif # if NCCS
 endif # if mpi
 
 #######################################################################
-#                      Create GPU Hyper-Q Commands
-#######################################################################
-
-/bin/rm -f $HOMDIR/GPUSTART.commands
-/bin/rm -f $HOMDIR/GPUEND.commands
-
-if ( $GPU == "TRUE" ) then
-
-cat > $HOMDIR/GPUSTART.commands << _EOF_
-
-# Set up the MPS Server on Each GPU Node
-# --------------------------------------
-_EOF_
-
-if ( $SITE == 'NCCS' ) then
-
-cat >> $HOMDIR/GPUSTART.commands << _EOF1_
-
-setenv GPU_NODELIST \`scontrol show hostnames\`
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID
-
-_EOF1_
-
-else if ( $SITE == 'NAS' ) then
-
-cat >> $HOMDIR/GPUSTART.commands << _EOF1_
-
-setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\`
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID
-
-_EOF1_
-
-endif # if site
-
-cat >> $HOMDIR/GPUSTART.commands << _EOF2_
-setenv CUDA_VISIBLE_DEVICES 0
-setenv CUDA_MPS_CLIENT 1
-setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0
-setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0
-
-foreach node (\$GPU_NODELIST)
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
-end
-
-sleep 3
-
-foreach node (\$GPU_NODELIST)
-   echo "Running MPS Server on \$node"
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash"
-end
-
-sleep 3
-
-_EOF2_
-
-cat > $HOMDIR/GPUEND.commands << _EOF3_
-# Remove the MPS Server on Each GPU Node
-# --------------------------------------
-
-foreach node (\$GPU_NODELIST)
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
-end
-
-_EOF3_
-
-endif
-
-#######################################################################
 #               Create Local Scripts and Resource Files
 #######################################################################
 
@@ -1976,20 +1895,6 @@ cat >      $HOMDIR/sedfile << EOF
 t success
 : success
 r $HOMDIR/SETENV.commands
-d
-}
-
-/@GPUSTART/ {
-t success1
-: success1
-r $HOMDIR/GPUSTART.commands
-d
-}
-
-/@GPUEND/ {
-t success2
-: success2
-r $HOMDIR/GPUEND.commands
 d
 }
 
@@ -2127,7 +2032,8 @@ s/@NX/$NX/g
 s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
 s/@USE_IOSERVER/$USE_IOSERVER/g
-s/@IOS_NDS/$IOS_NDS/g
+s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
+s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
@@ -2263,11 +2169,6 @@ foreach FILE ($FILES)
 end
 
 /bin/rm -f $HOMDIR/SETENV.commands
-
-if ($GPU == "TRUE") then
-/bin/rm -f $HOMDIR/GPUSTART.commands
-/bin/rm -f $HOMDIR/GPUEND.commands
-endif
 
 /bin/rm -f $TMPHIST
 
@@ -2903,18 +2804,6 @@ TRAP:
 #######################################################################
 #                      Usage and Error Outputs
 #######################################################################
-
-CONTACTMATT:
-cat <<EOF
-
-It appears your environment is not set correctly to
-run with the GPUs. If you wish to build and run the
-model using GPUs, please contact Matt Thompson at:
-
-            matthew.thompson@nasa.gov
-
-EOF
-exit 1
 
 SETCOLOR:
 echo
