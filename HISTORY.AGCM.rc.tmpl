@@ -1,8 +1,7 @@
 VERSION: 1
-EXPID:  BENCHMARK
+EXPID:  @EXPID
 EXPDSC: @EXPDSC
 EXPSRC: @EXPSRC
-
 
 COLLECTIONS: 'geosgcm_prog'
 #             'prog.eta'
@@ -38,7 +37,7 @@ COLLECTIONS: 'geosgcm_prog'
 #  list of COLLECTIONS for scripting purposes.   #
 ##################################################
 
-GRID_LABELS: @HIRES_LATLON
+GRID_LABELS: PC@HIST_IMx@HIST_JM-DC
 ::
 
 PC360x181-DC.GRID_TYPE: LatLon
@@ -95,9 +94,9 @@ PC23040x11521-DC.LM: 181
   geosgcm_prog.format:         'CFIO',
   geosgcm_prog.nbits:           12,
   geosgcm_prog.deflate:         1,
-  geosgcm_prog.grid_label:      @HIRES_LATLON,
+  geosgcm_prog.grid_label:      PC@HIST_IMx@HIST_JM-DC,
   geosgcm_prog.frequency:       060000,
-  geosgcm_prog.duration:        000000,
+  geosgcm_prog.duration:        060000,
   geosgcm_prog.vscale:          100.0,
   geosgcm_prog.vunit:          'hPa',
   geosgcm_prog.vvars:          'log(PLE)' , 'DYN'          ,
@@ -649,7 +648,7 @@ PC23040x11521-DC.LM: 181
   geosgcm_iau.archive:         '%c/Y%y4',
   geosgcm_iau.format:          'CFIO',
   geosgcm_iau.deflate:          1,
-  geosgcm_iau.grid_label:       @HIRES_LATLON,
+  geosgcm_iau.grid_label:       PC@HIST_IMx@HIST_JM-DC,
   geosgcm_iau.mode:            'time-averaged',
   geosgcm_iau.frequency:        240000,
   geosgcm_iau.ref_time:         210000,
