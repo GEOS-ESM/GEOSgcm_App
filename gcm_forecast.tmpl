@@ -492,7 +492,20 @@ cp  linkbcs $EXPDIR
 #                    Get Executable and RESTARTS
 #######################################################################
 
-cp $EXPDIR/GEOSgcm.x .
+# Detect if GEOSgcm.x is in the experiment directory
+if (-e $EXPDIR/GEOSgcm.x) then
+   echo "Found GEOSgcm.x in $EXPDIR"
+
+   echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+   /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+
+   setenv GEOSEXE $SCRDIR/GEOSgcm.x
+else
+   echo "Using GEOSgcm.x from $GEOSBIN"
+
+   setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+endif
+echo ""
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -851,7 +864,7 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+$RUN_CMD $NPES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 

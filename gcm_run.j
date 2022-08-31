@@ -72,6 +72,63 @@ endif
 if (! -e $SCRDIR ) mkdir -p $SCRDIR
 
 #######################################################################
+#             Settings for Singularity - EXPERIMENTAL
+#######################################################################
+
+# If you are using singularity, set the path to the singularity sandbox here
+setenv SINGULARITY_SANDBOX ""
+
+# echo if we are running in singularity
+if( $SINGULARITY_SANDBOX != "" ) then
+   echo "We are running under Singularity"
+   echo ""
+endif
+
+# Detect if GEOSgcm.x is in the experiment directory
+if (-e $EXPDIR/GEOSgcm.x) then
+   echo "Found GEOSgcm.x in $EXPDIR"
+
+   # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
+   # force the use of GEOSgcm.x in the installation directory
+   if( $SINGULARITY_SANDBOX != "" ) then
+      echo "NOTE: Testing has shown Singularity only works when running with"
+      echo "      the GEOSgcm.x executable directly from the installation bin directory"
+      echo ""
+      echo "      So, we will *ignore* the local GEOSgcm.x and "
+      echo "      instead use $GEOSBIN/GEOSgcm.x"
+      echo ""
+
+      setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+   else
+      echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+      /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+
+      setenv GEOSEXE $SCRDIR/GEOSgcm.x
+   endif
+
+else
+   echo "Using GEOSgcm.x from $GEOSBIN"
+
+   setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+endif
+echo ""
+
+# If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
+if( $SINGULARITY_SANDBOX != "" ) then
+   # Load the Singularity module
+   module load singularity
+
+   # Set Singularity Bind Paths. Note: These are dependent on where you are running.
+   # By default, we'll assume you are running this script from NOBACKUP
+   setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
+
+   # Set a variable to encapsulate all Singularity details
+   setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
+else
+   setenv SINGULARITY_RUN ""
+endif
+
+#######################################################################
 #                   Set Experiment Run Parameters
 #######################################################################
 
@@ -418,10 +475,8 @@ chmod +x linkbcs
 cp  linkbcs $EXPDIR
 
 #######################################################################
-#                    Get Executable and RESTARTS
+#                         Get RESTARTS
 #######################################################################
-
-cp $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -725,7 +780,7 @@ else
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -763,7 +818,7 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -802,8 +857,6 @@ endif
 # ----------------------------------
 
 @SETENVS
-
-@GPUSTART
 
 # Run bundleParser.py
 #---------------------
@@ -869,11 +922,9 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@OCEAN_PRELOAD $RUN_CMD $NPES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
-
-@GPUEND
 
 if( -e EGRESS ) then
    set rc = 0
