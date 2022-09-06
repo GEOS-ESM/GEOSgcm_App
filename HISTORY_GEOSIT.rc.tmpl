@@ -149,7 +149,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42'
              'vtx.mix'
 #            'vtx.prs'
 #            'prog.sfc+-'
-#            'traj_lcv_rst'
+#            'bkg_clcv_rst'
 # Trajectory Files
              'asm.eta'
 #            'prog.eta+-'
@@ -4034,19 +4034,20 @@ COLLECTIONS: 'asm_inst_3hr_glo_L576x361_p42'
 # its purpose is to generate background files for JEDI; thus unlike
 # the adjoint-trajectory files, these are written out within the 
 # background time interval.
-  traj_lcv_rst.format:      'CFIO' ,
-  traj_lcv_rst.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
-  traj_lcv_rst.ref_date:    >>>IOBBKGD<<< ,
-  traj_lcv_rst.ref_time:    >>>IOBBKGT<<< ,
-  traj_lcv_rst.end_date:    >>>IOEBKGD<<< ,
-  traj_lcv_rst.end_time:    >>>IOEBKGT<<< ,
-  traj_lcv_rst.frequency:   030000 ,
-  traj_lcv_rst.duration:    030000 ,
-  traj_lcv_rst.mode:        'instantaneous' ,
-  traj_lcv_rst.grid_label:  PE90x540-CF ,
-  traj_lcv_rst.fields:      'U_DGRID;V_DGRID'  , 'DYN'         , 'u;v'        ,
+  bkg_clcv_rst.format:      'CFIO' ,
+  bkg_clcv_rst.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  bkg_clcv_rst.ref_date:    >>>IOBBKGD<<< ,
+  bkg_clcv_rst.ref_time:    >>>IOBBKGT<<< ,
+  bkg_clcv_rst.end_date:    >>>IOEBKGD<<< ,
+  bkg_clcv_rst.end_time:    >>>IOEBKGT<<< ,
+  bkg_clcv_rst.frequency:   030000 ,
+  bkg_clcv_rst.duration:    030000 ,
+  bkg_clcv_rst.mode:        'instantaneous' ,
+  bkg_clcv_rst.grid_label:  PE90x540-CF ,
+  bkg_clcv_rst.fields:      'U_DGRID;V_DGRID'  , 'DYN'         , 'u;v'        ,
                             'U;V'              , 'DYN'         , 'ua;va'      ,
                             'T'                , 'DYN'         , 't'          ,
+                            'TV'               , 'DYN'         , 'tv'         ,
                             'Q'                , 'MOIST'       , 'q'          ,
                             'DELP'             , 'DYN'         , 'delp'       ,
                             'QITOT'            , 'AGCM'        , 'qi'         ,
