@@ -943,13 +943,15 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'QHAT'           , 'SURFACE'     , 'QSH'       ,
                                                     'FRACI'          , 'SURFACE'     , 'FRSEAICE'  ,
 #Additional variable
-#X                                                  'OFRACI'         , 'SURFACE'     , 'AICE'      ,
+# NOT YET IMPLEMENTED                               'OFRACI'         , 'SURFACE'     , 'AICE'      ,  # Add code from Bin Zhao
+		    'total runoff  as RUNOFF from lnd and RUNOFF from glc'  #
 #
                                                     'AN_PRCP'        , 'MOIST'       , 'PRECANV'   ,
                                                     'CN_PRCP'        , 'MOIST'       , 'PRECCON'   ,
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
                                                     'SNO'            , 'MOIST'       , 'PRECSNO'   ,
                                                     'TPREC'          , 'MOIST'       , 'PRECTOT'   ,
+                                                    'PRECTOT'        , 'SURFACE'     , 'PRECTOTCORR' , #
                                                     'PGENTOT'        , 'MOIST'       ,
                                                     'PREVTOT'        , 'MOIST'       ,
                                                     'LS_ARF'         , 'MOIST'       , 'FRCLS'     ,
@@ -1033,10 +1035,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   rad_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.fields:       'EMIS'    , 'SURFACE'  ,
                                                     'TS'      , 'SURFACE'  ,
                                                     'ALBEDO'  , 'SOLAR'    ,
-                                                    'ALBNF'   , 'SURFACE'  , 'ALBNIRDF'     ,
-                                                    'ALBNR'   , 'SURFACE'  , 'ALBNIRDR'     ,
-                                                    'ALBVF'   , 'SURFACE'  , 'ALBVISDF'     ,
-                                                    'ALBVR'   , 'SURFACE'  , 'ALBVISDR'     ,
+                                                    'ALBNF'   , 'SOLAR'    , 'ALBNIRDF'     , # confirm
+                                                    'ALBNR'   , 'SOLAR'    , 'ALBNIRDR'     , # confirm
+                                                    'ALBVF'   , 'SOLAR'    , 'ALBVISDF'     , # confirm
+                                                    'ALBVR'   , 'SOLAR'    , 'ALBVISDR'     , # confirm
                                                     'SFCEM'   , 'IRRAD'    , 'LWGEM'        ,
                                                     'LWS'     , 'IRRAD'    , 'LWGAB'        ,
                                                     'LCS'     , 'IRRAD'    , 'LWGABCLR'     ,
@@ -1140,22 +1142,22 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'TPUNST'    , 'SURFACE'  , 'TUNST'     ,
                                                     'TPSAT'     , 'SURFACE'  , 'TSAT'      ,
                                                     'TPWLT'     , 'SURFACE'  , 'TWLT'      ,
-                                                    'TPSURF'    , 'SURFACE'  , 'TSURF'     ,
+                                                    'TPSURF'    , 'SURFACE'  , 'TSURFLAND' ,  #
                                                     'TSOIL1'    , 'SURFACE'  ,
                                                     'TSOIL2'    , 'SURFACE'  ,
                                                     'TSOIL3'    , 'SURFACE'  ,
                                                     'TSOIL4'    , 'SURFACE'  ,
                                                     'TSOIL5'    , 'SURFACE'  ,
                                                     'TSOIL6'    , 'SURFACE'  ,
-                                                    'SNO'       , 'MOIST'    , 'PRECSNO'   ,
-                                                    'TPREC'     , 'MOIST'    , 'PRECTOT'   ,
+                                                    'PRLAND'    , 'SURFACE'  , 'PRECTOTCORR' , #
+                                                    'SNOLAND'   , 'SURFACE'  , 'PRECSNLAND'  , # check if same as PRECSOCORR
                                                     'TSLAND'    , 'SURFACE'  , 'SNOMAS'    ,
                                                     'SNOWDP'    , 'SURFACE'  , 'SNODP'     ,
                                                     'EVPSOI'    , 'SURFACE'  , 'EVPSOIL'   ,
                                                     'EVPVEG'    , 'SURFACE'  , 'EVPTRNS'   ,
                                                     'EVPINT'    , 'SURFACE'  , 'EVPINTR'   ,
                                                     'EVPICE'    , 'SURFACE'  , 'EVPSBLN'   ,
-                                                    'RUNSURF'   , 'SURFACE'  , 'RUNOFF'    ,
+                                                    'RUNSURF'   , 'SURFACE'  , 'RUNSURFLAND' , #
                                                     'BASEFLOW'  , 'SURFACE'  ,
                                                     'SMLAND'    , 'SURFACE'  ,
                                                     'QINFIL'    , 'SURFACE'  ,
@@ -1253,9 +1255,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.fields:       'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
                                                     'SWLAND'  , 'SURFACE'  ,
                                                     'LWS'     , 'IRRAD'    , 'LWGAB'    ,
-                                                    'PCU'     , 'SURFACE'  , 'PRECCU'   ,
-                                                    'PLS'     , 'SURFACE'  , 'PRECLS'   ,
-                                                    'SNO'     , 'SURFACE'  , 'PRECSNO'  ,
+                                                    'PCU'     , 'SURFACE'  , 'PRECRAINCUCORR'   , #
+                                                    'PLS'     , 'SURFACE'  , 'PRECRAINLSCORR'   , #
+                                                    'SNO'     , 'SURFACE'  , 'PRECSNOCORR'      , #
                                                     'DFPAR'   , 'SOLAR'    , 'PARDF'    ,
                                                     'DRPAR'   , 'SOLAR'    , 'PARDR'    ,
                                                      ::
@@ -1339,7 +1341,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE' ,
                                                     'FRACI'        , 'SURFACE'  , 'FRSEAICE'    ,
 #Additional variable
-#X                                                  'OFRACI'       , 'SURFACE'  , 'AICE'        ,
+# NOT YET IMPLEMENTED                               'OFRACI'       , 'SURFACE'  , 'AICE'        , # Add code from Bin Zhao
 #
                                                     'TSKINW'       , 'SURFACE'  , 'TSKINWTR'    ,
                                                     'TSKINICE'     , 'SURFACE'  ,
@@ -3750,8 +3752,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'OXFILL'        , 'AGCM'        , 'DOXDT_FIL'    ,
                                                     'SH'            , 'SURFACE'     , 'HFLUX'        ,
                                                     'EVAP'          , 'SURFACE'     ,
-                                                    'PCU'           , 'MOIST'       , 'PRECCU'       ,
-                                                    'PLS'           , 'MOIST'       , 'PRECLS'       ,
+                                                    'PCU'           , 'MOIST'       , 'PRECCU'       , # Should this be renamed 
+#                                                                                                      # PRECRAINCU? PCU in lfo_tavg 
+#                                                                                                      # comes from SURFACE.  
+                                                    'PLS'           , 'MOIST'       , 'PRECLS'       , # same ??
                                                     'SNO'           , 'MOIST'       , 'PRECSN'       ,
                                                     'DTHVDTANAINT'  , 'DYN'         , 'DTHDT_ANA'    ,
                                                     'DTHVDTPHYINT'  , 'DYN'         , 'DTHDT_PHY'    ,
@@ -3845,7 +3849,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.fields:       'SNOWDP_GL'    , 'LANDICE'  ,
                                                     'SNOMAS_GL'    , 'LANDICE'  ,
                                                     'ASNOW_GL'     , 'LANDICE'  ,
-                                                    'RUNOFF'       , 'LANDICE'  ,
+                                                    'RUNOFF'       , 'LANDICE'  , 'RUNOFFGLC'
                                                     'WESNSC'       , 'LANDICE'  ,
                                                     'WESNEXT'      , 'LANDICE'  ,
                                                     'SNICEALB'     , 'LANDICE'  ,
