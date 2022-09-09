@@ -951,7 +951,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
                                                     'SNO'            , 'MOIST'       , 'PRECSNO'   ,
                                                     'TPREC'          , 'MOIST'       , 'PRECTOT'   ,
-                                                    'PRECTOT'        , 'SURFACE'     , 'PRECTOTCORR' , #
+                                                    'PRECTOT'        , 'SURFACE'     , 'PRECTOTCORR' , # append "CORR" if reanalysis and from SURFACE
                                                     'PGENTOT'        , 'MOIST'       ,
                                                     'PREVTOT'        , 'MOIST'       ,
                                                     'LS_ARF'         , 'MOIST'       , 'FRCLS'     ,
@@ -1010,6 +1010,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
                                                     'SNO'            , 'MOIST'       , 'PRECSNO'   ,
                                                     'TPREC'          , 'MOIST'       , 'PRECTOT'   ,
+                                                    'PRECTOT'        , 'SURFACE'     , 'PRECTOTCORR' , # append "CORR" if reanalysis and from SURFACE
                                                     'PGENTOT'        , 'MOIST'       ,
                                                     'PREVTOT'        , 'MOIST'       ,
                                                     'LS_ARF'         , 'MOIST'       , 'FRCLS'     ,
@@ -1138,10 +1139,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'WCPR'      , 'SURFACE'  , 'PRMC'      ,
                                                     'WCRZ'      , 'SURFACE'  , 'RZMC'      ,
                                                     'WCSF'      , 'SURFACE'  , 'SFMC'      ,
-                                                    'TPSNOW'    , 'SURFACE'  ,
-                                                    'TPUNST'    , 'SURFACE'  , 'TUNST'     ,
-                                                    'TPSAT'     , 'SURFACE'  , 'TSAT'      ,
-                                                    'TPWLT'     , 'SURFACE'  , 'TWLT'      ,
+                                                    'TPSNOW'    , 'SURFACE'  , 'TPSNOWLAND',  #
+                                                    'TPUNST'    , 'SURFACE'  , 'TUNSTLAND' ,  #
+                                                    'TPSAT'     , 'SURFACE'  , 'TSATLAND'  ,  #
+                                                    'TPWLT'     , 'SURFACE'  , 'TWLTLAND'  ,  #
                                                     'TPSURF'    , 'SURFACE'  , 'TSURFLAND' ,  #
                                                     'TSOIL1'    , 'SURFACE'  ,
                                                     'TSOIL2'    , 'SURFACE'  ,
@@ -1149,24 +1150,24 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'TSOIL4'    , 'SURFACE'  ,
                                                     'TSOIL5'    , 'SURFACE'  ,
                                                     'TSOIL6'    , 'SURFACE'  ,
-                                                    'PRLAND'    , 'SURFACE'  , 'PRECTOTCORR' , #
-                                                    'SNOLAND'   , 'SURFACE'  , 'PRECSNLAND'  , # check if same as PRECSOCORR
-                                                    'TSLAND'    , 'SURFACE'  , 'SNOMAS'    ,
-                                                    'SNOWDP'    , 'SURFACE'  , 'SNODP'     ,
-                                                    'EVPSOI'    , 'SURFACE'  , 'EVPSOIL'   ,
-                                                    'EVPVEG'    , 'SURFACE'  , 'EVPTRNS'   ,
-                                                    'EVPINT'    , 'SURFACE'  , 'EVPINTR'   ,
-                                                    'EVPICE'    , 'SURFACE'  , 'EVPSBLN'   ,
+                                                    'PRLAND'    , 'SURFACE'  , 'PRECTOTCORR' , # append "CORR" if reanalysis and from SURFACE
+                                                    'SNOLAND'   , 'SURFACE'  , 'PRECSNOCORR' , # append "CORR" if reanalysis and from SURFACE
+                                                    'TSLAND'    , 'SURFACE'  , 'SNOMASLAND'  , #
+                                                    'SNOWDP'    , 'SURFACE'  , 'SNODPLAND'   , #
+                                                    'EVPSOI'    , 'SURFACE'  , 'EVPLANDSOIL' , #
+                                                    'EVPVEG'    , 'SURFACE'  , 'EVPLANDTRNS' , #
+                                                    'EVPINT'    , 'SURFACE'  , 'EVPLANDINTR' , #
+                                                    'EVPICE'    , 'SURFACE'  , 'EVPLANDSBLN' , #
                                                     'RUNSURF'   , 'SURFACE'  , 'RUNSURFLAND' , #
-                                                    'BASEFLOW'  , 'SURFACE'  ,
+                                                    'BASEFLOW'  , 'SURFACE'  , 'BASEFLOWLAND', #
                                                     'SMLAND'    , 'SURFACE'  ,
-                                                    'QINFIL'    , 'SURFACE'  ,
-                                                    'FRUST'     , 'SURFACE'  , 'FRUNST'    ,
-                                                    'FRSAT'     , 'SURFACE'  ,
-                                                    'ASNOW'     , 'SURFACE'  , 'FRSNO'     ,
-                                                    'FRWLT'     , 'SURFACE'  ,
-                                                    'DFPAR'     , 'SOLAR'    , 'PARDF'     ,
-                                                    'DRPAR'     , 'SOLAR'    , 'PARDR'     ,
+                                                    'QINFIL'    , 'SURFACE'  , 'QINFILLAND'  , #
+                                                    'FRUST'     , 'SURFACE'  , 'FRLANDUNST'  , #
+                                                    'FRSAT'     , 'SURFACE'  , 'FRLANDSAT'   , #
+                                                    'ASNOW'     , 'SURFACE'  , 'FRLANDSNO'   , #
+                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT',  , #
+                                                    'DFPAR'     , 'SURFACE'  , 'PARDFLAND'   , #
+                                                    'DRPAR'     , 'SURFACE'  , 'PARDRLAND'   , #
                                                     'SHLAND'    , 'SURFACE'  ,
                                                     'LHLAND'    , 'SURFACE'  ,
                                                     'EVLAND'    , 'SURFACE'  ,
@@ -1175,11 +1176,11 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'GHLAND'    , 'SURFACE'  ,
                                                     'TWLAND'    , 'SURFACE'  ,
                                                     'TELAND'    , 'SURFACE'  ,
-                                                    'DWLAND'    , 'SURFACE'  , 'WCHANGE'   ,
-                                                    'DHLAND'    , 'SURFACE'  , 'ECHANGE'   ,
+                                                    'DWLAND'    , 'SURFACE'  , 'WCHANGELAND' , #
+                                                    'DHLAND'    , 'SURFACE'  , 'ECHANGELAND' , #
                                                     'SPLAND'    , 'SURFACE'  ,
-                                                    'SPWATR'    , 'SURFACE'  ,
-                                                    'SPSNOW'    , 'SURFACE'  ,
+                                                    'SPWATR'    , 'SURFACE'  , 'SPLANDWATR',   #
+                                                    'SPSNOW'    , 'SURFACE'  , 'SPLANDSNOW',   #
                                                      ::
 
   lnd_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.format:      'CFIO' ,
@@ -1198,35 +1199,35 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'WCPR'      , 'SURFACE'  , 'PRMC'      ,
                                                     'WCRZ'      , 'SURFACE'  , 'RZMC'      ,
                                                     'WCSF'      , 'SURFACE'  , 'SFMC'      ,
-                                                    'TPSNOW'    , 'SURFACE'  ,
-                                                    'TPUNST'    , 'SURFACE'  , 'TUNST'     ,
-                                                    'TPSAT'     , 'SURFACE'  , 'TSAT'      ,
-                                                    'TPWLT'     , 'SURFACE'  , 'TWLT'      ,
-                                                    'TPSURF'    , 'SURFACE'  , 'TSURF'     ,
+                                                    'TPSNOW'    , 'SURFACE'  , 'TPSNOWLAND',  #
+                                                    'TPUNST'    , 'SURFACE'  , 'TUNSTLAND' ,  #
+                                                    'TPSAT'     , 'SURFACE'  , 'TSATLAND'  ,  #
+                                                    'TPWLT'     , 'SURFACE'  , 'TWLTLAND'  ,  #
+                                                    'TPSURF'    , 'SURFACE'  , 'TSURFLAND' ,  #
                                                     'TSOIL1'    , 'SURFACE'  ,
                                                     'TSOIL2'    , 'SURFACE'  ,
                                                     'TSOIL3'    , 'SURFACE'  ,
                                                     'TSOIL4'    , 'SURFACE'  ,
                                                     'TSOIL5'    , 'SURFACE'  ,
                                                     'TSOIL6'    , 'SURFACE'  ,
-                                                    'SNO'       , 'MOIST'    , 'PRECSNO'   ,
-                                                    'TPREC'     , 'MOIST'    , 'PRECTOT'   ,
-                                                    'TSLAND'    , 'SURFACE'  , 'SNOMAS'    ,
-                                                    'SNOWDP'    , 'SURFACE'  , 'SNODP'     ,
-                                                    'EVPSOI'    , 'SURFACE'  , 'EVPSOIL'   ,
-                                                    'EVPVEG'    , 'SURFACE'  , 'EVPTRNS'   ,
-                                                    'EVPINT'    , 'SURFACE'  , 'EVPINTR'   ,
-                                                    'EVPICE'    , 'SURFACE'  , 'EVPSBLN'   ,
-                                                    'RUNSURF'   , 'SURFACE'  , 'RUNOFF'    ,
-                                                    'BASEFLOW'  , 'SURFACE'  ,
+                                                    'PRLAND'    , 'SURFACE'  , 'PRECTOTCORR' , # append "CORR" if reanalysis and from SURFACE
+                                                    'SNOLAND'   , 'SURFACE'  , 'PRECSNOCORR' , # append "CORR" if reanalysis and from SURFACE
+                                                    'TSLAND'    , 'SURFACE'  , 'SNOMASLAND'  , #
+                                                    'SNOWDP'    , 'SURFACE'  , 'SNODPLAND'   , #
+                                                    'EVPSOI'    , 'SURFACE'  , 'EVPLANDSOIL' , #
+                                                    'EVPVEG'    , 'SURFACE'  , 'EVPLANDTRNS' , #
+                                                    'EVPINT'    , 'SURFACE'  , 'EVPLANDINTR' , #
+                                                    'EVPICE'    , 'SURFACE'  , 'EVPLANDSBLN' , #
+                                                    'RUNSURF'   , 'SURFACE'  , 'RUNSURFLAND' , #
+                                                    'BASEFLOW'  , 'SURFACE'  , 'BASEFLOWLAND', #
                                                     'SMLAND'    , 'SURFACE'  ,
-                                                    'QINFIL'    , 'SURFACE'  ,
-                                                    'FRUST'     , 'SURFACE'  , 'FRUNST'    ,
-                                                    'FRSAT'     , 'SURFACE'  ,
-                                                    'ASNOW'     , 'SURFACE'  , 'FRSNO'     ,
-                                                    'FRWLT'     , 'SURFACE'  ,
-                                                    'DFPAR'     , 'SOLAR'    , 'PARDF'     ,
-                                                    'DRPAR'     , 'SOLAR'    , 'PARDR'     ,
+                                                    'QINFIL'    , 'SURFACE'  , 'QINFILLAND'  , #
+                                                    'FRUST'     , 'SURFACE'  , 'FRLANDUNST'  , #
+                                                    'FRSAT'     , 'SURFACE'  , 'FRLANDSAT'   , #
+                                                    'ASNOW'     , 'SURFACE'  , 'FRLANDSNO'   , #
+                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT',  , #
+                                                    'DFPAR'     , 'SURFACE'  , 'PARDFLAND'   , #
+                                                    'DRPAR'     , 'SURFACE'  , 'PARDRLAND'   , #
                                                     'SHLAND'    , 'SURFACE'  ,
                                                     'LHLAND'    , 'SURFACE'  ,
                                                     'EVLAND'    , 'SURFACE'  ,
@@ -1235,11 +1236,11 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'GHLAND'    , 'SURFACE'  ,
                                                     'TWLAND'    , 'SURFACE'  ,
                                                     'TELAND'    , 'SURFACE'  ,
-                                                    'DWLAND'    , 'SURFACE'  , 'WCHANGE'   ,
-                                                    'DHLAND'    , 'SURFACE'  , 'ECHANGE'   ,
+                                                    'DWLAND'    , 'SURFACE'  , 'WCHANGELAND' , #
+                                                    'DHLAND'    , 'SURFACE'  , 'ECHANGELAND' , #
                                                     'SPLAND'    , 'SURFACE'  ,
-                                                    'SPWATR'    , 'SURFACE'  ,
-                                                    'SPSNOW'    , 'SURFACE'  ,
+                                                    'SPWATR'    , 'SURFACE'  , 'SPLANDWATR',   #
+                                                    'SPSNOW'    , 'SURFACE'  , 'SPLANDSNOW',   #
                                                      ::
 
   lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.format:       'CFIO' ,
@@ -1253,11 +1254,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.end_date:      >>>IOEDATE<<< ,
   lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.end_time:      >>>IOETIME<<< ,
   lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.fields:       'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
-                                                    'SWLAND'  , 'SURFACE'  ,
                                                     'LWS'     , 'IRRAD'    , 'LWGAB'    ,
-                                                    'PCU'     , 'SURFACE'  , 'PRECRAINCUCORR'   , #
-                                                    'PLS'     , 'SURFACE'  , 'PRECRAINLSCORR'   , #
-                                                    'SNO'     , 'SURFACE'  , 'PRECSNOCORR'      , #
+                                                    'PCU'     , 'SURFACE'  , 'PRECRAINCUCORR'   , # append "CORR" if reanalysis and from SURFACE
+                                                    'PLS'     , 'SURFACE'  , 'PRECRAINLSCORR'   , # append "CORR" if reanalysis and from SURFACE
+                                                    'SNO'     , 'SURFACE'  , 'PRECSNOCORR'      , # append "CORR" if reanalysis and from SURFACE
                                                     'DFPAR'   , 'SOLAR'    , 'PARDF'    ,
                                                     'DRPAR'   , 'SOLAR'    , 'PARDR'    ,
                                                      ::
@@ -1272,11 +1272,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.end_date:     >>>IOEDATE<<< ,
   lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.end_time:     >>>IOETIME<<< ,
   lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.fields:      'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
-                                                    'SWLAND'  , 'SURFACE'  ,
                                                     'LWS'     , 'IRRAD'    , 'LWGAB'    ,
-                                                    'PCU'     , 'SURFACE'  , 'PRECCU'   ,
-                                                    'PLS'     , 'SURFACE'  , 'PRECLS'   ,
-                                                    'SNO'     , 'SURFACE'  , 'PRECSNO'  ,
+                                                    'PCU'     , 'SURFACE'  , 'PRECRAINCUCORR'   , # append "CORR" if reanalysis and from SURFACE
+                                                    'PLS'     , 'SURFACE'  , 'PRECRAINLSCORR'   , # append "CORR" if reanalysis and from SURFACE
+                                                    'SNO'     , 'SURFACE'  , 'PRECSNOCORR'      , # append "CORR" if reanalysis and from SURFACE
                                                     'DFPAR'   , 'SOLAR'    , 'PARDF'    ,
                                                     'DRPAR'   , 'SOLAR'    , 'PARDR'    ,
                                                      ::
@@ -1335,8 +1334,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'LWNDICE'      , 'SURFACE'  , 'LWGNTICE'    ,
                                                     'SWNDWTR'      , 'SURFACE'  , 'SWGNTWTR'    ,
                                                     'SWNDICE'      , 'SURFACE'  , 'SWGNTICE'    ,
-                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  ,
-                                                    'RAINOCN'      , 'SURFACE'  ,
+                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  , # Should probably be "CORR" for reanalysis (R21C)??
+                                                    'RAINOCN'      , 'SURFACE'  ,                 # Should probably be "CORR" for reanalysis (R21C)??
                                                     'TAUXW;TAUYW'  , 'SURFACE'  , 'TAUXWTR;TAUYWTR' ,
                                                     'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE' ,
                                                     'FRACI'        , 'SURFACE'  , 'FRSEAICE'    ,
@@ -1347,10 +1346,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'TSKINICE'     , 'SURFACE'  ,
 # additonal exports for skin SST
                                                     'EVAPOUT'      , 'SURFACE'  ,
-                                                    'FRLAND'       , 'SURFACE'  ,
-                                                    'FRLANDICE'    , 'SURFACE'  ,
-                                                    'FRLAKE'       , 'SURFACE'  ,
-                                                    'FROCEAN'      , 'SURFACE'  ,
+                                                    'FRLAND'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLANDICE'    , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLAKE'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FROCEAN'      , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
                                                     'COSZ'         , 'SOLAR'    ,
                                                     'DCOOL'        , 'SURFACE'  ,
                                                     'DWARM'        , 'SURFACE'  ,
@@ -1393,8 +1392,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'LWNDICE'      , 'SURFACE'  , 'LWGNTICE'    ,
                                                     'SWNDWTR'      , 'SURFACE'  , 'SWGNTWTR'    ,
                                                     'SWNDICE'      , 'SURFACE'  , 'SWGNTICE'    ,
-                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  ,
-                                                    'RAINOCN'      , 'SURFACE'  ,
+                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  , # Should probably be "CORR" for reanalysis (R21C)??
+                                                    'RAINOCN'      , 'SURFACE'  ,                 # Should probably be "CORR" for reanalysis (R21C)??
                                                     'TAUXW;TAUYW'  , 'SURFACE'  , 'TAUXWTR;TAUYWTR' ,
                                                     'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE' ,
                                                     'FRACI'        , 'SURFACE'  , 'FRSEAICE'    ,
@@ -1405,10 +1404,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'TSKINICE'     , 'SURFACE'  ,
 # additonal exports for skin SST
                                                     'EVAPOUT'      , 'SURFACE'  ,
-                                                    'FRLAND'       , 'SURFACE'  ,
-                                                    'FRLANDICE'    , 'SURFACE'  ,
-                                                    'FRLAKE'       , 'SURFACE'  ,
-                                                    'FROCEAN'      , 'SURFACE'  ,
+                                                    'FRLAND'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLANDICE'    , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLAKE'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FROCEAN'      , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
                                                     'COSZ'         , 'SOLAR'    ,
                                                     'DCOOL'        , 'SURFACE'  ,
                                                     'DWARM'        , 'SURFACE'  ,
@@ -1444,27 +1443,27 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   ocn_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.fields:       'U10M;V10M'    , 'SURFACE'  ,
                                                     'T10M'         , 'SURFACE'  ,
                                                     'Q10M'         , 'SURFACE'  , 'QV10M'       ,
-                                                    'SHWTR'        , 'SURFACE'  , 'HFLUXWTR'    ,
-                                                    'SHICE'        , 'SURFACE'  , 'HFLUXICE'    ,
-                                                    'HLATWTR'      , 'SURFACE'  , 'EFLUXWTR'    ,
-                                                    'HLATICE'      , 'SURFACE'  , 'EFLUXICE'    ,
-                                                    'LWNDWTR'      , 'SURFACE'  , 'LWGNTWTR'    ,
-                                                    'LWNDICE'      , 'SURFACE'  , 'LWGNTICE'    ,
-                                                    'SWNDWTR'      , 'SURFACE'  , 'SWGNTWTR'    ,
-                                                    'SWNDICE'      , 'SURFACE'  , 'SWGNTICE'    ,
-                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  ,
-                                                    'RAINOCN'      , 'SURFACE'  ,
+                                                    'SHWTR'        , 'SURFACE'  , 'HFLUXWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SHICE'        , 'SURFACE'  , 'HFLUXICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'HLATWTR'      , 'SURFACE'  , 'EFLUXWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'HLATICE'      , 'SURFACE'  , 'EFLUXICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'LWNDWTR'      , 'SURFACE'  , 'LWGNTWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'LWNDICE'      , 'SURFACE'  , 'LWGNTICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SWNDWTR'      , 'SURFACE'  , 'SWGNTWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SWNDICE'      , 'SURFACE'  , 'SWGNTICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  ,  # CORR??   # Flux variable?  Why output in "inst" Collection??
+                                                    'RAINOCN'      , 'SURFACE'  ,                  # CORR??   # Flux variable?  Why output in "inst" Collection??
                                                     'TAUXW;TAUYW'  , 'SURFACE'  , 'TAUXWTR;TAUYWTR' ,
                                                     'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE' ,
                                                     'FRACI'        , 'SURFACE'  , 'FRSEAICE'    ,
                                                     'TSKINW'       , 'SURFACE'  , 'TSKINWTR'    ,
                                                     'TSKINICE'     , 'SURFACE'  ,
 # additonal exports for skin SST
-                                                    'EVAPOUT'      , 'SURFACE'  ,
-                                                    'FRLAND'       , 'SURFACE'  ,
-                                                    'FRLANDICE'    , 'SURFACE'  ,
-                                                    'FRLAKE'       , 'SURFACE'  ,
-                                                    'FROCEAN'      , 'SURFACE'  ,
+                                                    'EVAPOUT'      , 'SURFACE'  ,                     # Flux variable?  Why output in "inst" Collection??
+                                                    'FRLAND'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLANDICE'    , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLAKE'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FROCEAN'      , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
                                                     'COSZ'         , 'SOLAR'    ,
                                                     'DCOOL'        , 'SURFACE'  ,
                                                     'DWARM'        , 'SURFACE'  ,
@@ -1499,27 +1498,27 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   ocn_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.fields:      'U10M;V10M'    , 'SURFACE'  ,
                                                     'T10M'         , 'SURFACE'  ,
                                                     'Q10M'         , 'SURFACE'  , 'QV10M'       ,
-                                                    'SHWTR'        , 'SURFACE'  , 'HFLUXWTR'    ,
-                                                    'SHICE'        , 'SURFACE'  , 'HFLUXICE'    ,
-                                                    'HLATWTR'      , 'SURFACE'  , 'EFLUXWTR'    ,
-                                                    'HLATICE'      , 'SURFACE'  , 'EFLUXICE'    ,
-                                                    'LWNDWTR'      , 'SURFACE'  , 'LWGNTWTR'    ,
-                                                    'LWNDICE'      , 'SURFACE'  , 'LWGNTICE'    ,
-                                                    'SWNDWTR'      , 'SURFACE'  , 'SWGNTWTR'    ,
-                                                    'SWNDICE'      , 'SURFACE'  , 'SWGNTICE'    ,
-                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  ,
-                                                    'RAINOCN'      , 'SURFACE'  ,
+                                                    'SHWTR'        , 'SURFACE'  , 'HFLUXWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SHICE'        , 'SURFACE'  , 'HFLUXICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'HLATWTR'      , 'SURFACE'  , 'EFLUXWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'HLATICE'      , 'SURFACE'  , 'EFLUXICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'LWNDWTR'      , 'SURFACE'  , 'LWGNTWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'LWNDICE'      , 'SURFACE'  , 'LWGNTICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SWNDWTR'      , 'SURFACE'  , 'SWGNTWTR'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SWNDICE'      , 'SURFACE'  , 'SWGNTICE'    ,     # Flux variable?  Why output in "inst" Collection??
+                                                    'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN'  ,  # "CORR"??   # Flux variable?  Why output in "inst" Collection??
+                                                    'RAINOCN'      , 'SURFACE'  ,		   # "CORR"??   # Flux variable?  Why output in "inst" Collection??
                                                     'TAUXW;TAUYW'  , 'SURFACE'  , 'TAUXWTR;TAUYWTR' ,
                                                     'TAUXI;TAUYI'  , 'SURFACE'  , 'TAUXICE;TAUYICE' ,
                                                     'FRACI'        , 'SURFACE'  , 'FRSEAICE'    ,
                                                     'TSKINW'       , 'SURFACE'  , 'TSKINWTR'    ,
                                                     'TSKINICE'     , 'SURFACE'  ,
 # additonal exports for skin SST
-                                                    'EVAPOUT'      , 'SURFACE'  ,
-                                                    'FRLAND'       , 'SURFACE'  ,
-                                                    'FRLANDICE'    , 'SURFACE'  ,
-                                                    'FRLAKE'       , 'SURFACE'  ,
-                                                    'FROCEAN'      , 'SURFACE'  ,
+                                                    'EVAPOUT'      , 'SURFACE'  ,                     # Flux variable?  Why output in "inst" Collection??
+                                                    'FRLAND'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLANDICE'    , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FRLAKE'       , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
+                                                    'FROCEAN'      , 'SURFACE'  ,          # Isn't this constant?  Why output hourly??
                                                     'COSZ'         , 'SOLAR'    ,
                                                     'DCOOL'        , 'SURFACE'  ,
                                                     'DWARM'        , 'SURFACE'  ,
@@ -3000,33 +2999,33 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'WCPR'      , 'SURFACE'  , 'PRMC'      ,
                                                     'WCRZ'      , 'SURFACE'  , 'RZMC'      ,
                                                     'WCSF'      , 'SURFACE'  , 'SFMC'      ,
-                                                    'TPSNOW'    , 'SURFACE'  ,
-                                                    'TPUNST'    , 'SURFACE'  , 'TUNST'     ,
-                                                    'TPSAT'     , 'SURFACE'  , 'TSAT'      ,
-                                                    'TPWLT'     , 'SURFACE'  , 'TWLT'      ,
-                                                    'TPSURF'    , 'SURFACE'  , 'TSURF'     ,
+                                                    'TPSNOW'    , 'SURFACE'  , 'TPSNOWLAND',  #
+                                                    'TPUNST'    , 'SURFACE'  , 'TUNSTLAND' ,  #
+                                                    'TPSAT'     , 'SURFACE'  , 'TSATLAND'  ,  #
+                                                    'TPWLT'     , 'SURFACE'  , 'TWLTLAND'  ,  #
+                                                    'TPSURF'    , 'SURFACE'  , 'TSURFLAND' ,  #
                                                     'TSOIL1'    , 'SURFACE'  ,
                                                     'TSOIL2'    , 'SURFACE'  ,
                                                     'TSOIL3'    , 'SURFACE'  ,
                                                     'TSOIL4'    , 'SURFACE'  ,
                                                     'TSOIL5'    , 'SURFACE'  ,
                                                     'TSOIL6'    , 'SURFACE'  ,
-                                                    'SNO'       , 'MOIST'    , 'PRECSNO'   ,
-                                                    'TPREC'     , 'MOIST'    , 'PRECTOT'   ,
-                                                    'TSLAND'    , 'SURFACE'  , 'SNOMAS'    ,
-                                                    'SNOWDP'    , 'SURFACE'  , 'SNODP'     ,
-                                                    'EVPSOI'    , 'SURFACE'  , 'EVPSOIL'   ,
-                                                    'EVPVEG'    , 'SURFACE'  , 'EVPTRNS'   ,
-                                                    'EVPINT'    , 'SURFACE'  , 'EVPINTR'   ,
-                                                    'EVPICE'    , 'SURFACE'  , 'EVPSBLN'   ,
-                                                    'RUNSURF'   , 'SURFACE'  , 'RUNOFF'    ,
-                                                    'BASEFLOW'  , 'SURFACE'  ,
+                                                    'TPREC'     , 'MOIST'    , 'PRECTOT' , 
+                                                    'SNO'       , 'MOIST'    , 'PRECSNO' ,  
+                                                    'TSLAND'    , 'SURFACE'  , 'SNOMASLAND'  , #
+                                                    'SNOWDP'    , 'SURFACE'  , 'SNODPLAND'   , #
+                                                    'EVPSOI'    , 'SURFACE'  , 'EVPLANDSOIL' , #
+                                                    'EVPVEG'    , 'SURFACE'  , 'EVPLANDTRNS' , #
+                                                    'EVPINT'    , 'SURFACE'  , 'EVPLANDINTR' , #
+                                                    'EVPICE'    , 'SURFACE'  , 'EVPLANDSBLN' , #
+                                                    'RUNSURF'   , 'SURFACE'  , 'RUNSURFLAND' , #
+                                                    'BASEFLOW'  , 'SURFACE'  , 'BASEFLOWLAND', #
                                                     'SMLAND'    , 'SURFACE'  ,
-                                                    'QINFIL'    , 'SURFACE'  ,
-                                                    'FRUST'     , 'SURFACE'  , 'FRUNST'    ,
-                                                    'FRSAT'     , 'SURFACE'  ,
-                                                    'ASNOW'     , 'SURFACE'  , 'FRSNO'     ,
-                                                    'FRWLT'     , 'SURFACE'  ,
+                                                    'QINFIL'    , 'SURFACE'  , 'QINFILLAND'  , #
+                                                    'FRUST'     , 'SURFACE'  , 'FRLANDUNST'  , #
+                                                    'FRSAT'     , 'SURFACE'  , 'FRLANDSAT'   , #
+                                                    'ASNOW'     , 'SURFACE'  , 'FRLANDSNO'   , #
+                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT',  , #
                                                     'DFPAR'     , 'SOLAR'    , 'PARDF'     ,
                                                     'DRPAR'     , 'SOLAR'    , 'PARDR'     ,
                                                     'SHLAND'    , 'SURFACE'  ,
@@ -3037,12 +3036,13 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'GHLAND'    , 'SURFACE'  ,
                                                     'TWLAND'    , 'SURFACE'  ,
                                                     'TELAND'    , 'SURFACE'  ,
-                                                    'DWLAND'    , 'SURFACE'  , 'WCHANGE'   ,
-                                                    'DHLAND'    , 'SURFACE'  , 'ECHANGE'   ,
+                                                    'DWLAND'    , 'SURFACE'  , 'WCHANGELAND' , #
+                                                    'DHLAND'    , 'SURFACE'  , 'ECHANGELAND' , #
                                                     'SPLAND'    , 'SURFACE'  ,
-                                                    'SPWATR'    , 'SURFACE'  ,
-                                                    'SPSNOW'    , 'SURFACE'  ,
+                                                    'SPWATR'    , 'SURFACE'  , 'SPLANDWATR',   #
+                                                    'SPSNOW'    , 'SURFACE'  , 'SPLANDSNOW',   #
                                                      ::
+
 
   tavg1_2d_rad_Nx+-.format:                         'CFIO' ,
   tavg1_2d_rad_Nx+-.descr:                          '2d,1-Hourly,Time-Averaged,Single-Level,Forecast,Radiation Diagnostics' ,
@@ -3752,11 +3752,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'OXFILL'        , 'AGCM'        , 'DOXDT_FIL'    ,
                                                     'SH'            , 'SURFACE'     , 'HFLUX'        ,
                                                     'EVAP'          , 'SURFACE'     ,
-                                                    'PCU'           , 'MOIST'       , 'PRECCU'       , # Should this be renamed 
-#                                                                                                      # PRECRAINCU? PCU in lfo_tavg 
-#                                                                                                      # comes from SURFACE.  
-                                                    'PLS'           , 'MOIST'       , 'PRECLS'       , # same ??
-                                                    'SNO'           , 'MOIST'       , 'PRECSN'       ,
+                                                    'PCU'           , 'MOIST'       , 'PRECRAINCU'   , #
+                                                    'PLS'           , 'MOIST'       , 'PRECRAINLS'   , #
+                                                    'SNO'           , 'MOIST'       , 'PRECSNO'      , #
                                                     'DTHVDTANAINT'  , 'DYN'         , 'DTHDT_ANA'    ,
                                                     'DTHVDTPHYINT'  , 'DYN'         , 'DTHDT_PHY'    ,
                                                     'DTHVDTDYNINT'  , 'DYN'         , 'DTHDT_DYN'    ,
