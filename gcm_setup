@@ -1531,6 +1531,11 @@ while( $check == FALSE )
   echo "(To use ${C1}HISTORY.AGCM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
   echo "-------------------------------------------------------------------------"
   echo "Hit ENTER to use Default Location: (${C2}${HISTORYrc}${CN})"
+
+  if ( $OCNMODEL == "MOM5" ) then
+    echo "Ignore above and use HISTORY.AOGCM-MOM5.rc.tmpl"
+  endif
+
   set   NUHISTORY  = $<
   if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
 
