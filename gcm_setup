@@ -513,7 +513,8 @@ if( $OGCM == TRUE ) then
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
-       
+       set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
+
        set mom5_warning=">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
        echo "\033[31;5m"${mom5_warning}"\033[0m"
     else if ( $OCNMODEL == "MOM6" ) then
@@ -521,6 +522,7 @@ if( $OGCM == TRUE ) then
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
+       set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
     endif
 
     # Coupled Ocean Resolution
@@ -742,6 +744,8 @@ else
     set COUPLED   = "#DELETE"
     set MOM5      = "#DELETE"
     set MOM6      = "#DELETE"
+    set OCNMODEL  = "Data Ocean (${HRCODE})"
+    set DEFAULT_HISTORY_TEMPLATE="HISTORY.AGCM.rc.tmpl"
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
@@ -1515,74 +1519,57 @@ endif
 
 #######################################################################
 #                    Create Desired HISTORY template
-#         Note: Default HISTORY will be kept in $HOME/.HISTORYrc
 #######################################################################
 
     set check =  FALSE
 while( $check == FALSE )
-  if( -e $HOME/.HISTORYrc ) then
-            set HISTORYrc = `cat $HOME/.HISTORYrc`
-  else
-            set HISTORYrc = Current
-          echo $HISTORYrc > $HOME/.HISTORYrc
+
+  echo "Enter the filename of the ${C1}HISTORY template${CN} to use"
+  echo "-----------------------------------------------------------"
+  echo "As ${OCNMODEL} was chosen, the default HISTORY Template is ${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}"
+  echo "  1. Hit ENTER to use the default HISTORY template (${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}) or"
+  echo "  2. Type the full path of the HISTORY template to use"
+
+  set   HISTORY_TEMPLATE  = $<
+  if( .$HISTORY_TEMPLATE == . ) then
+     set HISTORY_TEMPLATE = ${DEFAULT_HISTORY_TEMPLATE}
   endif
-
-  echo "Enter the directory (/filename) of the ${C1}HISTORY.AGCM.rc.tmpl${CN} to use"
-  echo "(To use ${C1}HISTORY.AGCM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
-  echo "-------------------------------------------------------------------------"
-  echo "Hit ENTER to use Default Location: (${C2}${HISTORYrc}${CN})"
-
-  if ( $OCNMODEL == "MOM5" ) then
-    echo "Ignore above and use HISTORY.AOGCM-MOM5.rc.tmpl"
-  endif
-
-  set   NUHISTORY  = $<
-  if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
 
   set TMPHIST = `mktemp`
 
-  if( "$HISTORYrc" == "Current" ) then
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/HISTORY.AGCM.rc.tmpl $TMPHIST
-  endif
+  # Check to see if the HISTORY template exists in the $ETCDIR
+  if( -f $ETCDIR/$HISTORY_TEMPLATE ) then
+     set check = TRUE
+     set TMPHIST1 = `mktemp`
+     /bin/cp -f $ETCDIR/$HISTORY_TEMPLATE $TMPHIST1
 
-  if( "$HISTORYrc" != "Current" ) then
-       if( -f $ETCDIR/$HISTORYrc ) then
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-            set TMPHIST1 = `mktemp`
-            /bin/cp -f $ETCDIR/$HISTORYrc $TMPHIST1
+     set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
+     set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
 
-            set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
+     set  TMPCMD = `mktemp`
+     set  string = "EXPID:"
+     echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+           \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
+     chmod +x   $TMPCMD
+                $TMPCMD
+     /bin/rm -f $TMPCMD
+     /bin/mv -f $TMPHIST $TMPHIST1
+     cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
+     /bin/rm -f $TMPHIST1
 
-            set  TMPCMD = `mktemp`
-            set  string = "EXPID:"
-            echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
-            chmod +x   $TMPCMD
-                       $TMPCMD
-            /bin/rm -f $TMPCMD
-            /bin/mv -f $TMPHIST $TMPHIST1
-                   cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
-            /bin/rm -f $TMPHIST1
-
-       else if( -e $HISTORYrc/HISTORY.AGCM.rc.tmpl ) then
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY.AGCM.rc.tmpl $TMPHIST
-       else
-           echo "This condition is based on updating HISTORY.AGCM.rc.tmpl with CVS"
-           echo "This has no equivalent in git at present. Please contact Matt"
-           echo "Thompson or Larry Takacs to help resolve this."
-           exit 2
-       endif
+  # else check if the file exists (assuming they sent in full path)
+  else if( -e $HISTORY_TEMPLATE ) then
+     set check = TRUE
+     /bin/cp -f $HISTORY_TEMPLATE $TMPHIST
+  else
+     echo "Error: Could not find ${RED}${HISTORY_TEMPLATE}${RESET}"
+     echo ""
+     set check = FALSE
   endif
 end
+
+echo ""
+echo "Using ${C2}${HISTORY_TEMPLATE}${CN}"
 
 #######################################################################
 #                 Create Paths for HOME and EXP Directories
