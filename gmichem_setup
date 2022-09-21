@@ -841,6 +841,8 @@ else
     set COUPLED   = "#DELETE"
     set MOM5      = "#DELETE"
     set MOM6      = "#DELETE"
+    set OCNMODEL  = "Data Ocean (${HRCODE})"
+    set DEFAULT_HISTORY_TEMPLATE="HISTORY_GMICHEM.rc.tmpl"
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
@@ -2761,20 +2763,21 @@ else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-# the only GOCART species on by default right now are CO, CO2, CFC
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_CO:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_CO2:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_CFC:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
+
+# Initially turn off everything in Chem_Registry
+#   Handle both OPS and AMIP cases
+# ----------------------------------------------
+setenv CHEMREG_OPS  $EXPDIR/RC/Chem_Registry.rc
+setenv CHEMREG_AMIP $EXPDIR/RC/AMIP/Chem_Registry.rc
+
+/bin/mv $CHEMREG_OPS  $CHEMREG_OPS.tmp
+cat $CHEMREG_OPS.tmp  | awk '{ if ( $1 ~ "doing_" ) { sub(/yes/, "no" ) }; print }' > $CHEMREG_OPS
+/bin/rm $CHEMREG_OPS.tmp
+
+/bin/mv $CHEMREG_AMIP $CHEMREG_AMIP.tmp
+cat $CHEMREG_AMIP.tmp | awk '{ if ( $1 ~ "doing_" ) { sub(/yes/, "no" ) }; print }' > $CHEMREG_AMIP
+/bin/rm $CHEMREG_AMIP.tmp
 
 # Turn on GOCART2G
 # ----------------
@@ -2795,17 +2798,17 @@ if( $LACHEM == TRUE ) then
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_ACHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_OCS:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+    /bin/mv $CHEMREG_OPS  $CHEMREG_OPS.tmp
+    cat $CHEMREG_OPS.tmp  | awk '{ if ( $1 ~ "doing_OCS:" ) { sub(/no/, "yes" ) }; print }' > $CHEMREG_OPS
+    /bin/rm $CHEMREG_OPS.tmp
+
+    /bin/mv $CHEMREG_AMIP $CHEMREG_AMIP.tmp
+    cat $CHEMREG_AMIP.tmp | awk '{ if ( $1 ~ "doing_OCS:" ) { sub(/no/, "yes" ) }; print }' > $CHEMREG_AMIP
+    /bin/rm $CHEMREG_AMIP.tmp
 else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_ACHEM:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_OCS:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
 
 # Turn on HEMCO
@@ -2841,14 +2844,6 @@ endif
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GMICHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_GMI:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_XX:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
 # # Turn on GOCART.data if it is the AERO_PROVIDER
 # # ----------------------------------------------
 # if( $AERO_PROVIDER == GOCART.data ) then
@@ -2868,21 +2863,11 @@ endif
     /bin/mv $EXPDIR/RC/GAAS_GridComp.rc $EXPDIR/RC/GAAS_GridComp.tmp
     cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.?aod/Y%y4/M%m2/@ANA_EXPID.?g' > $EXPDIR/RC/GAAS_GridComp.rc
 
-# Turn on TR GridComp
-# ---------------------
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
-
 # Turn off PCHEM
 # --------------
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_PCHEM:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 
 # Turn on HEMCO GMI instance
 # --------------------------
@@ -2890,19 +2875,6 @@ endif
     sed -e 's/doMEGANviaHEMCO: F/doMEGANviaHEMCO: T/' $EXPDIR/RC/GMI_GridComp.rc > $EXPDIR/RC/GMI_GridComp.tmp
     /bin/mv -f $EXPDIR/RC/GMI_GridComp.tmp $EXPDIR/RC/GMI_GridComp.rc
   endif
-
-##################################################################
-# Edit the Chem_Registry.rc to use the species appropriate GMIchem
-##################################################################
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    sed -e "s|nbins_XX_GMI|nbins_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    sed -e "s|variable_table_XX_GMI|variable_table_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
-
 
 #######################################################################
 # Change GMI_GridComp.rc until GMI datasets are moved to GMAO Ops share
