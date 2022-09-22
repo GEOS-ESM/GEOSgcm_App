@@ -24,8 +24,6 @@ limit stacksize unlimited
 # -----------------------------------------------
 setenv OMP_NUM_THREADS 1
 
-@GPUSTART
-
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################
@@ -554,8 +552,6 @@ end
 @MOM6         endif
 @MOM6      endif
 @MOM6endif
-
-@GPUEND
 
 if( $pass == true ) then
      echo "<font color=green> PASS </font>"                > regress_test
