@@ -250,20 +250,18 @@ endif
 
 ASKMP:
 
- echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: 1MOM)"
- echo "   ${C2}1MOM  --  3-phase 1-moment Bacmeister et al${CN}"
- echo "   ${C2}GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
- echo "   ${C2}MG1   --  3-phase 2-moment Morrison & Gettleman${CN}"
-#echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
-#echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
- set   AGCM_MP = $<
+echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: BACM_1M)"
+echo "   ${C2}BACM_1M  --  3-phase 1-moment Bacmeister et al${CN}"
+echo "   ${C2}GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
+echo "   ${C2}MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman${CN}"
+set   AGCM_MP = $<
 if( .$AGCM_MP == . ) then
-   set AGCM_MP = "1MOM"
+   set AGCM_MP = "BACM_1M"
 else
    set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
-   if( "$AGCM_MP" != "1MOM" & \
-       "$AGCM_MP" != "GFDL" & \
-       "$AGCM_MP" != "MG1"  ) then
+   if( "$AGCM_MP" != "BACM_1M" & \
+       "$AGCM_MP" != "GFDL_1M" & \
+       "$AGCM_MP" != "MGB2_2M"  ) then
        echo
        echo "${C1}Microphysics${CN} must be one of the options below!"
        goto ASKMP
@@ -478,14 +476,12 @@ echo
 endif
 endif
 
-set CLDMICRO = "1MOMENT"
 if( $OGCM == TRUE ) then
 
     set COUPLED   = ""
     set OGRIDTYP  = "TM"
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
-    set CLDMICRO = "2MOMENT"
 
     # Ocean Model
     # -----------
@@ -1103,19 +1099,9 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 set GFDL_HYDRO = TRUE
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .false."
-if ( "$AGCM_MP" == "GFDL" ) then
-   set MP_GFDL = ""
-else
-   set MP_GFDL = "# "
-endif
-if ( "$AGCM_MP" == "MG1" ) then
-   set MP_MG1 = ""
-else
-   set MP_MG1 = "# "
-endif
 
-# 1MOM and GFDL do not use WSUB_NATURE, so this eliminates a regrid
-if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
+# BACM_1M and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+if ( "$AGCM_MP" == "BACM_1M" | "$AGCM_MP" == "GFDL_1M" ) then
    set MP_NO_USE_WSUB = ""
 else
    set MP_NO_USE_WSUB = "#DELETE#"
@@ -1140,10 +1126,10 @@ else
       set FV_MAKENH     = "Make_NH     = .F."
    endif
    set FV_HYDRO      = "hydrostatic = .F."
-   if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
+   if ( "$AGCM_MP" == "BACM_1M" | "$AGCM_MP" == "MGB2_2M" ) then
       set FV_SATADJ  = "do_sat_adj = .F."
       set FV_NWAT    = "nwat       =  3 "
-   else if ( "$AGCM_MP" == "GFDL" ) then
+   else if ( "$AGCM_MP" == "GFDL_1M" ) then
       set FV_SATADJ  = "do_sat_adj = .T."
       set FV_NWAT    = "nwat       =  6 "
       set GFDL_HYDRO = FALSE
@@ -2189,8 +2175,8 @@ s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
 
-s/@MP_MG1/$MP_MG1/g
-s/@MP_GFDL/$MP_GFDL/g
+s/@AGCM_MP/$AGCM_MP/g
+
 s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 s?@FV_NWAT?$FV_NWAT?g
