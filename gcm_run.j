@@ -40,6 +40,9 @@ setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
 
+# GSI CDAS coupling. Set to 1 to run with GSI in parallel 
+set RUN_GSI = 0
+
 #######################################################################
 #             Experiment Specific Environment Variables
 #######################################################################
@@ -237,6 +240,16 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 endif
 
+# submit GSI standalone run, will run in parallel 
+if ( $RUN_GSI == 1 ) then
+   # make sure EXPID is correct
+   /bin/mv gsi_cdas.j gsi_cdas.tmp
+   cat gsi_cdas.tmp | sed -e "s?setenv EXPID.*?setenv EXPID $EXPID?g" > gsi_cdas.j
+   /bin/rm gsi_cdas.tmp
+   echo "submitting gsi job to run in parallel..."
+   sbatch gsi_cdas.j
+endif
+
 #######################################################################
 #   Move to Scratch Directory and Copy RC Files from Home Directory
 #######################################################################
@@ -264,6 +277,42 @@ set END_DATE  = `grep '^\s*END_DATE:'     CAP.rc | cut -d: -f2`
 set NUM_SGMT  = `grep '^\s*NUM_SGMT:'     CAP.rc | cut -d: -f2`
 set FSEGMENT  = `grep '^\s*FCST_SEGMENT:' CAP.rc | cut -d: -f2`
 set USE_SHMEM = `grep '^\s*USE_SHMEM:'    CAP.rc | cut -d: -f2`
+
+#######################################################################
+#                  Setup the Analysis 
+#######################################################################
+if ( $RUN_GSI == 1 ) then
+   # Specify second HISTORY instance to output background files and turn on GSI coupling
+   echo 'REPLAY_HISTORY_RC: HISTORY_predictor.rc' >> AGCM.rc
+   echo ' ' >> AGCM.rc
+   echo 'GSI_COUPLING: 1' >> AGCM.rc
+   echo 'GSI_INTERVAL_SEC: 30' >> AGCM.rc
+   echo 'GSI_MAXCHECKS: 120' >> AGCM.rc
+
+   # Update experiment ID in HISTORY_predictor.rc
+   /bin/mv HISTORY_predictor.rc HISTORY_predictor.tmp
+   cat HISTORY_predictor.tmp | sed -e "s?EXPID:.*?EXPID: $EXPID?g" > HISTORY_predictor.rc
+   /bin/rm HISTORY_predictor.tmp
+
+   # Update EXPID pattern in all AnaSettings files 
+   foreach anasettings ( `/bin/ls -1 GEOSCHEMchem_AnaSettings_*.rc` )
+      /bin/mv $anasettings gcc_anasettings.tmp
+      cat gcc_anasettings.tmp | sed -e "s?>>>EXPID<<<?$EXPID?g" > $anasettings
+      /bin/rm gcc_anasettings.tmp
+   end
+
+   # Create a fake restart entry for the background and increment files
+   echo 'CODAS_BACKGROUND_RESTART_FILE:           codas_background_rst'        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_RESTART_TYPE:           ptar'                        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_FILE:        codas_background_checkpoint' >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_TYPE:        ptar'                        >> AGCM.rc
+
+   echo 'CODAS_INCREMENT_RESTART_FILE:            codas_increment_rst'         >> AGCM.rc
+   echo 'CODAS_INCREMENT_RESTART_TYPE:            pnc4'                        >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_FILE:         codas_increment_checkpoint'  >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_TYPE:         pnc4'                        >> AGCM.rc
+
+endif
 
 
 #######################################################################
@@ -882,6 +931,13 @@ else
 endif
 echo GEOSgcm Run Status: $rc
 if ( $rc == -1 ) exit -1
+
+# write geos complete file (this tells the GSI run to stop)
+if ( $RUN_GSI == 1 ) then
+   set geos_done = "geos_run.done"
+   touch ${geos_done}
+   echo "written geos checkpoint file: ${geos_done}"
+endif
 
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
