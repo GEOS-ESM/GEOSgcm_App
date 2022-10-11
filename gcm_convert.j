@@ -400,20 +400,8 @@ sed -r -i -e "/VEGDYN_INTERNAL_RESTART_TYPE:/ s/$fromtype/binary/" AGCM.rc
 #                    Get Executable and RESTARTS 
 #######################################################################
 
-# Detect if GEOSgcm.x is in the experiment directory
-if (-e $EXPDIR/GEOSgcm.x) then
-   echo "Found GEOSgcm.x in $EXPDIR"
+cp $EXPDIR/GEOSgcm.x .
 
-   echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-   /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
-
-   setenv GEOSEXE $SCRDIR/GEOSgcm.x
-else
-   echo "Using GEOSgcm.x from $GEOSBIN"
-
-   setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-endif
-echo ""
 set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
 
@@ -521,7 +509,7 @@ set LOGFILE = "$CNVDIR/GEOSgcm.log"
 # Assume gcm_setup set these properly for the local platform
 /bin/rm -f EGRESS
 @SETENVS
-@OCEAN_PRELOAD $RUN_CMD $NPES $GEOSEXE >& $LOGFILE
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
 if( -e EGRESS ) then
    set rc = 0
 else

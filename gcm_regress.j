@@ -66,23 +66,9 @@ cd $HOMDIR
     end
 cd $EXPDIR/regress
 
-# Detect if GEOSgcm.x is in the experiment directory
-if (-e $EXPDIR/GEOSgcm.x) then
-   echo "Found GEOSgcm.x in $EXPDIR"
-
-   echo "Copying $EXPDIR/GEOSgcm.x to $EXPDIR/regress"
-   /bin/cp $EXPDIR/GEOSgcm.x $EXPDIR/regress/GEOSgcm.x
-
-   setenv GEOSEXE $EXPDIR/regress/GEOSgcm.x
-else
-   echo "Using GEOSgcm.x from $GEOSBIN"
-
-   setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-endif
-echo ""
-
 cp $EXPDIR/RC/*.rc     $EXPDIR/regress
 cp $EXPDIR/RC/*.yaml   $EXPDIR/regress
+cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 cp $EXPDIR/linkbcs     $EXPDIR/regress
 cp $HOMDIR/*.yaml      $EXPDIR/regress
 @COUPLED cp $HOMDIR/*.nml       $EXPDIR/regress
@@ -347,7 +333,7 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES $GEOSEXE
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
 
 
 set date = `cat cap_restart`
@@ -410,7 +396,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES $GEOSEXE
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
 
 foreach rst ( $rst_file_names )
   /bin/rm -f  $rst
@@ -490,7 +476,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES $GEOSEXE
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
 
 set date = `cat cap_restart`
 set nymde = $date[1]
