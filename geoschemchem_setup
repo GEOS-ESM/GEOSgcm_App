@@ -501,11 +501,16 @@ if( $OGCM == TRUE ) then
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
+       set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
+
+       set mom5_warning=">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+       echo "\033[31;5m"${mom5_warning}"\033[0m"
     else if ( $OCNMODEL == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
+       set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
     endif
 
     # Coupled Ocean Resolution
@@ -727,6 +732,8 @@ else
     set COUPLED   = "#DELETE"
     set MOM5      = "#DELETE"
     set MOM6      = "#DELETE"
+    set OCNMODEL  = "Data Ocean (${HRCODE})"
+    set DEFAULT_HISTORY_TEMPLATE="HISTORY_GEOSCHEMCHEM.rc.tmpl"
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
@@ -751,10 +758,6 @@ endif
 # -------------------------------
      set NUM_READERS = 1
      set NUM_WRITERS = 1
-
-# Set DEFAULT IOSERVER Parameters
-# -------------------------------
-     set DEF_IOS_NDS      = 1
 
 # Default Run Parameters
 # ----------------------
@@ -889,7 +892,6 @@ if( $AGCM_IM ==  "c180" ) then
      set NUM_SGMT = 1
      set ATMOS_RES = CF0180x6C
      set POST_NDS = 8
-     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c360" ) then
      set       DT = 450
@@ -914,7 +916,6 @@ if( $AGCM_IM == "c360" ) then
      set ATMOS_RES = CF0360x6C
      set   CNV_NX = 4
      set POST_NDS = 12
-     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c500" ) then
      set       DT = 450
@@ -940,7 +941,6 @@ if( $AGCM_IM == "c500" ) then
      set   CNV_NX = 8
      set POST_NDS = 12
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 2
 endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 450
@@ -966,7 +966,6 @@ if( $AGCM_IM == "c720" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1440" ) then
      set       DT = 450
@@ -992,7 +991,6 @@ if( $AGCM_IM == "c1440" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
 endif
 # DYAMOND Resolutions
 if( $AGCM_IM == "c768" ) then
@@ -1019,7 +1017,6 @@ if( $AGCM_IM == "c768" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 3
 endif
 if( $AGCM_IM == "c1536" ) then
      set       DT = 90
@@ -1045,7 +1042,6 @@ if( $AGCM_IM == "c1536" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c3072" ) then
      set       DT = 45
@@ -1071,7 +1067,6 @@ if( $AGCM_IM == "c3072" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 5
 endif
 
 set IS_FCST = 0
@@ -1336,15 +1331,100 @@ RATSPRO:
      endif
 
 #######################################################################
+#                    Create Desired HISTORY template
+#######################################################################
+
+    set check =  FALSE
+while( $check == FALSE )
+
+  echo "Enter the filename of the ${C1}HISTORY template${CN} to use"
+  echo "-----------------------------------------------------------"
+  echo "As ${OCNMODEL} was chosen, the default HISTORY Template is ${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}"
+  echo "  1. Hit ENTER to use the default HISTORY template (${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}) or"
+  echo "  2. Type the full path of the HISTORY template to use"
+
+  set   HISTORY_TEMPLATE  = $<
+  if( .$HISTORY_TEMPLATE == . ) then
+     set HISTORY_TEMPLATE = ${DEFAULT_HISTORY_TEMPLATE}
+  endif
+
+  set TMPHIST = `mktemp`
+
+  # Check to see if the HISTORY template exists in the $ETCDIR
+  if( -f $ETCDIR/$HISTORY_TEMPLATE ) then
+     set check = TRUE
+     set TMPHIST1 = `mktemp`
+     /bin/cp -f $ETCDIR/$HISTORY_TEMPLATE $TMPHIST1
+
+     set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
+     set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
+
+     set  TMPCMD = `mktemp`
+     set  string = "EXPID:"
+     echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
+           \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
+     chmod +x   $TMPCMD
+                $TMPCMD
+     /bin/rm -f $TMPCMD
+     /bin/mv -f $TMPHIST $TMPHIST1
+     cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
+     /bin/rm -f $TMPHIST1
+
+  # else check if the file exists (assuming they sent in full path)
+  else if( -e $HISTORY_TEMPLATE ) then
+     set check = TRUE
+     /bin/cp -f $HISTORY_TEMPLATE $TMPHIST
+  else
+     echo "Error: Could not find ${RED}${HISTORY_TEMPLATE}${RESET}"
+     echo ""
+     set check = FALSE
+  endif
+end
+
+echo ""
+echo "Using ${C2}${HISTORY_TEMPLATE}${CN}"
+
+#######################################################################
 #                  Architecture Specific Variables
 #######################################################################
 
 @ MODEL_NPES = $NX * $NY
 
+# Calculate OSERVER nodes based on recommended algorithm
 if ( $DO_IOS == TRUE ) then
-   set IOS_NDS = $DEF_IOS_NDS
+
+   # In the calculations below, the weird bc-awk command is to round up the floating point calcs
+
+   # First we calculate the number of model nodes
+   set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+   # Next the number of frontend PEs is 10% of the model PEs
+   set NUM_FRONTEND_PES=`echo "scale=1;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+   # Now we roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
+   set NUM_HIST_COLLECTIONS=`cat $TMPHIST | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+
+   # And the total number of oserver PEs is frontend PEs plus number of history collections
+   @ NUM_OSERVER_PES=$NUM_FRONTEND_PES + $NUM_HIST_COLLECTIONS
+
+   # Now calculate the number of oserver nodes
+   set NUM_OSERVER_NODES=`echo "scale=1;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+   # And then the number of backend PEs is the number of history collections divided by the number of oserver nodes
+   set NUM_BACKEND_PES=`echo "scale=1;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+   # multigroup requires at least two backend pes
+   if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+
+   # Calculate the total number of nodes to request from batch
+   @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
+
 else
-   set IOS_NDS = 0
+   # Calculate the number of model nodes
+   set NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+   set NUM_OSERVER_NODES = 0
+   set NUM_BACKEND_PES   = 0
 endif
 
 @ CNV_NPES = $CNV_NX * $CNV_NY
@@ -1381,8 +1461,6 @@ if( $SITE == 'NAS' ) then
               setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
                  set QTYPE = "normal"                 # Queue to use
 
-              #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
               setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                              # batch queue name for gcm_run.j
@@ -1424,8 +1502,6 @@ else if( $SITE == 'NCCS' ) then
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
 
-              #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-              @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
               setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
@@ -1491,7 +1567,8 @@ else if( $SITE == 'AWS' ) then
 
               # By default on AWS, just ignore IOSERVER for now until testing
               set USE_IOSERVER = 0
-              set IOS_NDS = 0
+              set NUM_OSERVER_NODES = 0
+              set NUM_BACKEND_PES = 0
               set NCPUS_PER_NODE = 0
 else
 # These are defaults for the desktop
@@ -1534,76 +1611,10 @@ else
               set CNV_NY = ${NY}
               # By default on desktop, just ignore IOSERVER for now
               set USE_IOSERVER = 0
-              set IOS_NDS = 0
+              set NUM_OSERVER_NODES = 0
+              set NUM_BACKEND_PES = 0
               set NCPUS_PER_NODE = 0
 endif
-
-
-#######################################################################
-#                    Create Desired HISTORY template
-#         Note: Default HISTORY will be kept in $HOME/.HISTORYrc
-#######################################################################
-
-    set check =  FALSE
-while( $check == FALSE )
-  if( -e $HOME/.HISTORYrc ) then
-            set HISTORYrc = `cat $HOME/.HISTORYrc`
-  else
-            set HISTORYrc = Current
-          echo $HISTORYrc > $HOME/.HISTORYrc
-  endif
-
-  echo "Enter the directory (/filename) of the ${C1}HISTORY_GEOSCHEMCHEM.rc.tmpl${CN} to use"
-  echo "(To use ${C1}HISTORY_GEOSCHEMCHEM.rc.tmpl${CN} from current build, Type:  ${C2}Current${CN}         )"
-  echo "-------------------------------------------------------------------------"
-  echo "Hit ENTER to use Default Location: (${C2}${HISTORYrc}${CN})"
-  set   NUHISTORY  = $<
-  if( .$NUHISTORY != . ) set HISTORYrc = $NUHISTORY
-
-  set TMPHIST = `mktemp`
-
-  if( "$HISTORYrc" == "Current" ) then
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $ETCDIR/HISTORY_GEOSCHEMCHEM.rc.tmpl $TMPHIST
-  endif
-
-  if( "$HISTORYrc" != "Current" ) then
-       if( -f $ETCDIR/$HISTORYrc ) then
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-            set TMPHIST1 = `mktemp`
-            /bin/cp -f $ETCDIR/$HISTORYrc $TMPHIST1
-
-            set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
-            set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
-
-            set  TMPCMD = `mktemp`
-            set  string = "EXPID:"
-            echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-                 \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
-            chmod +x   $TMPCMD
-                       $TMPCMD
-            /bin/rm -f $TMPCMD
-            /bin/mv -f $TMPHIST $TMPHIST1
-                   cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
-            /bin/rm -f $TMPHIST1
-
-       else if( -e $HISTORYrc/HISTORY_GEOSCHEMCHEM.rc.tmpl ) then
-            set check = TRUE
-            if( -e $HOME/.HISTORYrc ) /bin/rm $HOME/.HISTORYrc
-            echo $HISTORYrc >                 $HOME/.HISTORYrc
-            /bin/cp -f $HISTORYrc/HISTORY_GEOSCHEMCHEM.rc.tmpl $TMPHIST
-       else
-           echo "This condition is based on updating HISTORY_GEOSCHEMCHEM.rc.tmpl with CVS"
-           echo "This has no equivalent in git at present. Please contact Matt"
-           echo "Thompson or Larry Takacs to help resolve this."
-           exit 2
-       endif
-  endif
-end
 
 #######################################################################
 #                 Create Paths for HOME and EXP Directories
@@ -2057,7 +2068,8 @@ s/@NX/$NX/g
 s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
 s/@USE_IOSERVER/$USE_IOSERVER/g
-s/@IOS_NDS/$IOS_NDS/g
+s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
+s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
