@@ -61,6 +61,11 @@ setenv TMPDIR /tmp
 #                   Test for Command Line Flags
 #######################################################################
 
+# Set default behavior of switches
+set LINKX = FALSE
+set EXE_VERB = "copied"
+set USING_SINGULARITY = FALSE
+
 while ( $#argv > 0 )
    set arg = $argv[1]
    shift argv
@@ -69,6 +74,17 @@ while ( $#argv > 0 )
       case -[Cc]:
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
+
+      # Symlink GEOSgcm.x
+      case --link:
+         set LINKX = TRUE
+         set EXE_VERB = "linked"
+         breaksw
+
+      # Using Singularity
+      case --singularity:
+         set USING_SINGULARITY = TRUE
+         breaksw
 
       # Here any string not above will trigger USAGE
       case -[Hh]:
@@ -1820,14 +1836,23 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                                $EXPDIR/RC
+mkdir -p                                                $EXPDIR/RC
 
-  # Copy over all files and subdirs in install/etc, keeping symlinks
-  cp -RP $GEOSDIR/etc/* $EXPDIR/RC
+# Copy over all files and subdirs in install/etc, keeping symlinks
+cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 
-  # Remove templated files in RC as they are unneeded and confusing for experiments
-  rm -f $EXPDIR/RC/*.tmpl
-  rm -f $EXPDIR/RC/fvcore_layout.rc
+# Remove templated files in RC as they are unneeded and confusing for experiments
+rm -f $EXPDIR/RC/*.tmpl
+rm -f $EXPDIR/RC/fvcore_layout.rc
+
+# Copy or link GEOSgcm.x if USING_SINGULARITY is FALSE
+if ( $USING_SINGULARITY == FALSE ) then
+   if ( $LINKX == "TRUE" ) then
+      if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+   else
+      if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
+   endif
+endif
 
 #######################################################################
 #               Set Recommended MPI Stack Settings
@@ -1991,6 +2016,7 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
+s?@USING_SINGULARITY?$USING_SINGULARITY?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -2576,9 +2602,16 @@ echo " "
 echo "Build Directory: ${C2}${GEOSDIR}${CN}"
 echo "----------------"
 echo " "
-echo "Note: By default, will run run GEOSgcm.x from the installation bin directory."
-echo "      If you wish to override this, copy a GEOSgcm.x into: "
-echo "      $EXPDIR"
+if ( $USING_SINGULARITY == TRUE ) then
+   echo "Note: As --singularity was passed in, we will run "
+   echo "      GEOSgcm.x from the installation bin directory."
+else
+   echo " "
+   echo "The following executable has been ${EXE_VERB} to your Experiment Directory:"
+   echo "----------------------------------------------------------------------"
+   echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
+   echo " "
+endif
 echo " "
 echo "If these files are not required, move or rename them (in RC/): "
 echo "-------------------------------------------------------------- "
@@ -3047,8 +3080,10 @@ geoschemchem_setup, a setup script for the GEOS-5 GCM
 
    Usage: $0:t [optional flag]
 
-   -c --color      Set the colors for $0:t
-   -h --help       Show usage
+   -c --color        Set the colors for $0:t
+      --link         Link GEOSgcm.x into experiment directory
+      --singularity  Setup Singularity experiment
+   -h --help         Show usage
 
    If invoked alone, the script runs as normal.
 

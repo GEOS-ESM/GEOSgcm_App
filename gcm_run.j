@@ -84,20 +84,23 @@ if( $SINGULARITY_SANDBOX != "" ) then
    echo ""
 endif
 
-# Detect if GEOSgcm.x is in the experiment directory
-if (-e $EXPDIR/GEOSgcm.x) then
-   echo "Found GEOSgcm.x in $EXPDIR"
+if ( @USING_SINGULARITY == TRUE )
+   # Detect if GEOSgcm.x is in the experiment directory
+   if (-e $EXPDIR/GEOSgcm.x) then
+      echo "Found GEOSgcm.x in $EXPDIR"
 
-   # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
-   # force the use of GEOSgcm.x in the installation directory
-   if( $SINGULARITY_SANDBOX != "" ) then
-      echo "NOTE: Testing has shown Singularity only works when running with"
-      echo "      the GEOSgcm.x executable directly from the installation bin directory"
-      echo ""
-      echo "      So, we will *ignore* the local GEOSgcm.x and "
-      echo "      instead use $GEOSBIN/GEOSgcm.x"
-      echo ""
-
+      # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
+      # force the use of GEOSgcm.x in the installation directory
+      if( $SINGULARITY_SANDBOX != "" ) then
+         echo "NOTE: Testing has shown Singularity only works when running with"
+         echo "      the GEOSgcm.x executable directly from the installation bin directory"
+         echo ""
+         echo "      So, we will *ignore* the local GEOSgcm.x and "
+         echo "      instead use $GEOSBIN/GEOSgcm.x"
+         echo ""
+      else
+         echo "Using GEOSgcm.x from $GEOSBIN"
+      endif
       setenv GEOSEXE $GEOSBIN/GEOSgcm.x
    else
       echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
@@ -105,11 +108,6 @@ if (-e $EXPDIR/GEOSgcm.x) then
 
       setenv GEOSEXE $SCRDIR/GEOSgcm.x
    endif
-
-else
-   echo "Using GEOSgcm.x from $GEOSBIN"
-
-   setenv GEOSEXE $GEOSBIN/GEOSgcm.x
 endif
 echo ""
 
