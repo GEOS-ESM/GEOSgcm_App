@@ -47,6 +47,7 @@ if (! -e $BKGDIR) mkdir -p $BKGDIR
 
 # manually add inc.eta collection for data assimilation
 if (! -e $EXPDIR/holding/ana2inc ) mkdir -p $EXPDIR/holding/ana2inc
+if (! -e $EXPDIR/holding/ana_after_gsi ) /bin/mkdir -p $EXPDIR/holding/ana_after_gsi
 if (! -e $EXPDIR/ods ) mkdir -p $EXPDIR/ods
 if (! -e $EXPDIR/diags_nc ) mkdir -p $EXPDIR/diags_nc
 
@@ -433,8 +434,9 @@ while ( ! -f $geos_done )
            bkg.eta.nc4 bkg.sfc.nc4 cbkg.eta.nc4
 
     # Move a copy of the updated ana.eta file to a specified run directory
-    /bin/cp $EXPID.ana.eta.${nymdm}_${hourm}00z.nc4 ${GEOSDIR}/$EXPID.ana.eta.after_gsi.${nymdm}_${hourm}00z.nc4
-
+    set outfile = "${EXPID}.ana.eta.after_gsi.${nymdm}_${hourm}00z.nc4"
+    /bin/cp $EXPID.ana.eta.${nymdm}_${hourm}00z.nc4 ${GEOSDIR}/${outfile}
+    /bin/cp $EXPID.ana.eta.${nymdm}_${hourm}00z.nc4 ${EXPDIR}/holding/ana_no2_after_gsi/${outfile}
   endif
 
   # write output file, copy to GEOS run directory
