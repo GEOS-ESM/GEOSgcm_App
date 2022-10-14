@@ -246,6 +246,11 @@ if ( $RUN_GSI == 1 ) then
    /bin/mv gsi_cdas.j gsi_cdas.tmp
    cat gsi_cdas.tmp | sed -e "s?setenv EXPID.*?setenv EXPID $EXPID?g" > gsi_cdas.j
    /bin/rm gsi_cdas.tmp
+   # remove checkpoint file if it already exists
+   set geos_done = "geos_run.done"
+   if ( -e $SCRDIR/$geos_done ) then
+      /bin/rm $SCRDIR/$geos_done 
+   endif 
    echo "submitting gsi job to run in parallel..."
    sbatch gsi_cdas.j
 endif
@@ -934,7 +939,6 @@ if ( $rc == -1 ) exit -1
 
 # write geos complete file (this tells the GSI run to stop)
 if ( $RUN_GSI == 1 ) then
-   set geos_done = "geos_run.done"
    touch ${geos_done}
    echo "written geos checkpoint file: ${geos_done}"
 endif
