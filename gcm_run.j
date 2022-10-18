@@ -84,7 +84,7 @@ if( $SINGULARITY_SANDBOX != "" ) then
    echo ""
 endif
 
-if ( @USING_SINGULARITY == TRUE )
+if ( @USING_SINGULARITY == TRUE ) then
    # Detect if GEOSgcm.x is in the experiment directory
    if (-e $EXPDIR/GEOSgcm.x) then
       echo "Found GEOSgcm.x in $EXPDIR"
