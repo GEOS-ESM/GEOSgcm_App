@@ -103,11 +103,14 @@ if ( @USING_SINGULARITY == TRUE )
       endif
       setenv GEOSEXE $GEOSBIN/GEOSgcm.x
    else
-      echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-      /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
-
-      setenv GEOSEXE $SCRDIR/GEOSgcm.x
+      echo "Using GEOSgcm.x from $GEOSBIN"
+      setenv GEOSEXE $GEOSBIN/GEOSgcm.x
    endif
+else
+   echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+   /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+
+   setenv GEOSEXE $SCRDIR/GEOSgcm.x
 endif
 echo ""
 
