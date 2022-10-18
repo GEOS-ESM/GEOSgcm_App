@@ -52,11 +52,6 @@ if (! -x ${BINDIR}/GEOSgcm.x) then
    exit 1
 endif
 
-# Set TMPDIR to /tmp due to issues with heredocs in Singularity sandboxes
-# -----------------------------------------------------------------------
-
-setenv TMPDIR /tmp
-
 #######################################################################
 #                   Test for Command Line Flags
 #######################################################################
@@ -401,7 +396,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
    echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo "         and Ivy Bridge are not supported by current GEOS"
    echo " "
    echo " NOTE 2: GEOS is non-zero-diff when running on AMD Rome"
    echo "         compared to the other Intel nodes."
@@ -1475,7 +1470,7 @@ if( $SITE == 'NAS' ) then
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
-                 set QTYPE = "normal"                 # Queue to use
+              set QTYPE = "normal"                    # Queue to use
 
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
@@ -1836,7 +1831,7 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-mkdir -p                                                $EXPDIR/RC
+mkdir -p  $EXPDIR/RC
 
 # Copy over all files and subdirs in install/etc, keeping symlinks
 cp -RP $GEOSDIR/etc/* $EXPDIR/RC
@@ -1852,6 +1847,14 @@ if ( $USING_SINGULARITY == FALSE ) then
    else
       if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
    endif
+
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = "#DELETE"
+   set NATIVE_BUILD = ""
+else
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = ""
+   set NATIVE_BUILD = "#DELETE"
 endif
 
 #######################################################################
@@ -2016,7 +2019,8 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
-s?@USING_SINGULARITY?$USING_SINGULARITY?g
+s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
+s?@NATIVE_BUILD?$NATIVE_BUILD?g
 
 s?@CHECKPOINT_TYPE?default?g
 

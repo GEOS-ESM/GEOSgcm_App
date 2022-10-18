@@ -72,64 +72,6 @@ endif
 if (! -e $SCRDIR ) mkdir -p $SCRDIR
 
 #######################################################################
-#             Settings for Singularity - EXPERIMENTAL
-#######################################################################
-
-# If you are using singularity, set the path to the singularity sandbox here
-setenv SINGULARITY_SANDBOX ""
-
-# echo if we are running in singularity
-if( $SINGULARITY_SANDBOX != "" ) then
-   echo "We are running under Singularity"
-   echo ""
-endif
-
-if ( @USING_SINGULARITY == TRUE ) then
-   # Detect if GEOSgcm.x is in the experiment directory
-   if (-e $EXPDIR/GEOSgcm.x) then
-      echo "Found GEOSgcm.x in $EXPDIR"
-
-      # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
-      # force the use of GEOSgcm.x in the installation directory
-      if( $SINGULARITY_SANDBOX != "" ) then
-         echo "NOTE: Testing has shown Singularity only works when running with"
-         echo "      the GEOSgcm.x executable directly from the installation bin directory"
-         echo ""
-         echo "      So, we will *ignore* the local GEOSgcm.x and "
-         echo "      instead use $GEOSBIN/GEOSgcm.x"
-         echo ""
-      else
-         echo "Using GEOSgcm.x from $GEOSBIN"
-      endif
-      setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-   else
-      echo "Using GEOSgcm.x from $GEOSBIN"
-      setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-   endif
-else
-   echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-   /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
-
-   setenv GEOSEXE $SCRDIR/GEOSgcm.x
-endif
-echo ""
-
-# If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
-if( $SINGULARITY_SANDBOX != "" ) then
-   # Load the Singularity module
-   module load singularity
-
-   # Set Singularity Bind Paths. Note: These are dependent on where you are running.
-   # By default, we'll assume you are running this script from NOBACKUP
-   setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
-
-   # Set a variable to encapsulate all Singularity details
-   setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
-else
-   setenv SINGULARITY_RUN ""
-endif
-
-#######################################################################
 #                   Set Experiment Run Parameters
 #######################################################################
 
@@ -324,7 +266,6 @@ set NUM_SGMT  = `grep '^\s*NUM_SGMT:'     CAP.rc | cut -d: -f2`
 set FSEGMENT  = `grep '^\s*FCST_SEGMENT:' CAP.rc | cut -d: -f2`
 set USE_SHMEM = `grep '^\s*USE_SHMEM:'    CAP.rc | cut -d: -f2`
 
-
 #######################################################################
 #              Create HISTORY Collection Directories
 #######################################################################
@@ -475,6 +416,66 @@ _EOF_
 
 chmod +x linkbcs
 cp  linkbcs $EXPDIR
+
+#######################################################################
+#                  Setup executable
+#######################################################################
+
+@SINGULARITY_BUILD #######################################################################
+@SINGULARITY_BUILD #             Settings for Singularity - EXPERIMENTAL
+@SINGULARITY_BUILD #######################################################################
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Note these have only really been tested on Discover
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
+@SINGULARITY_BUILD setenv SINGULARITY_SANDBOX ""
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
+@SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
+@SINGULARITY_BUILD    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
+@SINGULARITY_BUILD    exit 1
+@SINGULARITY_BUILD endif
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
+@SINGULARITY_BUILD echo "We are running under Singularity"
+@SINGULARITY_BUILD echo ""
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Load the Singularity module
+@SINGULARITY_BUILD module load singularity
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
+@SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
+@SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Set a variable to encapsulate all Singularity details
+@SINGULARITY_BUILD setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Detect if GEOSgcm.x is in the experiment directory
+@SINGULARITY_BUILD if (-e $EXPDIR/GEOSgcm.x) then
+@SINGULARITY_BUILD    echo "Found GEOSgcm.x in $EXPDIR"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD    # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
+@SINGULARITY_BUILD    # force the use of GEOSgcm.x in the installation directory
+@SINGULARITY_BUILD    if( $SINGULARITY_SANDBOX != "" ) then
+@SINGULARITY_BUILD       echo "NOTE: Testing has shown Singularity only works when running with"
+@SINGULARITY_BUILD       echo "      the GEOSgcm.x executable directly from the installation bin directory"
+@SINGULARITY_BUILD       echo ""
+@SINGULARITY_BUILD       echo "      So, we will *ignore* the local GEOSgcm.x and "
+@SINGULARITY_BUILD       echo "      instead use $GEOSBIN/GEOSgcm.x"
+@SINGULARITY_BUILD       echo ""
+@SINGULARITY_BUILD    else
+@SINGULARITY_BUILD       echo "Using GEOSgcm.x from $GEOSBIN"
+@SINGULARITY_BUILD    endif
+@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+@SINGULARITY_BUILD else
+@SINGULARITY_BUILD    echo "Using GEOSgcm.x from $GEOSBIN"
+@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+@SINGULARITY_BUILD endif
+
+@NATIVE_BUILD echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+@NATIVE_BUILD echo ""
+@NATIVE_BUILD /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
 #######################################################################
 #                         Get RESTARTS
@@ -782,7 +783,8 @@ else
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @SINGULARITY_BUILD $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @NATIVE_BUILD $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -820,7 +822,8 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -904,7 +907,8 @@ else
    set IOSERVER_EXTRA   = ""
 endif
 
-@OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@NATIVE_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 

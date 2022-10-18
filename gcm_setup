@@ -52,11 +52,6 @@ if (! -x ${BINDIR}/GEOSgcm.x) then
    exit 1
 endif
 
-# Set TMPDIR to /tmp due to issues with heredocs in Singularity sandboxes
-# -----------------------------------------------------------------------
-
-setenv TMPDIR /tmp
-
 #######################################################################
 #                   Test for Command Line Flags
 #######################################################################
@@ -1801,6 +1796,14 @@ if ( $USING_SINGULARITY == FALSE ) then
    else
       if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
    endif
+
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = "#DELETE"
+   set NATIVE_BUILD = ""
+else
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = ""
+   set NATIVE_BUILD = "#DELETE"
 endif
 
 #######################################################################
@@ -1965,7 +1968,8 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
-s?@USING_SINGULARITY?$USING_SINGULARITY?g
+s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
+s?@NATIVE_BUILD?$NATIVE_BUILD?g
 
 s?@CHECKPOINT_TYPE?default?g
 
