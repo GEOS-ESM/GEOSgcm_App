@@ -2967,10 +2967,22 @@ endif
 # Find out if we are running the cube and/or OGCM
 # -----------------------------------------------
 
-if ( -e $CLONEDIR/field_table ) then
+# First we need to find out if we are running in coupled mode
+# To do this, we look for "OCEAN_NAME" in AGCM.rc:
+
+set OGCM = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | wc -l`
+
+if ( $OGCM == 1 ) then
    set OGCM = TRUE
-else
+   # Now we need to find out if we are running MOM or MOM6 by looking
+   # at OCEAN_NAME: val and checking if it is MOM or MOM6
+   set OCEAN_MODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+else if ( $OGCM == 0 ) then
    set OGCM = FALSE
+else
+   echo "Found more than one OCEAN_NAME in ${OLDHOMDIR}/AGCM.rc"
+   echo "This is not allowed. Please fix this and try again."
+   exit 1
 endif
 
 # ------------------------------------------------
@@ -3032,13 +3044,31 @@ HOMDIR/logging.yaml
 EOF
 
 if( $OGCM == TRUE ) then
+
+# Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/input.nml
 HOMDIR/diag_table
-HOMDIR/field_table
 HOMDIR/__init__.py
 EXPDIR/plot/plotocn.j
 EOF
+
+# Some files are specific to MOM
+if ( $OCEAN_MODEL == "MOM" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/field_table
+EOF
+endif
+
+# Some files are specific to MOM6
+if ( $OCEAN_MODEL == "MOM6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/MOM_override
+HOMDIR/MOM_input
+HOMDIR/data_table
+EOF
+endif
+
 endif
 
 cat >> $FILES_TO_PROCESS << EOF
@@ -3098,6 +3128,9 @@ cat > $SEDFILE << EOF
 /^setenv \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
 /^setenv \+CNVDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
 /^setenv \+EXPID/  s#$OLDEXPID#$NEWEXPID#
+/^set \+EXPDIR/ s#$OLDEXPDIR#$NEWEXPDIR#
+/^set \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
+/^set \+EXPID/  s#$OLDEXPID#$NEWEXPID#
 /^EXPID:/  s#$OLDEXPID#$NEWEXPID#
 /GEOSUTIL\/post\/gcmpost.script/ s#$OLDEXPDIR#$NEWEXPDIR#
 /group_list/ s#\(group_list=\)\(.*\)#\1$GROUProot#
@@ -3117,6 +3150,12 @@ end
 #sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${NEWEXPID}_clonedfrom_${OLDEXPID}_by_${OLDUSER}#" $NEWHOMDIR/HISTORY.rc
  sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${EXPDSC}#" $NEWHOMDIR/HISTORY.rc
  sed -i -e "/^EXPID:/ s#\(EXPID: \)\(.*\)#\1${NEWEXPID}#" $NEWHOMDIR/HISTORY.rc
+
+# Change OLDEXPID to NEWEXPID in __init__.py if it exists
+# -------------------------------------------------------
+if ( -e $NEWHOMDIR/__init__.py ) then
+   sed -i -e "/$OLDEXPID/ s#$OLDEXPID#$NEWEXPID#" $NEWHOMDIR/__init__.py
+endif
 
 # -------------------------
 # Construct the new job ids
