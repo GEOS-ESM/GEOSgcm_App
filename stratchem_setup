@@ -1851,6 +1851,44 @@ set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
+# If we are using singularity, we can advise on MPI stack settings
+
+if( $USING_SINGULARITY == TRUE ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+# These are recommended settings for MPI stacks
+
+# Intel MPI
+# ---------
+#setenv I_MPI_ADJUST_ALLREDUCE 12
+#setenv I_MPI_ADJUST_GATHERV 3
+# This flag prints out the Intel MPI state. Uncomment if needed
+#setenv I_MPI_DEBUG 9
+
+# OpenMPI
+# -------
+# Open MPI and GEOS has had issues with restart writing. Having the
+# oserver write them can be orders of magnitude faster. To enable this
+# set WRITE_RESTART_BY_OSERVER to YES in AGCM.rc
+
+# This turns off an annoying warning when running
+# Open MPI on a system where TMPDIRs are on a networked
+# file system
+#setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+
+# HPE MPT
+# -------
+#setenv MPI_COLL_REPRODUCIBLE
+#setenv SLURM_DISTRIBUTION block
+#unsetenv MPI_MEMMAP_OFF
+#unsetenv MPI_NUM_MEMORY_REGIONS
+#setenv MPI_XPMEM_ENABLED yes
+#unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+#setenv MPI_LAUNCH_TIMEOUT 40
+EOF
+
+else
+
 if( $MPI == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
@@ -1931,6 +1969,8 @@ EOF
 endif # if NCCS
 
 endif # if mpi
+
+endif # if singularity
 
 #######################################################################
 #               Create Local Scripts and Resource Files

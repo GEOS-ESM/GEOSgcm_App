@@ -32,8 +32,8 @@ setenv GEOSBIN          @GEOSBIN
 setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
-source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+@NATIVE_BUILD source $GEOSBIN/g5_modules
+@NATIVE_BUILD setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -426,7 +426,26 @@ cp  linkbcs $EXPDIR
 @SINGULARITY_BUILD #######################################################################
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # Note these have only really been tested on Discover
-@SINGULARITY_BUILD
+@SINGULARITY_BUILD # and are not guaranteed to work on other systems
+
+@SINGULARITY_BUILD # Based on work on discover, to run you need to load the same compiler
+@SINGULARITY_BUILD # and MPI to match those in the container. For example, if your container was
+@SINGULARITY_BUILD # built with:
+@SINGULARITY_BUILD #   GNU 10.3.0
+@SINGULARITY_BUILD #   Intel Fortran 2021.6.0 (aka Intel oneAPI 2022.1.0)
+@SINGULARITY_BUILD #   Intel MPI 2021.6.0 (aka Intel oneAPI 2022.1.0)
+@SINGULARITY_BUILD # then you would need to load:
+@SINGULARITY_BUILD #   source /usr/share/modules/init/csh
+@SINGULARITY_BUILD #   module purge
+@SINGULARITY_BUILD #   module load comp/gcc/10.3.0
+@SINGULARITY_BUILD #   module load comp/intel/2021.6.0
+@SINGULARITY_BUILD #   module load mpi/impi/2021.6.0
+@SINGULARITY_BUILD #
+@SINGULARITY_BUILD # And then also append ${GEOSDIR}/lib to LD_LIBRARY_PATH
+@SINGULARITY_BUILD #   setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+
+@SINGULARITY_BUILD # Also look below for suggestions on Intel MPI, OpenMPI and MPT environment variables
+@SINGULARITY_BUILD #
 @SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
 @SINGULARITY_BUILD setenv SINGULARITY_SANDBOX ""
 @SINGULARITY_BUILD
@@ -446,6 +465,12 @@ cp  linkbcs $EXPDIR
 @SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
 @SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
 @SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # If you are running from a different location, you will need to change the bind path
+@SINGULARITY_BUILD # Also, note that often $NOBACKUP is, say, /discover/nobackup/username, but gcm_setup
+@SINGULARITY_BUILD # will set GEOSDIR, GEOSBIN, etc. above to something like /gpfsm/dnbXX/username which
+@SINGULARITY_BUILD # is the "real" physical path that /discover/nobackup/username is a symlink to.
+@SINGULARITY_BUILD # You might need to change all the gpfsm paths to nobackup paths.
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # Set a variable to encapsulate all Singularity details
 @SINGULARITY_BUILD setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
