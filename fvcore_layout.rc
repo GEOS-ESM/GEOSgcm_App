@@ -2,6 +2,7 @@
  @FV_HYDRO
  range_warn = .T.
  fv_debug = .F.
+ tau = 0.0
 /
 
 &main_nml

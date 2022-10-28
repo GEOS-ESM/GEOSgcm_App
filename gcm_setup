@@ -1094,7 +1094,7 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #######################################################################
 
 # For @-lines in AGCM.rc.tmpl
-set GFDL_HYDRO = TRUE
+set GFDL_HYDRO = ".TRUE."
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .false."
 
@@ -1130,7 +1130,7 @@ else
    else if ( "$CLDMICRO" == "GFDL_1M" ) then
       set FV_SATADJ  = "do_sat_adj = .T."
       set FV_NWAT    = "nwat       =  6 "
-      set GFDL_HYDRO = FALSE
+      set GFDL_HYDRO = ".FALSE."
    endif
 endif
 

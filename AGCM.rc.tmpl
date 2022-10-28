@@ -25,6 +25,7 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 DYCORE: @DYCORE
 #FV3_CONFIG: MONOTONIC
 AdvCore_Advection: 0
+RAYLEIGH_TAU1: 172800.0
 ###########################################################
 
 ###########################################################
@@ -51,7 +52,7 @@ HYDROSTATIC: @GFDL_HYDRO
 # shallow cumulus options
 # ----------------------------------------
 SHALLOW_OPTION: UW
-JASON_UW: .TRUE.
+#JASON_UW: .TRUE.
 ###########################################################
 
 ###########################################################
@@ -75,13 +76,14 @@ CLOSURE_CONGESTUS:3
 ###########################################################
 # GWD Parameterization
 # --------------------
-GEOS_EFFGWBKG: 0.1875
+GEOS_EFFGWBKG: 0.15625
 NCAR_EFFGWBKG: 0.00
 GEOS_EFFGWORO: 0.25
-NCAR_EFFGWORO: 0.0
+NCAR_EFFGWORO: 0.00
 NCAR_NRDG: 0.0
-BELJAARS_EFF_FACTOR: 0.0
-TURBULENCE_C_B: 6.0
+#BELJAARS_LIMITER: 400.0
+#BELJAARS_EFF_FACTOR: 0.0
+#TURBULENCE_C_B: 6.0
 ###########################################################
 
 ###########################################################
@@ -281,7 +283,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #X_EXP  REPLAY_ANA_EXPID:    @X_EXPID
 #X_EXP  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@X_EXPID
 #X_EXP  REPLAY_MODE: Regular
-#X_EXP  REPLAY_FILE: ana/Y%y4/M%m2/${ANAexpid}.asm.eta.%y4%m2%d2_%h2%n2z.nc4
+#X_EXP  REPLAY_FILE: ana/Y%y4/M%m2/@X_EXPID.asm.eta.%y4%m2%d2_%h2%n2z.nc4
 
 #   Regular REPLAY to ERA5
 #   ----------------------
@@ -474,8 +476,6 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ##############################################################################################
 
 # Option to Diagnose Precipitation Types for Land Surface
-# ------------------------------------------------------------
-DIAGNOSE_PRECIP_TYPE: FALSE
 
 # Choice for Land Surface Model
 #      1 : Catchment 
