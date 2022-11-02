@@ -237,9 +237,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.fields:       'SLP'            , 'DYN'      ,
                                                              'PS'             , 'DYN'      ,
                                                              'DMDTDYN'        , 'DYN'      , 'DMDTDYN'     ,
-                                                             'DMDTANA'        , 'DYN'      , 'DMDTANA'     ,   !!! Not a good idea to include IAU in instantaneous collection !!!
+                                                             'DMDTANA'        , 'DYN'      , 'DMDTANA'     ,   # !!! Not a good idea to include IAU in instantaneous collection !!!
                                                              'DMDT'           , 'PHYSICS'  , 'DMDTPHY'     ,
-                                                             'DQVDTANAINT'    , 'DYN'      , 'DQDTANAINT'  ,   !!! Not a good idea to include IAU in instantaneous collection !!!
+                                                             'DQVDTANAINT'    , 'DYN'      , 'DQDTANAINT'  ,   # !!! Not a good idea to include IAU in instantaneous collection !!!
                                                              'U2M;V2M'        , 'SURFACE'  ,
                                                              'U10M;V10M'      , 'SURFACE'  ,
                                                              'U50M;V50M'      , 'SURFACE'  ,
@@ -279,9 +279,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
   asm_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.fields:      'SLP'            , 'DYN'      ,
                                                               'PS'             , 'DYN'      ,
                                                               'DMDTDYN'        , 'DYN'      , 'DMDTDYN'     ,
-                                                              'DMDTANA'        , 'DYN'      , 'DMDTANA'     ,   !!! Not a good idea to include IAU in instantaneous collection !!!
+                                                              'DMDTANA'        , 'DYN'      , 'DMDTANA'     ,   # !!! Not a good idea to include IAU in instantaneous collection !!!
                                                               'DMDT'           , 'PHYSICS'  , 'DMDTPHY'     ,
-                                                              'DQVDTANAINT'    , 'DYN'      , 'DQDTANAINT'  ,   !!! Not a good idea to include IAU in instantaneous collection !!!
+                                                              'DQVDTANAINT'    , 'DYN'      , 'DQDTANAINT'  ,   # !!! Not a good idea to include IAU in instantaneous collection !!!
                                                               'U2M;V2M'        , 'SURFACE'  ,
                                                               'U10M;V10M'      , 'SURFACE'  ,
                                                               'U50M;V50M'      , 'SURFACE'  ,
@@ -1000,8 +1000,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48_NCKS'
                                                     'FRACI'          , 'SURFACE'     , 'FRSEAICE'  ,
 #Additional variable
                                                     'OFRACI'         , 'SURFACE'     , 'AICE'      ,
-                                                    'total runoff  as RUNOFF from lnd and RUNOFF from glc'  #
-#
+                                                 #  'total runoff  as RUNOFF from lnd and RUNOFF from glc'  #
                                                     'AN_PRCP'        , 'MOIST'       , 'PRECANV'   ,
                                                     'CN_PRCP'        , 'MOIST'       , 'PRECCON'   ,
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
