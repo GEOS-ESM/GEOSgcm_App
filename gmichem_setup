@@ -1441,31 +1441,6 @@ EMISSIONS:
      endif
 endif
 
-# GMI past experiment settings
-# (These will be a subset of the EMISSIONS options)
-# -------------------------------------------------
-GMIEXP:
-     set   GMIEXP = ''
-     echo
-     echo "-------------------------------------------------"
-     echo "Enter the ${C1}GMI Settings${CN} to use: "
-     echo "-------------------------------------------------"
-     echo " ${C2}Current${CN} (Default)"
-     echo " ${C2}CCMI_REF-C1${CN} (2001-2007 out-of-the-box)"
-     echo " ${C2}CCMI_REF-C2${CN} (2021-2098 out-of-the-box)"
-     echo "-------------------------------------------------"
-     set   GMIEXP = $<
-     if( .$GMIEXP == . )  set GMIEXP = CURRENT
-     set   GMIEXP = `echo   $GMIEXP | tr "[:lower:]" "[:upper:]"`
-     if(  $GMIEXP != CURRENT  & $GMIEXP != CCMI_REF-C1 & $GMIEXP != CCMI_REF-C2 ) then
-       echo
-       echo " Sorry. Invalid choice. Try again."
-       goto GMIEXP
-     else
-       echo
-     endif
-     if(  $GMIEXP == CURRENT ) set GMIEXP = ''
-
 # Should we run HEMCO for MEGAN emissions?
 # ----------------------------------------
 MEGANviaHEMCO:
@@ -1996,10 +1971,6 @@ echo $GROUP > $HOME/.GROUProot
   rm -f $EXPDIR/RC/*.tmpl
   rm -f $EXPDIR/RC/fvcore_layout.rc
   
-  if( .$GMIEXP != . ) then
-        /bin/cp $GEOSDIR/etc/$GMIEXP/chemistry_files/*.rc $EXPDIR/RC
-  endif
-
 if ( $LINKX == "TRUE" ) then
   if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
 else

@@ -2418,6 +2418,14 @@ if( $GOKART == TRUE ) then
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing_NI:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+
+    /bin/mv $EXPDIR/RC/AMIP/Chem_Registry.rc $EXPDIR/RC/AMIP/Chem_Registry.tmp
+    cat $EXPDIR/RC/AMIP/Chem_Registry.tmp | \
+    awk '{ if ( $1 ~ "doing_CO:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/AMIP/Chem_Registry.rc
+
+    /bin/mv $EXPDIR/RC/AMIP/Chem_Registry.rc $EXPDIR/RC/AMIP/Chem_Registry.tmp
+    cat $EXPDIR/RC/AMIP/Chem_Registry.tmp | \
+    awk '{ if ( $1 ~ "doing_NI:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/AMIP/Chem_Registry.rc
 else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
@@ -2426,6 +2434,10 @@ else
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+
+    /bin/mv $EXPDIR/RC/AMIP/Chem_Registry.rc $EXPDIR/RC/AMIP/Chem_Registry.tmp
+    cat $EXPDIR/RC/AMIP/Chem_Registry.tmp | \
+    awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/AMIP/Chem_Registry.rc
 endif
 
 # Turn on STRATCHEM
@@ -2434,36 +2446,23 @@ endif
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_STRATCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_SC:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing_XX:" ) { sub(/no/, "yes" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
 # ------------------------------------------------------------------
     /bin/mv $EXPDIR/RC/GAAS_GridComp.rc $EXPDIR/RC/GAAS_GridComp.tmp
     cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.?aod/Y%y4/M%m2/@ANA_EXPID.?g' > $EXPDIR/RC/GAAS_GridComp.rc
 
 
-# Turn on RATS_PROVIDER
-# ---------------------
+# Turn on PCHEM if it is RATS_PROVIDER, otherwise turn it OFF
+# -----------------------------------------------------------
 if( $RATS_PROVIDER == PCHEM ) then
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{if ( $1 ~ "doing") { if ( $1 ~ "PC") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
-endif
 
-# Turn on TR GridComp
-# ---------------------
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
-
-# Turn off PCHEM
-# --------------
+    /bin/mv $EXPDIR/RC/AMIP/Chem_Registry.rc $EXPDIR/RC/AMIP/Chem_Registry.tmp
+    cat $EXPDIR/RC/AMIP/Chem_Registry.tmp | \
+    awk '{if ( $1 ~ "doing") { if ( $1 ~ "PC") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/AMIP/Chem_Registry.rc
+else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_PCHEM:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
@@ -2472,60 +2471,39 @@ endif
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 
-######################################################################################################
-# Edit the Chem_Registry.rc to use the species appropriate for the Full or Reduced StratChem mechanism
-######################################################################################################
+    /bin/mv $EXPDIR/RC/AMIP/Chem_Registry.rc $EXPDIR/RC/AMIP/Chem_Registry.tmp
+    cat $EXPDIR/RC/AMIP/Chem_Registry.tmp | \
+    awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/AMIP/Chem_Registry.rc
+endif
+
+# Turn on TR GridComp
+# ---------------------
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+
+###############################################################
+# Distinguish between the Full and Reduced StratChem mechanisms
+###############################################################
 
 #   R is the flag for using the StratChem Reduced mechanism
 #   Set R by providing an option to cmake :   -DSTRATCHEM_REDUCED_MECHANISM=ON
 #   This will (1) properly set the line below, and (2) compile StratChem with the appropriate option.
 
+#   As of Nov 2022, the resource files do not need to be edited by this setup script
+#   but we leave the following lines in place, for reference
+
     set R = @STRATCHEM_REDUCED_MECHANISM@
 
     if (${R} == ON) then
-
       echo "-----------------------------------------------------"
-      echo "   Enforcing the ${C1}REDUCED${CN} equation set in StratChem"
+      echo "   Using the ${C1}REDUCED${CN} equation set in StratChem"
       echo "-----------------------------------------------------"
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_SC_r|nbins_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_XX_SC_r|nbins_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_SC_r|variable_table_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_XX_SC_r|variable_table_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
     else
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_SC_f|nbins_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|nbins_XX_SC_f|nbins_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_SC_f|variable_table_SC|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
-      /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-      sed -e "s|variable_table_XX_SC_f|variable_table_XX|" $EXPDIR/RC/Chem_Registry.tmp > $EXPDIR/RC/Chem_Registry.rc
-
+      echo "-----------------------------------------------------"
+      echo "   Using the ${C1}FULL${CN} equation set in StratChem"
+      echo "-----------------------------------------------------"
     endif
-
-    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
-
-#######################################################################
-#    Change EXTDATA until SC datasets are moved to GMAO Ops share
-#######################################################################
-
-if( ${SITE} == 'NCCS' ) then
- sed -e 's|EXTDATA|/discover/nobackup/projects/gmao/share/dasilva/fvInput|g' $EXPDIR/RC/SC_GridComp.rc > $EXPDIR/RC/SC_GridComp.tmp
- /bin/mv -f $EXPDIR/RC/SC_GridComp.tmp $EXPDIR/RC/SC_GridComp.rc
-endif
 
 #######################################################################
 #                       Echo Settings and Messages
@@ -2563,6 +2541,10 @@ echo ""
 
 if( -e $HOMDIR/tmpfile ) /bin/rm $HOMDIR/tmpfile
 if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
+
+/bin/rm -f $EXPDIR/RC/Chem_Registry.tmp
+/bin/rm -f $EXPDIR/RC/AMIP/Chem_Registry.tmp
+/bin/rm -f $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
 #######################################################################
 #                     Copy over Source Tarfile
