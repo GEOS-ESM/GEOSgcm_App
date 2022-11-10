@@ -112,6 +112,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
              'csp_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv'
 # Land-ice diagnostic
              'glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv'
+             'glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
 # Constant-height PBL collection
              'pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17'
              'pbl_tavg_1hr_glo_L@HIST_IMx@HIST_JM_z17'
@@ -1000,7 +1001,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'FRACI'          , 'SURFACE'     , 'FRSEAICE'  ,
 #Additional variable
                                                     'OFRACI'         , 'SURFACE'     , 'AICE'      ,
-                                                 #  'total runoff  as RUNOFF from lnd and RUNOFF from glc'  #
+                                                    'RUNOFF'         , 'SURFACE'     , 'RUNOFFTOT' , #total runoff from glc & lnd
+                                                    'GHTSKIN'        , 'SURFACE'     , 'GHTFLUX'   , #for consistency with M2
                                                     'AN_PRCP'        , 'MOIST'       , 'PRECANV'   ,
                                                     'CN_PRCP'        , 'MOIST'       , 'PRECCON'   ,
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
@@ -1061,6 +1063,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'FRACI'          , 'SURFACE'     , 'FRSEAICE'  ,
 #Additional variable
                                                     'OFRACI'         , 'SURFACE'     , 'AICE'      ,
+                                                    'RUNOFF'         , 'SURFACE'     , 'RUNOFFTOT' , #total runoff from glc & lnd
+                                                    'GHTSKIN'        , 'SURFACE'     , 'GHTFLUX'   , #for consistency with M2
                                                     'AN_PRCP'        , 'MOIST'       , 'PRECANV'   ,
                                                     'CN_PRCP'        , 'MOIST'       , 'PRECCON'   ,
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
@@ -1097,6 +1101,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'ALBNR'   , 'SOLAR'    , 'ALBNIRDR'     , # confirm
                                                     'ALBVF'   , 'SOLAR'    , 'ALBVISDF'     , # confirm
                                                     'ALBVR'   , 'SOLAR'    , 'ALBVISDR'     , # confirm
+                                                    'ALBNF'   , 'SURFACE'  , 'RELFNIRDF'     , # additional alb from surface
+                                                    'ALBVF'   , 'SURFACE'  , 'REFLVISDF'     , #additional alb from surface
                                                     'SFCEM'   , 'IRRAD'    , 'LWGEM'        ,
                                                     'LWS'     , 'IRRAD'    , 'LWGAB'        ,
                                                     'LCS'     , 'IRRAD'    , 'LWGABCLR'     ,
@@ -1148,6 +1154,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'ALBNR'   , 'SOLAR'    , 'ALBNIRDR'     ,
                                                     'ALBVF'   , 'SOLAR'    , 'ALBVISDF'     ,
                                                     'ALBVR'   , 'SOLAR'    , 'ALBVISDR'     ,
+                                                    'ALBNF'   , 'SURFACE'  , 'RELFNIRDF'    , # additional alb from surface
+                                                    'ALBVF'   , 'SURFACE'  , 'REFLVISDF'    , #additional alb from surface
                                                     'SFCEM'   , 'IRRAD'    , 'LWGEM'        ,
                                                     'LWS'     , 'IRRAD'    , 'LWGAB'        ,
                                                     'LCS'     , 'IRRAD'    , 'LWGABCLR'     ,
@@ -3993,12 +4001,43 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:         'time-averaged' ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:     010000 ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:      010000 ,
-  glc_tavg_1hr_glo_L360x181_slv.regrid_name:            'PE@AGCM_IMx@AGCM_JM-CF' ,
-  glc_tavg_1hr_glo_L360x181_slv.regrid_exch:            'tile.bin',
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:      >>>IOEDATE<<< ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:      >>>IOETIME<<< ,
-  glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:       'SNOWDP_GL'    , 'LANDICE'  ,
+  glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:   'SNOWDP_GL'    , 'LANDICE'  ,
+                                                    'SNOMAS_GL'    , 'LANDICE'  ,
+                                                    'ASNOW_GL'     , 'LANDICE'  ,
+                                                    'RUNOFF'       , 'LANDICE'  , 'RUNOFFGLC'
+                                                    'WESNSC'       , 'LANDICE'  ,
+                                                    'WESNEXT'      , 'LANDICE'  ,
+                                                    'SNICEALB'     , 'LANDICE'  ,
+# Additional variables                                                   
+                                                    'ALBNF'        , 'LANDICE'  , 'REFLNIRDFGLC' ,
+                                                    'ALBVF'        , 'LANDICE'  , 'REFLVISDFGLC' ,
+                                                    'EMIS'         , 'LANDICE'  , 
+                                                    'EVAPOUT'      , 'LANDICE'  , 'EVAPGLC',
+                                                    'GHTSKIN'      , 'LANDICE'  , 'GHTFLUXGLC',
+                                                    'IMELT'        , 'LANDICE'  ,
+                                                    'MELTWTR'      , 'LANDICE'  ,               
+                                                    'RAINRFZ',     , 'LANDICE'  ,
+                                                    'SMELT'        , 'LANDICE'  ,
+                                                    'SNOWALB'      , 'LANDICE'  ,
+                                                    'WESNBOT'      , 'LANDICE'  ,
+                                                    'TST'          , 'LANDICE'  ,
+                                                    'ZSNOW'        , 'LANDICE'  ,                                                     
+                                                     ::
+
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:       'CFIO' ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:        '2d,1-Hourly,Time-Averaged,Single-Level,Assimilation,Land Ice Surface Diagnostics' ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:       2 ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method: 'BILINEAR_MONOTONIC' ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:     '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:         'time-averaged' ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:     010000 ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:      010000 ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:      >>>IOEDATE<<< ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:      >>>IOETIME<<< ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:   'SNOWDP_GL'    , 'LANDICE'  ,
                                                     'SNOMAS_GL'    , 'LANDICE'  ,
                                                     'ASNOW_GL'     , 'LANDICE'  ,
                                                     'RUNOFF'       , 'LANDICE'  , 'RUNOFFGLC'
@@ -4006,13 +4045,21 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'WESNEXT'      , 'LANDICE'  ,
                                                     'SNICEALB'     , 'LANDICE'  ,
 # Additional variables
+                                                    'ALBNF'        , 'LANDICE'  , 'REFLNIRDFGLC' ,
+                                                    'ALBVF'        , 'LANDICE'  , 'REFLVISDFGLC' ,                                                  
+                                                    'EMIS'         , 'LANDICE'  , 
+                                                    'EVAPOUT'      , 'LANDICE'  , 'EVAPGLC',
+                                                    'GHTSKIN'      , 'LANDICE'  , 'GHTFLUXGLC',
                                                     'IMELT'        , 'LANDICE'  ,
-                                                    'MELTWTRCONT'  , 'LANDICE'  ,
+                                                    'MELTWTR'      , 'LANDICE'  ,               
+                                                    'RAINRFZ',     , 'LANDICE'  ,
                                                     'SMELT'        , 'LANDICE'  ,
                                                     'SNOWALB'      , 'LANDICE'  ,
                                                     'WESNBOT'      , 'LANDICE'  ,
                                                     'TST'          , 'LANDICE'  ,
+                                                    'ZSNOW'        , 'LANDICE'  ,                                                     
                                                      ::
+
 
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17.format:       'CFIO' ,
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17.descr:        '3d,1-Hourly,Instantaneous,Constant-Height,PBL Diagnostics' ,
