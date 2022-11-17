@@ -58,6 +58,8 @@ endif
 
 # Set default behavior of switches
 set LINKX = FALSE
+set EXE_VERB = "copied"
+set USING_SINGULARITY = FALSE
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -71,6 +73,12 @@ while ( $#argv > 0 )
       # Symlink GEOSgcm.x
       case --link:
          set LINKX = TRUE
+         set EXE_VERB = "linked"
+         breaksw
+
+      # Using Singularity
+      case --singularity:
+         set USING_SINGULARITY = TRUE
          breaksw
 
       # Here any string not above will trigger USAGE
@@ -388,7 +396,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
    echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo "         and Ivy Bridge are not supported by current GEOS"
    echo " "
    echo " NOTE 2: GEOS is non-zero-diff when running on AMD Rome"
    echo "         compared to the other Intel nodes."
@@ -1441,31 +1449,6 @@ EMISSIONS:
      endif
 endif
 
-# GMI past experiment settings
-# (These will be a subset of the EMISSIONS options)
-# -------------------------------------------------
-GMIEXP:
-     set   GMIEXP = ''
-     echo
-     echo "-------------------------------------------------"
-     echo "Enter the ${C1}GMI Settings${CN} to use: "
-     echo "-------------------------------------------------"
-     echo " ${C2}Current${CN} (Default)"
-     echo " ${C2}CCMI_REF-C1${CN} (2001-2007 out-of-the-box)"
-     echo " ${C2}CCMI_REF-C2${CN} (2021-2098 out-of-the-box)"
-     echo "-------------------------------------------------"
-     set   GMIEXP = $<
-     if( .$GMIEXP == . )  set GMIEXP = CURRENT
-     set   GMIEXP = `echo   $GMIEXP | tr "[:lower:]" "[:upper:]"`
-     if(  $GMIEXP != CURRENT  & $GMIEXP != CCMI_REF-C1 & $GMIEXP != CCMI_REF-C2 ) then
-       echo
-       echo " Sorry. Invalid choice. Try again."
-       goto GMIEXP
-     else
-       echo
-     endif
-     if(  $GMIEXP == CURRENT ) set GMIEXP = ''
-
 # Should we run HEMCO for MEGAN emissions?
 # ----------------------------------------
 MEGANviaHEMCO:
@@ -1525,7 +1508,7 @@ while( $check == FALSE )
      echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
            \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
      chmod +x   $TMPCMD
-                 $TMPCMD
+                $TMPCMD
      /bin/rm -f $TMPCMD
      /bin/mv -f $TMPHIST $TMPHIST1
      cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
@@ -1620,7 +1603,7 @@ if( $SITE == 'NAS' ) then
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
-              set QTYPE = "normal"                 # Queue to use
+              set QTYPE = "normal"                    # Queue to use
 
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
@@ -1987,23 +1970,30 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                                $EXPDIR/RC
-  
-  # Copy over all files and subdirs in install/etc, keeping symlinks
-  cp -RP $GEOSDIR/etc/* $EXPDIR/RC
+mkdir -p  $EXPDIR/RC
 
-  # Remove templated files in RC as they are unneeded and confusing for experiments
-  rm -f $EXPDIR/RC/*.tmpl
-  rm -f $EXPDIR/RC/fvcore_layout.rc
-  
-  if( .$GMIEXP != . ) then
-        /bin/cp $GEOSDIR/etc/$GMIEXP/chemistry_files/*.rc $EXPDIR/RC
-  endif
+# Copy over all files and subdirs in install/etc, keeping symlinks
+cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 
-if ( $LINKX == "TRUE" ) then
-  if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+# Remove templated files in RC as they are unneeded and confusing for experiments
+rm -f $EXPDIR/RC/*.tmpl
+rm -f $EXPDIR/RC/fvcore_layout.rc
+
+# Copy or link GEOSgcm.x if USING_SINGULARITY is FALSE
+if ( $USING_SINGULARITY == FALSE ) then
+   if ( $LINKX == "TRUE" ) then
+      if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+   else
+      if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
+   endif
+
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = "#DELETE"
+   set NATIVE_BUILD = ""
 else
-  if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = ""
+   set NATIVE_BUILD = "#DELETE"
 endif
 
 #######################################################################
@@ -2014,6 +2004,44 @@ endif
 set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
+
+# If we are using singularity, we can advise on MPI stack settings
+
+if( $USING_SINGULARITY == TRUE ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+# These are recommended settings for MPI stacks
+
+# Intel MPI
+# ---------
+#setenv I_MPI_ADJUST_ALLREDUCE 12
+#setenv I_MPI_ADJUST_GATHERV 3
+# This flag prints out the Intel MPI state. Uncomment if needed
+#setenv I_MPI_DEBUG 9
+
+# OpenMPI
+# -------
+# Open MPI and GEOS has had issues with restart writing. Having the
+# oserver write them can be orders of magnitude faster. To enable this
+# set WRITE_RESTART_BY_OSERVER to YES in AGCM.rc
+
+# This turns off an annoying warning when running
+# Open MPI on a system where TMPDIRs are on a networked
+# file system
+#setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+
+# HPE MPT
+# -------
+#setenv MPI_COLL_REPRODUCIBLE
+#setenv SLURM_DISTRIBUTION block
+#unsetenv MPI_MEMMAP_OFF
+#unsetenv MPI_NUM_MEMORY_REGIONS
+#setenv MPI_XPMEM_ENABLED yes
+#unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+#setenv MPI_LAUNCH_TIMEOUT 40
+EOF
+
+else
 
 if( $MPI == openmpi ) then
 
@@ -2096,6 +2124,8 @@ endif # if NCCS
 
 endif # if mpi
 
+endif # if singularity
+
 #######################################################################
 #               Create Local Scripts and Resource Files
 #######################################################################
@@ -2168,6 +2198,8 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
+s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
+s?@NATIVE_BUILD?$NATIVE_BUILD?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -2749,7 +2781,7 @@ endif
 #     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
 #     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 # endif
-# 
+#
 # if( $AERO_PROVIDER == GMICHEM ) then
 #     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
 #     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
@@ -2799,18 +2831,15 @@ echo " "
 echo "Build Directory: ${C2}${GEOSDIR}${CN}"
 echo "----------------"
 echo " "
-if ( ! -e $GEOSBIN/GEOSgcm.x ) then
-     echo " "
-     echo "Note:  Build directory does not contain ${C1}GEOSgcm.x${CN} !"
-     echo "       You will need to put a copy of ${C1}GEOSgcm.x${CN} in your Experiment directory"
-     echo "----------------------------------------------------------------------------"
-     echo " "
+if ( $USING_SINGULARITY == TRUE ) then
+   echo "Note: As --singularity was passed in, we will run "
+   echo "      GEOSgcm.x from the installation bin directory."
 else
-     echo " "
-     echo "The following executable has been placed in your Experiment Directory:"
-     echo "----------------------------------------------------------------------"
-     echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
-     echo " "
+   echo " "
+   echo "The following executable has been ${EXE_VERB} to your Experiment Directory:"
+   echo "----------------------------------------------------------------------"
+   echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
+   echo " "
 endif
 echo " "
 echo "You must now copy your ${C1}Initial Conditions${CN} into: "
@@ -2967,10 +2996,22 @@ endif
 # Find out if we are running the cube and/or OGCM
 # -----------------------------------------------
 
-if ( -e $CLONEDIR/field_table ) then
+# First we need to find out if we are running in coupled mode
+# To do this, we look for "OCEAN_NAME" in AGCM.rc:
+
+set OGCM = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | wc -l`
+
+if ( $OGCM == 1 ) then
    set OGCM = TRUE
-else
+   # Now we need to find out if we are running MOM or MOM6 by looking
+   # at OCEAN_NAME: val and checking if it is MOM or MOM6
+   set OCEAN_MODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+else if ( $OGCM == 0 ) then
    set OGCM = FALSE
+else
+   echo "Found more than one OCEAN_NAME in ${OLDHOMDIR}/AGCM.rc"
+   echo "This is not allowed. Please fix this and try again."
+   exit 1
 endif
 
 # ------------------------------------------------
@@ -3032,13 +3073,31 @@ HOMDIR/logging.yaml
 EOF
 
 if( $OGCM == TRUE ) then
+
+# Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/input.nml
 HOMDIR/diag_table
-HOMDIR/field_table
 HOMDIR/__init__.py
 EXPDIR/plot/plotocn.j
 EOF
+
+# Some files are specific to MOM
+if ( $OCEAN_MODEL == "MOM" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/field_table
+EOF
+endif
+
+# Some files are specific to MOM6
+if ( $OCEAN_MODEL == "MOM6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/MOM_override
+HOMDIR/MOM_input
+HOMDIR/data_table
+EOF
+endif
+
 endif
 
 cat >> $FILES_TO_PROCESS << EOF
@@ -3098,6 +3157,9 @@ cat > $SEDFILE << EOF
 /^setenv \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
 /^setenv \+CNVDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
 /^setenv \+EXPID/  s#$OLDEXPID#$NEWEXPID#
+/^set \+EXPDIR/ s#$OLDEXPDIR#$NEWEXPDIR#
+/^set \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
+/^set \+EXPID/  s#$OLDEXPID#$NEWEXPID#
 /^EXPID:/  s#$OLDEXPID#$NEWEXPID#
 /GEOSUTIL\/post\/gcmpost.script/ s#$OLDEXPDIR#$NEWEXPDIR#
 /group_list/ s#\(group_list=\)\(.*\)#\1$GROUProot#
@@ -3117,6 +3179,12 @@ end
 #sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${NEWEXPID}_clonedfrom_${OLDEXPID}_by_${OLDUSER}#" $NEWHOMDIR/HISTORY.rc
  sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${EXPDSC}#" $NEWHOMDIR/HISTORY.rc
  sed -i -e "/^EXPID:/ s#\(EXPID: \)\(.*\)#\1${NEWEXPID}#" $NEWHOMDIR/HISTORY.rc
+
+# Change OLDEXPID to NEWEXPID in __init__.py if it exists
+# -------------------------------------------------------
+if ( -e $NEWHOMDIR/__init__.py ) then
+   sed -i -e "/$OLDEXPID/ s#$OLDEXPID#$NEWEXPID#" $NEWHOMDIR/__init__.py
+endif
 
 # -------------------------
 # Construct the new job ids
@@ -3263,8 +3331,10 @@ gmichem_setup, a setup script for the GEOS-5 GCM
 
    Usage: $0:t [optional flag]
 
-   -c --color      Set the colors for $0:t
-   -h --help       Show usage
+   -c --color        Set the colors for $0:t
+      --link         Link GEOSgcm.x into experiment directory
+      --singularity  Setup Singularity experiment
+   -h --help         Show usage
 
    If invoked alone, the script runs as normal.
 
