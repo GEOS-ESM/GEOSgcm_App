@@ -58,6 +58,8 @@ endif
 
 # Set default behavior of switches
 set LINKX = FALSE
+set EXE_VERB = "copied"
+set USING_SINGULARITY = FALSE
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -71,6 +73,12 @@ while ( $#argv > 0 )
       # Symlink GEOSgcm.x
       case --link:
          set LINKX = TRUE
+         set EXE_VERB = "linked"
+         breaksw
+
+      # Using Singularity
+      case --singularity:
+         set USING_SINGULARITY = TRUE
          breaksw
 
       # Here any string not above will trigger USAGE
@@ -1411,7 +1419,7 @@ if( $SITE == 'NAS' ) then
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
-              set QTYPE = "normal"                 # Queue to use
+              set QTYPE = "normal"                    # Queue to use
 
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
@@ -1781,10 +1789,21 @@ cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 rm -f $EXPDIR/RC/*.tmpl
 rm -f $EXPDIR/RC/fvcore_layout.rc
 
-if ( $LINKX == "TRUE" ) then
-  if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+# Copy or link GEOSgcm.x if USING_SINGULARITY is FALSE
+if ( $USING_SINGULARITY == FALSE ) then
+   if ( $LINKX == "TRUE" ) then
+      if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+   else
+      if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
+   endif
+
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = "#DELETE"
+   set NATIVE_BUILD = ""
 else
-  if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = ""
+   set NATIVE_BUILD = "#DELETE"
 endif
 
 #######################################################################
@@ -1795,6 +1814,44 @@ endif
 set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
+
+# If we are using singularity, we can advise on MPI stack settings
+
+if( $USING_SINGULARITY == TRUE ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+# These are recommended settings for MPI stacks
+
+# Intel MPI
+# ---------
+#setenv I_MPI_ADJUST_ALLREDUCE 12
+#setenv I_MPI_ADJUST_GATHERV 3
+# This flag prints out the Intel MPI state. Uncomment if needed
+#setenv I_MPI_DEBUG 9
+
+# OpenMPI
+# -------
+# Open MPI and GEOS has had issues with restart writing. Having the
+# oserver write them can be orders of magnitude faster. To enable this
+# set WRITE_RESTART_BY_OSERVER to YES in AGCM.rc
+
+# This turns off an annoying warning when running
+# Open MPI on a system where TMPDIRs are on a networked
+# file system
+#setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+
+# HPE MPT
+# -------
+#setenv MPI_COLL_REPRODUCIBLE
+#setenv SLURM_DISTRIBUTION block
+#unsetenv MPI_MEMMAP_OFF
+#unsetenv MPI_NUM_MEMORY_REGIONS
+#setenv MPI_XPMEM_ENABLED yes
+#unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+#setenv MPI_LAUNCH_TIMEOUT 40
+EOF
+
+else
 
 if( $MPI == openmpi ) then
 
@@ -1877,6 +1934,8 @@ endif # if NCCS
 
 endif # if mpi
 
+endif # if singularity
+
 #######################################################################
 #               Create Local Scripts and Resource Files
 #######################################################################
@@ -1949,6 +2008,8 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
+s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
+s?@NATIVE_BUILD?$NATIVE_BUILD?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -2373,18 +2434,15 @@ echo " "
 echo "Build Directory: ${C2}${GEOSDIR}${CN}"
 echo "----------------"
 echo " "
-if ( ! -e $GEOSBIN/GEOSgcm.x ) then
-     echo " "
-     echo "Note:  Build directory does not contain ${C1}GEOSgcm.x${CN} !"
-     echo "       You will need to put a copy of ${C1}GEOSgcm.x${CN} in your Experiment directory"
-     echo "----------------------------------------------------------------------------"
-     echo " "
+if ( $USING_SINGULARITY == TRUE ) then
+   echo "Note: As --singularity was passed in, we will run "
+   echo "      GEOSgcm.x from the installation bin directory."
 else
-     echo " "
-     echo "The following executable has been placed in your Experiment Directory:"
-     echo "----------------------------------------------------------------------"
-     echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
-     echo " "
+   echo " "
+   echo "The following executable has been ${EXE_VERB} to your Experiment Directory:"
+   echo "----------------------------------------------------------------------"
+   echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
+   echo " "
 endif
 echo " "
 echo "You must now copy your ${C1}Initial Conditions${CN} into: "
@@ -2876,8 +2934,10 @@ gcm_setup, a setup script for the GEOS GCM
 
    Usage: $0:t [optional flag]
 
-   -c --color      Set the colors for $0:t
-   -h --help       Show usage
+   -c --color        Set the colors for $0:t
+      --link         Link GEOSgcm.x into experiment directory
+      --singularity  Setup Singularity experiment
+   -h --help         Show usage
 
    If invoked alone, the script runs as normal.
 
