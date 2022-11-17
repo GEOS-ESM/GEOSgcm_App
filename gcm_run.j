@@ -32,8 +32,8 @@ setenv GEOSBIN          @GEOSBIN
 setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
-source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+@NATIVE_BUILD source $GEOSBIN/g5_modules
+@NATIVE_BUILD setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -90,14 +90,9 @@ set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
 
-set USE_IOSERVER   = @USE_IOSERVER
-set AGCM_IOS_NODES = `grep '^\s*IOSERVER_NODES:' $HOMDIR/AGCM.rc | cut -d: -f2`
-
-if ($USE_IOSERVER == 0) then
-   set IOS_NODES = 0
-else
-   set IOS_NODES = $AGCM_IOS_NODES
-endif
+set USE_IOSERVER      = @USE_IOSERVER
+set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:'  $HOMDIR/AGCM.rc | cut -d: -f2`
+set NUM_BACKEND_PES   = `grep '^\s*NUM_BACKEND_PES:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
@@ -111,41 +106,47 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
+set NCPUS_PER_NODE = @NCPUS_PER_NODE
+set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
 
-      set NCPUS_PER_NODE = @NCPUS_PER_NODE
+      @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
 
-      @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
-      @ NPES   = $NODES * $NCPUS_PER_NODE
+      @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
 
-      if( $NPES > $NCPUS ) then
+      if( $TOTAL_PES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
          echo "--------------------------------"
          echo "Allotted  NCPUs: $NCPUS"
-         echo "Requested NCPUs: $NPES"
+         echo "Requested NCPUs: $TOTAL_PES"
          echo ""
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
          echo ""
-         echo "Specified IOSERVER_NODES: $AGCM_IOS_NODES"
+         echo "Specified model nodes: $NUM_MODEL_NODES"
+         echo "Specified oserver nodes: $NUM_OSERVER_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
    else
 
-      @ NPES = $MODEL_NPES
+      @ TOTAL_PES = $MODEL_NPES
 
-      if( $NPES > $NCPUS ) then
+      if( $TOTAL_PES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
          echo "--------------------------------"
          echo "Allotted  NCPUs: $NCPUS"
-         echo "Requested NCPUs: $NPES"
+         echo "Requested NCPUs: $TOTAL_PES"
          echo ""
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
+         echo ""
+         echo "Specified model nodes: $NUM_MODEL_NODES"
+         echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
@@ -154,7 +155,7 @@ if ( $NCPUS != NULL ) then
 else
    # This is for the desktop path
 
-   @ NPES = $MODEL_NPES
+   @ TOTAL_PES = $MODEL_NPES
 
 endif
 
@@ -264,7 +265,6 @@ set END_DATE  = `grep '^\s*END_DATE:'     CAP.rc | cut -d: -f2`
 set NUM_SGMT  = `grep '^\s*NUM_SGMT:'     CAP.rc | cut -d: -f2`
 set FSEGMENT  = `grep '^\s*FCST_SEGMENT:' CAP.rc | cut -d: -f2`
 set USE_SHMEM = `grep '^\s*USE_SHMEM:'    CAP.rc | cut -d: -f2`
-
 
 #######################################################################
 #              Create HISTORY Collection Directories
@@ -418,10 +418,93 @@ chmod +x linkbcs
 cp  linkbcs $EXPDIR
 
 #######################################################################
-#                    Get Executable and RESTARTS
+#                  Setup executable
 #######################################################################
 
-cp $EXPDIR/GEOSgcm.x .
+@SINGULARITY_BUILD #######################################################################
+@SINGULARITY_BUILD #             Settings for Singularity - EXPERIMENTAL
+@SINGULARITY_BUILD #######################################################################
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Note these have only really been tested on Discover
+@SINGULARITY_BUILD # and are not guaranteed to work on other systems
+
+@SINGULARITY_BUILD # Based on work on discover, to run you need to load the same compiler
+@SINGULARITY_BUILD # and MPI to match those in the container. For example, if your container was
+@SINGULARITY_BUILD # built with:
+@SINGULARITY_BUILD #   GNU 10.3.0
+@SINGULARITY_BUILD #   Intel Fortran 2021.6.0 (aka Intel oneAPI 2022.1.0)
+@SINGULARITY_BUILD #   Intel MPI 2021.6.0 (aka Intel oneAPI 2022.1.0)
+@SINGULARITY_BUILD # then you would need to load:
+@SINGULARITY_BUILD #   source /usr/share/modules/init/csh
+@SINGULARITY_BUILD #   module purge
+@SINGULARITY_BUILD #   module load comp/gcc/10.3.0
+@SINGULARITY_BUILD #   module load comp/intel/2021.6.0
+@SINGULARITY_BUILD #   module load mpi/impi/2021.6.0
+@SINGULARITY_BUILD #
+@SINGULARITY_BUILD # And then also append ${GEOSDIR}/lib to LD_LIBRARY_PATH
+@SINGULARITY_BUILD #   setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+
+@SINGULARITY_BUILD # Also look below for suggestions on Intel MPI, OpenMPI and MPT environment variables
+@SINGULARITY_BUILD #
+@SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
+@SINGULARITY_BUILD setenv SINGULARITY_SANDBOX ""
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
+@SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
+@SINGULARITY_BUILD    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
+@SINGULARITY_BUILD    exit 1
+@SINGULARITY_BUILD endif
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
+@SINGULARITY_BUILD echo "We are running under Singularity"
+@SINGULARITY_BUILD echo ""
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Load the Singularity module
+@SINGULARITY_BUILD module load singularity
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
+@SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
+@SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # If you are running from a different location, you will need to change the bind path
+@SINGULARITY_BUILD # Also, note that often $NOBACKUP is, say, /discover/nobackup/username, but gcm_setup
+@SINGULARITY_BUILD # will set GEOSDIR, GEOSBIN, etc. above to something like /gpfsm/dnbXX/username which
+@SINGULARITY_BUILD # is the "real" physical path that /discover/nobackup/username is a symlink to.
+@SINGULARITY_BUILD # You might need to change all the gpfsm paths to nobackup paths.
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Set a variable to encapsulate all Singularity details
+@SINGULARITY_BUILD setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Detect if GEOSgcm.x is in the experiment directory
+@SINGULARITY_BUILD if (-e $EXPDIR/GEOSgcm.x) then
+@SINGULARITY_BUILD    echo "Found GEOSgcm.x in $EXPDIR"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD    # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
+@SINGULARITY_BUILD    # force the use of GEOSgcm.x in the installation directory
+@SINGULARITY_BUILD    if( $SINGULARITY_SANDBOX != "" ) then
+@SINGULARITY_BUILD       echo "NOTE: Testing has shown Singularity only works when running with"
+@SINGULARITY_BUILD       echo "      the GEOSgcm.x executable directly from the installation bin directory"
+@SINGULARITY_BUILD       echo ""
+@SINGULARITY_BUILD       echo "      So, we will *ignore* the local GEOSgcm.x and "
+@SINGULARITY_BUILD       echo "      instead use $GEOSBIN/GEOSgcm.x"
+@SINGULARITY_BUILD       echo ""
+@SINGULARITY_BUILD    else
+@SINGULARITY_BUILD       echo "Using GEOSgcm.x from $GEOSBIN"
+@SINGULARITY_BUILD    endif
+@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+@SINGULARITY_BUILD else
+@SINGULARITY_BUILD    echo "Using GEOSgcm.x from $GEOSBIN"
+@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+@SINGULARITY_BUILD endif
+
+@NATIVE_BUILD echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+@NATIVE_BUILD echo ""
+@NATIVE_BUILD /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
+
+#######################################################################
+#                         Get RESTARTS
+#######################################################################
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -725,7 +808,8 @@ else
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @SINGULARITY_BUILD $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @NATIVE_BUILD $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -763,7 +847,8 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -803,8 +888,6 @@ endif
 
 @SETENVS
 
-@GPUSTART
-
 # Run bundleParser.py
 #---------------------
 python bundleParser.py
@@ -842,38 +925,17 @@ setenv OMP_NUM_THREADS 1
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1 ) then
-   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
-
-   # Per SI Team, the multigroup server should always be used
-   # The ideal number of backend PEs is based on the number of HISTORY
-   # collections and number of IO nodes
-
-   # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
-   set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
-
-   # Protect against divide by zero
-   if ($IOS_NODES == 0) then
-      echo "Something is wrong. IOSERVER asked for, but zero IO nodes provided"
-      exit 3
-   endif
-
-   # Now we divide that number of collections by the ioserver nodes
-   set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
-
-   # Finally multigroup requires at least two backend pes
-   if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
-
-   set IOSERVER_EXTRA = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $NUM_OSERVER_NODES"
+   set IOSERVER_EXTRA   = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
 else
    set IOSERVER_OPTIONS = ""
-   set IOSERVER_EXTRA = ""
+   set IOSERVER_EXTRA   = ""
 endif
 
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@NATIVE_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
-
-@GPUEND
 
 if( -e EGRESS ) then
    set rc = 0
