@@ -1001,8 +1001,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'FRACI'          , 'SURFACE'     , 'FRSEAICE'  ,
 #Additional variable
                                                     'OFRACI'         , 'SURFACE'     , 'AICE'      ,
-                                                    'RUNOFF'         , 'SURFACE'     , 'RUNOFFTOT' , #total runoff from glc & lnd
-                                                    'GHTSKIN'        , 'SURFACE'     , 'GHTFLUX'   , #for consistency with M2
+                                                    'RUNOFF'         , 'SURFACE'     , 'RUNOFFTOT' ,                                                    
                                                     'AN_PRCP'        , 'MOIST'       , 'PRECANV'   ,
                                                     'CN_PRCP'        , 'MOIST'       , 'PRECCON'   ,
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
@@ -1034,7 +1033,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
   flx_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:     >>>IOEDATE<<< ,
   flx_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:     >>>IOETIME<<< ,
   flx_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:      'LHFX'           , 'SURFACE'     , 'EFLUX'      ,
-                                                    'EVAP'           , 'SURFACE'     ,
+                                                    'EVAP'           , 'SURFACE'     ,                      ##
                                                     'SH'             , 'SURFACE'     , 'HFLUX'     ,
 #                                                   'RADSRF'         , 'RADIATION'   ,
                                                     'TAUX;TAUY'      , 'SURFACE'     ,
@@ -1064,7 +1063,6 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
 #Additional variable
                                                     'OFRACI'         , 'SURFACE'     , 'AICE'      ,
                                                     'RUNOFF'         , 'SURFACE'     , 'RUNOFFTOT' , #total runoff from glc & lnd
-                                                    'GHTSKIN'        , 'SURFACE'     , 'GHTFLUX'   , #for consistency with M2
                                                     'AN_PRCP'        , 'MOIST'       , 'PRECANV'   ,
                                                     'CN_PRCP'        , 'MOIST'       , 'PRECCON'   ,
                                                     'LS_PRCP'        , 'MOIST'       , 'PRECLSC'   ,
@@ -1533,7 +1531,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'FLNS'         , 'IRRAD'    , 'LWGNT'   ,
                                                     'OLR'          , 'IRRAD'    , 'LWTUP'   ,
                                                     'RSRS'         , 'SOLAR'    , 'SWGNT'   ,
-                                                    'RUNSURF'      , 'SURFACE'  , 'RUNOFF'  ,
+                                                    'RUNSURF'      , 'SURFACE'  , 'RUNOFF'  , #is this the right runoff?
                                                     'SNOWOCN'      , 'SURFACE'  , 'PRECSNOOCN',
                                                     'SNO'          , 'MOIST'    , 'PRECSNO' ,
                                                     'PLS'          , 'SURFACE'  , 'PRECLS'  , 
@@ -1545,8 +1543,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'DFNIR'        , 'SOLAR'    , 'NIRDF'   ,
                                                     'DRNIR'        , 'SOLAR'    , 'NIRDR'   ,
                                                     'TAUX;TAUY'    , 'SURFACE'  ,
-                                                    'SHWTR'        , 'SURFACE'  , 'HFLUXWTR',
-                                                    'HLATWTR'      , 'SURFACE'  , 'EFLUXWTR',
+                                                    'SHWTR'        , 'SURFACE'  , 'SHOCN',
+                                                    'HLATWTR'      , 'SURFACE'  , 'LHOCN',
                                                      ::
 
   ocf_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:      'CFIO' ,
@@ -1580,8 +1578,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'DFNIR'        , 'SOLAR'    , 'NIRDF'   ,
                                                     'DRNIR'        , 'SOLAR'    , 'NIRDR'   ,
                                                     'TAUX;TAUY'    , 'SURFACE'  ,
-                                                    'SHWTR'        , 'SURFACE'  , 'HFLUXWTR',
-                                                    'HLATWTR'      , 'SURFACE'  , 'EFLUXWTR',
+                                                    'SHWTR'        , 'SURFACE'  , 'SHOCN'   ,
+                                                    'HLATWTR'      , 'SURFACE'  , 'LHOCN'   ,
                                                      ::
 
 #######################################################################
@@ -4003,10 +4001,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:      >>>IOEDATE<<< ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:      >>>IOETIME<<< ,
-  glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:   'SNOWDP_GL'    , 'LANDICE'  ,
-                                                    'SNOMAS_GL'    , 'LANDICE'  ,
-                                                    'ASNOW_GL'     , 'LANDICE'  ,
-                                                    'RUNOFF'       , 'LANDICE'  , 'RUNOFFGLC'
+  glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:   'SNOWDP_GL'    , 'LANDICE'  , 'SNOWDPGLC'    ,
+                                                    'SNOMAS_GL'    , 'LANDICE'  , 'SNOMASGLC'    ,
+                                                    'ASNOW_GL'     , 'LANDICE'  , 'ASNOWGLC'     ,
+                                                    'RUNOFF'       , 'LANDICE'  , 'RUNOFFTOTGLC' ,
                                                     'WESNSC'       , 'LANDICE'  ,
                                                     'WESNEXT'      , 'LANDICE'  ,
                                                     'SNICEALB'     , 'LANDICE'  ,
@@ -4025,7 +4023,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'WESNBOT'      , 'LANDICE'  ,
                                                     'TST'          , 'LANDICE'  , 'TSKINGLC'     ,
                                                     'HLATN'        , 'LANDICE'  , 'LHGLC'        ,
-                                                    'SHOUT'        , 'LANDICE'  , 'SHGLC'        ,                                                  
+                                                    'SHOUT'        , 'LANDICE'  , 'SHGLC'        ,
+                                                    'LWNDSRF'      , 'LANDICE'  , 'LWNDGLC'      ,
+                                                    'SWNDSRF'      , 'LANDICE'  , 'SWNDGLC'      ,                                                  
                                                      ::
 
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:       'CFIO' ,
@@ -4038,10 +4038,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:      010000 ,
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:      >>>IOEDATE<<< ,
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:      >>>IOETIME<<< ,
-  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:   'SNOWDP_GL'    , 'LANDICE'  ,
-                                                      'SNOMAS_GL'    , 'LANDICE'  ,
-                                                      'ASNOW_GL'     , 'LANDICE'  ,
-                                                      'RUNOFF'       , 'LANDICE'  , 'RUNOFFGLC'
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:   'SNOWDP_GL'    , 'LANDICE'  , 'SNOWDPGLC'     ,
+                                                      'SNOMAS_GL'    , 'LANDICE'  , 'SNOMASGLC'     ,
+                                                      'ASNOW_GL'     , 'LANDICE'  , 'ASNOWGLC'      ,
+                                                      'RUNOFF'       , 'LANDICE'  , 'RUNOFFTOTGLC'  ,
                                                       'WESNSC'       , 'LANDICE'  ,
                                                       'WESNEXT'      , 'LANDICE'  ,
                                                       'SNICEALB'     , 'LANDICE'  ,
@@ -4060,7 +4060,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                       'WESNBOT'      , 'LANDICE'  ,
                                                       'TST'          , 'LANDICE'  , 'TSKINGLC'     ,
                                                       'HLATN'        , 'LANDICE'  , 'LHGLC'        ,
-                                                      'SHOUT'        , 'LANDICE'  , 'SHGLC'        ,                                             
+                                                      'SHOUT'        , 'LANDICE'  , 'SHGLC'        ,
+                                                      'LWNDSRF'      , 'LANDICE'  , 'LWNDGLC'      ,
+                                                      'SWNDSRF'      , 'LANDICE'  , 'SWNDGLC'      ,                                               
                                                      ::
 
 
