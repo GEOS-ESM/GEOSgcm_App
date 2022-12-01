@@ -1104,6 +1104,10 @@ endif
 # Settings for fvcore_layout.rc
 set FV_NWAT    = ""
 set FV_ZTRACER = "z_tracer    = .T."
+set FV_N_SPLIT = ""
+if( $AGCM_IM == "c720" ) then  # done for consistency w/ FP settings (revision of other hi-res are likely needed)
+set FV_N_SPLIT = "n_split = 12"
+endif
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
    set FV_MAKENH     = "Make_NH     = .F."
    set FV_HYDRO      = "hydrostatic = .T."
@@ -2179,6 +2183,7 @@ s?@FV_ZTRACER?$FV_ZTRACER?g
 s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
 s?@FV_SATADJ?$FV_SATADJ?g
+s?@FV_N_SPLIT?$FV_N_SPLIT?g
 
 EOF
 
