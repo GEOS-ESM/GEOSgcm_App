@@ -1436,10 +1436,10 @@ if( $SITE == 'NAS' ) then
               setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
 
-              setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}      # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                              # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                              # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/verification/MERRA-2            # Default Analysis Location   for M2 REPLAY
+              setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG} # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                         # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                         # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/merra2/data                # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
@@ -1480,7 +1480,7 @@ else if( $SITE == 'NCCS' ) then
               setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA-2 # Default Analysis Location   for M2 REPLAY
+              setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/merra2/data        # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
@@ -2049,7 +2049,7 @@ s?>>>REGULAR_REPLAY<<<?#?g
 s?>>>REGULAR_REPLAY_GMAO<<<?#?g
 s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
 s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
-s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA2_MEANS/ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4?g
+s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
 s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
