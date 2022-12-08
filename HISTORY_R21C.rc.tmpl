@@ -1207,7 +1207,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'WCPR'      , 'SURFACE'  , 'PRMC'      ,
                                                     'WCRZ'      , 'SURFACE'  , 'RZMC'      ,
                                                     'WCSF'      , 'SURFACE'  , 'SFMC'      ,
-                                                    'CAPAC',    , 'SURFACE'  , 'INTRWATR'  ,  #
+                                                    'CAPAC'     , 'SURFACE'  , 'INTRWATR'  ,  #
                                                     'TPSNOW'    , 'SURFACE'  , 'TPSNOWLAND',  #
                                                     'TPUNST'    , 'SURFACE'  , 'TUNSTLAND' ,  #
                                                     'TPSAT'     , 'SURFACE'  , 'TSATLAND'  ,  #
@@ -1234,9 +1234,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'FRUST'     , 'SURFACE'  , 'FRLANDUNST'  , #
                                                     'FRSAT'     , 'SURFACE'  , 'FRLANDSAT'   , #
                                                     'ASNOW'     , 'SURFACE'  , 'FRLANDSNO'   , #
-                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT',  , #
-                                                    'DFPAR'     , 'SURFACE'  , 'PARDFLAND'   , #
-                                                    'DRPAR'     , 'SURFACE'  , 'PARDRLAND'   , #
+                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT'   , #
+                                                    'DFPARLAND' , 'SURFACE'  , 'PARDFLAND'   , #
+                                                    'DRPARLAND' , 'SURFACE'  , 'PARDRLAND'   , #
                                                     'SHLAND'    , 'SURFACE'  ,
                                                     'LHLAND'    , 'SURFACE'  ,
                                                     'EVLAND'    , 'SURFACE'  ,
@@ -1270,7 +1270,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'WCPR'      , 'SURFACE'  , 'PRMC'      ,
                                                     'WCRZ'      , 'SURFACE'  , 'RZMC'      ,
                                                     'WCSF'      , 'SURFACE'  , 'SFMC'      ,
-                                                    'CAPAC',    , 'SURFACE'  , 'INTRWATR'  ,  #
+                                                    'CAPAC'     , 'SURFACE'  , 'INTRWATR'  ,  #
                                                     'TPSNOW'    , 'SURFACE'  , 'TPSNOWLAND',  #
                                                     'TPUNST'    , 'SURFACE'  , 'TUNSTLAND' ,  #
                                                     'TPSAT'     , 'SURFACE'  , 'TSATLAND'  ,  #
@@ -1297,9 +1297,9 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'FRUST'     , 'SURFACE'  , 'FRLANDUNST'  , #
                                                     'FRSAT'     , 'SURFACE'  , 'FRLANDSAT'   , #
                                                     'ASNOW'     , 'SURFACE'  , 'FRLANDSNO'   , #
-                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT',  , #
-                                                    'DFPAR'     , 'SURFACE'  , 'PARDFLAND'   , #
-                                                    'DRPAR'     , 'SURFACE'  , 'PARDRLAND'   , #
+                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT'   , #
+                                                    'DFPARLAND' , 'SURFACE'  , 'PARDFLAND'   , #
+                                                    'DRPARLAND' , 'SURFACE'  , 'PARDRLAND'   , #
                                                     'SHLAND'    , 'SURFACE'  ,
                                                     'LHLAND'    , 'SURFACE'  ,
                                                     'EVLAND'    , 'SURFACE'  ,
@@ -1316,19 +1316,19 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                      ::
 
 
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.format:       'CFIO' ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.descr:        '2d,1-Hourly,Time-Averaged,Single-Level,Assimilation,Land Surface Forcings' ,
-# lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.nbits:         10 ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.deflate:       2 ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.regrid_method: 'BILINEAR_MONOTONIC' ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.template:     '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.mode:         'time-averaged' ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.frequency:     010000 ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.duration:      010000 ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.end_date:      >>>IOEDATE<<< ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.end_time:      >>>IOETIME<<< ,
-  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv_NCKS.fields:       'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:       'CFIO' ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:        '2d,1-Hourly,Time-Averaged,Single-Level,Assimilation,Land Surface Forcings' ,
+# lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:         10 ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:       2 ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method: 'BILINEAR_MONOTONIC' ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:     '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:         'time-averaged' ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:     010000 ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:      010000 ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:      >>>IOEDATE<<< ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:      >>>IOETIME<<< ,
+  lfo_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:       'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
                                                              'LWS'     , 'IRRAD'    , 'LWGAB'    ,
                                                              'PCU'     , 'SURFACE'  , 'PRECRAINCUCORR'   , # append "CORR" if reanalysis and from SURFACE
                                                              'PLS'     , 'SURFACE'  , 'PRECRAINLSCORR'   , # append "CORR" if reanalysis and from SURFACE
@@ -1337,18 +1337,18 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                              'DRPAR'   , 'SOLAR'    , 'PARDR'    ,
                                                              ::
 
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.format:      'CFIO' ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.descr:       '2d,1-Hourly,Time-Averaged,Single-Level,Assimilation,Land Surface Forcings' ,
-# lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.nbits:        10 ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.deflate:      2 ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.regrid_method: 'BILINEAR_MONOTONIC' ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.template:    '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.mode:        'time-averaged' ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.frequency:    010000 ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.duration:     010000 ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.end_date:     >>>IOEDATE<<< ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.end_time:     >>>IOETIME<<< ,
-  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv_NCKS.fields:      'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:      'CFIO' ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:       '2d,1-Hourly,Time-Averaged,Single-Level,Assimilation,Land Surface Forcings' ,
+# lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:        10 ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:      2 ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method: 'BILINEAR_MONOTONIC' ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:    '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:        'time-averaged' ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:    010000 ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:     010000 ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:     >>>IOEDATE<<< ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:     >>>IOETIME<<< ,
+  lfo_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:      'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
                                                               'LWS'     , 'IRRAD'    , 'LWGAB'    ,
                                                               'PCU'     , 'SURFACE'  , 'PRECRAINCUCORR'   , # append "CORR" if reanalysis and from SURFACE
                                                               'PLS'     , 'SURFACE'  , 'PRECRAINLSCORR'   , # append "CORR" if reanalysis and from SURFACE
@@ -3121,7 +3121,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'WCPR'      , 'SURFACE'  , 'PRMC'      ,
                                                     'WCRZ'      , 'SURFACE'  , 'RZMC'      ,
                                                     'WCSF'      , 'SURFACE'  , 'SFMC'      ,
-                                                    'CAPAC',    , 'SURFACE'  , 'INTRWATR'  ,  #
+                                                    'CAPAC'     , 'SURFACE'  , 'INTRWATR'  ,  #
                                                     'TPSNOW'    , 'SURFACE'  , 'TPSNOWLAND',  #
                                                     'TPUNST'    , 'SURFACE'  , 'TUNSTLAND' ,  #
                                                     'TPSAT'     , 'SURFACE'  , 'TSATLAND'  ,  #
@@ -3148,7 +3148,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'FRUST'     , 'SURFACE'  , 'FRLANDUNST'  , #
                                                     'FRSAT'     , 'SURFACE'  , 'FRLANDSAT'   , #
                                                     'ASNOW'     , 'SURFACE'  , 'FRLANDSNO'   , #
-                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT',  , #
+                                                    'FRWLT'     , 'SURFACE'  , 'FRLANDWLT'   , #
                                                     'DFPAR'     , 'SOLAR'    , 'PARDF'     ,
                                                     'DRPAR'     , 'SOLAR'    , 'PARDR'     ,
                                                     'SHLAND'    , 'SURFACE'  ,
@@ -4001,6 +4001,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:         'time-averaged' ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:     010000 ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:      010000 ,
+  glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_name:  'PE@AGCM_IMx@AGCM_JM-CF' ,
+  glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_exch:  'tile.bin' ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:      >>>IOEDATE<<< ,
   glc_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:      >>>IOETIME<<< ,
@@ -4020,7 +4022,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                     'IMELT'        , 'LANDICE'  , 
                                                     'MELTWTR'      , 'LANDICE'  , 
                                                     'MELTWTRCONT'  , 'LANDICE'  ,              
-                                                    'RAINRFZ',     , 'LANDICE'  ,
+                                                    'RAINRFZ'      , 'LANDICE'  ,
                                                     'SMELT'        , 'LANDICE'  , 
                                                     'SNOWALB'      , 'LANDICE'  ,
                                                     'WESNBOT'      , 'LANDICE'  ,
@@ -4039,6 +4041,8 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:         'time-averaged' ,
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:     010000 ,
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:      010000 ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_name:  'PE@AGCM_IMx@AGCM_JM-CF' ,
+  glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_exch:  'tile.bin' ,
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:      >>>IOEDATE<<< ,
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:      >>>IOETIME<<< ,
   glc_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:   'SNOWDP_GL'    , 'LANDICE'  , 'SNOWDPGLC'     ,
@@ -4057,7 +4061,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                       'IMELT'        , 'LANDICE'  ,
                                                       'MELTWTR'      , 'LANDICE'  ,               
                                                       'MELTWTRCONT'  , 'LANDICE'  ,
-                                                      'RAINRFZ',     , 'LANDICE'  ,
+                                                      'RAINRFZ'      , 'LANDICE'  ,
                                                       'SMELT'        , 'LANDICE'  ,
                                                       'SNOWALB'      , 'LANDICE'  ,
                                                       'WESNBOT'      , 'LANDICE'  ,
