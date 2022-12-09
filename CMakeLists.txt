@@ -4,12 +4,6 @@ ecbuild_add_executable (
   LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
   )
 
-ecbuild_add_executable (
-  TARGET idfupd.x
-  SOURCES idfupd.F90
-  LIBS GEOSgcm_GridComp esmf
-  )
-
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
