@@ -1093,7 +1093,27 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #           Setting for Microphysics & Hydrostatic Mode               #
 #######################################################################
 
-# For @-lines in AGCM.rc.tmpl
+set BACM_1M_ = "#"
+if ( "$CLDMICRO" == "BACM_1M" ) then
+   set BACM_1M_ = "" 
+   set RAYLEIGH_TAU1 = "RAYLEIGH_TAU1: 172800.0"
+   set FV_TAU = "tau = 0.0"
+endif
+
+set GFDL_1M_ = "#"
+if ( "$CLDMICRO" == "GFDL_1M" ) then
+   set GFDL_1M_ = "" 
+   set RAYLEIGH_TAU1 = "#RAYLEIGH_TAU1: 172800.0"
+   set FV_TAU = "tau = 2.5"
+endif
+
+set MGB2_2M_ = "#"
+if ( "$CLDMICRO" == "MGB2_2M" ) then
+   set MGB2_2M_ = "" 
+   set RAYLEIGH_TAU1 = "RAYLEIGH_TAU1: 172800.0"
+   set FV_TAU = "tau = 0.0"
+endif
+
 set GFDL_HYDRO = ".TRUE."
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .false."
@@ -1106,12 +1126,9 @@ else
 endif
 
 # Settings for fvcore_layout.rc
-set FV_NWAT    = ""
-set FV_ZTRACER = "z_tracer    = .T."
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
    set FV_MAKENH     = "Make_NH     = .F."
    set FV_HYDRO      = "hydrostatic = .T."
-   set FV_SATADJ     = "do_sat_adj  = .F."
 else
    # Logic for NH runs based on build type
    if ( "$DEFAULT_HYDROSTATIC" == "TRUE") then
@@ -1124,12 +1141,7 @@ else
       set FV_MAKENH     = "Make_NH     = .F."
    endif
    set FV_HYDRO      = "hydrostatic = .F."
-   if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "MGB2_2M" ) then
-      set FV_SATADJ  = "do_sat_adj = .F."
-      set FV_NWAT    = "nwat       =  3 "
-   else if ( "$CLDMICRO" == "GFDL_1M" ) then
-      set FV_SATADJ  = "do_sat_adj = .T."
-      set FV_NWAT    = "nwat       =  6 "
+   if ( "$CLDMICRO" == "GFDL_1M" ) then
       set GFDL_HYDRO = ".FALSE."
    endif
 endif
@@ -1985,7 +1997,6 @@ s?@DASTUNING?#?g
 s?>>>FORCEDAS<<<?$FORCEDAS?g
 s?>>>FORCEGCM<<<?$FORCEGCM?g
 s?@COUPLED?$COUPLED?g
-s?@CLDMICRO?$CLDMICRO?g
 s?@MOM5?$MOM5?g
 s?@MOM6?$MOM6?g
 s?@DATAOCEAN?$DATAOCEAN?g
@@ -2085,15 +2096,19 @@ s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
 
-s/@CLDMICRO/$CLDMICRO/g
-
 s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
+
+s?@BACM_1M_?$BACM_1M_?g
+s?@GFDL_1M_?$GFDL_1M_?g
+s?@MGB2_2M_?$MGB2_2M_?g
+
+s?@RAYLEIGH_TAU1?$RAYLEIGH_TAU1?g
+
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
-s?@FV_NWAT?$FV_NWAT?g
-s?@FV_ZTRACER?$FV_ZTRACER?g
+
 s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
-s?@FV_SATADJ?$FV_SATADJ?g
+s?@FV_TAU?$FV_TAU?g
 
 s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
 s?@GFDL_USE_CCN?$GFDL_USE_CCN?g

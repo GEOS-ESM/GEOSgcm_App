@@ -25,7 +25,7 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 DYCORE: @DYCORE
 #FV3_CONFIG: MONOTONIC
 AdvCore_Advection: 0
-RAYLEIGH_TAU1: 172800.0
+@RAYLEIGH_TAU1
 ###########################################################
 
 ###########################################################
@@ -41,10 +41,27 @@ ORBIT_ANAL2B: .TRUE.
 ###########################################################
 
 ###########################################################
-# microphysics options
+# BACM_1M microphysics options
 # ----------------------------------------
-CLDMICR_OPTION: @CLDMICRO
-HYDROSTATIC: @GFDL_HYDRO
+@BACM_1M_CLDMICR_OPTION: BACM_1M
+###########################################################
+
+###########################################################
+# GFDL_1M microphysics options
+# ----------------------------------------
+@GFDL_1M_CLDMICR_OPTION: GFDL_1M
+@GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
+@GFDL_1M_JASON_UW: .FALSE.
+@GFDL_1M_CNV_FRACTION_MIN: 0.00
+@GFDL_1M_CNV_FRACTION_MAX: 4000.00
+@GFDL_1M_CNV_FRACTION_EXP: 0.25
+@GFDL_1M_TAU_DEEP: 7200.0
+
+###########################################################
+# MGB2_2M microphysics options
+# ----------------------------------------
+@MGB2_2M_CLDMICR_OPTION: MGB2_2M
+@MGB2_2M_MGVERSION: @MGVERSION
 ###########################################################
 
 ###########################################################
@@ -79,7 +96,7 @@ NCAR_EFFGWBKG: 0.00
 GEOS_EFFGWORO: 0.25
 NCAR_EFFGWORO: 0.00
 NCAR_NRDG: 0.0
-#NCAR_ORO_TNDMAX: 40.0
+NCAR_ORO_TNDMAX: 80.0
 BELJAARS_EFF_FACTOR: 0.0
 BELJAARS_LIMITER: 0.0
 TURBULENCE_C_B: 6.0

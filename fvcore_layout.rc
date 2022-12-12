@@ -2,7 +2,7 @@
  @FV_HYDRO
  range_warn = .T.
  fv_debug = .F.
- tau = 0.0
+ @FV_TAU
 /
 
 &main_nml
@@ -41,14 +41,14 @@
   fast_sat_adj = .true.
   sat_adj0 = 0.75
   tau_i2s  = 900.
-  tau_l2v  = 300.
+  tau_l2v  = 150.
   tau_i2v  = 300.
   tau_g2v  = 900.
-  tau_revp = 300.
+  tau_revp = 150.
   tau_frz  = 450.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
-  dw_land  = 0.035
-  dw_ocean = 0.100
+  dw_land  = 0.0
+  dw_ocean = 0.25
   ql_gen = 1.0e-3
   ql_mlt = 1.0e-3
   qi0_crt = 8.0E-5
@@ -60,7 +60,7 @@
   rh_ins = 0.30
   ccn_l = 300.
   ccn_o = 100.
-  c_paut = 0.75
+  c_paut = 0.5
   c_cracw = 0.8
   use_ppm = .false.
   @GFDL_USE_CCN
