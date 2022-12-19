@@ -464,7 +464,7 @@ wait
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
 /bin/rm gwd_internal_rst
-/bin/cp /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE/gwd_internal_c${AGCM_IM} gwd_internal_rst
+/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
 
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
