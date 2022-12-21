@@ -19,87 +19,107 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
       AGCM.IM_WORLD: @AGCM_IM
       @LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
 
+###########################################################
+# dynamics options
+# ----------------------------------------
 DYCORE: @DYCORE
-
- SOLAR_DT: 3600
- IRRAD_DT: 3600
-SATSIM_DT: 1800
-
-SOLARAvrg: 0
-IRRADAvrg: 0
-
-EOT: .TRUE.
-ORBIT_ANAL2B: .TRUE.
-
-# UNCOMMENT to use Morrison-Gettelman-Barahona cloud microphysics
-@MP_MG1CLDMICRO: 2MOMENT
-
-# UNCOMMENT to use GFDL 6-phase cloud microphysics
-@MP_GFDLCLDMICRO: GFDL
-# UNCOMMENT to when GFDL microphysics is run with NonHydrostatic FV3
-@MP_GFDLHYDROSTATIC: @GFDL_HYDRO
-
-# UNCOMMENT to disable aerosol activation in 1-moment cloud microphysics
-#USE_AEROSOL_NN: 0
+#FV3_CONFIG: MONOTONIC
+AdvCore_Advection: 0
+@RAYLEIGH_TAU1
+###########################################################
 
 ###########################################################
-# Flag for definition of the convection scheme
-# The options are RAS or GF
+# radiation options
+# ----------------------------------------
+ SOLAR_DT: 3600
+ IRRAD_DT: 3600
+SATSIM_DT: 3600
+SOLARAvrg: 0
+IRRADAvrg: 0
+EOT: .TRUE.
+ORBIT_ANAL2B: .TRUE.
+###########################################################
+
+###########################################################
+# BACM_1M microphysics options
+# ----------------------------------------
+@BACM_1M_CLDMICR_OPTION: BACM_1M
+###########################################################
+
+###########################################################
+# GFDL_1M microphysics options
+# ----------------------------------------
+@GFDL_1M_CLDMICR_OPTION: GFDL_1M
+@GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
+@GFDL_1M_JASON_UW: .FALSE.
+@GFDL_1M_TURBULENCE_JASON_TUNING: .TRUE.
+@GFDL_1M_CNV_FRACTION_MIN: 0.00
+@GFDL_1M_CNV_FRACTION_MAX: 4000.00
+@GFDL_1M_CNV_FRACTION_EXP: 0.25
+@GFDL_1M_TAU_DEEP: 7200.0
+@GFDL_1M_USE_GF2020: 1
+###########################################################
+
+###########################################################
+# MGB2_2M microphysics options
+# ----------------------------------------
+@MGB2_2M_CLDMICR_OPTION: MGB2_2M
+@MGB2_2M_MGVERSION: @MGVERSION
+###########################################################
+
+###########################################################
+# shallow cumulus options
+# ----------------------------------------
+SHALLOW_OPTION: UW
+###########################################################
+
+###########################################################
+# convection scheme options
 # ----------------------------------------
 CONVPAR_OPTION: GF
-
-# Override default aerosol convective scavenging and use dz method
-USE_TRACER_SCAVEN: 1
-
-# Flag to activated scale-awareness approach (0 false, 1 true)
-USE_SCALE_DEP: 1
-
-# Flag to activated diurnal cycle closure (0 false, 1 true)
-DICYCLE: 1
-
 # Convective plumes to be activated (1 true, 0 false)
-# ----------------------------------------
 DEEP: 1
 SHALLOW: 0
 CONGESTUS: 1
-
-# UW shallow cumulus settings
-DOSHLW: 1
-
 # Choice for the closures:
-# ----------------------------------------
 # deep : 0 ensemble (all) , 1 GR, 4 ll omega, 7 moist conv, 10 PB
 # shallow : 0 ensemble (Wstar/BLQE) , 1 Wstar, 4 heat-engine or 7 BLQE
 # congestus: 0 ensemble (Wstar/BLQE/PB), 1 Wstar, 2 BLQE, 3 PB, 4 PB_BL
 CLOSURE_DEEP:0
 CLOSURE_SHALLOW:7
 CLOSURE_CONGESTUS:3
+###########################################################
 
+###########################################################
 # GWD Parameterization
 # --------------------
+GEOS_EFFGWBKG: 0.125
+NCAR_EFFGWBKG: 0.00
+GEOS_EFFGWORO: 0.25
+NCAR_EFFGWORO: 0.00
+NCAR_NRDG: 0.0
+NCAR_ORO_TNDMAX: 80.0
+BELJAARS_EFF_FACTOR: 0.0
+BELJAARS_LIMITER: 0.0
+TURBULENCE_C_B: 6.0
+###########################################################
 
-# if .FALSE., use GEOS GWD code (default); .TRUE., use new NCAR GWD code
-USE_NCAR_GWD: .FALSE.
-
-# This is only used if USE_NCAR_GWD is .TRUE.
-BERES_FILE_NAME: ExtData/g5gcm/gwd/newmfspectra40_dc25.nc
-
+###########################################################
 # Ocean Model Configuration Parameters
 # ------------------------------------
-      OGCM.GRID_TYPE: @OGCM_GRID_TYPE
-      OGCM.GRIDNAME: @OGCM_GRIDNAME
-      OGCM.IM_WORLD: @OGCM_IM
-      OGCM.JM_WORLD: @OGCM_JM
-      OGCM.LM: @OGCM_LM
-      @COUPLED OGCM.NX: @OGCM_NX
-      @COUPLED OGCM.NY: @OGCM_NY
-      @COUPLED OGCM.GRIDSPEC: MAPL_Tripolar.nc
-
-      @DATAOCEAN @LATLON_OGCM OGCM.POLE: 'PE'
-      @DATAOCEAN @LATLON_OGCM OGCM.DATELINE: 'DE'
-      @DATAOCEAN @CUBE_OGCM OGCM.NF: @OGCM_NF
-
+OGCM.GRID_TYPE: @OGCM_GRID_TYPE
+OGCM.GRIDNAME: @OGCM_GRIDNAME
+OGCM.IM_WORLD: @OGCM_IM
+OGCM.JM_WORLD: @OGCM_JM
+OGCM.LM: @OGCM_LM
+@COUPLED OGCM.NX: @OGCM_NX
+@COUPLED OGCM.NY: @OGCM_NY
+@COUPLED OGCM.GRIDSPEC: MAPL_Tripolar.nc
+@DATAOCEAN @LATLON_OGCM OGCM.POLE: 'PE'
+@DATAOCEAN @LATLON_OGCM OGCM.DATELINE: 'DE'
+@DATAOCEAN @CUBE_OGCM OGCM.NF: @OGCM_NF
 OGCM_RUN_DT: @OCEAN_DT
+###########################################################
 
 ##############################################################################################
 ####                                                                                      ####
@@ -278,8 +298,17 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   ANA EXPID and LOCATION used for REPLAY
 #   --------------------------------------
-#   REPLAY_ANA_EXPID:    @REPLAY_ANA_EXPID
-#   REPLAY_ANA_LOCATION: @REPLAY_ANA_LOCATION
+#X_EXP  REPLAY_ANA_EXPID:    @X_EXPID
+#X_EXP  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@X_EXPID
+#X_EXP  REPLAY_MODE: Regular
+#X_EXP  REPLAY_FILE: ana/Y%y4/M%m2/@X_EXPID.asm.eta.%y4%m2%d2_%h2%n2z.nc4
+
+#   Regular REPLAY to ERA5
+#   ----------------------
+#ERA5  REPLAY_ANA_EXPID: era5_eta2eta_L137
+#ERA5  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/osse2/Ops12KM_R/forecasts_EC/ERA5/UV
+#ERA5  REPLAY_MODE: Regular
+#ERA5  REPLAY_FILE: /discover/nobackup/projects/gmao/osse2/Ops12KM_R/forecasts_EC/ERA5/UV/%y4%m2%d2_%h20000/era5_eta2eta_L137.%y4%m2%d2_%h2z.nc4
 
 #   Typical Exact REPLAY Configuration
 #   ----------------------------------
@@ -465,8 +494,6 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ##############################################################################################
 
 # Option to Diagnose Precipitation Types for Land Surface
-# ------------------------------------------------------------
-DIAGNOSE_PRECIP_TYPE: FALSE
 
 # Choice for Land Surface Model
 #      1 : Catchment
@@ -525,6 +552,10 @@ DYN_INTERNAL_RESTART_FILE:              fvcore_internal_rst
 DYN_INTERNAL_CHECKPOINT_FILE:           fvcore_internal_checkpoint
 DYN_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
 DYN_INTERNAL_HEADER:                    1
+
+GWD_INTERNAL_RESTART_FILE:              gwd_internal_rst
+GWD_INTERNAL_CHECKPOINT_FILE:           gwd_internal_checkpoint
+GWD_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
 
 LAKE_INTERNAL_RESTART_FILE:             lake_internal_rst
 LAKE_INTERNAL_CHECKPOINT_FILE:          lake_internal_checkpoint
