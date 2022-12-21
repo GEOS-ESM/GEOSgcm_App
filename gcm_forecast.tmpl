@@ -239,10 +239,8 @@ EXPID:  ${EXPID}_FCST
 EXPDSC: Forecasts_spawned_from_${EXPID}
 
 COLLECTIONS: 'geosgcm_fcst'
-             'geosgcm_surf'
-             ::
+              ::
              'prog.eta'
-             'tavg1_2d_flx_Mx'
 
 GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
  ::
@@ -255,71 +253,42 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
   PC${HIST_IM}x${HIST_JM}-DC.DATELINE: DC
   PC${HIST_IM}x${HIST_JM}-DC.LM: ${AGCM_LM}
 
-  geosgcm_fcst.template:  '%y4%m2%d2_%h2%n2z.nc4',
-  geosgcm_fcst.archive:   '%c/Y%y4',
-  geosgcm_fcst.format:    'CFIO',
-  geosgcm_fcst.frequency:  060000,
-  geosgcm_fcst.duration:   000000,
-  geosgcm_fcst.grid_label: PC${HIST_IM}x${HIST_JM}-DC,
-  geosgcm_fcst.vscale:     100.0,
-  geosgcm_fcst.vunit:     'hPa',
-  geosgcm_fcst.vvars:     'log(PLE)' , 'DYN'          ,
-  geosgcm_fcst.levels:     1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1,
-  geosgcm_fcst.fields:    'PHIS'     , 'AGCM'         ,
-                          'SLP'      , 'DYN'          ,
-                          'U;V'      , 'DYN'          ,
-                          'T'        , 'DYN'          ,
-                          'PS'       , 'DYN'          ,
-                          'ZLE'      , 'DYN'          , 'H'   ,
-                          'OMEGA'    , 'DYN'          ,
-                          'Q'        , 'MOIST'        , 'QV'  ,
-                          'RH2'      , 'MOIST'        , 'RH'  ,
-                          ::
+  geosgcm_fcst.template:      '%y4%m2%d2_%h2%n2z.nc4' ,
+  geosgcm_fcst.archive:       '%c/Y%y4' ,
+  geosgcm_fcst.format:        'CFIO' ,
+  geosgcm_fcst.deflate:        1 ,
+  geosgcm_fcst.grid_label:     PC${HIST_IM}x${HIST_JM}-DC ,
+  geosgcm_fcst.regrid_method: 'BILINEAR' ,
+  geosgcm_fcst.frequency:      060000 ,
+  geosgcm_fcst.duration:       000000 ,
+  geosgcm_fcst.vscale:         100.0 ,
+  geosgcm_fcst.vunit:         'hPa' ,
+  geosgcm_fcst.vvars:         'log(PLE)' , 'DYN'          ,
+  geosgcm_fcst.levels:         1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1,
+  geosgcm_fcst.fields:        'PHIS'   , 'AGCM'       ,
+                              'SLP'    , 'DYN'        ,
+                              'U;V'    , 'DYN'        ,
+                              'T'      , 'DYN'        ,
+                              'PS'     , 'DYN'        ,
+                              'ZLE'    , 'DYN'        , 'H'   ,
+                              'OMEGA'  , 'DYN'        ,
+                              'Q'      , 'MOIST'      , 'QV'  ,
+                              'QITOT'  , 'AGCM'       , 'QI'  ,
+                              'QLTOT'  , 'AGCM'       , 'QL'  ,
+                              'RH2'    , 'MOIST'      , 'RH'  ,
+                              'O3'     , 'CHEMISTRY'  ,
+                               ::
 
-  geosgcm_surf.template:  '%y4%m2%d2_%h2%n2z.nc4',
-  geosgcm_surf.archive:   '%c/Y%y4',
-  geosgcm_surf.format:    'CFIO',
-  geosgcm_surf.mode:      'time-averaged',
-  geosgcm_surf.frequency:  030000,
-  geosgcm_surf.duration:   000000,
-  geosgcm_surf.grid_label: PC${HIST_IM}x${HIST_JM}-DC,
-  geosgcm_surf.fields:    'PHIS'     , 'AGCM'         ,
-                          'SLP'      , 'DYN'          ,
-                          'PS'       , 'DYN'          ,
-                          'DMDTDYN'  , 'DYN'          ,
-                          'TQV'      , 'AGCM'         ,
-                          'TQL'      , 'AGCM'         ,
-                          'TQI'      , 'AGCM'         ,
-                          'TPREC'    , 'MOIST'        ,
-                          'CN_PRCP'  , 'MOIST'        , 'CNPRCP' ,
-                          'LS_PRCP'  , 'MOIST'        , 'LSPRCP' ,
-                          'AN_PRCP'  , 'MOIST'        , 'ANPRCP' ,
-                          'CLDTT'    , 'SOLAR'        ,
-                          'CLDLO'    , 'SOLAR'        ,
-                          'CLDMD'    , 'SOLAR'        ,
-                          'CLDHI'    , 'SOLAR'        ,
-                          'OSR'      , 'SOLAR'        ,
-                          'SLRSF'    , 'SOLAR'        , 'SWGDWN'    ,
-                          'OLR'      , 'IRRAD'        ,
-                          'LWS'      , 'IRRAD'        ,
-                          'EVAP'     , 'SURFACE'      ,
-                          'TS'       , 'SURFACE'      ,
-                          'T2M'      , 'SURFACE'      ,
-                          'Q2M'      , 'SURFACE'      , 'QV2M'    ,
-                          'U10M;V10M', 'SURFACE'      ,
-                          'ZPBL'     , 'TURBULENCE'   ,  'PBLH'   ,
-                          ::
-
-  prog.eta.template:      '%y4%m2%d2_%h2%n2z.nc4',
-  prog.eta.archive:       '%c/Y%y4',
-  prog.eta.format:        'CFIO',
-  prog.eta.deflate:        1,
-  prog.eta.nbits:          12,
+  prog.eta.template:      '%y4%m2%d2_%h2%n2z.nc4' ,
+  prog.eta.archive:       '%c/Y%y4' ,
+  prog.eta.format:        'CFIO' ,
+  prog.eta.deflate:        1 ,
+  prog.eta.grid_label:     PC${HIST_IM}x${HIST_JM}-DC ,
+  prog.eta.regrid_method: 'BILINEAR' ,
+  prog.eta.mode:          'instantaneous' ,
   prog.eta.frequency:      060000 ,
   prog.eta.duration:       060000 ,
   prog.eta.ref_time:       000000 ,
-  prog.eta.mode:          'instantaneous' ,
-  prog.eta.grid_label:     PC${HIST_IM}x${HIST_JM}-DC,
   prog.eta.fields:        'PHIS'       , 'AGCM'       , 'phis'       ,
                           'SGH'        , 'AGCM'       , 'hs_stdv'    ,
                           'TS'         , 'SURFACE'    , 'ts'         ,
@@ -338,28 +307,7 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
                           'QLTOT'      , 'AGCM'       , 'qltot'      ,
                           'QRTOT'      , 'MOIST'      , 'qrtot'      ,
                           'QSTOT'      , 'MOIST'      , 'qstot'      ,
-                          ::
-
-  tavg1_2d_flx_Mx.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
-  tavg1_2d_flx_Mx.archive:     '%c/Y%y4',
-  tavg1_2d_flx_Mx.format:      'CFIO' ,
-  tavg1_2d_flx_Mx.mode:        'time-averaged' ,
-  tavg1_2d_flx_Mx.descr:       '2d,1-Hourly,Time-Averaged,Native Cubed-Sphere on Single-Level,Diagnostics' ,
-  tavg1_2d_flx_Mx.nbits:       12 ,
-  tavg1_2d_flx_Mx.chunksize:   ${AGCM_IM} ${AGCM_JM} 1 1,
-  tavg1_2d_flx_Mx.cubeFormat:  0
-  tavg1_2d_flx_Mx.deflate:     1,
-  tavg1_2d_flx_Mx.frequency:   010000 ,
-  tavg1_2d_flx_Mx.duration:    010000 ,
-  tavg1_2d_flx_Mx.fields:       'AN_PRCP'  , 'MOIST'       , 'PRECANV' ,
-                                'CN_PRCP'  , 'MOIST'       , 'PRECCON' ,
-                                'LS_PRCP'  , 'MOIST'       , 'PRECLSC' ,
-                                'TPREC'    , 'MOIST'       , 'PRECTOT' ,
-                                'OSR'      , 'SOLAR'       , 'SWTUP'   ,
-                                'OLR'      , 'IRRAD'       , 'LWTUP'   ,
-                                'TQV'      , 'AGCM'        ,
-                                'ZPBL'     , 'TURBULENCE'  ,  'PBLH'   ,
-                                ::
+                           ::
 
 _EOF_
 
@@ -549,7 +497,8 @@ end
      if( $CYCLED == .TRUE. ) then
           /bin/ln -s $EXPDIR/restarts/*${nymd0}_${hour}*z.*  .
           $GEOSBIN/stripname ${EXPID}.
-          $GEOSBIN/stripname .e${nymd0}_${hour}\*
+          $GEOSBIN/stripname _checkpoint.${nymd0}_${hour}\* _rst  # Format if written from RECORD_FREQUENCY
+          $GEOSBIN/stripname .e${nymd0}_${hour}\*                 # Format if decorated by gcm_run.j
 
      else if( $FCST_TYPE == 'Exact' | $FCST_TYPE == 'Regular' ) then
           /bin/ln -s ${ANA_LOCATION}/rs/Y$year/M$month/${ANA_EXPID}.rst.${nymd0}_${hour}z.tar  .
@@ -626,19 +575,6 @@ endif
 
 set yearc = `echo $nymdc | cut -c1-4`
 set yearf = `echo $nymdf | cut -c1-4`
-
-# For Non-Reynolds SST, Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
-# --------------------------------------------------------------------------------------------------
-if( @OCEANtag != DE0360xPE0180 ) then
-    if( $yearf > $yearc ) then
-       @ yearf = $yearc + 1
-       @ nymdf = $yearf * 10000 + 0101
-        set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-        set newstring = "END_DATE: $nymdf $nhmsf"
-        /bin/mv CAP.rc CAP.tmp
-        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-    endif
-endif
 
 # Which ExtData are we using
 set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.' CAP.rc | wc -l`
@@ -773,7 +709,7 @@ endif
 if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
   echo "Saltwater internal state is already split, good to go!"
 else
- if ( ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) && ( $counter == 1 ) ) then
+ if ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) then
 
    echo "Found Saltwater internal state. Splitting..."
 

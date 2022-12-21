@@ -32,8 +32,8 @@ setenv GEOSBIN          @GEOSBIN
 setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
-source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+@NATIVE_BUILD source $GEOSBIN/g5_modules
+@NATIVE_BUILD setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -274,7 +274,6 @@ set NUM_SGMT  = `grep '^\s*NUM_SGMT:'     CAP.rc | cut -d: -f2`
 set FSEGMENT  = `grep '^\s*FCST_SEGMENT:' CAP.rc | cut -d: -f2`
 set USE_SHMEM = `grep '^\s*USE_SHMEM:'    CAP.rc | cut -d: -f2`
 
-
 #######################################################################
 #              Create HISTORY Collection Directories
 #######################################################################
@@ -338,8 +337,6 @@ cat << _EOF_ > $FILE
 @COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 @COUPLED/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
 @COUPLED/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MOM5#/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
-@MOM6#/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -430,10 +427,93 @@ chmod +x linkbcs
 cp  linkbcs $EXPDIR
 
 #######################################################################
-#                    Get Executable and RESTARTS
+#                  Setup executable
 #######################################################################
 
-cp $EXPDIR/GEOSgcm.x .
+@SINGULARITY_BUILD #######################################################################
+@SINGULARITY_BUILD #             Settings for Singularity - EXPERIMENTAL
+@SINGULARITY_BUILD #######################################################################
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Note these have only really been tested on Discover
+@SINGULARITY_BUILD # and are not guaranteed to work on other systems
+
+@SINGULARITY_BUILD # Based on work on discover, to run you need to load the same compiler
+@SINGULARITY_BUILD # and MPI to match those in the container. For example, if your container was
+@SINGULARITY_BUILD # built with:
+@SINGULARITY_BUILD #   GNU 10.3.0
+@SINGULARITY_BUILD #   Intel Fortran 2021.6.0 (aka Intel oneAPI 2022.1.0)
+@SINGULARITY_BUILD #   Intel MPI 2021.6.0 (aka Intel oneAPI 2022.1.0)
+@SINGULARITY_BUILD # then you would need to load:
+@SINGULARITY_BUILD #   source /usr/share/modules/init/csh
+@SINGULARITY_BUILD #   module purge
+@SINGULARITY_BUILD #   module load comp/gcc/10.3.0
+@SINGULARITY_BUILD #   module load comp/intel/2021.6.0
+@SINGULARITY_BUILD #   module load mpi/impi/2021.6.0
+@SINGULARITY_BUILD #
+@SINGULARITY_BUILD # And then also append ${GEOSDIR}/lib to LD_LIBRARY_PATH
+@SINGULARITY_BUILD #   setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+
+@SINGULARITY_BUILD # Also look below for suggestions on Intel MPI, OpenMPI and MPT environment variables
+@SINGULARITY_BUILD #
+@SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
+@SINGULARITY_BUILD setenv SINGULARITY_SANDBOX ""
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
+@SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
+@SINGULARITY_BUILD    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
+@SINGULARITY_BUILD    exit 1
+@SINGULARITY_BUILD endif
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
+@SINGULARITY_BUILD echo "We are running under Singularity"
+@SINGULARITY_BUILD echo ""
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Load the Singularity module
+@SINGULARITY_BUILD module load singularity
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
+@SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
+@SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # If you are running from a different location, you will need to change the bind path
+@SINGULARITY_BUILD # Also, note that often $NOBACKUP is, say, /discover/nobackup/username, but gcm_setup
+@SINGULARITY_BUILD # will set GEOSDIR, GEOSBIN, etc. above to something like /gpfsm/dnbXX/username which
+@SINGULARITY_BUILD # is the "real" physical path that /discover/nobackup/username is a symlink to.
+@SINGULARITY_BUILD # You might need to change all the gpfsm paths to nobackup paths.
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Set a variable to encapsulate all Singularity details
+@SINGULARITY_BUILD setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD # Detect if GEOSgcm.x is in the experiment directory
+@SINGULARITY_BUILD if (-e $EXPDIR/GEOSgcm.x) then
+@SINGULARITY_BUILD    echo "Found GEOSgcm.x in $EXPDIR"
+@SINGULARITY_BUILD
+@SINGULARITY_BUILD    # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
+@SINGULARITY_BUILD    # force the use of GEOSgcm.x in the installation directory
+@SINGULARITY_BUILD    if( $SINGULARITY_SANDBOX != "" ) then
+@SINGULARITY_BUILD       echo "NOTE: Testing has shown Singularity only works when running with"
+@SINGULARITY_BUILD       echo "      the GEOSgcm.x executable directly from the installation bin directory"
+@SINGULARITY_BUILD       echo ""
+@SINGULARITY_BUILD       echo "      So, we will *ignore* the local GEOSgcm.x and "
+@SINGULARITY_BUILD       echo "      instead use $GEOSBIN/GEOSgcm.x"
+@SINGULARITY_BUILD       echo ""
+@SINGULARITY_BUILD    else
+@SINGULARITY_BUILD       echo "Using GEOSgcm.x from $GEOSBIN"
+@SINGULARITY_BUILD    endif
+@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+@SINGULARITY_BUILD else
+@SINGULARITY_BUILD    echo "Using GEOSgcm.x from $GEOSBIN"
+@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+@SINGULARITY_BUILD endif
+
+@NATIVE_BUILD echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+@NATIVE_BUILD echo ""
+@NATIVE_BUILD /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
+
+#######################################################################
+#                         Get RESTARTS
+#######################################################################
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -712,7 +792,6 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -742,7 +821,8 @@ else
 
    # Run the script
    # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @SINGULARITY_BUILD $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   @NATIVE_BUILD $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -780,7 +860,8 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -864,7 +945,8 @@ else
    set IOSERVER_EXTRA   = ""
 endif
 
-@OCEAN_PRELOAD $RUN_CMD $TOTAL_PES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@NATIVE_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
