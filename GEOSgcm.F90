@@ -13,8 +13,7 @@
 program GEOS5_Main
    use MPI
    use MAPL
-!!$   use GEOS_GcsGridCompMod, only:  ROOT_SetServices => SetServices
-   !use GEOS_GcmGridCompMod, only:  ROOT_SetServices => SetServices
+   use GEOS_GcmGridCompMod, only:  ROOT_SetServices => SetServices
    implicit none
 !EOP
 
@@ -29,9 +28,9 @@ program GEOS5_Main
    cli = MAPL_FlapCLI(description = 'GEOS AGCM', &
                                      authors     = 'GMAO')
    cap_options = MAPL_CapOptions(cli)
-   !cap = MAPL_Cap('GCM', ROOT_SetServices, cap_options = cap_options)
+   cap = MAPL_Cap('GCM', ROOT_SetServices, cap_options = cap_options)
 
-   !call cap%run(_RC)
+   call cap%run(_RC)
 
 end program GEOS5_Main
    
