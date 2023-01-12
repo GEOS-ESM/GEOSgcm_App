@@ -51,12 +51,6 @@ ORBIT_ANAL2B: .TRUE.
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
 @GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
-@GFDL_1M_JASON_UW: .FALSE.
-@GFDL_1M_TURBULENCE_JASON_TUNING: .TRUE.
-@GFDL_1M_CNV_FRACTION_MIN: 0.00
-@GFDL_1M_CNV_FRACTION_MAX: 4000.00
-@GFDL_1M_CNV_FRACTION_EXP: 0.25
-@GFDL_1M_TAU_DEEP: 7200.0
 @GFDL_1M_USE_GF2020: 1
 ###########################################################
 
@@ -98,9 +92,7 @@ NCAR_EFFGWBKG: 0.00
 GEOS_EFFGWORO: 0.25
 NCAR_EFFGWORO: 0.00
 NCAR_NRDG: 0.0
-NCAR_ORO_TNDMAX: 80.0
 BELJAARS_EFF_FACTOR: 0.0
-BELJAARS_LIMITER: 0.0
 TURBULENCE_C_B: 6.0
 ###########################################################
 
@@ -298,10 +290,10 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   ANA EXPID and LOCATION used for REPLAY
 #   --------------------------------------
-#X_EXP  REPLAY_ANA_EXPID:    @X_EXPID
-#X_EXP  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@X_EXPID
+#X_EXP  REPLAY_ANA_EXPID:    @ANA_EXPID
+#X_EXP  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@ANA_EXPID
 #X_EXP  REPLAY_MODE: Regular
-#X_EXP  REPLAY_FILE: ana/Y%y4/M%m2/@X_EXPID.asm.eta.%y4%m2%d2_%h2%n2z.nc4
+#X_EXP  REPLAY_FILE: ana/Y%y4/M%m2/@ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
 
 #   Regular REPLAY to ERA5
 #   ----------------------
