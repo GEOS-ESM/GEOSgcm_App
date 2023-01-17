@@ -25,7 +25,6 @@ AGCM_GRIDNAME: @AGCM_GRIDNAME
 DYCORE: @DYCORE
 #FV3_CONFIG: MONOTONIC
 AdvCore_Advection: 0
-@RAYLEIGH_TAU1
 ###########################################################
 
 ###########################################################
@@ -51,7 +50,9 @@ ORBIT_ANAL2B: .TRUE.
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
 @GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
-@GFDL_1M_USE_GF2020: 1
+@GFDL_1M_CNV_FRACTION_MIN: 0.0
+@GFDL_1M_CNV_FRACTION_MAX: 1500.00
+@GFDL_1M_CNV_FRACTION_EXP: 2.0
 ###########################################################
 
 ###########################################################
@@ -71,6 +72,7 @@ SHALLOW_OPTION: UW
 # convection scheme options
 # ----------------------------------------
 CONVPAR_OPTION: GF
+#USE_GF2020: 1
 # Convective plumes to be activated (1 true, 0 false)
 DEEP: 1
 SHALLOW: 0
@@ -87,13 +89,6 @@ CLOSURE_CONGESTUS:3
 ###########################################################
 # GWD Parameterization
 # --------------------
-GEOS_EFFGWBKG: 0.125
-NCAR_EFFGWBKG: 0.00
-GEOS_EFFGWORO: 0.25
-NCAR_EFFGWORO: 0.00
-NCAR_NRDG: 0.0
-BELJAARS_EFF_FACTOR: 0.0
-TURBULENCE_C_B: 6.0
 ###########################################################
 
 ###########################################################
