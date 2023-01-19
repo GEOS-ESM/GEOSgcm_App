@@ -95,7 +95,7 @@ loggers:
        level: WARNING
        root_level: INFO
 
-   MAPL.PROF:
+   MAPL.profiler:
        handlers: [console_plain]
        propagate: FALSE
        level: WARNING
