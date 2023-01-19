@@ -623,6 +623,15 @@ if( ${EMISSIONS} == AMIP_EMISSIONS) then
 
 endif
 
+if( $AGCM_LM  != 72 ) then
+    set files = `/bin/ls  *.yaml`
+    foreach file ($files)
+      echo $file
+      cp $file dummy
+      cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
+    end
+endif
+
 # Rename big ExtData files that are not needed
 # --------------------------------------------
 set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
