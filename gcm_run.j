@@ -245,6 +245,7 @@ cd $SCRDIR
 /bin/rm -rf *
                              cp -f  $EXPDIR/RC/* .
                              cp     $EXPDIR/cap_restart .
+                             cp     $EXPDIR/parcels.nc4 .
                              cp -f  $HOMDIR/*.rc .
                              cp -f  $HOMDIR/*.nml .
                              cp -f  $HOMDIR/*.yaml .
