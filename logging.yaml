@@ -1,12 +1,12 @@
 schema_version: 1
 
-###############################      
+###############################
 locks:
    mpi:
       class: MpiLock
       comm:  MPI_COMM_WORLD
 
-###############################      
+###############################
 formatters:
    plain:
       class: Formatter
@@ -25,9 +25,7 @@ formatters:
       class: Formatter
       format: '(%(i)i3.3,%(j)i3.3): %(level_name)'
 
-
-
-###############################      
+###############################
 handlers:
 
    console:
@@ -35,14 +33,13 @@ handlers:
       formatter: basic
       unit: OUTPUT_UNIT
       level: INFO
- 
+
    console_plain:
       class: streamhandler
       formatter: plain
       unit: OUTPUT_UNIT
       level: INFO
- 
-      
+
    warnings:
       class:  FileHandler
       filename: warnings_and_errors.log
@@ -69,17 +66,17 @@ handlers:
       class: MpiFileHandler
       formatter: basic
       filename:  debug_%(rank)i3.3~.log
-      comm: MPI_COMM_WORLD      
+      comm: MPI_COMM_WORLD
       rank_prefix: rank
       level: DEBUG
 
-###############################      
+###############################
 root:
    handlers: [warnings,errors,console]
    level: WARNING
    root_level: WARNING
 
-###############################      
+###############################
 loggers:
 
    errors:
@@ -89,7 +86,7 @@ loggers:
    CAP:
        level: WARNING
        root_level: INFO
-       
+
    MAPL:
        handlers: [mpi_shared]
        level: WARNING
@@ -102,7 +99,7 @@ loggers:
        root_level: INFO
 
   # Note: When enabling another logger, make sure
-  #       indentation matches that of the above 
+  #       indentation matches that of the above
   #       loggers!
 
   # MAPL.base:
