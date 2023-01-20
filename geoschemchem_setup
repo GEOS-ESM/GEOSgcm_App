@@ -2508,7 +2508,7 @@ if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 # Modify RC Files for LM
 # ----------------------
 if( $AGCM_LM != 72 ) then
-    set files = `ls -1 $EXPDIR/RC/*.rc`
+    set files = `ls -1 $EXPDIR/RC/*.rc $EXPDIR/RC/*.yaml`
     foreach file ($files)
        /bin/rm -f    $EXPDIR/RC/dummy
        /bin/mv $file $EXPDIR/RC/dummy
