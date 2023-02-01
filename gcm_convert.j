@@ -20,6 +20,8 @@ limit stacksize unlimited
 
 @SETENVS
 
+@MPT_SHEPHERD
+
 # Establish safe default number of OpenMP threads
 # -----------------------------------------------
 setenv OMP_NUM_THREADS 1
@@ -509,6 +511,9 @@ set LOGFILE = "$CNVDIR/GEOSgcm.log"
 # Assume gcm_setup set these properly for the local platform
 /bin/rm -f EGRESS
 @SETENVS
+
+@MPT_SHEPHERD
+
 @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
 if( -e EGRESS ) then
    set rc = 0

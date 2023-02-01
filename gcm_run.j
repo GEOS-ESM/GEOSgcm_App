@@ -885,6 +885,8 @@ endif
 
 @SETENVS
 
+@MPT_SHEPHERD
+
 # Run bundleParser.py
 #---------------------
 python bundleParser.py

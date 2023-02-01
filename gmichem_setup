@@ -479,6 +479,7 @@ endif
 endif
 
 set CLDMICRO = "1MOMENT"
+set MPT_SHEPHERD = ""
 if( $OGCM == TRUE ) then
 
     set COUPLED   = ""
@@ -2039,6 +2040,10 @@ cat > $HOMDIR/SETENV.commands << EOF
 #setenv MPI_XPMEM_ENABLED yes
 #unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 #setenv MPI_LAUNCH_TIMEOUT 40
+# Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
+# to run. We believe this is due to LD_PRELOAD. For now we only set
+# this for coupled runs.
+#setenv MPI_SHEPHERD true
 EOF
 
 else
@@ -2097,6 +2102,13 @@ cat > $HOMDIR/SETENV.commands << EOF
    #setenv FOR_IGNORE_EXCEPTIONS false
 
 EOF
+
+# Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
+# to run. We believe this is due to LD_PRELOAD. For now we only set
+# this for coupled runs.
+if( $OGCM == TRUE ) then
+   set MPT_SHEPHERD = "setenv MPI_SHEPHERD true"
+endif
 
 else if( $MPI == intelmpi ) then
 
@@ -2200,6 +2212,7 @@ s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
 s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
 s?@NATIVE_BUILD?$NATIVE_BUILD?g
+s?@MPT_SHEPHERD?$MPT_SHEPHERD?g
 
 s?@CHECKPOINT_TYPE?default?g
 
