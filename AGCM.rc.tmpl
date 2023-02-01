@@ -536,9 +536,9 @@ MOIST_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 
 # Boot-Strapable AGCM Model Restart Files
 # ---------------------------------------
-AIAU_IMPORT_RESTART_FILE:               aiau_import_rst
-AIAU_IMPORT_CHECKPOINT_FILE:            aiau_import_checkpoint
-AIAU_IMPORT_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+##AIAU_IMPORT_RESTART_FILE:               aiau_import_rst
+##AIAU_IMPORT_CHECKPOINT_FILE:            aiau_import_checkpoint
+##AIAU_IMPORT_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
 
 GWD_IMPORT_RESTART_FILE:                gwd_import_rst
 GWD_IMPORT_CHECKPOINT_FILE:             gwd_import_checkpoint
@@ -660,9 +660,9 @@ SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 >>>COUPLED<<<SEAICE_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
 >>>COUPLED<<<SEAICE_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
 
->>>COUPLED<<<SEAICE_INTERNAL_RESTART_FILE:           seaice_internal_rst
->>>COUPLED<<<SEAICE_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
->>>COUPLED<<<SEAICE_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
+>>>COUPLED<<<##SEAICE_INTERNAL_RESTART_FILE:           seaice_internal_rst
+>>>COUPLED<<<##SEAICE_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
+>>>COUPLED<<<##SEAICE_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
 
 >>>COUPLED<<<OCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
 >>>COUPLED<<<OCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
@@ -799,7 +799,7 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 >>>COUPLED<<<USE_DATASEA:0
 >>>COUPLED<<<OCEAN_NAME: @OCEAN_NAME
 >>>COUPLED<<<USE_DATASEAICE:0
->>>COUPLED<<<steady_state_ocean: 0
+>>>COUPLED<<<steady_state_ocean: 1
 >>>COUPLED<<<OCEAN_PICE_SCALING: 0.0
 
 # For running MOM5 coupled model in dual ocean mode, uncomment three lines below, 
