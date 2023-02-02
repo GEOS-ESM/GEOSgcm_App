@@ -10,6 +10,7 @@
 #@RUN_Q
 #@BATCH_GROUP
 #@BATCH_JOINOUTERR
+#PBS -W umask=0022
 #@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
@@ -340,7 +341,7 @@ setenv EMISSIONS @EMISSIONS
 
 >>>MOM5<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
 >>>MOM6<<<setenv GRIDDIR  @COUPLEDIR/MOM6/@ATMOStag_@OCEANtag
->>>MIT<<<setenv GRIDDIR  @COUPLEDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
+>>>MIT<<<setenv GRIDDIR /nobackupp18/afahad/GEOSMITgcmFiles/GRIDDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM} 
 >>>COUPLED<<<#setenv GRIDDIR2  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 >>>COUPLED<<<setenv BCTAG `basename $GRIDDIR`
 >>>DATAOCEAN<<<setenv BCTAG `basename $BCSDIR`
@@ -354,9 +355,9 @@ cat << _EOF_ > $FILE
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
->>>COUPLED<<</bin/ln -sf $GRIDDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
->>>COUPLED<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
->>>MIT<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Runoff.bin   runoff.bin
+>>>COUPLED<<</bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/SEAWIFS_KPAR_mon_clim.data SEAWIFS_KPAR_mon_clim.data
+>>>COUPLED<<</bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/CF0090x6C_LL5400xLL0015-Pfafstetter.til   tile.data
+>>>MIT<<</bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/CF0090x6C_LL5400xLL0015-Pfafstetter.TRN   runoff.bin
 >>>MIT<<</bin/ln -sf $GRIDDIR/mit.ascii
 >>>MOM5<<</bin/ln -sf $GRIDDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 >>>MOM5<<</bin/ln -sf $GRIDDIR/MAPL_Tripolar.nc .
@@ -365,6 +366,7 @@ cat << _EOF_ > $FILE
 >>>COUPLED<<</bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 >>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 >>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+/bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -1044,18 +1046,18 @@ foreach collection ( $collections )
    /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
 end
 
->>>COUPLED<<<# MOM-Specific Output Files
->>>COUPLED<<<# -------------------------
->>>MOM5<<< set dsets="ocean_month"
->>>MOM6<<< set dsets="ocean_state prog_z sfc_ave forcing"
->>>COUPLED<<< foreach dset ( $dsets )
->>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
->>>COUPLED<<< if($num != 0) then
->>>COUPLED<<<    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
->>>COUPLED<<<    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
->>>COUPLED<<< endif
->>>COUPLED<<< end
->>>COUPLED<<<
+##>>>COUPLED<<<# MOM-Specific Output Files
+##>>>COUPLED<<<# -------------------------
+##>>>MOM5<<< set dsets="ocean_month"
+##>>>MOM6<<< set dsets="ocean_state prog_z sfc_ave forcing"
+##>>>COUPLED<<< foreach dset ( $dsets )
+##>>>COUPLED<<< set num = `/bin/ls -1 $dset.nc | wc -l`
+##>>>COUPLED<<< if($num != 0) then
+##>>>COUPLED<<<    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+##>>>COUPLED<<<    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+##>>>COUPLED<<< endif
+##>>>COUPLED<<< end
+##>>>COUPLED<<<
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
