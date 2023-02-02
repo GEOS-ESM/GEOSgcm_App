@@ -23,7 +23,7 @@ limit stacksize unlimited
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################
-
+setenv FOR_IGNORE_EXCEPTIONS false
 setenv ARCH `uname`
 
 setenv SITE             @SITE
