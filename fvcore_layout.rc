@@ -36,11 +36,12 @@
   vr_max = 12.
   qi_lim = 1.
   @GFDL_PROG_CCN
+  do_evap = .true.
+  do_subl = .true.
   do_qa = .false.
-  fast_sat_adj = .true.
   sat_adj0 = 0.75
   tau_i2s  = 900.
-  tau_l2v  = 150.
+  tau_l2v  = 300.
   tau_i2v  = 300.
   tau_g2v  = 900.
   tau_revp = 300.
