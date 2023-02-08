@@ -868,7 +868,7 @@ if( $USE_IOSERVER == 1 ) then
    endif
 
    # Now we divide that number of collections by the ioserver nodes
-   set NUM_BACKEND_PES = `echo "scale=1;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
+   set NUM_BACKEND_PES = `echo "scale=6;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
 
    # Finally multigroup requires at least two backend pes
    if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
