@@ -721,12 +721,14 @@ SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
 # GIGATRAJ RUN CONFIG
 # -------------------------
-GIGATRAJ_INTERNAL_RESTART_FILE:        gigatraj_internal_rst
+GIGATRAJ_INTERNAL_RESTART_FILE:         gigatraj_internal_rst
 GIGATRAJ_INTERNAL_CHECKPOINT_FILE:      gigatraj_internal_checkpoint
 GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      @CHECKPOINT_TYPE
 GIGATRAJ_PARCELS_FILE:                  parcels.nc4
 GIGATRAJ_REBALANCE_MINUTES:             15
 GIGATRAJ_OUTPUT_MINUTES:                15
+# using ";" to separate fields
+GIGATRAJ_EXTRA_FIELDS:                  T;TH
 
 # Boundary Datasets
 # -----------------
