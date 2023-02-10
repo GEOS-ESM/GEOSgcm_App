@@ -46,8 +46,8 @@
   tau_revp = 150.
   tau_frz  = 300.
   rthresh  = 10.e-6 ! This is a key parameter for cloud water
-  dw_land  = 0.1
-  dw_ocean = 0.1
+  dw_land  = 0.075
+  dw_ocean = 0.200
   ql_mlt = 1.0e-4
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
@@ -59,7 +59,7 @@
   ccn_l = 300.
   ccn_o = 100.
   c_paut = 1.0
-  c_cracw = 0.8
+  c_cracw = 1.0
   use_ppm = .false.
   @GFDL_USE_CCN
   mono_prof = .true.
