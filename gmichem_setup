@@ -1541,10 +1541,10 @@ if ( $DO_IOS == TRUE ) then
    # In the calculations below, the weird bc-awk command is to round up the floating point calcs
 
    # First we calculate the number of model nodes
-   set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
    # Next the number of frontend PEs is 10% of the model PEs
-   set NUM_FRONTEND_PES=`echo "scale=1;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   set NUM_FRONTEND_PES=`echo "scale=6;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
    # Now we roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
    set NUM_HIST_COLLECTIONS=`cat $TMPHIST | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
@@ -1553,10 +1553,10 @@ if ( $DO_IOS == TRUE ) then
    @ NUM_OSERVER_PES=$NUM_FRONTEND_PES + $NUM_HIST_COLLECTIONS
 
    # Now calculate the number of oserver nodes
-   set NUM_OSERVER_NODES=`echo "scale=1;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   set NUM_OSERVER_NODES=`echo "scale=6;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
    # And then the number of backend PEs is the number of history collections divided by the number of oserver nodes
-   set NUM_BACKEND_PES=`echo "scale=1;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   set NUM_BACKEND_PES=`echo "scale=6;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
    # multigroup requires at least two backend pes
    if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
@@ -1566,7 +1566,7 @@ if ( $DO_IOS == TRUE ) then
 
 else
    # Calculate the number of model nodes
-   set NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   set NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
    set NUM_OSERVER_NODES = 0
    set NUM_BACKEND_PES   = 0
