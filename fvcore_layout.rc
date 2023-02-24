@@ -35,18 +35,17 @@
   vg_max = 12.
   vr_max = 12.
   qi_lim = 1.
-  @GFDL_PROG_CCN
   do_evap = .false.
   do_subl = .false.
   do_qa = .false.
   sat_adj0 = 0.75
-  tau_l2v  = 450.
-  tau_i2v  = 450.
+  tau_l2v  = 300.
+  tau_i2v  = 300.
   tau_revp = 450.
   tau_frz  = 450.
   tau_i2s  = 450.
-  dw_land  = 0.10
-  dw_ocean = 0.20
+  dw_land  = 0.05
+  dw_ocean = 0.10
   ql_mlt = 1.0e-4
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
@@ -54,12 +53,13 @@
   c_pgacs = 0.01
   rh_inc = 0.30
   rh_inr = 0.30
-  ccn_l = 300.
-  ccn_o = 100.
   c_paut = 1.0
   c_cracw = 1.0
   use_ppm = .false.
+  @GFDL_PROG_CCN
   @GFDL_USE_CCN
+  ccn_l = 300.
+  ccn_o = 100.
   mono_prof = .true.
   z_slope_liq  = .true.
   z_slope_ice  = .true.

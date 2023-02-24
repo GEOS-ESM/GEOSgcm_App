@@ -1118,7 +1118,7 @@ if ( "$CLDMICRO" == "MGB2_2M" ) then
 endif
 
 set GFDL_HYDRO = ".TRUE."
-set GFDL_PROG_CCN = "prog_ccn = .false."
+set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .true."
 
 # BACM_1M and GFDL do not use WSUB_NATURE, so this eliminates a regrid
