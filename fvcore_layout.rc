@@ -35,12 +35,12 @@
   vg_max = 12.
   vr_max = 12.
   qi_lim = 1.
-  do_evap = .false.
-  do_subl = .false.
+  do_evap = .true.
+  do_subl = .true.
   do_qa = .false.
   sat_adj0 = 0.75
-  tau_l2v  = 300.
-  tau_i2v  = 300.
+  tau_l2v  = 450.
+  tau_i2v  = 450.
   tau_revp = 450.
   tau_frz  = 450.
   tau_i2s  = 450.
