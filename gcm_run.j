@@ -107,7 +107,7 @@ endif
 @ MODEL_NPES = $NX * $NY
 
 set NCPUS_PER_NODE = @NCPUS_PER_NODE
-set NUM_MODEL_NODES=`echo "scale=1;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
 if ( $NCPUS != NULL ) then
 
@@ -883,6 +883,8 @@ endif
 # ----------------------------------
 
 @SETENVS
+
+@MPT_SHEPHERD
 
 # Run bundleParser.py
 #---------------------
