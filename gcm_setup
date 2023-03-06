@@ -197,6 +197,11 @@ echo "   ${C2}c720 -- 1/8  deg (${C1} 12.5    km${C2}) ${CN}"
 echo "   ${C2}c1440 - 1/16 deg (${C1}  6.25   km${C2}) ${CN}"
 echo "   ${C2}c2880 - 1/32 deg (${C1}  3.125  km${C2}) ${CN}"
 echo "   ${C2}c5760 - 1/64 deg (${C1}  1.5625 km${C2}) ${CN}"
+echo "   ${C2}         CONUS Stretched Grids                "
+echo "   ${C2}c270 -- ${C1} 13.0 -100 km${C2}) ${CN} "
+echo "   ${C2}c540 -- ${C1}  7.0 - 50 km${C2}) ${CN} "
+echo "   ${C2}c1080 - ${C1}  3.5 - 25 km${C2}) ${CN} "
+echo "   ${C2}c2160 - ${C1}  1.25- 12 km${C2}) ${CN} "
 echo "   ${C2}             DYAMOND Grids                    "
 echo "   ${C2}c768 -- 1/8  deg (${C1} 12.0    km${C2}) ${CN}"
 echo "   ${C2}c1536 - 1/16 deg (${C1}  6.0    km${C2}) ${CN}"
@@ -215,6 +220,10 @@ if( $HRCODE != 'c12'   & \
     $HRCODE != 'c1440' & \
     $HRCODE != 'c2880' & \
     $HRCODE != 'c5760' & \
+    $HRCODE != 'c270'  & \
+    $HRCODE != 'c540'  & \
+    $HRCODE != 'c1080' & \
+    $HRCODE != 'c2160' & \
     $HRCODE != 'c768'  & \
     $HRCODE != 'c1536' & \
     $HRCODE != 'c3072' ) goto HRCODE
@@ -315,6 +324,10 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c360'  | \
     $HRCODE == 'c720'  | \
     $HRCODE == 'c1440' | \
+    $HRCODE == 'c270'  | \
+    $HRCODE == 'c540'  | \
+    $HRCODE == 'c1080' | \
+    $HRCODE == 'c2160' | \
     $HRCODE == 'c768'  | \
     $HRCODE == 'c1536' | \
     $HRCODE == 'c3072' ) then
@@ -1006,6 +1019,95 @@ if( $AGCM_IM == "c5760" ) then
      set USE_SHMEM = 1
      set DEF_IOS_NDS = 4
 endif
+# CONUS Stretched Grids
+if( $AGCM_IM == "c270" ) then
+     set       DT = 225
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 270
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 9
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF270x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c540" ) then
+     set       DT = 150
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 540
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 18
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF540x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c1080" ) then
+     set       DT = 75
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 1080
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 36
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF1080x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c2160" ) then
+     set       DT = 60
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set AGCM_IM  = 2160
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 72
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF2160x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
 # DYAMOND Resolutions
 if( $AGCM_IM == "c768" ) then
      set       DT = 180
@@ -1119,7 +1221,7 @@ endif
 
 set GFDL_HYDRO = ".TRUE."
 set GFDL_PROG_CCN = "prog_ccn = .true."
-set GFDL_USE_CCN  = "use_ccn = .false."
+set GFDL_USE_CCN  = "use_ccn = .true."
 
 # BACM_1M and GFDL do not use WSUB_NATURE, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
