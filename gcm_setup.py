@@ -1,52 +1,66 @@
 # Required libraries
 import os
+import sys
 # NOTE: this script depends on questionary
-# pip install questionary
 import questionary
 
 # Testing libraries
 import pdb
-   
-    # #!/bin/tcsh -f
+import unittest
 
-    # #######################################################################
-    # #                            Define Colors
-    # #         Note:  For No Colors, set C1 and C2 to NONE
-    # #######################################################################
+# Debug utilities
+DEBUG = True
+def log(msg):
+    if (DEBUG):
+        print(msg)
+    return None
 
-    # set BLACK   = `tput setaf 0`
-    # set RED     = `tput setaf 1`
-    # set GREEN   = `tput setaf 2`
-    # set YELLOW  = `tput setaf 3`
-    # set BLUE    = `tput setaf 4`
-    # set MAGENTA = `tput setaf 5`
-    # set CYAN    = `tput setaf 6`
-    # set WHITE   = `tput setaf 7`
-    # set RESET   = `tput sgr0`
-    # set BOLD    = `tput bold`
-    # set COLORS  = `echo $BLACK $RED $GREEN $YELLOW $BLUE $MAGENTA $CYAN $WHITE $RESET`
 
-# Define dictionary of name-path pairs for reference
-pathdict = {
-    'HOME' : os.path.expanduser( '~' )
-}
+# Text decoration
+class textdecor:
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+    NEWLINE = '\n'
+    RESET = '\033[0m'
 
-#   Check if .GCMSETUP is in home directory
-#   
+    def decoratepath(path):
+        return textdecor.BLUE + textdecor.BOLD + path + textdecor.RESET
+    
+    def decorateexe(exe):
+        return textdecor.GREEN + textdecor.BOLD + exe + textdecor.RESET
 
-    # if( -e $HOME/.GCMSETUP ) then
-    #      set GCMSETUPinfo = `cat $HOME/.GCMSETUP`
-    #      set C1 = $GCMSETUPinfo[1]
-    #      set C2 = $GCMSETUPinfo[2]
-    # else
-    #      set C1 = $RED
-    #      set C2 = $BLUE
-    # endif
-    #      set CN = $RESET
+# Functions to display misconfiguration messages to the user
+def raiseuserexception(msg):
+    print(msg)
+# log(raiseuserexception('Test user exception'))
 
-    # #######################################################################
-    # #                     Build Directory Locations
-    # #######################################################################
+def raisefatalexception(msg):
+    raiseuserexception(msg)
+    exit(1)
+# log(raisefatalexception('Test fatal exception'))
+
+
+# #######################################################################
+# #                     Build Directory Locations
+# #######################################################################
+
+pathdict = {}
+pathdict['CWD']         = os.getcwd()
+pathdict['HOME']        = os.path.expanduser( '~' )
+pathdict['GCMSETUP']    = os.path.realpath(__file__)
+pathdict['BINDIR']      = os.path.dirname(pathdict['GCMSETUP'])
+pathdict['GEOSDEF']     = os.path.dirname(pathdict['BINDIR'])
+pathdict['ETCDIR']      = os.path.join(pathdict['GEOSDEF'],'etc')
+
+# [log(key + ": " + pathdict[key])for key in pathdict]
 
     # # Set Current Working Path to gcm_setup
     # # -------------------------------------
@@ -61,13 +75,14 @@ pathdict = {
     # set GEOSDEF  = `dirname $BINDIR`
     # set ETCDIR   = ${GEOSDEF}/etc
 
-    # # Test if GEOSgcm.x is here which means you are in install directory
-    # if (! -x ${BINDIR}/GEOSgcm.x) then
-    #    echo "You are trying to run $0 in the Applications/GEOSgcm_App directory"
-    #    echo "This is no longer supported. Please run from the bin/ directory"
-    #    echo "in your installation"
-    #    exit 1
-    # endif
+# Test if GEOSgcm.x is here which means you are in install directory
+if not os.path.exists(os.path.join(pathdict['BINDIR'],'GEOSgcm.x')):
+    raisefatalexception('You are trying to run ' + \
+                            textdecor.decorateexe('gcm_setup.py') + \
+                            ' in the ' + textdecor.decoratepath(pathdict['CWD']) + \
+                            ' directory.' + textdecor.NEWLINE + 'This is no longer supported.  ' +  \
+                            'Please run from the ' + textdecor.decoratepath('bin/') + ' directory in your installation.')
+log(os.path.exists(os.path.join(pathdict['BINDIR'],'GEOSgcm.x')))
 
     # #######################################################################
     # #                   Test for Command Line Flags
@@ -289,7 +304,9 @@ pathdict = {
 
     # ASKHYDRO:
 
-# MAKEFILE Injects NAME HERE
+# # NOTE: This variable is set at CMake time depending on
+    # #       how the build was configured.
+    # #     @CFG_HYDROSTATIC@ = ("TRUE","FALSE")
     # set DEFAULT_HYDROSTATIC = @CFG_HYDROSTATIC@
 
     # echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
@@ -528,6 +545,7 @@ pathdict = {
     #     # suffix is different on Linux and macOS. This is set by configure_file()
     #     if ( $OCNMODEL == "MOM5" ) then
     #        set OCEAN_NAME="MOM"
+    #       # Make
     #        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
     #        set MOM5=""
     #        set MOM6 = "#DELETE"
