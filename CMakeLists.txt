@@ -19,8 +19,7 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   message(STATUS "*** Override with -DCMAKE_INSTALL_PREFIX=<path>.")
 endif()
 
-add_executable ( GEOSgcm.x GEOSgcm.F90)
-install(TARGETS GEOSgcm.x)
+add_subdirectory(src)
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 
