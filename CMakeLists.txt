@@ -67,6 +67,7 @@ else()
 endif()
 
 set (setup_scripts
+   gcm_setup.py
    gcm_setup
    gmichem_setup
    geoschemchem_setup
