@@ -1356,7 +1356,8 @@ echo "------------------------------------"
 echo " ${C2}0${CN} none"
 echo " ${C2}1${CN} GOCART2G (Default)"
 echo " ${C2}2${CN} GOCART.data"
-echo " ${C2}3${CN} GMI Chemistry"
+echo " ${C2}3${CN} GMICHEM"
+echo " ${C2}4${CN} CARMA"
 echo "------------------------------------"
 
 set APNum = ''
@@ -1365,7 +1366,7 @@ set APNum = $<
 if( .$APNum == . ) then
  set APNum = 1
 else
- if( $APNum < 0 | $APNum > 3 ) then
+ if( $APNum < 0 | $APNum > 4 ) then
   echo " Sorry. Invalid choice. Try again."
   goto AP
  endif
@@ -1409,7 +1410,7 @@ if($APNum == 2) then
  set GOKARTDATA = TRUE
  set GOCART          = "#"
  set HIST_GOCART     = "#DELETE"
- set USE_AEROSOL_NN  = "#USE_AEROSOL_NN"
+ set USE_AEROSOL_NN  = "USE_AEROSOL_NN"
 
  # GOCART.data uses MERRA2OX currently
  set MERRA2OX_SPECIES = ""
@@ -1418,6 +1419,17 @@ endif
 
 if($APNum == 3) then
  set AERO_PROVIDER   = GMICHEM
+
+ set GOKART2G   = FALSE
+ set GOKART     = FALSE
+ set GOKARTDATA = FALSE
+ set GOCART          = "#"
+ set HIST_GOCART     = "#DELETE"
+ set USE_AEROSOL_NN  = "USE_AEROSOL_NN"
+endif
+
+if($APNum == 4) then
+ set AERO_PROVIDER   = CARMA
 
  set GOKART2G   = FALSE
  set GOKART     = FALSE
@@ -2283,7 +2295,7 @@ s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g
 
-#.sds.. need to comment out if AERO_PROVIDER=none
+#.sds.. need to uncomment out if AERO_PROVIDER=[none, GMIDATA]
 s?^#USE_AEROSOL_NN?$USE_AEROSOL_NN?g
 
 s?@OANA_PROVIDER?GMICHEM?g
@@ -2636,6 +2648,26 @@ set file = $HOMDIR/AGCM.rc
 
 # Add GMI timestep:
 /bin/mv $file $HOMDIR/dummy
+
+#.sds... special case for AERO_PROVIDER=GMICHEM or CARMA(temporary?) set these-
+set DOIT = FALSE
+if ( $AERO_PROVIDER == 'CARMA' ) then
+  set DOIT = TRUE
+endif
+if ( $AERO_PROVIDER == 'GMICHEM' ) then
+  set DOIT = TRUE
+endif
+if ( $DOIT == 'TRUE' ) then
+  echo 'DU_OPTICS: ExtData/g5chem/x/opticsBands_DU.v15_5.RRTMG.nc' >> $HOMDIR/dummy
+  echo 'SS_OPTICS: ExtData/g5chem/x/opticsBands_SS.v3_5.RRTMG.nc' >> $HOMDIR/dummy
+  echo 'SU_OPTICS: ExtData/g5chem/x/opticsBands_SU.v2_5.RRTMG.nc' >> $HOMDIR/dummy
+  echo 'OC_OPTICS: ExtData/g5chem/x/opticsBands_OC.v1_5.RRTMG.nc' >> $HOMDIR/dummy
+  echo 'BC_OPTICS: ExtData/g5chem/x/opticsBands_BC.v1_5.RRTMG.nc' >> $HOMDIR/dummy
+  echo 'BRC_OPTICS: ExtData/g5chem/x/opticsBands_BRC.v2_5.RRTMG.nc' >> $HOMDIR/dummy
+  echo 'NI_OPTICS: ExtData/g5chem/x/opticsBands_NI.v2_5.RRTMG.nc' >> $HOMDIR/dummy
+endif
+#.sds... end
+
 cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $file
 
 ## Change from GF to RAS for now:
