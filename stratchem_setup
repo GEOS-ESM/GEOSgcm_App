@@ -388,30 +388,49 @@ if ( $SITE == 'NCCS' ) then
 
 else if ( $SITE == 'NAS' ) then
 
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}has (Haswell)${CN}"
-   echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
-   echo "   ${C2}cas (Cascade Lake)${CN}"
-   echo "   ${C2}rom (AMD Rome)${CN}"
-   echo " "
-   echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "         and Ivy Bridge are not supported by current GEOS"
-   echo " "
-   echo " NOTE 2: GEOS is non-zero-diff when running on AMD Rome"
-   echo "         compared to the other Intel nodes."
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      set MODEL = 'sky'
-   endif
+   set BUILT_ON_ROME = @BUILT_ON_ROME@
 
-   if( $MODEL != 'has' & \
-       $MODEL != 'bro' & \
-       $MODEL != 'sky' & \
-       $MODEL != 'cas' & \
-       $MODEL != 'rom' ) goto ASKPROC
+   if ( $BUILT_ON_ROME == "TRUE") then
+
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}rom (AMD Rome) (default)${CN}"
+      echo " "
+      echo " NOTE GEOS is non-zero-diff when running on AMD Rome"
+      echo "      compared to the other Intel nodes."
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'rom'
+      endif
+
+      if( $MODEL != 'rom' ) goto ASKPROC
+   else
+
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}has (Haswell)${CN}"
+      echo "   ${C2}bro (Broadwell)${CN}"
+      echo "   ${C2}sky (Skylake)${CN} (default)"
+      echo "   ${C2}cas (Cascade Lake)${CN}"
+      echo " "
+      echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
+      echo "         and Ivy Bridge are not supported by current GEOS"
+      echo " "
+      echo " NOTE 2: Due to OS differences, if you want to run on the AMD"
+      echo "         Rome nodes at NAS, you must recompile on the Rome nodes"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'sky'
+      endif
+
+      if( $MODEL != 'has' & \
+          $MODEL != 'bro' & \
+          $MODEL != 'sky' & \
+          $MODEL != 'cas' ) goto ASKPROC
+
+   endif
 
    # Some processors have weird names at NAS
    # ---------------------------------------
