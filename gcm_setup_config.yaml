@@ -1,0 +1,134 @@
+# YAML configuration file for questions in gcm_setup.py
+# 
+# You must adhere to the following question structure:
+#   - name:       'Question name' 
+#     type:       'text'                              or 
+#                 'select'                            or 
+#                 'confirm'                           or 
+#                 'path'
+#     prompt:     'Prompt shown to user'
+#     default:    'Default option text for question'  or
+#                  True/False                         (if type == confirm) or 
+#                 'runtime'                          (if default determined at runtime)
+#     options:    
+#                 'Option 1 text'   : 'Option 1 value'
+#                 'Option 2 text'   :  'Option 2 value'
+#     followup:   
+#                 name        : 'name of followup question'
+#                 conditions  : (dict of equality conditions for followup)
+#                                   ans     : ''
+#     callback:   'name of callback function'
+#
+# Fields will be ignored if they do not apply to question type.
+
+mainquestions: 
+# Experiment ID
+  - name:     'expid' 
+    type:     'text'
+    prompt:   'Enter the Experiment ID:'
+    default:  '0'
+    options:
+    followup:
+    callback: 
+
+# Experiment description
+  - name:     'expdesc'
+    type:     'text'
+    prompt:   'Enter a 1-line Experiment Description:'
+    default: 
+    options:
+    followup:
+    callback: 
+
+# Clone old experiment
+  - name:     'cloneexp'
+    type:     'confirm'
+    prompt:   'Do you wish to CLONE an old experiment?'
+    default:  False
+    options:
+    followup: 'cloneparams'
+    callback: 
+
+# Horizontal atmospheric resolution
+  - name:     'hrcode'
+    type:     'select'
+    prompt:   'Select the Atmospheric Model Horizontal Resolution Code:'
+    default:  
+    options:   
+              'Cubed Sphere:   c12  --  8   deg'          :  12
+              '                c24  --  4   deg'          :  24
+              '                c48  --  2   deg'          :  48
+              '                c90  --  1   deg'          :  90
+              '                c180 -- 1/2  deg (56-km)'  :  180
+              '                c360 -- 1/4  deg (28-km)'  :  360
+              '                c720 -- 1/8  deg (14-km)'  :  720
+              '                c1440 - 1/16 deg ( 7-km)'  :  1440
+              'DYAMOND Grids:  c768 -- 1/8  deg (12-km)'  :  768
+              '                c1536 - 1/16 deg ( 6-km)'  :  1536
+              '                c3072 - 1/32 deg ( 3-km)'  :  3072
+    followup:
+    callback: 
+
+# Vertical atmospheric resolution
+  - name:     'agcmlm'
+    type:     'select'
+    prompt:   'Select the Atmospheric Model Vertical Resolution Code:'
+    default:  'L72'
+    options:  
+      'L71'  : 71
+      'L72'  : 72
+      'L91'  : 91
+      'L127' : 127
+      'L132' : 132
+      'L137' : 137
+      'L181' : 181
+    followup: 
+#     callback: 
+
+# # Atmospheric microphysics
+#   - name:     'agcmpmp'
+#     type:     'select'
+#     prompt:   'Select the Atmospheric Model Microphysics Option:'
+#     default:  '1MOM  --  3-phase 1-moment Bacmeister et al'
+#     options:  
+#       '1MOM  --  3-phase 1-moment Bacmeister et al'                       : '1MOM'
+#       'GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory'  : 'GFDL'
+#       'MG1   --  3-phase 2-moment Morrison & Gettleman'                   : 'MG1'
+#     followup: 
+#     callback: 
+
+
+# # Hydrostatic atmosphere
+#   - name:     'usehydro'
+#     type:     'confirm'
+#     prompt:   'Use Hydrostatic Atmosphere?'
+#     options:  
+#     # TODO: REPLACE 
+#     # default:  !!bool @CFG_HYDROSTATIC@ # Force CMAKE variable to be treated as bool
+#     default:  !!bool False
+#     followup: 
+#     callback: 
+
+# # ioserver
+#   - name:     'useioserver'
+#     type:     'confirm'
+#     prompt:   'Use IOSERVER?'
+#     options:  
+#     default:  'runtime'
+#     followup: 
+#     callback: 
+
+# # processor model
+#   - name:     'procmodel'
+#     type:     'select'
+#     prompt:   'Select the Processor Model you wish to run on:'
+#     options:  
+#               'Haswell'         : 'hasw'
+#               'Skylake'         : 'sky'
+#               'Cascade Lake'    : 'cas'
+#     default:  'Skylake'
+#     followup: 
+#     callback: 
+
+# # followupquestions:
+
