@@ -105,6 +105,7 @@ else
 endif
 
 @ MODEL_NPES = $NX * $NY
+@ NCPUS_PER_NODE = @NCPUS_PER_NODE
 
 set NCPUS_PER_NODE = @NCPUS_PER_NODE
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
@@ -114,7 +115,6 @@ if ( $NCPUS != NULL ) then
    if ( $USE_IOSERVER == 1 ) then
 
       @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
-
       @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
 
       if( $TOTAL_PES > $NCPUS ) then
@@ -244,7 +244,7 @@ endif
 
 cd $SCRDIR
 /bin/rm -rf *
-                             cp -f  $EXPDIR/RC/* .
+                             /bin/ln -sf $EXPDIR/RC/* .
                              cp     $EXPDIR/cap_restart .
                              cp -f  $HOMDIR/*.rc .
                              cp -f  $HOMDIR/*.nml .
@@ -252,6 +252,14 @@ cd $SCRDIR
                              cp     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
+                             if (-z input.nml) then
+                                 echo "try cat for input.nml again"
+                                 cat fvcore_layout.rc >> input.nml
+                             endif
+                             if (-z input.nml) then
+                                 echo "input.nml is zero-length"
+                                 exit 0
+                             endif
 
                              @MOM6cp -f  $HOMDIR/MOM_input .
                              @MOM6cp -f  $HOMDIR/MOM_override .
@@ -387,6 +395,9 @@ cat << _EOF_ > $FILE
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+#@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_DYN_ave_${AGCM_IM}x${AGCM_JM}.data topo_dynave.data
+#@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_GWD_var_${AGCM_IM}x${AGCM_JM}.data topo_gwdvar.data
+#@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_TRB_var_${AGCM_IM}x${AGCM_JM}.data topo_trbvar.data
 
 @COUPLED/bin/ln -sf $ABCSDIR/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 @COUPLED/bin/ln -sf $ABCSDIR/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
@@ -536,6 +547,11 @@ else
     end
 endif
 wait
+
+# Get proper ridge scheme GWD internal restart
+# --------------------------------------------
+/bin/rm gwd_internal_rst
+/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
 
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
@@ -704,6 +720,15 @@ if( ${EMISSIONS} == AMIP_EMISSIONS ) then
         end
     endif
 
+endif
+
+if( $AGCM_LM  != 72 ) then
+    set files = `/bin/ls  *.yaml`
+    foreach file ($files)
+      echo $file
+      cp $file dummy
+      cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
+    end
 endif
 
 # Rename big ExtData files that are not needed
@@ -942,7 +967,6 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
-if ( $rc == -1 ) exit -1
 
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
