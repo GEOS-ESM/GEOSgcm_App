@@ -105,7 +105,6 @@ else
 endif
 
 @ MODEL_NPES = $NX * $NY
-@ NCPUS_PER_NODE = @NCPUS_PER_NODE
 
 set NCPUS_PER_NODE = @NCPUS_PER_NODE
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
@@ -244,7 +243,7 @@ endif
 
 cd $SCRDIR
 /bin/rm -rf *
-                             /bin/ln -sf $EXPDIR/RC/* .
+                             cp -f  $EXPDIR/RC/* .
                              cp     $EXPDIR/cap_restart .
                              cp -f  $HOMDIR/*.rc .
                              cp -f  $HOMDIR/*.nml .
@@ -337,6 +336,8 @@ cat << _EOF_ > $FILE
 @COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 @COUPLED/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
 @COUPLED/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MOM5#/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@MOM6#/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -801,6 +802,7 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
+@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
