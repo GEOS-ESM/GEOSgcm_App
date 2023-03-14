@@ -91,8 +91,6 @@ usage ()
    echo "  Optional argument: "
    echo "    --num_levels: number of levels (72, 71, 91, 132, 137, and 181 allowed)."
    echo
-   echo "    --extdata2g: run with extdata2g"
-   echo
    echo
 }
 
@@ -103,7 +101,6 @@ selected_case=NULL
 expdir=NULL
 account=NULL
 nlev=72
-use_extdata2g=FALSE
 
 while [ "${1+defined}" ]
 do
@@ -127,10 +124,6 @@ do
          shift
          nlev=$1
          shift
-         ;;
-      "--extdata2g")
-         shift
-         use_extdata2g=TRUE
          ;;
       "--help" | "-h")
          usage
@@ -430,30 +423,12 @@ mkdir -p $expdir/ExtData
 
 year=$(cat $expdir/cap_restart | cut -c1-4)
 
-if [[ $use_extdata2g == TRUE ]]
-then
-   /bin/cp $INSTALLDIR/etc/*.yaml $expdir
-   /bin/cp $INSTALLDIR/etc/AMIP/*.yaml $expdir
-   /bin/mv $expdir/WSUB_ExtData.yaml $expdir/WSUB_ExtData.tmp
-   cat $expdir/WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' \
-                                      -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > $expdir/WSUB_ExtData.yaml
-   /bin/rm $expdir/WSUB_ExtData.tmp
-else
-   if [[ "$year" -lt  "2000" ]]
-   then
-      echo "Before 2000, using AMIP.20C"
-      /bin/cp $INSTALLDIR/etc/AMIP.20C/*.rc $expdir
-   else
-      echo "After 2000, using AMIP"
-      /bin/cp $INSTALLDIR/etc/AMIP/*.rc $expdir
-   fi
-
-   # Turn off wsub as we are 1moment
-   /bin/mv $expdir/WSUB_ExtData.rc $expdir/WSUB_ExtData.tmp
-   cat $expdir/WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' \
-                                      -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > $expdir/WSUB_ExtData.rc
-   /bin/rm $expdir/WSUB_ExtData.tmp
-fi
+/bin/cp $INSTALLDIR/etc/*.yaml $expdir
+/bin/cp $INSTALLDIR/etc/AMIP/*.yaml $expdir
+/bin/mv $expdir/WSUB_ExtData.yaml $expdir/WSUB_ExtData.tmp
+cat $expdir/WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' \
+                                   -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > $expdir/WSUB_ExtData.yaml
+/bin/rm $expdir/WSUB_ExtData.tmp
 
 /bin/cp $SCMDIR/general/* $expdir
 
@@ -496,21 +471,6 @@ fi
 /bin/ln -s $CHMDIR/g5gcm $expdir/ExtData
 /bin/ln -s $CHMDIR/chemistry $expdir/ExtData
 
-if [[ $use_extdata2g == TRUE ]]
-then
-   echo "USE_EXTDATA2G: .true." >> $expdir/CAP.rc
-   EXTDATA2G=""
-else
-   if [[ -e $expdir/ExtData.rc ]]
-   then
-      /bin/rm -f  $expdir/ExtData.rc
-   fi
-
-   extdata_files=`/bin/ls -1 $expdir/*_ExtData.rc`
-   cat $extdata_files > $expdir/ExtData.rc
-   EXTDATA2G="# ONLY FOR ExtData2G"
-fi
-
 # Handle scm_run.j
 
 /bin/cp $INSTALLDIR/bin/scm_run.j $expdir
@@ -536,7 +496,6 @@ s?@BATCH_TASKS?$BATCH_TASKS?g
 s?@BATCH_TIME?$BATCH_TIME?g
 s?@BATCH_GROUP?$BATCH_GROUP?g
 s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
-s?@EXTDATA2G?$EXTDATA2G?g
 EOF
 
 $ISED -f $expdir/sedfile $expdir/scm_run.j
