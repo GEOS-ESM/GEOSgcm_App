@@ -1650,6 +1650,36 @@ endif
 # -------------
 set  RATS_PROVIDER = GMICHEM
 
+
+#######################################################################
+#                  Confirm HEARTBEAT time for the model
+#######################################################################
+
+# Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
+if( "$CLDMICRO" == "BACM_1M" ) then
+   set DT = 450
+endif
+
+ASKHB:
+echo "Enter ${C1}HEARTBEAT_DT${CN} to use"
+echo "   ${C2}1. Hit ENTER to use the recommended default of ${DT} ${CN}"
+echo "   ${C2}2. Type an integer (in seconds) to overide the default value ${CN}"
+
+set    HEARTBEAT =  $<
+if(  .$HEARTBEAT == . ) then
+   set HEARTBEAT =  $DT
+else
+   set HEARTBEAT = `echo $HEARTBEAT | awk '{print ($0+0)}'`
+   if ( ! $HEARTBEAT > 0 ) then
+      echo
+      echo "${C1}HEARTBEAT${CN} must be a valid integer using one of the options below!"
+      goto ASKHB
+   endif
+endif
+
+set DT = $HEARTBEAT
+
+
 #######################################################################
 #                    Create Desired HISTORY template
 #######################################################################
