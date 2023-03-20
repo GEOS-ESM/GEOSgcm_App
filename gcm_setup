@@ -670,6 +670,8 @@ if( $OGCM == TRUE ) then
        endif
     endif
 
+    endif
+
     set IMO = ${OGCM_IM}
     if( $IMO < 10 ) then
        set IMO = 000$IMO
