@@ -4,13 +4,13 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#@BATCH_TIME@RUN_T
-#@RUN_P
-#@BATCH_JOBNAME@RUN_N
-#@RUN_Q
-#@BATCH_GROUP
-#@BATCH_JOINOUTERR
-#@BATCH_NAME -o gcm_run.o@RSTDATE
+#SBATCH --time=06:00:00
+#SBATCH --nodes=@NODES
+#SBATCH --tasks-per-node=@TASKS_PER_NODE
+#SBATCH --job-name=@EXPID
+#SBATCH --output=@BENCH_DIR/%x.o%j
+#SBATCH --nice --no-requeue
+#SBATCH @SYSTEM
 
 #######################################################################
 #                         System Settings
@@ -32,8 +32,8 @@ setenv GEOSBIN          @GEOSBIN
 setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
-@NATIVE_BUILD source $GEOSBIN/g5_modules
-@NATIVE_BUILD setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -46,8 +46,8 @@ echo   VERSION: $GCMVER
 
 
 setenv  EXPID   @EXPID
-setenv  EXPDIR  @EXPDIR
-setenv  HOMDIR  @HOMDIR
+setenv  EXPDIR  @BENCH_DIR/@EXPID
+setenv  HOMDIR  @BENCH_DIR/@EXPID
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
@@ -68,6 +68,9 @@ if( $GCMEMIP == TRUE ) then
 else
     setenv  SCRDIR  $EXPDIR/scratch
 endif
+
+set STATS_ONLY = @STATS_ONLY
+if ($STATS_ONLY == 0) then
 
 if (! -e $SCRDIR ) mkdir -p $SCRDIR
 
@@ -90,9 +93,14 @@ set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
 
-set USE_IOSERVER      = @USE_IOSERVER
-set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:'  $HOMDIR/AGCM.rc | cut -d: -f2`
-set NUM_BACKEND_PES   = `grep '^\s*NUM_BACKEND_PES:' $HOMDIR/AGCM.rc | cut -d: -f2`
+set USE_IOSERVER   = @USE_IOSERVER
+set AGCM_IOS_NODES = `grep '^\s*IOSERVER_NODES:' $HOMDIR/AGCM.rc | cut -d: -f2`
+
+if ($USE_IOSERVER == 0) then
+   set IOS_NODES = 0
+else
+   set IOS_NODES = $AGCM_IOS_NODES
+endif
 
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
@@ -105,47 +113,41 @@ else
 endif
 
 @ MODEL_NPES = $NX * $NY
-
-set NCPUS_PER_NODE = @NCPUS_PER_NODE
-set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+@ NCPUS_PER_NODE = @TASKS_PER_NODE
 
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
 
-      @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
-      @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
+      @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($AGCM_IOS_NODES * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
+      @ NPES   = $NODES * $NCPUS_PER_NODE
 
-      if( $TOTAL_PES > $NCPUS ) then
+      if( $NPES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
          echo "--------------------------------"
          echo "Allotted  NCPUs: $NCPUS"
-         echo "Requested NCPUs: $TOTAL_PES"
+         echo "Requested NCPUs: $NPES"
          echo ""
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
          echo ""
-         echo "Specified model nodes: $NUM_MODEL_NODES"
-         echo "Specified oserver nodes: $NUM_OSERVER_NODES"
+         echo "Specified IOSERVER_NODES: $AGCM_IOS_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
    else
 
-      @ TOTAL_PES = $MODEL_NPES
+      @ NPES = $MODEL_NPES
 
-      if( $TOTAL_PES > $NCPUS ) then
+      if( $NPES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
          echo "--------------------------------"
          echo "Allotted  NCPUs: $NCPUS"
-         echo "Requested NCPUs: $TOTAL_PES"
+         echo "Requested NCPUs: $NPES"
          echo ""
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
-         echo ""
-         echo "Specified model nodes: $NUM_MODEL_NODES"
-         echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
@@ -154,7 +156,7 @@ if ( $NCPUS != NULL ) then
 else
    # This is for the desktop path
 
-   @ TOTAL_PES = $MODEL_NPES
+   @ NPES = $MODEL_NPES
 
 endif
 
@@ -251,14 +253,6 @@ cd $SCRDIR
                              cp     $GEOSBIN/bundleParser.py .
 
                              cat fvcore_layout.rc >> input.nml
-                             if (-z input.nml) then
-                                 echo "try cat for input.nml again"
-                                 cat fvcore_layout.rc >> input.nml
-                             endif
-                             if (-z input.nml) then
-                                 echo "input.nml is zero-length"
-                                 exit 0
-                             endif
 
                              @MOM6cp -f  $HOMDIR/MOM_input .
                              @MOM6cp -f  $HOMDIR/MOM_override .
@@ -272,6 +266,7 @@ set END_DATE  = `grep '^\s*END_DATE:'     CAP.rc | cut -d: -f2`
 set NUM_SGMT  = `grep '^\s*NUM_SGMT:'     CAP.rc | cut -d: -f2`
 set FSEGMENT  = `grep '^\s*FCST_SEGMENT:' CAP.rc | cut -d: -f2`
 set USE_SHMEM = `grep '^\s*USE_SHMEM:'    CAP.rc | cut -d: -f2`
+
 
 #######################################################################
 #              Create HISTORY Collection Directories
@@ -390,14 +385,15 @@ cat << _EOF_ > $FILE
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
 >>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
->>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/bcs_shared/make_bcs_inputs/land/CO2/v1/CO2_MonthlyMean_DiurnalCycle.nc4
+>>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
+>>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
 
-@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
-@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
-@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
-#@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_DYN_ave_${AGCM_IM}x${AGCM_JM}.data topo_dynave.data
-#@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_GWD_var_${AGCM_IM}x${AGCM_JM}.data topo_gwdvar.data
-#@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_TRB_var_${AGCM_IM}x${AGCM_JM}.data topo_trbvar.data
+#@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
+#@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
+#@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
+@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_DYN_ave_${AGCM_IM}x${AGCM_JM}.data topo_dynave.data
+@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_GWD_var_${AGCM_IM}x${AGCM_JM}.data topo_gwdvar.data
+@DATAOCEAN/bin/ln -sf /discover/nobackup/bmauer/gmted_topo/NCAR_TOPO_GMTED_UFS_SMOOTHING/c${AGCM_IM}/smoothed/gmted_TRB_var_${AGCM_IM}x${AGCM_JM}.data topo_trbvar.data
 
 @COUPLED/bin/ln -sf $ABCSDIR/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 @COUPLED/bin/ln -sf $ABCSDIR/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
@@ -427,93 +423,10 @@ chmod +x linkbcs
 cp  linkbcs $EXPDIR
 
 #######################################################################
-#                  Setup executable
+#                    Get Executable and RESTARTS
 #######################################################################
 
-@SINGULARITY_BUILD #######################################################################
-@SINGULARITY_BUILD #             Settings for Singularity - EXPERIMENTAL
-@SINGULARITY_BUILD #######################################################################
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Note these have only really been tested on Discover
-@SINGULARITY_BUILD # and are not guaranteed to work on other systems
-
-@SINGULARITY_BUILD # Based on work on discover, to run you need to load the same compiler
-@SINGULARITY_BUILD # and MPI to match those in the container. For example, if your container was
-@SINGULARITY_BUILD # built with:
-@SINGULARITY_BUILD #   GNU 10.3.0
-@SINGULARITY_BUILD #   Intel Fortran 2021.6.0 (aka Intel oneAPI 2022.1.0)
-@SINGULARITY_BUILD #   Intel MPI 2021.6.0 (aka Intel oneAPI 2022.1.0)
-@SINGULARITY_BUILD # then you would need to load:
-@SINGULARITY_BUILD #   source /usr/share/modules/init/csh
-@SINGULARITY_BUILD #   module purge
-@SINGULARITY_BUILD #   module load comp/gcc/10.3.0
-@SINGULARITY_BUILD #   module load comp/intel/2021.6.0
-@SINGULARITY_BUILD #   module load mpi/impi/2021.6.0
-@SINGULARITY_BUILD #
-@SINGULARITY_BUILD # And then also append ${GEOSDIR}/lib to LD_LIBRARY_PATH
-@SINGULARITY_BUILD #   setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
-
-@SINGULARITY_BUILD # Also look below for suggestions on Intel MPI, OpenMPI and MPT environment variables
-@SINGULARITY_BUILD #
-@SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
-@SINGULARITY_BUILD setenv SINGULARITY_SANDBOX ""
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
-@SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
-@SINGULARITY_BUILD    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
-@SINGULARITY_BUILD    exit 1
-@SINGULARITY_BUILD endif
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
-@SINGULARITY_BUILD echo "We are running under Singularity"
-@SINGULARITY_BUILD echo ""
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Load the Singularity module
-@SINGULARITY_BUILD module load singularity
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
-@SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
-@SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # If you are running from a different location, you will need to change the bind path
-@SINGULARITY_BUILD # Also, note that often $NOBACKUP is, say, /discover/nobackup/username, but gcm_setup
-@SINGULARITY_BUILD # will set GEOSDIR, GEOSBIN, etc. above to something like /gpfsm/dnbXX/username which
-@SINGULARITY_BUILD # is the "real" physical path that /discover/nobackup/username is a symlink to.
-@SINGULARITY_BUILD # You might need to change all the gpfsm paths to nobackup paths.
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Set a variable to encapsulate all Singularity details
-@SINGULARITY_BUILD setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Detect if GEOSgcm.x is in the experiment directory
-@SINGULARITY_BUILD if (-e $EXPDIR/GEOSgcm.x) then
-@SINGULARITY_BUILD    echo "Found GEOSgcm.x in $EXPDIR"
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD    # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
-@SINGULARITY_BUILD    # force the use of GEOSgcm.x in the installation directory
-@SINGULARITY_BUILD    if( $SINGULARITY_SANDBOX != "" ) then
-@SINGULARITY_BUILD       echo "NOTE: Testing has shown Singularity only works when running with"
-@SINGULARITY_BUILD       echo "      the GEOSgcm.x executable directly from the installation bin directory"
-@SINGULARITY_BUILD       echo ""
-@SINGULARITY_BUILD       echo "      So, we will *ignore* the local GEOSgcm.x and "
-@SINGULARITY_BUILD       echo "      instead use $GEOSBIN/GEOSgcm.x"
-@SINGULARITY_BUILD       echo ""
-@SINGULARITY_BUILD    else
-@SINGULARITY_BUILD       echo "Using GEOSgcm.x from $GEOSBIN"
-@SINGULARITY_BUILD    endif
-@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-@SINGULARITY_BUILD else
-@SINGULARITY_BUILD    echo "Using GEOSgcm.x from $GEOSBIN"
-@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-@SINGULARITY_BUILD endif
-
-@NATIVE_BUILD echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-@NATIVE_BUILD echo ""
-@NATIVE_BUILD /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
-@NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
-
-#######################################################################
-#                         Get RESTARTS
-#######################################################################
+cp $EXPDIR/GEOSgcm.x .
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -666,12 +579,12 @@ set yearf = `echo $nymdf | cut -c1-4`
 # --------------------------------------------------------------------------------------------------
 if( @OCEANtag != DE0360xPE0180 ) then
     if( $yearf > $yearc ) then
-       @ yearf = $yearc + 1
-       @ nymdf = $yearf * 10000 + 0101
-        set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-        set newstring = "END_DATE: $nymdf $nhmsf"
-        /bin/mv CAP.rc CAP.tmp
-        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+      #@ yearf = $yearc + 1
+      #@ nymdf = $yearf * 10000 + 0101
+      # set oldstring = `grep '^\s*END_DATE:' CAP.rc`
+      # set newstring = "END_DATE: $nymdf $nhmsf"
+      # /bin/mv CAP.rc CAP.tmp
+      # cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
     endif
 endif
 
@@ -720,15 +633,6 @@ if( ${EMISSIONS} == AMIP_EMISSIONS ) then
         end
     endif
 
-endif
-
-if( $AGCM_LM  != 72 ) then
-    set files = `/bin/ls  *.yaml`
-    foreach file ($files)
-      echo $file
-      cp $file dummy
-      cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
-    end
 endif
 
 # Rename big ExtData files that are not needed
@@ -833,8 +737,7 @@ else
 
    # Run the script
    # --------------
-   @SINGULARITY_BUILD $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
-   @NATIVE_BUILD $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -872,8 +775,7 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -913,7 +815,7 @@ endif
 
 @SETENVS
 
-@MPT_SHEPHERD
+@GPUSTART
 
 # Run bundleParser.py
 #---------------------
@@ -952,17 +854,38 @@ setenv OMP_NUM_THREADS 1
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1 ) then
-   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $NUM_OSERVER_NODES"
-   set IOSERVER_EXTRA   = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
+
+   # Per SI Team, the multigroup server should always be used
+   # The ideal number of backend PEs is based on the number of HISTORY
+   # collections and number of IO nodes
+
+   # First we figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
+   set NUM_HIST_COLS = `cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+
+   # Protect against divide by zero
+   if ($IOS_NODES == 0) then
+      echo "Something is wrong. IOSERVER asked for, but zero IO nodes provided"
+      exit 3
+   endif
+
+   # Now we divide that number of collections by the ioserver nodes
+   set NUM_BACKEND_PES = `echo "scale=6;(($NUM_HIST_COLS - 1) / $IOS_NODES)" | bc | awk '{print int($1 + 0.5)}'`
+
+   # Finally multigroup requires at least two backend pes
+   if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+
+   set IOSERVER_EXTRA = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
 else
    set IOSERVER_OPTIONS = ""
-   set IOSERVER_EXTRA   = ""
+   set IOSERVER_EXTRA = ""
 endif
 
-@SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
-@NATIVE_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
+
+@GPUEND
 
 if( -e EGRESS ) then
    set rc = 0
@@ -970,6 +893,91 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
+if ( $rc == -1 ) exit -1
+endif # STATS_ONLY
+
+if ($EXPID =~ '*RFCST*') then
+
+echo Running Stats
+
+foreach CLIM_SRC ('MERRA-2' 'ERA5')
+
+cd $SCRDIR
+
+set nDAYS = `cat CAP.rc | grep JOB_SGMT: | cut -d: -f2 | cut -c7-9`
+@ nMAX = $nDAYS + 1
+@ fHOURS = 24 * $nDAYS
+@ nSECS = -60 * 60 * $fHOURS
+
+set nymdc = `cat cap_restart | cut -c1-8`
+set nhmsc = `cat cap_restart | cut -c10-15`
+set dateV  = `$GEOSBIN/tick $nymdc $nhmsc $nSECS`
+set nymd =  $dateV[1]
+set yyyymm   = `echo $nymd | cut -b1-6`
+set FDAYS  = `printf "%02d" $nDAYS`
+
+set statsdir = $SCRDIR/GEOS-${CLIM_SRC}.stats.$yyyymm.f${FDAYS}day
+mkdir -p $statsdir
+cd       $statsdir
+
+set year0      = `echo $nymd | cut -b1-4`
+set month0     = `echo $nymd | cut -b5-6`
+set fcst_files = `/bin/ls -1 ../*geosgcm_prog*nc4`
+
+# Set Climatology
+# ------------
+if ( "$CLIM_SRC" == 'ERA5' ) then
+   set clim_files = `/bin/ls -1 /discover/nobackup/projects/gmao/g6dev/sdrabenh/valdat/era5/clim_data/era5_mnth.mrg1_avg.1440x0721.Y1985-2014.T[01][0268]z.nc4`
+   set levs_clim  = `echo 1000 975 950 925 900 875 850 825 800 775 750 700 650 600 550 500 450 400 350 300 250 225 200 175 150 125 100 70 50 30 20 10 7 5 3 2 1`
+else
+   set clim_files = `/bin/ls -1 $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_[01][0268]z.576x361.data.nc4`
+   set levs_clim  = `echo 1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1`
+endif
+
+set ana_files = ''
+@ n = 1
+while ($n <= $nMAX)
+set year  = `echo $nymd | cut -b1-4`
+set month = `echo $nymd | cut -b5-6`
+if ( "$CLIM_SRC" == 'ERA5' ) then
+ set next = `/bin/ls -1 /discover/nobackup/projects/gmao/g6dev/sdrabenh/valdat/era5/pres_levels_daily/Y$year/M$month/era5_pl-allvar.${nymd}*z.nc4`
+else
+ set next = `/bin/ls -1 /discover/nobackup/projects/gmao/dadev/dao_it/archive/@X_EXPID/diag/Y${year}/M${month}/@X_EXPID.inst3_3d_asm_Np.${nymd}*.nc4`
+endif
+set ana_files = `echo $ana_files $next`
+set date = `$GEOSUTIL/post/tick $nymd 0 86400`
+set nymd = $date[1]
+echo $n $date $nMAX
+@ n = $n + 1
+end
+
+cat > stats_$CLIM_SRC.j << EOF
+#!/bin/csh -f
+#SBATCH --time=03:00:00
+#SBATCH --nodes=1
+#SBATCH --job-name=@EXPID
+#SBATCH --output=${EXPDIR}_STATS_${CLIM_SRC}.o%j
+#SBATCH --no-requeue
+#SBATCH @SYSTEM
+setenv GEOSDIR   $GEOSDIR
+setenv GEOSBIN   $GEOSBIN
+setenv GEOSETC   $GEOSETC
+setenv GEOSUTIL  $GEOSUTIL
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+echo $LD_LIBRARY_PATH
+cd $statsdir
+$RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files -ana $ana_files -cli $clim_files -rc $GEOSUTIL/post/stats.rc \
+                                 -levs $levs_clim -tag $EXPID -nfreq 060000 -fhour $fHOURS
+exit 0
+EOF
+sbatch stats_$CLIM_SRC.j
+
+cd $SCRDIR
+
+end
+endif
+exit 0
 
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive

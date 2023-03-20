@@ -81,6 +81,11 @@ while ( $#argv > 0 )
          set USING_SINGULARITY = TRUE
          breaksw
 
+      # Avoid Symlink GEOSgcm.x
+      case --nolink:
+         set LINKX = FALSE
+         breaksw
+
       # Here any string not above will trigger USAGE
       case -[Hh]:
       case --[Hh][Ee][Ll][Pp]:
@@ -182,18 +187,25 @@ echo "Enter the ${C1}Atmospheric Horizontal Resolution${CN} code:"
 echo "--------------------------------------"
 echo "            Cubed-Sphere"
 echo "--------------------------------------"
-echo "   ${C2}c12  --  8   deg ${CN}"
-echo "   ${C2}c24  --  4   deg ${CN}"
-echo "   ${C2}c48  --  2   deg ${CN}"
-echo "   ${C2}c90  --  1   deg ${CN}"
-echo "   ${C2}c180 -- 1/2  deg (${C1}56-km${C2}) ${CN}"
-echo "   ${C2}c360 -- 1/4  deg (${C1}28-km${C2}) ${CN} "
-echo "   ${C2}c720 -- 1/8  deg (${C1}14-km${C2}) ${CN}"
-echo "   ${C2}c1440 - 1/16 deg (${C1} 7-km${C2}) ${CN}"
+echo "   ${C2}c12  -- 8    deg (${C1}750.0    km${C2}) ${CN}"
+echo "   ${C2}c24  -- 4    deg (${C1}375.0    km${C2}) ${CN}"
+echo "   ${C2}c48  -- 2    deg (${C1}187.5    km${C2}) ${CN}"
+echo "   ${C2}c90  -- 1    deg (${C1}100.0    km${C2}) ${CN}"
+echo "   ${C2}c180 -- 1/2  deg (${C1} 50.0    km${C2}) ${CN}"
+echo "   ${C2}c360 -- 1/4  deg (${C1} 25.0    km${C2}) ${CN} "
+echo "   ${C2}c720 -- 1/8  deg (${C1} 12.5    km${C2}) ${CN}"
+echo "   ${C2}c1440 - 1/16 deg (${C1}  6.25   km${C2}) ${CN}"
+echo "   ${C2}c2880 - 1/32 deg (${C1}  3.125  km${C2}) ${CN}"
+echo "   ${C2}c5760 - 1/64 deg (${C1}  1.5625 km${C2}) ${CN}"
+echo "   ${C2}         CONUS Stretched Grids                "
+echo "   ${C2}c270 -- ${C1} 13.0 -100 km${C2}) ${CN} "
+echo "   ${C2}c540 -- ${C1}  7.0 - 50 km${C2}) ${CN} "
+echo "   ${C2}c1080 - ${C1}  3.5 - 25 km${C2}) ${CN} "
+echo "   ${C2}c2160 - ${C1}  1.25- 12 km${C2}) ${CN} "
 echo "   ${C2}          DYAMOND Grids                 "
-echo "   ${C2}c768 -- 1/8  deg (${C1}12-km${C2}) ${CN}"
-echo "   ${C2}c1536 - 1/16 deg (${C1} 6-km${C2}) ${CN}"
-echo "   ${C2}c3072 - 1/32 deg (${C1} 3-km${C2}) ${CN}"
+echo "   ${C2}c768 -- 1/8  deg (${C1} 12.0    km${C2}) ${CN}"
+echo "   ${C2}c1536 - 1/16 deg (${C1}  6.0    km${C2}) ${CN}"
+echo "   ${C2}c3072 - 1/32 deg (${C1}  3.0    km${C2}) ${CN}"
 echo " "
 set HRCODE = `echo $<`
 set HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
@@ -206,6 +218,12 @@ if( $HRCODE != 'c12'   & \
     $HRCODE != 'c360'  & \
     $HRCODE != 'c720'  & \
     $HRCODE != 'c1440' & \
+    $HRCODE != 'c2880' & \
+    $HRCODE != 'c5760' & \
+    $HRCODE != 'c270'  & \
+    $HRCODE != 'c540'  & \
+    $HRCODE != 'c1080' & \
+    $HRCODE != 'c2160' & \
     $HRCODE != 'c768'  & \
     $HRCODE != 'c1536' & \
     $HRCODE != 'c3072' ) goto HRCODE
@@ -245,20 +263,18 @@ endif
 
 ASKMP:
 
- echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: 1MOM)"
- echo "   ${C2}1MOM  --  3-phase 1-moment Bacmeister et al${CN}"
- echo "   ${C2}GFDL  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
- echo "   ${C2}MG1   --  3-phase 2-moment Morrison & Gettleman${CN}"
-#echo "   ${C2}MG2   --  5-phase 2-moment Morrison & Gettleman${CN}"
-#echo "   ${C2}MG3   --  6-phase 2-moment Morrison & Gettleman${CN}"
- set   AGCM_MP = $<
-if( .$AGCM_MP == . ) then
-   set AGCM_MP = "1MOM"
+echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: BACM_1M)"
+echo "   ${C2}BACM_1M  --  3-phase 1-moment Bacmeister et al${CN}"
+echo "   ${C2}GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
+echo "   ${C2}MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman${CN}"
+set   CLDMICRO = $<
+if( .$CLDMICRO == . ) then
+   set CLDMICRO = "BACM_1M"
 else
-   set AGCM_MP = `echo $AGCM_MP | tr "[:lower:]" "[:upper:]"`
-   if( "$AGCM_MP" != "1MOM" & \
-       "$AGCM_MP" != "GFDL" & \
-       "$AGCM_MP" != "MG1"  ) then
+   set CLDMICRO = `echo $CLDMICRO | tr "[:lower:]" "[:upper:]"`
+   if( "$CLDMICRO" != "BACM_1M" & \
+       "$CLDMICRO" != "GFDL_1M" & \
+       "$CLDMICRO" != "MGB2_2M"  ) then
        echo
        echo "${C1}Microphysics${CN} must be one of the options below!"
        goto ASKMP
@@ -272,7 +288,7 @@ endif
 
 ASKHYDRO:
 
-set DEFAULT_HYDROSTATIC = @CFG_HYDROSTATIC@
+set DEFAULT_HYDROSTATIC = TRUE
 
 echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
@@ -308,6 +324,10 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c360'  | \
     $HRCODE == 'c720'  | \
     $HRCODE == 'c1440' | \
+    $HRCODE == 'c270'  | \
+    $HRCODE == 'c540'  | \
+    $HRCODE == 'c1080' | \
+    $HRCODE == 'c2160' | \
     $HRCODE == 'c768'  | \
     $HRCODE == 'c1536' | \
     $HRCODE == 'c3072' ) then
@@ -497,7 +517,6 @@ echo
 endif
 endif
 
-set CLDMICRO = "1MOMENT"
 set MPT_SHEPHERD = ""
 if( $OGCM == TRUE ) then
 
@@ -506,7 +525,6 @@ if( $OGCM == TRUE ) then
     set DATAOCEAN = "#DELETE"
     set OCEAN_NAME = ""
     set OCEAN_PRELOAD = ""
-    set CLDMICRO = "2MOMENT"
 
     # Ocean Model
     # -----------
@@ -890,7 +908,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 900
+     set       DT = 1800
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set SATSIM_DT = `expr $DT \* 2`
@@ -919,7 +937,7 @@ if( $AGCM_IM ==  "c12" ) then
      set   CNV_NY = 6
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 900
+     set       DT = 1800
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set SATSIM_DT = `expr $DT \* 2`
@@ -943,7 +961,7 @@ if( $AGCM_IM ==  "c24" ) then
      set   CNV_NY = 6
 endif
 if( $AGCM_IM ==  "c48" ) then
-     set       DT = 450
+     set       DT = 1800
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set SATSIM_DT = `expr $DT \* 2`
@@ -965,7 +983,7 @@ if( $AGCM_IM ==  "c48" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c90" ) then
-     set       DT = 450
+     set       DT = 900
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set SATSIM_DT = `expr $DT \* 2`
@@ -993,7 +1011,7 @@ if( $AGCM_IM ==  "c90" ) then
      set POST_NDS = 8
 endif
 if( $AGCM_IM ==  "c180" ) then
-     set       DT = 450
+     set       DT = 600
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set SATSIM_DT = `expr $DT \* 2`
@@ -1045,33 +1063,8 @@ if( $AGCM_IM == "c360" ) then
      set   CNV_NX = 4
      set POST_NDS = 12
 endif
-if( $AGCM_IM == "c500" ) then
-     set       DT = 450
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set SATSIM_DT = `expr $DT \* 2`
-     set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
-     set AGCM_IM  = 500
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 12
-     set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 4
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0500x6C
-     set   CNV_NX = 8
-     set POST_NDS = 12
-     set USE_SHMEM = 1
-endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 450
+     set       DT = 225
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set SATSIM_DT = `expr $DT \* 2`
@@ -1096,7 +1089,7 @@ if( $AGCM_IM == "c720" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 450
+     set       DT = 150
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set SATSIM_DT = `expr $DT \* 2`
@@ -1116,6 +1109,159 @@ if( $AGCM_IM == "c1440" ) then
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF1440x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c2880" ) then
+     set       DT = 75
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set SATSIM_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set GMICHEM_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
+     set AGCM_IM  = 2880
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 30
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF2880x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set DEF_IOS_NDS = 4
+endif
+if( $AGCM_IM == "c5760" ) then
+     set       DT = 150
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set SATSIM_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set GMICHEM_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
+     set AGCM_IM  = 5760
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 60
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF5760x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set DEF_IOS_NDS = 4
+endif
+# CONUS Stretched Grids
+if( $AGCM_IM == "c270" ) then
+     set       DT = 225
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set SATSIM_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set GMICHEM_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
+     set AGCM_IM  = 270
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 9
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF270x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c540" ) then
+     set       DT = 150
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set SATSIM_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set GMICHEM_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
+     set AGCM_IM  = 540
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 18
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF540x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c1080" ) then
+     set       DT = 75
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set SATSIM_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set GMICHEM_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
+     set AGCM_IM  = 1080
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 36
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF1080x6C
+     set   CNV_NX = 8
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+endif
+if( $AGCM_IM == "c2160" ) then
+     set       DT = 60
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set SATSIM_DT = 3600
+     set OCEAN_DT = $IRRAD_DT
+     set  CHEM_DT = $DT
+     set GMICHEM_DT = `expr $DT \* 2`
+#    set  GOCART_DT = `expr $DT \* 2`
+     set AGCM_IM  = 2160
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 72
+     set       NY = `expr $NX \* 6 \* 2`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF2160x6C
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
@@ -1225,33 +1371,36 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 #           Setting for Microphysics & Hydrostatic Mode               #
 #######################################################################
 
-# For @-lines in AGCM.rc.tmpl
-set GFDL_HYDRO = FALSE
-if ( "$AGCM_MP" == "GFDL" ) then
-   set MP_GFDL = ""
-else
-   set MP_GFDL = "# "
-endif
-if ( "$AGCM_MP" == "MG1" ) then
-   set MP_MG1 = ""
-else
-   set MP_MG1 = "# "
+set BACM_1M_ = "#"
+if ( "$CLDMICRO" == "BACM_1M" ) then
+   set BACM_1M_ = "" 
 endif
 
-# 1MOM and GFDL do not use WSUB_NATURE, so this eliminates a regrid
-if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
+set GFDL_1M_ = "#"
+if ( "$CLDMICRO" == "GFDL_1M" ) then
+   set GFDL_1M_ = "" 
+endif
+
+set MGB2_2M_ = "#"
+if ( "$CLDMICRO" == "MGB2_2M" ) then
+   set MGB2_2M_ = "" 
+endif
+
+set GFDL_HYDRO = ".TRUE."
+set GFDL_PROG_CCN = "prog_ccn = .true."
+set GFDL_USE_CCN  = "use_ccn = .true."
+
+# BACM_1M and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
    set MP_NO_USE_WSUB = ""
 else
    set MP_NO_USE_WSUB = "#DELETE#"
 endif
 
 # Settings for fvcore_layout.rc
-set FV_NWAT    = ""
-set FV_ZTRACER = "z_tracer    = .T."
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
    set FV_MAKENH     = "Make_NH     = .F."
    set FV_HYDRO      = "hydrostatic = .T."
-   set FV_SATADJ     = "do_sat_adj  = .F."
 else
    # Logic for NH runs based on build type
    if ( "$DEFAULT_HYDROSTATIC" == "TRUE") then
@@ -1264,13 +1413,8 @@ else
       set FV_MAKENH     = "Make_NH     = .F."
    endif
    set FV_HYDRO      = "hydrostatic = .F."
-   if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "MG1" ) then
-      set FV_SATADJ  = "do_sat_adj = .F."
-      set FV_NWAT    = "nwat       =  3 "
-   else if ( "$AGCM_MP" == "GFDL" ) then
-      set FV_SATADJ  = "do_sat_adj = .T."
-      set FV_NWAT    = "nwat       =  6 "
-      set GFDL_HYDRO = TRUE
+   if ( "$CLDMICRO" == "GFDL_1M" ) then
+      set GFDL_HYDRO = ".FALSE."
    endif
 endif
 
@@ -1506,6 +1650,36 @@ endif
 # -------------
 set  RATS_PROVIDER = GMICHEM
 
+
+#######################################################################
+#                  Confirm HEARTBEAT time for the model
+#######################################################################
+
+# Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
+if( "$CLDMICRO" == "BACM_1M" ) then
+   set DT = 450
+endif
+
+ASKHB:
+echo "Enter ${C1}HEARTBEAT_DT${CN} to use"
+echo "   ${C2}1. Hit ENTER to use the recommended default of ${DT} ${CN}"
+echo "   ${C2}2. Type an integer (in seconds) to overide the default value ${CN}"
+
+set    HEARTBEAT =  $<
+if(  .$HEARTBEAT == . ) then
+   set HEARTBEAT =  $DT
+else
+   set HEARTBEAT = `echo $HEARTBEAT | awk '{print ($0+0)}'`
+   if ( ! $HEARTBEAT > 0 ) then
+      echo
+      echo "${C1}HEARTBEAT${CN} must be a valid integer using one of the options below!"
+      goto ASKHB
+   endif
+endif
+
+set DT = $HEARTBEAT
+
+
 #######################################################################
 #                    Create Desired HISTORY template
 #######################################################################
@@ -1665,6 +1839,7 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   /nobackup/gmao_SIteam/ModelData/GWD_RIDGE              # Location of GWD_RIDGE files
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -1706,6 +1881,7 @@ else if( $SITE == 'NCCS' ) then
               setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
 else if( $SITE == 'AWS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
@@ -1740,6 +1916,7 @@ else if( $SITE == 'AWS' ) then
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
               setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   /ford1/share/gmao_SIteam/ModelData/GWD_RIDGE           # Location of GWD_RIDGE files
 
               # By default on AWS, just ignore IOSERVER for now until testing
               set USE_IOSERVER = 0
@@ -1781,6 +1958,7 @@ else
               setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
               setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   /ford1/share/gmao_SIteam/ModelData/GWD_RIDGE           # Location of GWD_RIDGE files
               set NX = 1
               set NY = 6
               set CNV_NX = ${NX}
@@ -2225,6 +2403,7 @@ s?@ICEFILE?$ICEFILE?g
 s?@KPARFILE?$KPARFILE?g
 s?@CHMDIR?$CHMDIR?g
 s?@COUPLEDIR?$COUPLEDIR?g
+s?@GWDRSDIR?$GWDRSDIR?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
@@ -2369,15 +2548,19 @@ s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
 
-s/@MP_MG1/$MP_MG1/g
-s/@MP_GFDL/$MP_GFDL/g
 s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
+
+s?@BACM_1M_?$BACM_1M_?g
+s?@GFDL_1M_?$GFDL_1M_?g
+s?@MGB2_2M_?$MGB2_2M_?g
+
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
-s?@FV_NWAT?$FV_NWAT?g
-s?@FV_ZTRACER?$FV_ZTRACER?g
+
 s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
-s?@FV_SATADJ?$FV_SATADJ?g
+
+s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
+s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
 
 EOF
 
