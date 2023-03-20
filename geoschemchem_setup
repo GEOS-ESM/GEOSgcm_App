@@ -1122,7 +1122,7 @@ else
    set MP_MG1 = "# "
 endif
 
-# 1MOM and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+# 1MOM and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
    set MP_NO_USE_WSUB = ""
 else

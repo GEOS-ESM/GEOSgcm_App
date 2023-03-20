@@ -435,7 +435,7 @@ then
    /bin/cp $INSTALLDIR/etc/*.yaml $expdir
    /bin/cp $INSTALLDIR/etc/AMIP/*.yaml $expdir
    /bin/mv $expdir/WSUB_ExtData.yaml $expdir/WSUB_ExtData.tmp
-   cat $expdir/WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_Wvar_positive_05hrdeg.*#/dev/null#' > $expdir/WSUB_ExtData.yaml
+   cat $expdir/WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > $expdir/WSUB_ExtData.yaml
    /bin/rm $expdir/WSUB_ExtData.tmp
 else
    if [[ "$year" -lt  "2000" ]]
@@ -449,7 +449,7 @@ else
 
    # Turn off wsub as we are 1moment
    /bin/mv $expdir/WSUB_ExtData.rc $expdir/WSUB_ExtData.tmp
-   cat $expdir/WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > $expdir/WSUB_ExtData.rc
+   cat $expdir/WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > $expdir/WSUB_ExtData.rc
    /bin/rm $expdir/WSUB_ExtData.tmp
 fi
 
