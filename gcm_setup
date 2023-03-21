@@ -535,7 +535,7 @@ if( $OGCM == TRUE ) then
     else
        set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
 
-       if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6"  & $OCNMODEL != "MIT") then
+       if ( "$OCNMODEL" != "MOM5" & "$OCNMODEL" != "MOM6"  & "$OCNMODEL" != "MIT") then
           echo
           echo "${C1}Ocean Model${CN} must be either MOM5, MOM6 or MIT!"
           goto OCNMODEL
@@ -546,7 +546,7 @@ if( $OGCM == TRUE ) then
 
     # NOTE: We use a CMake variable here because the shared library
     # suffix is different on Linux and macOS. This is set by configure_file()
-    if ( $OCNMODEL == "MOM5" ) then
+    if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
@@ -556,7 +556,7 @@ if( $OGCM == TRUE ) then
        set mom5_warning=">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
        echo "\033[31;5m"${mom5_warning}"\033[0m"
        set MIT  = "#DELETE"
-    else if ( $OCNMODEL == "MOM6" ) then
+    else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
@@ -564,18 +564,18 @@ if( $OGCM == TRUE ) then
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
        set MIT  = "#DELETE"
        set OCEAN_NAME="MOM6"
-    else if ( $OCNMODEL == "MIT" ) then
-        set OCEAN_NAME="MIT"
-        set OGCM_GRID_TYPE = llc
-	set MIT = ""
-        set MOM5 = "#DELETE"
-        set MOM6 = "#DELETE"
+    else if ( "$OCNMODEL" == "MIT" ) then
+       set OCEAN_NAME="MIT"
+       set OGCM_GRID_TYPE = llc
+       set MIT = ""
+       set MOM5 = "#DELETE"
+       set MOM6 = "#DELETE"
     endif
 
     # Coupled Ocean Resolution
     # ------------------------
     CORSLV:
-    if( .$OCNMODEL == .MIT ) then
+    if( "$OCNMODEL" == "MIT" ) then
         echo "Enter the ${C1}Ocean Horizontal Resolution: ${C2}llc90${CN} (1-deg, Lat-Lon-Cube) Default"
         echo "                                            ${C2}llc1080${CN} (1/12-deg, Lat-Lon-Cube)"
         echo "                                            ${C2}llc2160${CN} (1/24-deg, Lat-Lon-Cube)"
@@ -628,7 +628,7 @@ if( $OGCM == TRUE ) then
             if( $num == 0 ) then
                  set OGCM_IM = 360
                  set OGCM_JM = 200
-            else 
+            else
                  goto CORSLV
             endif
         endif
@@ -691,7 +691,7 @@ if( $OGCM == TRUE ) then
     endif
 
     set OCEAN_RES = TM${IMO}xTM${JMO}
-    if( .$OCNMODEL == .MIT ) then
+    if( "$OCNMODEL" == "MIT" ) then
       set OCEAN_RES = ${OGRIDTYP}${IMO}x${OGRIDTYP}${JMO}
     endif
     set OCEAN_TAG  = Reynolds
@@ -717,7 +717,7 @@ if( $OGCM == TRUE ) then
        set OGCM_NY = 10
     endif
     @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
-    if ( $OCNMODEL != "MIT" ) then
+    if ( "$OCNMODEL" != "MIT" ) then
        set OGCM_GRID_TYPE = Tripolar
     endif
     set LATLON_OGCM = ""
@@ -725,7 +725,7 @@ if( $OGCM == TRUE ) then
     set DATAOCEAN = "#DELETE"
     set OGCM_NF = 1
 
-    if( .$OCNMODEL == .MIT ) then
+    if( "$OCNMODEL" == "MIT" ) then
         if (${OGRIDTYP} == 'CM') then
             set OGCM_NX = 6
             set OGCM_NY = 1
@@ -988,7 +988,7 @@ if( $AGCM_IM ==  "c90" ) then
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
-          if( .$OCNMODEL == .MIT ) then
+          if( "$OCNMODEL" == "MIT" ) then
               set  NX = 10
               set  NY = 36
           else
@@ -1304,7 +1304,7 @@ if( $AGCM_IM == "c3072" ) then
      set POST_NDS = 16
      set USE_SHMEM = 1
 endif
-if( .$OCNMODEL == .MIT ) then
+if( "$OCNMODEL" == "MIT" ) then
      set OCEAN_DT = $DT
 endif
 
@@ -1314,7 +1314,7 @@ set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
 if( ${OGRIDTYP} == 'CF' ) then
    set OGCM_GRIDNAME   = "OC${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
 else
-    if( .$OCNMODEL == .MIT ) then
+    if( "$OCNMODEL" == "MIT" ) then
         set OGCM_GRIDNAME   = "${OGRIDTYP}${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
     else
         set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
@@ -1342,17 +1342,17 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 
 set BACM_1M_ = "#"
 if ( "$CLDMICRO" == "BACM_1M" ) then
-   set BACM_1M_ = "" 
+   set BACM_1M_ = ""
 endif
 
 set GFDL_1M_ = "#"
 if ( "$CLDMICRO" == "GFDL_1M" ) then
-   set GFDL_1M_ = "" 
+   set GFDL_1M_ = ""
 endif
 
 set MGB2_2M_ = "#"
 if ( "$CLDMICRO" == "MGB2_2M" ) then
-   set MGB2_2M_ = "" 
+   set MGB2_2M_ = ""
 endif
 
 set GFDL_HYDRO = ".TRUE."
@@ -1749,9 +1749,9 @@ if( $SITE == 'NAS' ) then
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   /nobackup/gmao_SIteam/ModelData/GWD_RIDGE              # Location of GWD_RIDGE files
-              if ( $OCNMODEL == "MIT" ) then
+              if ( "$OCNMODEL" == "MIT" ) then
                 setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
-              else 
+              else
                 setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings     # Coupled Ocean/Atmos Forcing
               endif
               setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
@@ -1801,7 +1801,7 @@ else if( $SITE == 'NCCS' ) then
               if (${OGRIDTYP} == "LL") then
                 setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
               endif
-              if ( $OCNMODEL == "MIT" ) then
+              if ( "$OCNMODEL" == "MIT" ) then
                 setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos Forcing
               endif
               setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
@@ -2500,7 +2500,7 @@ set FILES = "gcm_run.j          \
              logging.yaml       "
 set FILES = `echo $FILES`
 
-if( $OGCM == TRUE & $OCNMODEL != MIT ) then
+if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
    if ( $OCEAN_NAME == "MOM" ) then
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
@@ -2659,7 +2659,7 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/AGCM.rc.tmpl        $HOMDIR/AGCM.rc
 /bin/mv $HOMDIR/HISTORY.rc.tmpl     $HOMDIR/HISTORY.rc
 
-if( $OGCM == TRUE  & $OCNMODEL != "MIT" ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
+if( $OGCM == TRUE  & "$OCNMODEL" != "MIT" ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options
@@ -3011,7 +3011,7 @@ HOMDIR/gcm_emip.setup
 HOMDIR/logging.yaml
 EOF
 
-if( $OGCM == TRUE & $OCNMODEL != MIT ) then
+if( $OGCM == TRUE & "$OCNMODEL" != MIT ) then
 
 # Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
