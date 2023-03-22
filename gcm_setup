@@ -1754,8 +1754,6 @@ if( $SITE == 'NAS' ) then
               else
                 setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings     # Coupled Ocean/Atmos Forcing
               endif
-              setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
-              setenv TAREXEC    mtar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -1804,8 +1802,6 @@ else if( $SITE == 'NCCS' ) then
               if ( "$OCNMODEL" == "MIT" ) then
                 setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos Forcing
               endif
-              setenv CPEXEC     /bin/cp                                                # Copy utility for large copies
-              setenv TAREXEC    tar
 else if( $SITE == 'AWS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
