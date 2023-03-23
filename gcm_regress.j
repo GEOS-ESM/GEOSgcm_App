@@ -165,8 +165,20 @@ cat << _EOF_ > $FILE
 EXPID:  ${EXPID}
 EXPDSC: ${EXPID}_Regression_Test
 
-COLLECTIONS:
+COLLECTIONS: test_collection
            ::
+
+  test_collection.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  test_collection.archive:          '%c/Y%y4' ,
+  test_collection.format:           'CFIO' ,
+  test_collection.deflate:           1 ,
+  test_collection.frequency:         020000 ,
+  test_collection.fields:           'PHIS', 'AGCM' ,
+                                    'SLP' , 'DYN'  ,
+                                    'T'   , 'DYN'  ,
+                                    'U;V' , 'DYN'  ,
+                                    'Q'   , 'MOIST', 'QV',
+  ::
 _EOF_
 
 ##################################################################
@@ -337,7 +349,7 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 
 set date = `cat cap_restart`
@@ -348,6 +360,13 @@ foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.1
 end
 @MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.1
+
+# Move history as well
+set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
+
+foreach   hist ( $hist_file_names )
+ /bin/mv $hist  ${hist}.${nymde}_${nhmse}.1
+end
 
 ##################################################################
 ######
@@ -400,7 +419,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 foreach rst ( $rst_file_names )
   /bin/rm -f  $rst
@@ -480,7 +499,7 @@ setenv YEAR `cat cap_restart | cut -c1-4`
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 set date = `cat cap_restart`
 set nymde = $date[1]
@@ -490,6 +509,11 @@ foreach   chk ( $chk_file_names )
  /bin/mv $chk  ${chk}.${nymde}_${nhmse}.2
 end
 @MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.2
+
+# Move history as well
+foreach   hist ( $hist_file_names )
+ /bin/mv $hist  ${hist}.${nymde}_${nhmse}.2
+end
 
 #######################################################################
 #                          Compare Restarts
@@ -538,7 +562,7 @@ foreach chk ( $chk_file_names )
   endif
 end
 
-# check MOM.res.nc (MOM6 restart)
+@MOM6# check MOM.res.nc (MOM6 restart)
 @MOM6set file1 = MOM.res.nc.1
 @MOM6set file2 = MOM.res.nc.2
 @MOM6if( -e $file1 && -e $file2 ) then
@@ -556,6 +580,31 @@ end
 @MOM6         endif
 @MOM6      endif
 @MOM6endif
+
+
+# Check history files
+foreach hist ( $hist_file_names )
+  set file1 = ${hist}.${nymde}_${nhmse}.1
+  set file2 = ${hist}.${nymde}_${nhmse}.2
+  if( -e $file1 && -e $file2 ) then
+                               set check = true
+      if( $check == true ) then
+         echo Comparing ${hist}
+
+# compare history files
+         nccmp -dmfgB $file1 $file2
+         if( $status == 0 ) then
+             echo Success!
+             echo " "
+         else
+             echo Failed!
+             echo " "
+             set pass = false
+         endif
+
+      endif
+  endif
+end
 
 if( $pass == true ) then
      echo "<font color=green> PASS </font>"                > regress_test
