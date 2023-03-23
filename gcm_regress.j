@@ -172,7 +172,7 @@ COLLECTIONS: test_collection
   test_collection.archive:          '%c/Y%y4' ,
   test_collection.format:           'CFIO' ,
   test_collection.deflate:           1 ,
-  test_collection.frequency:         020000 ,
+  test_collection.frequency:         060000 ,
   test_collection.fields:           'PHIS', 'AGCM' ,
                                     'SLP' , 'DYN'  ,
                                     'T'   , 'DYN'  ,
