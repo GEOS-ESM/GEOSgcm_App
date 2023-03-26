@@ -23,42 +23,29 @@
 
 &gfdl_cloud_microphysics_nml
   sedi_transport = .true.
-  do_sedi_heat = .false.
-  preciprad = .true.
-  const_vi = .F.
-  const_vs = .F.
-  const_vg = .F.
-  const_vr = .F.
-  qi_lim = 1.
-  do_evap = .true.
-  do_subl = .true.
+  do_evap = .false.
+  do_subl = .false.
   do_qa = .false.
-  sat_adj0 = 0.75
-  tau_l2v  = 600.
-  tau_i2v  = 600.
-  tau_revp = 600.
-  tau_frz  = 600.
-  tau_i2s  = 600.
+  tau_l2v  = 150.
+  tau_i2v  = 150.
+  tau_revp = 300.
+  tau_frz  = 300.
   dw_land  = 0.05
-  dw_ocean = 0.20
-  ql_mlt = 1.0e-4
+  dw_ocean = 0.10
+  rh_inc = 0.30
+  rh_inr = 0.30
   qi0_crt = 8.0E-5
   qs0_crt = 1.0e-3
   c_psaci = 0.05
   c_pgacs = 0.01
-  rh_inc = 0.30
-  rh_inr = 0.30
   c_paut = 1.0
   c_cracw = 1.0
-  use_ppm = .false.
   @GFDL_PROG_CCN
   @GFDL_USE_CCN
   ccn_l = 300.
   ccn_o = 100.
-  mono_prof = .true.
   z_slope_liq  = .true.
   z_slope_ice  = .true.
-  de_ice = .false.
   fix_negative = .true.
   icloud_f = 3
   mp_time = 150.
