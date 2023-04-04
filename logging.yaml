@@ -1,6 +1,8 @@
 schema_version: 1
 
-# Example on how to use the logging.yaml file
+# Example on how to use the logging.yaml file based on
+# 
+#   https://github.com/GEOS-ESM/MAPL/wiki/How-to-use-the-MAPL-logging-library,-aka-%22pFlogger%22
 #
 # Let us say you want to get all the debugging loggers
 # from ExtData in MAPL. To do this you first want to
