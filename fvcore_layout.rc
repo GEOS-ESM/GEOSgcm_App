@@ -23,8 +23,8 @@
 
 &gfdl_cloud_microphysics_nml
   sedi_transport = .true.
-  do_evap = .false.
-  do_subl = .false.
+  do_evap = .true.
+  do_subl = .true.
   do_qa = .false.
   tau_l2v  = 150.
   tau_i2v  = 150.

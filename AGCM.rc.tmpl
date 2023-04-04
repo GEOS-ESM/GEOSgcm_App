@@ -1,23 +1,23 @@
 
 # Atmospheric Model Configuration Parameters
 # ------------------------------------------
-           NX: @NX
-           NY: @NY
+NX: @NX
+NY: @NY
 
- IOSERVER_NODES: @NUM_OSERVER_NODES
+IOSERVER_NODES: @NUM_OSERVER_NODES
 NUM_BACKEND_PES: @NUM_BACKEND_PES
 
-      AGCM_IM: @AGCM_IM
-      AGCM_JM: @AGCM_JM
-      AGCM_LM: @AGCM_LM
+AGCM_IM: @AGCM_IM
+AGCM_JM: @AGCM_JM
+AGCM_LM: @AGCM_LM
 AGCM_GRIDNAME: @AGCM_GRIDNAME
 
-      AGCM.GRID_TYPE: @GRID_TYPE
-      AGCM.GRIDNAME: @AGCM_GRIDNAME
-      @CUBE_AGCM AGCM.NF: @AGCM_NF
-      AGCM.LM: @AGCM_LM
-      AGCM.IM_WORLD: @AGCM_IM
-      @LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
+AGCM.GRID_TYPE: @GRID_TYPE
+AGCM.GRIDNAME: @AGCM_GRIDNAME
+@CUBE_AGCM AGCM.NF: @AGCM_NF
+AGCM.LM: @AGCM_LM
+AGCM.IM_WORLD: @AGCM_IM
+@LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
 
 ###########################################################
 # dynamics options
@@ -50,7 +50,7 @@ ORBIT_ANAL2B: .TRUE.
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
 @GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
-@GFDL_1M_USE_BERGERON: .FALSE.
+@GFDL_1M_USE_AEROSOL_NN: .FALSE.
 ###########################################################
 
 ###########################################################
