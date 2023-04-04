@@ -1,7 +1,7 @@
 schema_version: 1
 
 # Example on how to use the logging.yaml file based on
-# 
+#
 #   https://github.com/GEOS-ESM/MAPL/wiki/How-to-use-the-MAPL-logging-library,-aka-%22pFlogger%22
 #
 # Let us say you want to get all the debugging loggers
