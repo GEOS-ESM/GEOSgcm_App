@@ -21,7 +21,7 @@ workflows:
           baselibs_version: *baselibs_version
           repo: GEOSgcm
           checkout_fixture: true
-          fixture_branch: release/v1
+          fixture_branch: release/v10
           mepodevelop: true
           persist_workspace: true # Needs to be true to run fv3/gcm experiment, costs extra
       # Run GCM (1 hour, no ExtData)
