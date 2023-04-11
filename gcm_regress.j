@@ -339,9 +339,8 @@ set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
 
 echo "=== Running 24 hour test with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
- 
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 set date = `cat cap_restart`
 set nymde1 = $date[1]
@@ -499,7 +498,8 @@ set test_NY = 6
 # Copy Original Restarts to Regress directory
 # -------------------------------------------
 foreach rst ( $rst_file_names )
-       cp $EXPDIR/$rst $EXPDIR/regress
+  /bin/rm -f  $rst
+  cp $EXPDIR/$rst $EXPDIR/regress
 end
 
 /bin/rm              cap_restart
@@ -575,6 +575,7 @@ set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
 if( -e startstop_regress_test ) /bin/rm startstop_regress_test
 
 echo "=== Comparing restarts from 24-hour ${NX0}x${NY0} run with restarts from 6-hour + 18-hour ${NX0}x${NY0} runs ==="
+
 set startstop_pass = true
 foreach chk ( $chk_file_names )
   set file1 = ${chk}.${nymde1}_${nhmse1}.1
@@ -590,10 +591,10 @@ foreach chk ( $chk_file_names )
 # compare binary checkpoint files
          cmp $file1 $file2
          if( $status == 0 ) then
-             echo Success!
+             echo Start-Stop Success!
              echo " "
          else
-             echo Failed!
+             echo Start-Stop Failed!
              echo " "
              set startstop_pass = false
          endif
@@ -601,10 +602,10 @@ foreach chk ( $chk_file_names )
 # compare NetCDF-4 checkpoint files
 # 	 ${NCCMP} $file1 $file2
 # 	 if( status == 0 ) then
-# 	     echo Success!
+# 	     echo Start-Stop Success!
 # 	     echo " "
 # 	 else
-# 	     echo Failed!
+# 	     echo Start-Stop Failed!
 # 	     echo " "
 # 	     set startstop_pass = false
 # 	 endif
@@ -622,10 +623,10 @@ end
 @MOM6         echo Comparing "MOM6 restarts"
 @MOM6         cmp $file1 $file2
 @MOM6         if( $status == 0 ) then
-@MOM6             echo Success!
+@MOM6             echo Start-Stop Success!
 @MOM6             echo " "
 @MOM6         else
-@MOM6             echo Failed!
+@MOM6             echo Start-Stop Failed!
 @MOM6             echo " "
 @MOM6             set pass = false
 @MOM6         endif
@@ -646,10 +647,10 @@ foreach hist ( $complete_hist_file_names )
 # compare history files
          ${NCCMP} $file1 $file2
          if( $status == 0 ) then
-             echo Success!
+             echo Start-Stop Success!
              echo " "
          else
-             echo Failed!
+             echo Start-Stop Failed!
              echo " "
              set startstop_pass = false
          endif
@@ -693,10 +694,10 @@ foreach chk ( $chk_file_names )
 # compare binary checkpoint files
          cmp $file1 $file2
          if( $status == 0 ) then
-             echo Success!
+             echo Layout Success!
              echo " "
          else
-             echo Failed!
+             echo Layout Failed!
              echo " "
              set layout_pass = false
          endif
@@ -704,10 +705,10 @@ foreach chk ( $chk_file_names )
 # compare NetCDF-4 checkpoint files
 # 	 ${NCCMP} $file1 $file2
 # 	 if( status == 0 ) then
-# 	     echo Success!
+# 	     echo Layout Success!
 # 	     echo " "
 # 	 else
-# 	     echo Failed!
+# 	     echo Layout Failed!
 # 	     echo " "
 # 	     set layout_pass = false
 # 	 endif
@@ -725,10 +726,10 @@ end
 @MOM6         echo Comparing "MOM6 restarts"
 @MOM6         cmp $file1 $file2
 @MOM6         if( $status == 0 ) then
-@MOM6             echo Success!
+@MOM6             echo Layout Success!
 @MOM6             echo " "
 @MOM6         else
-@MOM6             echo Failed!
+@MOM6             echo Layout Failed!
 @MOM6             echo " "
 @MOM6             set pass = false
 @MOM6         endif
@@ -749,10 +750,10 @@ foreach hist ( $complete_hist_file_names )
 # compare history files
          ${NCCMP} $file1 $file2
          if( $status == 0 ) then
-             echo Success!
+             echo Layout Success!
              echo " "
          else
-             echo Failed!
+             echo Layout Failed!
              echo " "
              set layout_pass = false
          endif
