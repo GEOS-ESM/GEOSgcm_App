@@ -32,9 +32,9 @@ setenv OMP_NUM_THREADS 1
 
 setenv ARCH `uname`
 
-setenv SITE             @SITE
-setenv GEOSDIR          @GEOSDIR
-setenv GEOSBIN          @GEOSBIN
+setenv SITE    @SITE
+setenv GEOSDIR @GEOSDIR
+setenv GEOSBIN @GEOSBIN
 
 source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
@@ -45,17 +45,17 @@ setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 #             Experiment Specific Environment Variables
 #######################################################################
 
-setenv    EXPID   @EXPID
-setenv    EXPDIR  @EXPDIR
-setenv    HOMDIR  @HOMDIR
-setenv    SCRDIR  $EXPDIR/scratch
+setenv EXPID  @EXPID
+setenv EXPDIR @EXPDIR
+setenv HOMDIR @HOMDIR
+setenv SCRDIR $EXPDIR/scratch
 
 #######################################################################
 #                 Create Clean Regress Sub-Directory
 #######################################################################
 
-mkdir -p                    $EXPDIR/regress
-cd                          $EXPDIR/regress
+mkdir -p $EXPDIR/regress
+cd $EXPDIR/regress
 /bin/rm -rf `/bin/ls | grep -v  gcm_regress.j | grep -v slurm`
 
 # Copy RC Files from Home Directory
@@ -63,8 +63,8 @@ cd                          $EXPDIR/regress
 cd $HOMDIR
     set files = `ls -1 *.rc`
     foreach file ($files)
-            set fname = `echo $file | cut -d "." -f1`
-           cp $fname.rc $EXPDIR/regress
+      set fname = `echo $file | cut -d "." -f1`
+      cp $fname.rc $EXPDIR/regress
     end
 cd $EXPDIR/regress
 
@@ -84,13 +84,6 @@ cat fvcore_layout.rc >> input.nml
 set IM = `grep  AGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set JM = `grep  AGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set LM = `grep  AGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
-
-@    IM6 = 6 * $IM
-if( $IM6 == $JM ) then
-   set CUBE = TRUE
-else
-   set CUBE = FALSE
-endif
 
 # Create Restart List
 # -------------------
@@ -173,11 +166,23 @@ COLLECTIONS: test_collection
   test_collection.format:           'CFIO' ,
   test_collection.deflate:           1 ,
   test_collection.frequency:         060000 ,
-  test_collection.fields:           'PHIS', 'AGCM' ,
-                                    'SLP' , 'DYN'  ,
-                                    'T'   , 'DYN'  ,
-                                    'U;V' , 'DYN'  ,
-                                    'Q'   , 'MOIST', 'QV',
+@DATAOCEAN  test_collection.fields:           'PHIS', 'AGCM' ,
+@DATAOCEAN                                    'SLP' , 'DYN'  ,
+@DATAOCEAN                                    'T'   , 'DYN'  ,
+@DATAOCEAN                                    'U;V' , 'DYN'  ,
+@DATAOCEAN                                    'Q'   , 'MOIST', 'QV',
+@MOM5  test_collection.fields:           'UW'   ,'MOM'  , 'US',
+@MOM5                                    'VW'   ,'MOM'  , 'VS',
+@MOM5                                    'TW'   ,'MOM'  , 'TS',
+@MOM5                                    'SW'   ,'MOM'  , 'SS',
+@MOM5                                    'SLV'  ,'MOM'  ,
+@MOM5                                    'QFLUX','OCEAN' ,
+@MOM6  test_collection.fields:           'UW'   ,'MOM6'  , 'US',
+@MOM6                                    'VW'   ,'MOM6'  , 'VS',
+@MOM6                                    'TW'   ,'MOM6'  , 'TS',
+@MOM6                                    'SW'   ,'MOM6'  , 'SS',
+@MOM6                                    'SLV'  ,'MOM6'  ,
+@MOM6                                    'QFLUX','OCEAN' ,
   ::
 _EOF_
 
@@ -232,9 +237,9 @@ if( @EMISSIONS == AMIP_EMISSIONS ) then
        set AMIP_Transition_Date = 20000301
 
        if( $nymd0 < ${AMIP_Transition_Date} ) then
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
        else
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
        endif
     else
        set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
@@ -328,99 +333,102 @@ endif
 
 set test_duration = 240000
 
-cp     CAP.rc      CAP.rc.orig
-cp    AGCM.rc     AGCM.rc.orig
+cp CAP.rc      CAP.rc.orig
+cp AGCM.rc     AGCM.rc.orig
 cp HISTORY.rc0 HISTORY.rc
 
-set           NX0 = `grep "^ *NX:" AGCM.rc.orig | cut -d':' -f2`
-set           NY0 = `grep "^ *NY:" AGCM.rc.orig | cut -d':' -f2`
-
-@ NPES0 = $NX0 * $NY0
-
+set NX0 = `grep "^ *NX:" AGCM.rc.orig | cut -d':' -f2`
+set NY0 = `grep "^ *NY:" AGCM.rc.orig | cut -d':' -f2`
 
 ./strip CAP.rc
-set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
+
+echo "=== Running 24 hour test with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
+
 @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
-
 set date = `cat cap_restart`
-set nymde = $date[1]
-set nhmse = $date[2]
+set nymde1 = $date[1]
+set nhmse1 = $date[2]
 
-foreach   chk ( $chk_file_names )
- /bin/mv $chk  ${chk}.${nymde}_${nhmse}.1
+foreach chk ( $chk_file_names )
+ /bin/mv -v $chk ${chk}.${nymde1}_${nhmse1}.1
 end
-@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.1
+@MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.1
 
 # Move history as well
 set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
+# Need also make another variable storing all the history files
+set complete_hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 
-foreach   hist ( $hist_file_names )
- /bin/mv $hist  ${hist}.${nymde}_${nhmse}.1
+foreach hist ( $hist_file_names )
+ /bin/mv -v $hist ${hist}.${nymde1}_${nhmse1}.1
 end
 
 ##################################################################
 ######
 ######               Perform Regression Test # 2
+######               (6-Hour Using NX:NY Layout)
 ######
 ##################################################################
 
-set test_duration = 180000
-
-@DATAOCEAN if( $CUBE == TRUE ) then
-@DATAOCEAN     @ test_NX = $NPES0 / 6
-@DATAOCEAN     @ test_NP = $IM / $test_NX
-@DATAOCEAN   if($test_NP < 4 ) then
-@DATAOCEAN     @ test_NX = $IM / 4 # To ensure enough gridpoints for HALO
-@DATAOCEAN   endif
-@DATAOCEAN   set test_NY = 6
-@DATAOCEAN else
-@DATAOCEAN   set test_NX = $NY0
-@DATAOCEAN   set test_NY = $NX0
-@DATAOCEAN endif
-
-@COUPLED set test_NX = $NX0
-@COUPLED set test_NY = $NY0
+set test_duration = 060000
 
 /bin/rm              cap_restart
 echo $nymd0 $nhms0 > cap_restart
 
-cp     CAP.rc.orig  CAP.rc
-cp    AGCM.rc.orig AGCM.rc
+cp CAP.rc.orig  CAP.rc
+cp AGCM.rc.orig AGCM.rc
 cp HISTORY.rc0  HISTORY.rc
 
+@COUPLED /bin/rm -rf INPUT
+@COUPLED /bin/mkdir INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
+
 ./strip CAP.rc
-set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-
-./strip AGCM.rc
-set oldstring =  `cat AGCM.rc | grep "^ *NX:"`
-set newstring =  "NX: ${test_NX}"
-/bin/mv AGCM.rc AGCM.tmp
-cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
-set newstring =  "NY: ${test_NY}"
-/bin/mv AGCM.rc AGCM.tmp
-cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
+
+echo "=== Running 6 hour test with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
+
 @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
+set date = `cat cap_restart`
+set nymde2 = $date[1]
+set nhmse2 = $date[2]
+
+foreach chk ( $chk_file_names )
+ /bin/cp -v $chk ${chk}.${nymde2}_${nhmse2}.2
+end
+@MOM6/bin/cp -v RESTART/MOM.res.nc MOM.res.nc.2
+
+# *Copy* history as well
+set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
+
+# Note: We copy the history here because this lets the file(s)
+#       be available for Test #3 so a full compare can be made
+#       with Test #1
+foreach hist ( $hist_file_names )
+ /bin/cp -v $hist ${hist}.${nymde2}_${nhmse2}.2
+end
+
 foreach rst ( $rst_file_names )
-  /bin/rm -f  $rst
+  /bin/rm -f $rst
 end
 set numrst = `echo $rst_files | wc -w`
 set numchk = `echo $chk_files | wc -w`
@@ -450,83 +458,161 @@ end
 ##################################################################
 ######
 ######               Perform Regression Test # 3
+######               (18-Hour Using NX:NY Layout)
 ######
 ##################################################################
 
-set test_duration = 060000
+set test_duration = 180000
 
-if( $CUBE == TRUE ) then
-  set test_NX = 1
-  set test_NY = 6
-  set test_Cores = 6
-else
-  set test_NX = 1
-  set test_NY = 2
-  set test_Cores = 2
-endif
+cp HISTORY.rc0 HISTORY.rc
+
+@MOM6# When you restart in MOM6 mode, you must change input_filename
+@MOM6# in the input.nml file from 'n' to 'r'
+@MOM6 /bin/cp input.nml input.nml.orig
+@MOM6 sed -i -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
 
 ./strip CAP.rc
-set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-
-./strip AGCM.rc
-set oldstring =  `cat AGCM.rc | grep "^ *NX:"`
-set newstring =  "NX: ${test_NX}"
-/bin/mv AGCM.rc AGCM.tmp
-cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
-set newstring =  "NY: ${test_NY}"
-/bin/mv AGCM.rc AGCM.tmp
-cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-@COUPLED set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NX:"`
-@COUPLED set newstring =  "OGCM.NX: ${test_NY}"
-@COUPLED /bin/mv AGCM.rc AGCM.tmp
-@COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-@COUPLED set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NY:"`
-@COUPLED set newstring =  "OGCM.NY: ${test_NX}"
-@COUPLED /bin/mv AGCM.rc AGCM.tmp
-@COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-
-@MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
-@MOM6sed -r -i -e "/^ *LAYOUT/ s#= ([0-9]+), *([0-9]+)#= ${test_NY}, ${test_NX}#" MOM_input
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
+
+set date = `cat cap_restart`
+set nymdb = $date[1]
+set nhmsb = $date[2]
+
+echo "=== Running 18 hour test with NX = $NX and NY = $NY starting at $nymdb $nhmsb ==="
+
 @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 set date = `cat cap_restart`
-set nymde = $date[1]
-set nhmse = $date[2]
+set nymde3 = $date[1]
+set nhmse3 = $date[2]
 
-foreach   chk ( $chk_file_names )
- /bin/mv $chk  ${chk}.${nymde}_${nhmse}.2
+foreach chk ( $chk_file_names )
+ /bin/mv -v $chk ${chk}.${nymde3}_${nhmse3}.3
 end
-@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.2
+@MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
 
 # Move history as well
-foreach   hist ( $hist_file_names )
- /bin/mv $hist  ${hist}.${nymde}_${nhmse}.2
+set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
+
+foreach hist ( $hist_file_names )
+ /bin/mv -v $hist ${hist}.${nymde3}_${nhmse3}.3
+end
+
+##################################################################
+######
+######               Perform Regression Test # 4
+######               (6-Hour Using 1:6 Layout)
+######
+##################################################################
+
+set test_duration = 060000
+
+set test_NX = 1
+set test_NY = 6
+
+# Copy Original Restarts to Regress directory
+# -------------------------------------------
+foreach rst ( $rst_file_names )
+  /bin/rm -f $rst
+  cp $EXPDIR/$rst $EXPDIR/regress
+end
+
+@COUPLED /bin/rm -rf INPUT
+@COUPLED /bin/mkdir INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
+
+@COUPLED # restore original input.nml
+@COUPLED /bin/mv input.nml.orig input.nml
+
+/bin/rm              cap_restart
+echo $nymd0 $nhms0 > cap_restart
+
+cp CAP.rc.orig  CAP.rc
+cp AGCM.rc.orig AGCM.rc
+cp HISTORY.rc0  HISTORY.rc
+
+./strip CAP.rc
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
+/bin/mv CAP.rc CAP.tmp
+cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+
+./strip AGCM.rc
+set oldstring = `cat AGCM.rc | grep "^ *NX:"`
+set newstring = "NX: ${test_NX}"
+/bin/mv AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+set oldstring = `cat AGCM.rc | grep "^ *NY:"`
+set newstring = "NY: ${test_NY}"
+/bin/mv AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+@COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
+@COUPLED set newstring = "OGCM.NX: ${test_NY}"
+@COUPLED /bin/mv AGCM.rc AGCM.tmp
+@COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+@COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
+@COUPLED set newstring = "OGCM.NY: ${test_NX}"
+@COUPLED /bin/mv AGCM.rc AGCM.tmp
+@COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+@MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
+@MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
+
+setenv YEAR `cat cap_restart | cut -c1-4`
+./linkbcs
+set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
+set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
+@ NPES = $NX * $NY
+
+echo "=== Running 6 hour test with NX = $test_NX and NY = $test_NY starting at $nymd0 $nhms0 ==="
+
+@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+set date = `cat cap_restart`
+set nymde4 = $date[1]
+set nhmse4 = $date[2]
+
+foreach chk ( $chk_file_names )
+ /bin/mv -v $chk ${chk}.${nymde4}_${nhmse4}.4
+end
+@MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
+
+# Move history as well
+set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
+
+foreach hist ( $hist_file_names )
+ /bin/mv -v $hist ${hist}.${nymde4}_${nhmse4}.4
 end
 
 #######################################################################
 #                          Compare Restarts
+#                      for start stop regression
 #######################################################################
 
-set CDO = `echo ${BASEDIR}/${ARCH}/bin/cdo -Q -s diffn`
+# This part compares the restarts from the 24-hour NXxNY run (.1) with the
+# restarts at the end of the 6-hour + 18-hour runs (.3)
 
-if( -e regress_test ) /bin/rm regress_test
+set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
 
-set pass = true
+if( -e startstop_regress_test ) /bin/rm startstop_regress_test
+
+echo "=== Comparing restarts from 24-hour ${NX0}x${NY0} run with restarts from 6-hour + 18-hour ${NX0}x${NY0} runs ==="
+
+set startstop_pass = true
 foreach chk ( $chk_file_names )
-  set file1 = ${chk}.${nymde}_${nhmse}.1
-  set file2 = ${chk}.${nymde}_${nhmse}.2
+  set file1 = ${chk}.${nymde1}_${nhmse1}.1
+  set file2 = ${chk}.${nymde3}_${nhmse3}.3
   if( -e $file1 && -e $file2 ) then
-                               set check = true
+      set check = true
       foreach exempt (${EXEMPT_chk})
          if( $chk == $exempt ) set check = false
       end
@@ -536,24 +622,23 @@ foreach chk ( $chk_file_names )
 # compare binary checkpoint files
          cmp $file1 $file2
          if( $status == 0 ) then
-             echo Success!
+             echo Start-Stop Success!
              echo " "
          else
-             echo Failed!
+             echo Start-Stop Failed!
              echo " "
-             set pass = false
+             set startstop_pass = false
          endif
 
 # compare NetCDF-4 checkpoint files
-# 	 set NUMDIFF = `${CDO} $file1 $file2 | awk '{print $1}'`
-# 	 if( "$NUMDIFF" == "" ) then
-# 	     echo Success!
+# 	 ${NCCMP} $file1 $file2
+# 	 if( status == 0 ) then
+# 	     echo Start-Stop Success!
 # 	     echo " "
 # 	 else
-# 	     echo Failed!
-# 	     echo `${CDO} $file1 $file2`
+# 	     echo Start-Stop Failed!
 # 	     echo " "
-# 	     set pass = false
+# 	     set startstop_pass = false
 # 	 endif
 
       endif
@@ -562,50 +647,160 @@ end
 
 @MOM6# check MOM.res.nc (MOM6 restart)
 @MOM6set file1 = MOM.res.nc.1
-@MOM6set file2 = MOM.res.nc.2
+@MOM6set file2 = MOM.res.nc.3
 @MOM6if( -e $file1 && -e $file2 ) then
-@MOM6                             set check = true
+@MOM6      set check = true
 @MOM6      if( $check == true ) then
 @MOM6         echo Comparing "MOM6 restarts"
 @MOM6         cmp $file1 $file2
 @MOM6         if( $status == 0 ) then
-@MOM6             echo Success!
+@MOM6             echo Start-Stop Success!
 @MOM6             echo " "
 @MOM6         else
-@MOM6             echo Failed!
+@MOM6             echo Start-Stop Failed!
 @MOM6             echo " "
 @MOM6             set pass = false
 @MOM6         endif
 @MOM6      endif
 @MOM6endif
 
+echo "=== Comparing history files from 24-hour ${NX0}x${NY0} run with history files from 6-hour + 18-hour ${NX0}x${NY0} runs ==="
 
 # Check history files
-foreach hist ( $hist_file_names )
-  set file1 = ${hist}.${nymde}_${nhmse}.1
-  set file2 = ${hist}.${nymde}_${nhmse}.2
+foreach hist ( $complete_hist_file_names )
+  set file1 = ${hist}.${nymde1}_${nhmse1}.1
+  set file2 = ${hist}.${nymde3}_${nhmse3}.3
   if( -e $file1 && -e $file2 ) then
-                               set check = true
+      set check = true
       if( $check == true ) then
          echo Comparing ${hist}
 
 # compare history files
-         nccmp -dmfgB $file1 $file2
+         ${NCCMP} $file1 $file2
          if( $status == 0 ) then
-             echo Success!
+             echo Start-Stop Success!
              echo " "
          else
-             echo Failed!
+             echo Start-Stop Failed!
              echo " "
-             set pass = false
+             set startstop_pass = false
          endif
 
       endif
   endif
 end
 
-if( $pass == true ) then
-     echo "<font color=green> PASS </font>"                > regress_test
+if( $startstop_pass == true ) then
+   echo "<font color=green> PASS </font>"                > startstop_regress_test
 else
-     echo "<font color=red> <blink> FAIL </blink> </font>" > regress_test
+   echo "<font color=red> <blink> FAIL </blink> </font>" > startstop_regress_test
+endif
+
+#######################################################################
+#                          Compare Restarts
+#                        for layout regression
+#######################################################################
+
+# This part compares the restarts from the 6-hour NXxNY run (.2) with the
+# restarts from the 6-hour 1x6 run (.4)
+
+set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
+
+if( -e layout_regress_test ) /bin/rm layout_regress_test
+
+echo "=== Comparing restarts from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
+
+set layout_pass = true
+foreach chk ( $chk_file_names )
+  set file1 = ${chk}.${nymde2}_${nhmse2}.2
+  set file2 = ${chk}.${nymde4}_${nhmse4}.4
+  if( -e $file1 && -e $file2 ) then
+      set check = true
+      foreach exempt (${EXEMPT_chk})
+         if( $chk == $exempt ) set check = false
+      end
+      if( $check == true ) then
+         echo Comparing ${chk}
+
+# compare binary checkpoint files
+         cmp $file1 $file2
+         if( $status == 0 ) then
+             echo Layout Success!
+             echo " "
+         else
+             echo Layout Failed!
+             echo " "
+             set layout_pass = false
+         endif
+
+# compare NetCDF-4 checkpoint files
+# 	 ${NCCMP} $file1 $file2
+# 	 if( status == 0 ) then
+# 	     echo Layout Success!
+# 	     echo " "
+# 	 else
+# 	     echo Layout Failed!
+# 	     echo " "
+# 	     set layout_pass = false
+# 	 endif
+
+      endif
+  endif
+end
+
+@MOM6# check MOM.res.nc (MOM6 restart)
+@MOM6set file1 = MOM.res.nc.2
+@MOM6set file2 = MOM.res.nc.4
+@MOM6if( -e $file1 && -e $file2 ) then
+@MOM6      set check = true
+@MOM6      if( $check == true ) then
+@MOM6         echo Comparing "MOM6 restarts"
+@MOM6         cmp $file1 $file2
+@MOM6         if( $status == 0 ) then
+@MOM6             echo Layout Success!
+@MOM6             echo " "
+@MOM6         else
+@MOM6             echo Layout Failed!
+@MOM6             echo " "
+@MOM6             set pass = false
+@MOM6         endif
+@MOM6      endif
+@MOM6endif
+
+echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with history files from 6-hour ${test_NX}x${test_NY} run ==="
+
+# Check history files
+foreach hist ( $complete_hist_file_names )
+  set file1 = ${hist}.${nymde2}_${nhmse4}.2
+  set file2 = ${hist}.${nymde2}_${nhmse4}.4
+  if( -e $file1 && -e $file2 ) then
+      set check = true
+      if( $check == true ) then
+         echo Comparing ${hist}
+
+# compare history files
+         ${NCCMP} $file1 $file2
+         if( $status == 0 ) then
+             echo Layout Success!
+             echo " "
+         else
+             echo Layout Failed!
+             echo " "
+             set layout_pass = false
+         endif
+
+      endif
+  endif
+end
+
+if( $layout_pass == true ) then
+   echo "<font color=green> PASS </font>"                > layout_regress_test
+else
+   echo "<font color=red> <blink> FAIL </blink> </font>" > layout_regress_test
+endif
+
+if( $startstop_pass == true && $layout_pass == true ) then
+   echo "<font color=green> PASS </font>"                > regress_test
+else
+   echo "<font color=red> <blink> FAIL </blink> </font>" > regress_test
 endif
