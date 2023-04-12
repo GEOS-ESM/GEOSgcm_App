@@ -32,9 +32,9 @@ setenv OMP_NUM_THREADS 1
 
 setenv ARCH `uname`
 
-setenv SITE             @SITE
-setenv GEOSDIR          @GEOSDIR
-setenv GEOSBIN          @GEOSBIN
+setenv SITE    @SITE
+setenv GEOSDIR @GEOSDIR
+setenv GEOSBIN @GEOSBIN
 
 source $GEOSBIN/g5_modules
 setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
@@ -45,17 +45,17 @@ setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 #             Experiment Specific Environment Variables
 #######################################################################
 
-setenv    EXPID   @EXPID
-setenv    EXPDIR  @EXPDIR
-setenv    HOMDIR  @HOMDIR
-setenv    SCRDIR  $EXPDIR/scratch
+setenv EXPID  @EXPID
+setenv EXPDIR @EXPDIR
+setenv HOMDIR @HOMDIR
+setenv SCRDIR $EXPDIR/scratch
 
 #######################################################################
 #                 Create Clean Regress Sub-Directory
 #######################################################################
 
-mkdir -p                    $EXPDIR/regress
-cd                          $EXPDIR/regress
+mkdir -p $EXPDIR/regress
+cd $EXPDIR/regress
 /bin/rm -rf `/bin/ls | grep -v  gcm_regress.j | grep -v slurm`
 
 # Copy RC Files from Home Directory
@@ -63,8 +63,8 @@ cd                          $EXPDIR/regress
 cd $HOMDIR
     set files = `ls -1 *.rc`
     foreach file ($files)
-            set fname = `echo $file | cut -d "." -f1`
-           cp $fname.rc $EXPDIR/regress
+      set fname = `echo $file | cut -d "." -f1`
+      cp $fname.rc $EXPDIR/regress
     end
 cd $EXPDIR/regress
 
@@ -166,11 +166,23 @@ COLLECTIONS: test_collection
   test_collection.format:           'CFIO' ,
   test_collection.deflate:           1 ,
   test_collection.frequency:         060000 ,
-  test_collection.fields:           'PHIS', 'AGCM' ,
-                                    'SLP' , 'DYN'  ,
-                                    'T'   , 'DYN'  ,
-                                    'U;V' , 'DYN'  ,
-                                    'Q'   , 'MOIST', 'QV',
+@DATAOCEAN  test_collection.fields:           'PHIS', 'AGCM' ,
+@DATAOCEAN                                    'SLP' , 'DYN'  ,
+@DATAOCEAN                                    'T'   , 'DYN'  ,
+@DATAOCEAN                                    'U;V' , 'DYN'  ,
+@DATAOCEAN                                    'Q'   , 'MOIST', 'QV',
+@MOM5  test_collection.fields:           'UW'   ,'MOM'  , 'US',
+@MOM5                                    'VW'   ,'MOM'  , 'VS',
+@MOM5                                    'TW'   ,'MOM'  , 'TS',
+@MOM5                                    'SW'   ,'MOM'  , 'SS',
+@MOM5                                    'SLV'  ,'MOM'  ,
+@MOM5                                    'QFLUX','OCEAN' ,
+@MOM6  test_collection.fields:           'UW'   ,'MOM6'  , 'US',
+@MOM6                                    'VW'   ,'MOM6'  , 'VS',
+@MOM6                                    'TW'   ,'MOM6'  , 'TS',
+@MOM6                                    'SW'   ,'MOM6'  , 'SS',
+@MOM6                                    'SLV'  ,'MOM6'  ,
+@MOM6                                    'QFLUX','OCEAN' ,
   ::
 _EOF_
 
@@ -225,9 +237,9 @@ if( @EMISSIONS == AMIP_EMISSIONS ) then
        set AMIP_Transition_Date = 20000301
 
        if( $nymd0 < ${AMIP_Transition_Date} ) then
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
        else
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
        endif
     else
        set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
@@ -321,16 +333,16 @@ endif
 
 set test_duration = 240000
 
-cp     CAP.rc      CAP.rc.orig
-cp    AGCM.rc     AGCM.rc.orig
+cp CAP.rc      CAP.rc.orig
+cp AGCM.rc     AGCM.rc.orig
 cp HISTORY.rc0 HISTORY.rc
 
-set           NX0 = `grep "^ *NX:" AGCM.rc.orig | cut -d':' -f2`
-set           NY0 = `grep "^ *NY:" AGCM.rc.orig | cut -d':' -f2`
+set NX0 = `grep "^ *NX:" AGCM.rc.orig | cut -d':' -f2`
+set NY0 = `grep "^ *NY:" AGCM.rc.orig | cut -d':' -f2`
 
 ./strip CAP.rc
-set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
@@ -346,18 +358,18 @@ set date = `cat cap_restart`
 set nymde1 = $date[1]
 set nhmse1 = $date[2]
 
-foreach   chk ( $chk_file_names )
- /bin/mv -v $chk  ${chk}.${nymde1}_${nhmse1}.1
+foreach chk ( $chk_file_names )
+ /bin/mv -v $chk ${chk}.${nymde1}_${nhmse1}.1
 end
-@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.1
+@MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.1
 
 # Move history as well
 set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 # Need also make another variable storing all the history files
 set complete_hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 
-foreach   hist ( $hist_file_names )
- /bin/mv -v $hist  ${hist}.${nymde1}_${nhmse1}.1
+foreach hist ( $hist_file_names )
+ /bin/mv -v $hist ${hist}.${nymde1}_${nhmse1}.1
 end
 
 ##################################################################
@@ -372,13 +384,17 @@ set test_duration = 060000
 /bin/rm              cap_restart
 echo $nymd0 $nhms0 > cap_restart
 
-cp     CAP.rc.orig  CAP.rc
-cp    AGCM.rc.orig AGCM.rc
+cp CAP.rc.orig  CAP.rc
+cp AGCM.rc.orig AGCM.rc
 cp HISTORY.rc0  HISTORY.rc
 
+@COUPLED /bin/rm -rf INPUT
+@COUPLED /bin/mkdir INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
+
 ./strip CAP.rc
-set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
@@ -396,20 +412,23 @@ set date = `cat cap_restart`
 set nymde2 = $date[1]
 set nhmse2 = $date[2]
 
-foreach   chk ( $chk_file_names )
- /bin/cp -v $chk  ${chk}.${nymde2}_${nhmse2}.2
+foreach chk ( $chk_file_names )
+ /bin/cp -v $chk ${chk}.${nymde2}_${nhmse2}.2
 end
-@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.2
+@MOM6/bin/cp -v RESTART/MOM.res.nc MOM.res.nc.2
 
-# Move history as well
+# *Copy* history as well
 set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 
-foreach   hist ( $hist_file_names )
- /bin/mv -v $hist  ${hist}.${nymde2}_${nhmse2}.2
+# Note: We copy the history here because this lets the file(s)
+#       be available for Test #3 so a full compare can be made
+#       with Test #1
+foreach hist ( $hist_file_names )
+ /bin/cp -v $hist ${hist}.${nymde2}_${nhmse2}.2
 end
 
 foreach rst ( $rst_file_names )
-  /bin/rm -f  $rst
+  /bin/rm -f $rst
 end
 set numrst = `echo $rst_files | wc -w`
 set numchk = `echo $chk_files | wc -w`
@@ -447,9 +466,14 @@ set test_duration = 180000
 
 cp HISTORY.rc0 HISTORY.rc
 
+@MOM6# When you restart in MOM6 mode, you must change input_filename
+@MOM6# in the input.nml file from 'n' to 'r'
+@MOM6 /bin/cp input.nml input.nml.orig
+@MOM6 sed -i -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
+
 ./strip CAP.rc
-set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
@@ -471,16 +495,16 @@ set date = `cat cap_restart`
 set nymde3 = $date[1]
 set nhmse3 = $date[2]
 
-foreach   chk ( $chk_file_names )
- /bin/mv -v $chk  ${chk}.${nymde3}_${nhmse3}.3
+foreach chk ( $chk_file_names )
+ /bin/mv -v $chk ${chk}.${nymde3}_${nhmse3}.3
 end
-@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.3
+@MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
 
 # Move history as well
 set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 
-foreach   hist ( $hist_file_names )
- /bin/mv -v $hist  ${hist}.${nymde3}_${nhmse3}.3
+foreach hist ( $hist_file_names )
+ /bin/mv -v $hist ${hist}.${nymde3}_${nhmse3}.3
 end
 
 ##################################################################
@@ -498,43 +522,50 @@ set test_NY = 6
 # Copy Original Restarts to Regress directory
 # -------------------------------------------
 foreach rst ( $rst_file_names )
-  /bin/rm -f  $rst
+  /bin/rm -f $rst
   cp $EXPDIR/$rst $EXPDIR/regress
 end
+
+@COUPLED /bin/rm -rf INPUT
+@COUPLED /bin/mkdir INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
+
+@COUPLED # restore original input.nml
+@COUPLED /bin/mv input.nml.orig input.nml
 
 /bin/rm              cap_restart
 echo $nymd0 $nhms0 > cap_restart
 
-cp     CAP.rc.orig  CAP.rc
-cp    AGCM.rc.orig AGCM.rc
+cp CAP.rc.orig  CAP.rc
+cp AGCM.rc.orig AGCM.rc
 cp HISTORY.rc0  HISTORY.rc
 
 ./strip CAP.rc
-set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: 00000000 ${test_duration}"
+set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+set newstring = "JOB_SGMT: 00000000 ${test_duration}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 ./strip AGCM.rc
-set oldstring =  `cat AGCM.rc | grep "^ *NX:"`
-set newstring =  "NX: ${test_NX}"
+set oldstring = `cat AGCM.rc | grep "^ *NX:"`
+set newstring = "NX: ${test_NX}"
 /bin/mv AGCM.rc AGCM.tmp
 cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
-set newstring =  "NY: ${test_NY}"
+set oldstring = `cat AGCM.rc | grep "^ *NY:"`
+set newstring = "NY: ${test_NY}"
 /bin/mv AGCM.rc AGCM.tmp
 cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-@COUPLED set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NX:"`
-@COUPLED set newstring =  "OGCM.NX: ${test_NY}"
+@COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
+@COUPLED set newstring = "OGCM.NX: ${test_NY}"
 @COUPLED /bin/mv AGCM.rc AGCM.tmp
 @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-@COUPLED set oldstring =  `cat AGCM.rc | grep "^ *OGCM.NY:"`
-@COUPLED set newstring =  "OGCM.NY: ${test_NX}"
+@COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
+@COUPLED set newstring = "OGCM.NY: ${test_NX}"
 @COUPLED /bin/mv AGCM.rc AGCM.tmp
 @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
 @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
-@MOM6sed -r -i -e "/^ *LAYOUT/ s#= ([0-9]+), *([0-9]+)#= ${test_NY}, ${test_NX}#" MOM_input
+@MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
@@ -550,16 +581,16 @@ set date = `cat cap_restart`
 set nymde4 = $date[1]
 set nhmse4 = $date[2]
 
-foreach   chk ( $chk_file_names )
- /bin/mv -v $chk  ${chk}.${nymde4}_${nhmse4}.4
+foreach chk ( $chk_file_names )
+ /bin/mv -v $chk ${chk}.${nymde4}_${nhmse4}.4
 end
-@MOM6/bin/mv RESTART/MOM.res.nc MOM.res.nc.4
+@MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
 
 # Move history as well
 set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 
-foreach   hist ( $hist_file_names )
- /bin/mv -v $hist  ${hist}.${nymde4}_${nhmse4}.4
+foreach hist ( $hist_file_names )
+ /bin/mv -v $hist ${hist}.${nymde4}_${nhmse4}.4
 end
 
 #######################################################################
@@ -581,11 +612,11 @@ foreach chk ( $chk_file_names )
   set file1 = ${chk}.${nymde1}_${nhmse1}.1
   set file2 = ${chk}.${nymde3}_${nhmse3}.3
   if( -e $file1 && -e $file2 ) then
-                               set startstop_check = true
+      set check = true
       foreach exempt (${EXEMPT_chk})
-         if( $chk == $exempt ) set startstop_check = false
+         if( $chk == $exempt ) set check = false
       end
-      if( $startstop_check == true ) then
+      if( $check == true ) then
          echo Comparing ${chk}
 
 # compare binary checkpoint files
@@ -618,7 +649,7 @@ end
 @MOM6set file1 = MOM.res.nc.1
 @MOM6set file2 = MOM.res.nc.3
 @MOM6if( -e $file1 && -e $file2 ) then
-@MOM6                             set check = true
+@MOM6      set check = true
 @MOM6      if( $check == true ) then
 @MOM6         echo Comparing "MOM6 restarts"
 @MOM6         cmp $file1 $file2
@@ -640,8 +671,8 @@ foreach hist ( $complete_hist_file_names )
   set file1 = ${hist}.${nymde1}_${nhmse1}.1
   set file2 = ${hist}.${nymde3}_${nhmse3}.3
   if( -e $file1 && -e $file2 ) then
-                               set startstop_check = true
-      if( $startstop_check == true ) then
+      set check = true
+      if( $check == true ) then
          echo Comparing ${hist}
 
 # compare history files
@@ -660,9 +691,9 @@ foreach hist ( $complete_hist_file_names )
 end
 
 if( $startstop_pass == true ) then
-     echo "<font color=green> PASS </font>"                > startstop_regress_test
+   echo "<font color=green> PASS </font>"                > startstop_regress_test
 else
-     echo "<font color=red> <blink> FAIL </blink> </font>" > startstop_regress_test
+   echo "<font color=red> <blink> FAIL </blink> </font>" > startstop_regress_test
 endif
 
 #######################################################################
@@ -684,11 +715,11 @@ foreach chk ( $chk_file_names )
   set file1 = ${chk}.${nymde2}_${nhmse2}.2
   set file2 = ${chk}.${nymde4}_${nhmse4}.4
   if( -e $file1 && -e $file2 ) then
-                               set layout_check = true
+      set check = true
       foreach exempt (${EXEMPT_chk})
-         if( $chk == $exempt ) set layout_check = false
+         if( $chk == $exempt ) set check = false
       end
-      if( $layout_check == true ) then
+      if( $check == true ) then
          echo Comparing ${chk}
 
 # compare binary checkpoint files
@@ -721,7 +752,7 @@ end
 @MOM6set file1 = MOM.res.nc.2
 @MOM6set file2 = MOM.res.nc.4
 @MOM6if( -e $file1 && -e $file2 ) then
-@MOM6                             set check = true
+@MOM6      set check = true
 @MOM6      if( $check == true ) then
 @MOM6         echo Comparing "MOM6 restarts"
 @MOM6         cmp $file1 $file2
@@ -743,8 +774,8 @@ foreach hist ( $complete_hist_file_names )
   set file1 = ${hist}.${nymde2}_${nhmse4}.2
   set file2 = ${hist}.${nymde2}_${nhmse4}.4
   if( -e $file1 && -e $file2 ) then
-                               set layout_check = true
-      if( $layout_check == true ) then
+      set check = true
+      if( $check == true ) then
          echo Comparing ${hist}
 
 # compare history files
@@ -763,7 +794,13 @@ foreach hist ( $complete_hist_file_names )
 end
 
 if( $layout_pass == true ) then
-     echo "<font color=green> PASS </font>"                > layout_regress_test
+   echo "<font color=green> PASS </font>"                > layout_regress_test
 else
-     echo "<font color=red> <blink> FAIL </blink> </font>" > layout_regress_test
+   echo "<font color=red> <blink> FAIL </blink> </font>" > layout_regress_test
+endif
+
+if( $startstop_pass == true && $layout_pass == true ) then
+   echo "<font color=green> PASS </font>"                > regress_test
+else
+   echo "<font color=red> <blink> FAIL </blink> </font>" > regress_test
 endif
