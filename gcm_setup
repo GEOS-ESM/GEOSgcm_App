@@ -1039,8 +1039,9 @@ if( $AGCM_IM == "c5760" ) then
      set DEF_IOS_NDS = 4
 endif
 # CONUS Stretched Grids
+set CONUS = '#'
 if( $AGCM_IM == "c270" ) then
-     set       DT = 225
+     set       DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -1060,9 +1061,10 @@ if( $AGCM_IM == "c270" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
+     set CONUS = ''
 endif
 if( $AGCM_IM == "c540" ) then
-     set       DT = 150
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -1082,11 +1084,12 @@ if( $AGCM_IM == "c540" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
+     set CONUS = ''
 endif
 if( $AGCM_IM == "c1080" ) then
-     set       DT = 75
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
+     set       DT = 150
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 1080
@@ -1104,11 +1107,12 @@ if( $AGCM_IM == "c1080" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
+     set CONUS = ''
 endif
 if( $AGCM_IM == "c2160" ) then
-     set       DT = 60
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
+     set       DT = 75
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
      set AGCM_IM  = 2160
@@ -1126,6 +1130,7 @@ if( $AGCM_IM == "c2160" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
+     set CONUS = ''
 endif
 # DYAMOND Resolutions
 if( $AGCM_IM == "c768" ) then
@@ -1270,6 +1275,17 @@ else
    endif
 endif
 
+if ($CONUS == 'NULL') then
+  set SCHMIDT     = 'do_schmidt  = .false.'
+  set STRETCH_FAC = 'stretch_fac = 1.0'
+  set TARGET_LON  = 'target_lon  = 0.0'
+  set TARGET_LAT  = 'target_lat  = 0.0'
+else
+  set SCHMIDT     = 'do_schmidt  = .true.'
+  set STRETCH_FAC = 'stretch_fac = 2.5'
+  set TARGET_LON  = 'target_lon  = -98.35'
+  set TARGET_LAT  = 'target_lat  = 39.5'
+endif
 
 #######################################################################
 #           Check for land surface and runoff routing  models         #
@@ -2281,6 +2297,8 @@ s/@END_DATE/${END_DATE}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
+s/@CONUS/${CONUS}/g
+
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
 s/@HIST_JM/$HIST_JM/g
@@ -2303,23 +2321,24 @@ s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
 
-s?@GFDL_HYDRO?$GFDL_HYDRO?g
-
-s?@FV_MAKENH?$FV_MAKENH?g
-s?@FV_HYDRO?$FV_HYDRO?g
-
-s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
-s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
-
 EOF
 
-# Added FV3 Specific Parameters
-# -----------------------------
+# Added FV3/GFDL-MP Specific Parameters
+# -------------------------------------
 
 cat >> $HOMDIR/sedfile << EOF
 
 s^@HYDROSTATIC^$HYDROSTATIC^g
 s/@GRID_FILE/$GRID_FILE/g
+s?@FV_SCHMIDT?$SCHMIDT?g
+s?@FV_STRETCH_FAC?$STRETCH_FAC?g
+s?@FV_TARGET_LON?$TARGET_LON?g
+s?@FV_TARGET_LAT?$TARGET_LAT?g
+s?@FV_MAKENH?$FV_MAKENH?g
+s?@FV_HYDRO?$FV_HYDRO?g
+s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
+s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
+s?@GFDL_HYDRO?$GFDL_HYDRO?g
 
 EOF
 
