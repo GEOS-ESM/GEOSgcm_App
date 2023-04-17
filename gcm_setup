@@ -2515,7 +2515,7 @@ if( $AGCM_LM != 72 ) then
        cat $EXPDIR/RC/dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" \
                             | sed -e "s|z72|z${AGCM_LM}|g"     \
                             | sed -e "s|_72_|_${AGCM_LM}_|g"   > $file
-     end
+    end
 endif
 
 
@@ -2568,10 +2568,6 @@ if( $AERO_PROVIDER == GOCART2G ) then
 
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 endif
 
@@ -2583,17 +2579,11 @@ endif
 
 # Turn on RATS_PROVIDER
 # ---------------------
-if( $RATS_PROVIDER == PCHEM ) then
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "PC") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
-endif
+# (By default, doing_PC is yes in RC/Chem_Registry.rc and RC/AMIP/Chem_Registry.rc)
 
 # Turn on TR GridComp
 # ---------------------
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
+# (By default, ENABLE_TR is TRUE in RC/GEOS_ChemGridComp.rc)
 
 
 #######################################################################
