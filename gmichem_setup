@@ -1474,11 +1474,6 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
     if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
     if( $LSM_CHOICE == 3 ) set GCMRUN_CATCHCN = ""
-    if( $LSM_CHOICE == 2 ) then
-      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM40 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
-    else if ( $LSM_CHOICE == 3 ) then
-      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM45 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
-    endif
 else
     set LSM_CHOICE = 1
     set HIST_CATCHCN = "#DELETE"
@@ -2900,6 +2895,14 @@ endif
 if( $LSM_BCS == "Icarus-NLv3" ) then
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    if( $LSM_CHOICE == 2 ) then
+       /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+       cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *LAND_PARAMS:/ s/NRv7.2/CN_CLM40/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    else if ( $LSM_CHOICE == 3 ) then
+       /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+       cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *LAND_PARAMS:/ s/NRv7.2/CN_CLM45/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    endif
+
 else
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
