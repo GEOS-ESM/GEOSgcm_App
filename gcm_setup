@@ -1242,7 +1242,7 @@ set GFDL_HYDRO = ".TRUE."
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .true."
 
-# BACM_1M and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+# BACM_1M and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
    set MP_NO_USE_WSUB = ""
 else
@@ -1345,10 +1345,10 @@ endif
 # ----------------
 GOCART:
 echo "Do you wish to run ${C1}GOCART${CN} with ${C2}Actual${CN} or ${C2}Climatological${CN} Aerosols? (Enter: ${C2}A${CN} (Default) or ${C2}C${CN})"
-set   GOKART  = $<
-if( .$GOKART == . ) set  GOKART  = A
-set   GOKART  = `echo   $GOKART | tr "[:lower:]" "[:upper:]"`
-if(  $GOKART != 'A'   & $GOKART != 'C' ) then
+set   DATA_DRIVEN  = $<
+if( .$DATA_DRIVEN == . ) set  DATA_DRIVEN  = A
+set   DATA_DRIVEN  = `echo   $DATA_DRIVEN | tr "[:lower:]" "[:upper:]"`
+if(  $DATA_DRIVEN != 'A'   & $DATA_DRIVEN != 'C' ) then
       echo
       echo "${C1}GOCART${CN} must be set equal to ${C2}A${CN} or ${C2}C${CN}!"
       goto GOCART
@@ -1356,8 +1356,8 @@ else
       echo
 endif
 
-if(  $GOKART == "A" ) set GOKART = TRUE    # Use Actual         Aerosols
-if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
+if(  $DATA_DRIVEN == "A" ) set DATA_DRIVEN = FALSE    # Use Actual         Aerosols
+if(  $DATA_DRIVEN == "C" ) set DATA_DRIVEN = TRUE     # Use Climatological Aerosols
 
 # Default setup for linkbcs emissions
 set OPS_SPECIES      = "#"
@@ -1365,11 +1365,19 @@ set CMIP_SPECIES     = "#"
 set MERRA2OX_SPECIES = "#"
 set PCHEM_CLIM_YEARS = ""
 
-if( $GOKART == TRUE ) then
+set AERO_PROVIDER   = GOCART2G
 
-set GOCART          = ""
-set GOCART_INTERNAL = "GOCART_INTERNAL"
-set HIST_GOCART     = ""
+if( $DATA_DRIVEN == FALSE ) then
+
+   set GOCART          = ""
+   set HIST_GOCART     = ""
+
+else
+
+   set  GOCART          = "#"
+   set  HIST_GOCART     = "#DELETE"
+
+endif
 
 # Emission Files
 # --------------
@@ -1402,38 +1410,6 @@ EMISSIONS:
         set PCHEM_CLIM_YEARS = 39
      endif
 
-# AERO Provider
-# -------------
-     set AERO_PROVIDER = GOCART2G
-#AERO:
-#echo "Enter the ${C1}AERO_PROVIDER${CN}: ${C2}GOCART${CN} (Default) or ${C2}GOCART.data${CN}:"
-#      set AERO_PROVIDER  = $<
-#         if( .$AERO_PROVIDER == . ) then
-#          set  AERO_PROVIDER = GOCART
-#      else
-#         if(  $AERO_PROVIDER != GOCART.data & $AERO_PROVIDER != GOCART ) then
-#            echo
-#            echo "${C1}AERO_PROVIDER${CN} must be equal to ${C2}GOCART${CN} or ${C2}GOCART.data${CN}!"
-#            goto AERO
-#         else
-#            echo
-#         endif
-#      endif
-
-else
-
-# GOKART = FALSE
-# --------------
-set  AERO_PROVIDER   = GOCART.data
-set  EMISSIONS       = ""
-set  GOCART          = "#"
-set  HIST_GOCART     = "#DELETE"
-
-# GOCART.data uses MERRA2OX currently
-set MERRA2OX_SPECIES = ""
-set PCHEM_CLIM_YEARS = 39
-
-endif
 
 # RATS Provider
 # -------------
@@ -2551,14 +2527,6 @@ if( $RATS_PROVIDER == PCHEM ) then
     awk '{ if ($1~"ENABLE_PCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 endif
 
-# Turn on GOCART.data
-# -------------------
-if( $AERO_PROVIDER == GOCART.data ) then
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-endif
-
 # Turn on TR GridComp
 # -------------------
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
@@ -2583,9 +2551,21 @@ else
     awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
-# Turn on GOCART
-# --------------
-if( $GOKART == TRUE ) then
+# Enable DATA_DRIVEN GOCART2G
+# ---------------------------
+if( $AERO_PROVIDER == GOCART2G ) then
+    if ($DATA_DRIVEN == TRUE ) then
+       /bin/mv $EXPDIR/RC/GOCART2G_GridComp.rc $EXPDIR/RC/GOCART2G_GridComp.tmp
+       cat $EXPDIR/RC/GOCART2G_GridComp.tmp | \
+          sed -e '/ACTIVE_INSTANCES_DU:/ s/DU /DU.data /' \
+              -e '/ACTIVE_INSTANCES_SS:/ s/SS /SS.data /' \
+              -e '/ACTIVE_INSTANCES_SU:/ s/SU /SU.data /' \
+              -e '/ACTIVE_INSTANCES_NI:/ s/NI /NI.data /' \
+              -e '/ACTIVE_INSTANCES_CA:/ s/CA.oc /CA.oc.data /' \
+              -e '/ACTIVE_INSTANCES_CA:/ s/CA.bc /CA.bc.data /' \
+              -e '/ACTIVE_INSTANCES_CA:/ s/CA.br /CA.br.data /' > $EXPDIR/RC/GOCART2G_GridComp.rc
+    endif
+
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
@@ -2593,14 +2573,6 @@ if( $GOKART == TRUE ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-else
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY

@@ -1293,8 +1293,8 @@ set GFDL_HYDRO = ".TRUE."
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .true."
 
-# BACM_1M and GFDL do not use WSUB_NATURE, so this eliminates a regrid
-if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
+# 1MOM and GFDL do not use WSUB_CLIM, so this eliminates a regrid
+if ( "$AGCM_MP" == "1MOM" | "$AGCM_MP" == "GFDL" ) then
    set MP_NO_USE_WSUB = ""
 else
    set MP_NO_USE_WSUB = "#DELETE#"
