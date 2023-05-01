@@ -90,6 +90,19 @@ CLOSURE_CONGESTUS: 3
 ###########################################################
 
 ###########################################################
+# Enable wet scavenging
+MTRI_increments::
+DU::DU default
+SS::SS default
+SU::SO4 default
+CA.bc::CA.bcphilic default
+CA.br::CA.brphilic default
+CA.oc::CA.ocphilic default
+NI::NO3an1 "NI::NO3an2,NI::NO3an3"
+::
+###########################################################
+
+###########################################################
 # Ocean Model Configuration Parameters
 # ------------------------------------
 OGCM.GRID_TYPE: @OGCM_GRID_TYPE
