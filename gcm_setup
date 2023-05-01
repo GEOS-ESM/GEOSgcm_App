@@ -881,7 +881,7 @@ if( $AGCM_IM ==  "c90" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 4
+          set  NX = 3
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -949,7 +949,7 @@ if( $AGCM_IM == "c720" ) then
      set  LONG_DT = 450
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 16
+     set       NX = 24
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -971,7 +971,7 @@ if( $AGCM_IM == "c1440" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
+     set       NX = 48
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -993,7 +993,7 @@ if( $AGCM_IM == "c2880" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
+     set       NX = 96
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1016,7 +1016,7 @@ if( $AGCM_IM == "c5760" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 60
+     set       NX = 192
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1041,7 +1041,7 @@ if( $AGCM_IM == "c270" ) then
      set  LONG_DT = $DT
      set AGCM_IM  = 270
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 9
+     set       NX = 18
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1065,7 +1065,7 @@ if( $AGCM_IM == "c540" ) then
      set  LONG_DT = $DT
      set AGCM_IM  = 540
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 18
+     set       NX = 36
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1089,7 +1089,7 @@ if( $AGCM_IM == "c1080" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 1080
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 36
+     set       NX = 72
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1113,7 +1113,7 @@ if( $AGCM_IM == "c1536" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 64 
+     set       NX = 96 
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1137,7 +1137,7 @@ if( $AGCM_IM == "c2160" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 72
+     set       NX = 192
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
