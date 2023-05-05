@@ -1393,6 +1393,7 @@ set  RATS_PROVIDER   = PCHEM
 # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
 if( "$CLDMICRO" == "BACM_1M" ) then
    set DT = 450
+   set LONG_DT = 450
 endif
 
 ASKHB:
