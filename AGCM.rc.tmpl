@@ -19,20 +19,36 @@ AGCM.LM: @AGCM_LM
 AGCM.IM_WORLD: @AGCM_IM
 @LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
 
+@CONUS AGCM.STRETCH_FACTOR: @STRETCH_FACTOR
+@CONUS AGCM.TARGET_LAT: 39.5
+@CONUS AGCM.TARGET_LON: -98.35
+
+###########################################################
+# long physics DT options
+# ----------------------------------------
+ADJUST_DT: .FALSE.
+CHEMISTRY_RUN_AT_INTERVAL_START: .TRUE.
+CHEMISTRY_DT: @LONG_DT
+GOCART_DT: @LONG_DT
+HEMCO_DT: @LONG_DT
+GF_DT: @LONG_DT
+UW_DT: @LONG_DT
+###########################################################
+
 ###########################################################
 # dynamics options
 # ----------------------------------------
 DYCORE: @DYCORE
-#FV3_CONFIG: MONOTONIC
+@CONUS FV3_CONFIG: HWT
 AdvCore_Advection: 0
 ###########################################################
 
 ###########################################################
 # radiation options
 # ----------------------------------------
- SOLAR_DT: 3600
- IRRAD_DT: 3600
-SATSIM_DT: 3600
+ SOLAR_DT: @SOLAR_DT
+ IRRAD_DT: @IRRAD_DT
+SATSIM_DT: @IRRAD_DT
 SOLARAvrg: 0
 IRRADAvrg: 0
 EOT: .TRUE.
@@ -50,7 +66,6 @@ ORBIT_ANAL2B: .TRUE.
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
 @GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
-@GFDL_1M_USE_AEROSOL_NN: .FALSE.
 ###########################################################
 
 ###########################################################
@@ -91,7 +106,8 @@ CLOSURE_CONGESTUS: 3
 
 ###########################################################
 # Enable wet scavenging
-MTRI_increments::
+# NOTE: this section should be commented out when running gocart.data
+MCHEMTRI_increments::
 DU::DU default
 SS::SS default
 SU::SO4 default
