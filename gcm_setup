@@ -1113,7 +1113,7 @@ if( $AGCM_IM == "c1536" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 96 
+     set       NX = 96
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
