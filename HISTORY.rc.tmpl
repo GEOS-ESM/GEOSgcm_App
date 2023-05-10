@@ -1478,7 +1478,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'CA.bcEMBB'    , 'CA.bc'  , 'BCEMBB'          ,
                                   'CA.bcEMBF'    , 'CA.bc'  , 'BCEMBF'          ,
                                   'CA.bcEMAN'    , 'CA.bc'  , 'BCEMAN'          ,
-#                                 'DBC2gDT'      , 'MOIST'  , 'BCSV'            ,
+                                  'MTRI%CA.bc::CA.bcphilicIM' , 'PHYSICS' , 'BCSV' ,
 # Brown Carbon
                                   'CA.brEM'      , 'CA.br'  , 'BREM001;BREM002' ,
                                   'CA.brDP'      , 'CA.br'  , 'BRDP001;BRDP002' ,
@@ -1488,19 +1488,19 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'CA.brEMAN'    , 'CA.br'  , 'BREMAN'          ,
                                   'CA.brPSOA'    , 'CA.br'  , 'BRPSOA'          ,
                                   'CA.brHYPHIL'  , 'CA.br'  , 'BRHYPHIL'        ,
-#                                 'DBRC2gDT'     , 'MOIST'  , 'BRSV'            ,
+                                  'MTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
 # Dust
                                   'DUEM'         , 'DU'     , 'DUEM001;DUEM002;DUEM003;DUEM004;DUEM005',
                                   'DUSD'         , 'DU'     , 'DUSD001;DUSD002;DUSD003;DUSD004;DUSD005',
                                   'DUDP'         , 'DU'     , 'DUDP001;DUDP002;DUDP003;DUDP004;DUDP005',
                                   'DUWT'         , 'DU'     , 'DUWT001;DUWT002;DUWT003;DUWT004;DUWT005',
-#                                 'DDU2gDT'      , 'MOIST'  , 'DUSV'            ,
+                                  'MTRI%DU::DUIM'             , 'PHYSICS' , 'DUSV' ,
 # Seasalt
                                   'SSEM'         , 'SS'     , 'SSEM001;SSEM002;SSEM003;SSEM004;SSEM005',
                                   'SSSD'         , 'SS'     , 'SSSD001;SSSD002;SSSD003;SSSD004;SSSD005',
                                   'SSDP'         , 'SS'     , 'SSDP001;SSDP002;SSDP003;SSDP004;SSDP005',
                                   'SSWT'         , 'SS'     , 'SSWT001;SSWT002;SSWT003;SSWT004;SSWT005',
-#                                 'DSS2gDT'      , 'MOIST'  , 'SSSV'            ,
+                                  'MTRI%SS::SSIM'             , 'PHYSICS' , 'SSSV' ,
 # Sulfates
                                   'SUEM'         , 'SU'     , 'SUEM001;SUEM002;SUEM003;SUEM004',
                                   'SUSD'         , 'SU'     , 'SUSD001;SUSD002;SUSD003;SUSD004',
@@ -1516,7 +1516,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'SO2EMBB'      , 'SU'     ,
                                   'SO2EMVN'      , 'SU'     ,
                                   'SO2EMVE'      , 'SU'     ,
-#                                 'DSU2gDT'      , 'MOIST'  , 'SUSV'            ,
+                                  'MTRI%SU::SO4IM'            , 'PHYSICS' , 'SUSV' ,
 # Organic Carbon
                                   'CA.ocEM'      , 'CA.oc'  , 'OCEM001;OCEM002' ,
                                   'CA.ocDP'      , 'CA.oc'  , 'OCDP001;OCDP002' ,
@@ -1527,7 +1527,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'CA.ocEMBG'    , 'CA.oc'  , 'OCEMBG'          ,
                                   'CA.ocPSOA'    , 'CA.oc'  , 'OCPSOA'          ,
                                   'CA.ocHYPHIL'  , 'CA.oc'  , 'OCHYPHIL'        ,
-#                                 'DOC2gDT'      , 'MOIST'  , 'OCSV'            ,
+                                  'MTRI%CA.oc::CA.ocphilicIM' , 'PHYSICS' , 'OCSV' ,
 # Nitrate
                                   'NIPNO3AQ'     , 'NI'     ,
                                   'NIPNH4AQ'     , 'NI'     ,
@@ -1544,7 +1544,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'NH4DP'        , 'NI'     ,
                                   'NH4WT'        , 'NI'     ,
                                   'NH4SV'        , 'NI'     ,
-#                                 'DNI2gDT'      , 'MOIST'  , 'NISV'            ,
+                                  'MTRI%NI::NO3an1IM'         , 'PHYSICS' , 'NISV' ,
                                    ::
 
   tavg3_2d_chm_Nx-.format:        'CFIO' ,
