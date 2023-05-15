@@ -1106,14 +1106,14 @@ if( $AGCM_IM == "c1080" ) then
      set STRETCH_FACTOR = 2.5
 endif
 if( $AGCM_IM == "c1536" ) then
-     set       DT = 75 
+     set       DT = 75
      set SOLAR_DT = 900
      set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
      set  LONG_DT = 300
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 96 
+     set       NX = 96
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1124,7 +1124,7 @@ if( $AGCM_IM == "c1536" ) then
      set NUM_SGMT = 1
      set ATMOS_RES = CF1536x6C
      set   CNV_NX = 8
-     set POST_NDS = 16     
+     set POST_NDS = 16
      set USE_SHMEM = 1
      set CONUS = ''
      set STRETCH_FACTOR = 3.0
