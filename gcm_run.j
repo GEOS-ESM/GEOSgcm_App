@@ -524,16 +524,36 @@ set chk_file_names = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" 
 
 set monthly_chk_names = `cat $EXPDIR/HISTORY.rc | grep -v '^[\t ]*#' | sed -n 's/\([^\t ]\+\).monthly:[\t ]*1.*/\1/p' | sed 's/$/_rst/' `
 
+set read_by_face = `grep READ_RESTART_BY_FACE: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
 set dummy = `echo $rst_file_names`
 set rst_file_names = ''
+set tile_rsts = (catch catchcn route lake landice openwater saltwater seaicethermo)
 foreach rst ( $dummy )
   set length  = `echo $rst | awk '{print length($0)}'`
   set    bit  = `echo $rst | cut -c1`
   if(  "$bit" == "+" | \
        "$bit" == "-" ) set rst = `echo $rst | cut -c2-$length`
-  set rst_file_names = `echo $rst_file_names $rst`
+  set is_tile_rst = FALSE
+  if ($read_by_face == YES) then
+     foreach tile_rst ($tile_rsts)
+       if ( $rst =~ *$tile_rst* ) then
+         set is_tile_rst = TRUE
+         break
+       endif  
+     end
+  endif
+  if ($is_tile_rst == FALSE & $read_by_face == YES) then
+    set part1 = `echo $rst:q | sed 's/_rst/ /g'`
+      foreach n (1 2 3 4 5 6)
+         set rst = ${part1}_face_${n}_rst
+         set rst_file_names = `echo $rst_file_names $rst`
+      end
+  else   
+    set rst_file_names = `echo $rst_file_names $rst`
+  endif
 end
 
 # Copy Restarts to Scratch Directory
@@ -551,9 +571,15 @@ wait
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
-/bin/rm gwd_internal_rst
-/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
-
+if ( $read_by_face == TRUE ) then
+  foreach n (1 2 3 4 5 6)
+    /bin/rm gwd_internal_face_${n}_rst
+    /bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+  end
+else
+  /bin/rm gwd_internal_rst
+  /bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
+endif
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
