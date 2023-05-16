@@ -469,8 +469,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
    if ( $MODEL == USER_MUST_SET | $NCPUS_PER_NODE == USER_MUST_SET ) then
       echo "ERROR: We have detected you are on $SITE. As we do not have"
       echo "       official fixed node info yet, we ask you to edit $0"
-      echo "       and set the MODEL and NCPUS_PER_NODE variables"
-      echo "       in the script $0."
+      echo "       and set the MODEL and NCPUS_PER_NODE variables."
       echo "       Look for the section that says:"
       echo " "
       echo "       # AWS and Azure users must set the MODEL and NCPUS_PER_NODE"
