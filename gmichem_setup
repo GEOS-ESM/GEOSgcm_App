@@ -423,8 +423,6 @@ else if ( $SITE == 'NAS' ) then
        $MODEL != 'cas' & \
        $MODEL != 'rom' ) goto ASKPROC
 
-   endif
-
    # Some processors have weird names at NAS
    # ---------------------------------------
 
@@ -463,9 +461,9 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
 
    # Above we need a user to set the MODEL and NCPUS_PER_NODE
    # variables. Here we check that they have been set. If not,
-   # we ask the user to set them 
+   # we ask the user to set them
    # --------------------------------------------------------
-   
+
    if ( $MODEL == USER_MUST_SET | $NCPUS_PER_NODE == USER_MUST_SET ) then
       echo "ERROR: We have detected you are on $SITE. As we do not have"
       echo "       official fixed node info yet, we ask you to edit $0"
@@ -1239,7 +1237,7 @@ if( $AGCM_IM == "c1536" ) then
      set GMICHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 96 
+     set       NX = 96
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1311,17 +1309,17 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 
 set BACM_1M_ = "#"
 if ( "$CLDMICRO" == "BACM_1M" ) then
-   set BACM_1M_ = "" 
+   set BACM_1M_ = ""
 endif
 
 set GFDL_1M_ = "#"
 if ( "$CLDMICRO" == "GFDL_1M" ) then
-   set GFDL_1M_ = "" 
+   set GFDL_1M_ = ""
 endif
 
 set MGB2_2M_ = "#"
 if ( "$CLDMICRO" == "MGB2_2M" ) then
-   set MGB2_2M_ = "" 
+   set MGB2_2M_ = ""
 endif
 
 set GFDL_HYDRO = ".TRUE."
@@ -2893,7 +2891,7 @@ if( $LGOCART2G == TRUE ) then
               -e '/ACTIVE_INSTANCES_CA:/ s/CA.oc /CA.oc.data /' \
               -e '/ACTIVE_INSTANCES_CA:/ s/CA.bc /CA.bc.data /' \
               -e '/ACTIVE_INSTANCES_CA:/ s/CA.br /CA.br.data /' > $EXPDIR/RC/GOCART2G_GridComp.rc
-    endif 
+    endif
 
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
