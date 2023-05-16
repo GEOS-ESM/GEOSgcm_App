@@ -198,14 +198,11 @@ echo "   ${C2}c1440 - 1/16 deg (${C1}  6.25   km${C2}) ${CN}"
 echo "   ${C2}c2880 - 1/32 deg (${C1}  3.125  km${C2}) ${CN}"
 echo "   ${C2}c5760 - 1/64 deg (${C1}  1.5625 km${C2}) ${CN}"
 echo "   ${C2}         CONUS Stretched Grids                "
-echo "   ${C2}c270 -- ${C1} 13.0 -100 km${C2}) ${CN} "
-echo "   ${C2}c540 -- ${C1}  7.0 - 50 km${C2}) ${CN} "
-echo "   ${C2}c1080 - ${C1}  3.5 - 25 km${C2}) ${CN} "
-echo "   ${C2}c2160 - ${C1}  1.25- 12 km${C2}) ${CN} "
-echo "   ${C2}             DYAMOND Grids                    "
-echo "   ${C2}c768 -- 1/8  deg (${C1} 12.0    km${C2}) ${CN}"
-echo "   ${C2}c1536 - 1/16 deg (${C1}  6.0    km${C2}) ${CN}"
-echo "   ${C2}c3072 - 1/32 deg (${C1}  3.0    km${C2}) ${CN}"
+echo "   ${C2}c270 -- ${C1} 16.0 -100 km${C2}) ${CN} "
+echo "   ${C2}c540 -- ${C1}  8.0 - 50 km${C2}) ${CN} "
+echo "   ${C2}c1080 - ${C1}  4.0 - 25 km${C2}) ${CN} "
+echo "   ${C2}c1536 - ${C1}  2.0 - 20 km${C2}) ${CN} "
+echo "   ${C2}c2160 - ${C1}  2.0 - 12 km${C2}) ${CN} "
 echo " "
 set HRCODE = `echo $<`
 set HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
@@ -223,10 +220,8 @@ if( $HRCODE != 'c12'   & \
     $HRCODE != 'c270'  & \
     $HRCODE != 'c540'  & \
     $HRCODE != 'c1080' & \
-    $HRCODE != 'c2160' & \
-    $HRCODE != 'c768'  & \
     $HRCODE != 'c1536' & \
-    $HRCODE != 'c3072' ) goto HRCODE
+    $HRCODE != 'c2160' ) goto HRCODE
 
 set Resolution = $HRCODE
 
@@ -327,10 +322,8 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c270'  | \
     $HRCODE == 'c540'  | \
     $HRCODE == 'c1080' | \
-    $HRCODE == 'c2160' | \
-    $HRCODE == 'c768'  | \
     $HRCODE == 'c1536' | \
-    $HRCODE == 'c3072' ) then
+    $HRCODE == 'c2160' ) then
 
     set DEFAULT_DO_IOS = TRUE
     echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
@@ -919,11 +912,9 @@ if( $AGCM_IM ==  "c12" ) then
      set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
@@ -948,11 +939,9 @@ if( $AGCM_IM ==  "c24" ) then
      set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 24
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
@@ -972,11 +961,9 @@ if( $AGCM_IM ==  "c48" ) then
      set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
@@ -991,10 +978,9 @@ if( $AGCM_IM ==  "c48" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c90" ) then
-     set       DT = 900
+     set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -1011,9 +997,8 @@ if( $AGCM_IM ==  "c90" ) then
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1024,13 +1009,11 @@ if( $AGCM_IM ==  "c90" ) then
      set POST_NDS = 8
 endif
 if( $AGCM_IM ==  "c180" ) then
-     set       DT = 600
+     set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -1056,11 +1039,9 @@ if( $AGCM_IM == "c360" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12
@@ -1080,14 +1061,12 @@ if( $AGCM_IM == "c720" ) then
      set       DT = 225
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = 450
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 16
+     set       NX = 24
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1103,16 +1082,14 @@ if( $AGCM_IM == "c720" ) then
 endif
 if( $AGCM_IM == "c1440" ) then
      set       DT = 150
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = 300
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
+     set       NX = 48
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1128,16 +1105,14 @@ if( $AGCM_IM == "c1440" ) then
 endif
 if( $AGCM_IM == "c2880" ) then
      set       DT = 75
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = 300
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
+     set       NX = 96
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1153,17 +1128,15 @@ if( $AGCM_IM == "c2880" ) then
      set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 150
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set       DT = 30
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = 300
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 60
+     set       NX = 192
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1179,18 +1152,17 @@ if( $AGCM_IM == "c5760" ) then
      set DEF_IOS_NDS = 4
 endif
 # CONUS Stretched Grids
+set CONUS = '#'
 if( $AGCM_IM == "c270" ) then
-     set       DT = 225
+     set       DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 270
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 9
+     set       NX = 18
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1203,19 +1175,19 @@ if( $AGCM_IM == "c270" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
+     set CONUS = ''
+     set STRETCH_FACTOR = 2.5
 endif
 if( $AGCM_IM == "c540" ) then
-     set       DT = 150
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 540
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 18
+     set       NX = 36
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1228,19 +1200,19 @@ if( $AGCM_IM == "c540" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
+     set CONUS = ''
+     set STRETCH_FACTOR = 2.5
 endif
 if( $AGCM_IM == "c1080" ) then
-     set       DT = 75
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set       DT = 150
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
+     set  LONG_DT = 300
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 1080
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 36
+     set       NX = 72
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1253,70 +1225,19 @@ if( $AGCM_IM == "c1080" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
-endif
-if( $AGCM_IM == "c2160" ) then
-     set       DT = 60
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
-     set AGCM_IM  = 2160
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 72
-     set       NY = `expr $NX \* 6 \* 2`
-     set HYDROSTATIC = $USE_HYDROSTATIC
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF2160x6C
-     set   CNV_NX = 8
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-endif
-# DYAMOND Resolutions
-if( $AGCM_IM == "c768" ) then
-     set       DT = 180
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = 900
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = $CHEM_DT
-     set AGCM_IM  = 768
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 32
-     set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0768x6C
-     set   CNV_NX = 8
-     set POST_NDS = 16
-     set USE_SHMEM = 1
+     set CONUS = ''
+     set STRETCH_FACTOR = 2.5
 endif
 if( $AGCM_IM == "c1536" ) then
-     set       DT = 90
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+     set       DT = 75
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = 900
+     set  LONG_DT = 300
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = $CHEM_DT
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 64
+     set       NX = 96
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1329,31 +1250,33 @@ if( $AGCM_IM == "c1536" ) then
      set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
+     set CONUS = ''
+     set STRETCH_FACTOR = 3.0
 endif
-if( $AGCM_IM == "c3072" ) then
-     set       DT = 45
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
+if( $AGCM_IM == "c2160" ) then
+     set       DT = 60
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  CHEM_DT = 900
+     set  LONG_DT = 300
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = $CHEM_DT
-     set AGCM_IM  = 3072
+     set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 64
-     set       NY = `expr $NX \* 6`
+     set       NX = 192
+     set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
      set NUM_READERS = 6
-     set JOB_SGMT = 00000005
+     set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF3072x6C
+     set ATMOS_RES = CF2160x6C
      set   CNV_NX = 8
-     set POST_NDS = 16
+     set POST_NDS = 32
      set USE_SHMEM = 1
+     set CONUS = ''
+     set STRETCH_FACTOR = 2.5
 endif
 if( "$OCNMODEL" == "MIT" ) then
      set OCEAN_DT = $DT
@@ -1410,7 +1333,7 @@ set GFDL_HYDRO = ".TRUE."
 set GFDL_PROG_CCN = "prog_ccn = .true."
 set GFDL_USE_CCN  = "use_ccn = .true."
 
-# BACM_1M and GFDL do not use WSUB_NATURE, so this eliminates a regrid
+# BACM_1M and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
    set MP_NO_USE_WSUB = ""
 else
@@ -1438,6 +1361,17 @@ else
    endif
 endif
 
+if ($CONUS == '#') then
+  set SCHMIDT     = "do_schmidt  = .false."
+  set STRETCH_FAC = "stretch_fac = 1.0"
+  set TARGET_LON  = "target_lon  = 0.0"
+  set TARGET_LAT  = "target_lat  = 0.0"
+else
+  set SCHMIDT     = "do_schmidt  = .true."
+  set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
+  set TARGET_LON  = "target_lon  = -98.35"
+  set TARGET_LAT  = "target_lat  = 39.5"
+endif
 
 #######################################################################
 #           Check for land surface and runoff routing  models         #
@@ -1513,10 +1447,10 @@ endif
 # ----------------
 GOCART:
 echo "Do you wish to run ${C1}GOCART${CN} with ${C2}Actual${CN} or ${C2}Climatological${CN} Aerosols? (Enter: ${C2}A${CN} (Default) or ${C2}C${CN})"
-set   GOKART  = $<
-if( .$GOKART == . ) set  GOKART  = A
-set   GOKART  = `echo   $GOKART | tr "[:lower:]" "[:upper:]"`
-if(  $GOKART != 'A'   & $GOKART != 'C' ) then
+set   DATA_DRIVEN  = $<
+if( .$DATA_DRIVEN == . ) set  DATA_DRIVEN  = A
+set   DATA_DRIVEN  = `echo   $DATA_DRIVEN | tr "[:lower:]" "[:upper:]"`
+if(  $DATA_DRIVEN != 'A'   & $DATA_DRIVEN != 'C' ) then
       echo
       echo "${C1}GOCART${CN} must be set equal to ${C2}A${CN} or ${C2}C${CN}!"
       goto GOCART
@@ -1524,8 +1458,8 @@ else
       echo
 endif
 
-if(  $GOKART == "A" ) set GOKART = TRUE    # Use Actual         Aerosols
-if(  $GOKART == "C" ) set GOKART = FALSE   # Use Climatological Aerosols
+if(  $DATA_DRIVEN == "A" ) set DATA_DRIVEN = FALSE    # Use Actual         Aerosols
+if(  $DATA_DRIVEN == "C" ) set DATA_DRIVEN = TRUE     # Use Climatological Aerosols
 
 # Default setup for linkbcs emissions
 set OPS_SPECIES      = "#"
@@ -1533,11 +1467,19 @@ set CMIP_SPECIES     = "#"
 set MERRA2OX_SPECIES = "#"
 set PCHEM_CLIM_YEARS = ""
 
-if( $GOKART == TRUE ) then
+set AERO_PROVIDER   = GOCART2G
 
-set GOCART          = ""
-set GOCART_INTERNAL = "GOCART_INTERNAL"
-set HIST_GOCART     = ""
+if( $DATA_DRIVEN == FALSE ) then
+
+   set GOCART          = ""
+   set HIST_GOCART     = ""
+
+else
+
+   set  GOCART          = "#"
+   set  HIST_GOCART     = "#DELETE"
+
+endif
 
 # Emission Files
 # --------------
@@ -1570,38 +1512,6 @@ EMISSIONS:
         set PCHEM_CLIM_YEARS = 39
      endif
 
-# AERO Provider
-# -------------
-     set AERO_PROVIDER = GOCART2G
-#AERO:
-#echo "Enter the ${C1}AERO_PROVIDER${CN}: ${C2}GOCART${CN} (Default) or ${C2}GOCART.data${CN}:"
-#      set AERO_PROVIDER  = $<
-#         if( .$AERO_PROVIDER == . ) then
-#          set  AERO_PROVIDER = GOCART
-#      else
-#         if(  $AERO_PROVIDER != GOCART.data & $AERO_PROVIDER != GOCART ) then
-#            echo
-#            echo "${C1}AERO_PROVIDER${CN} must be equal to ${C2}GOCART${CN} or ${C2}GOCART.data${CN}!"
-#            goto AERO
-#         else
-#            echo
-#         endif
-#      endif
-
-else
-
-# GOKART = FALSE
-# --------------
-set  AERO_PROVIDER   = GOCART.data
-set  EMISSIONS       = ""
-set  GOCART          = "#"
-set  HIST_GOCART     = "#DELETE"
-
-# GOCART.data uses MERRA2OX currently
-set MERRA2OX_SPECIES = ""
-set PCHEM_CLIM_YEARS = 39
-
-endif
 
 # RATS Provider
 # -------------
@@ -1630,6 +1540,7 @@ RATSPRO:
 # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
 if( "$CLDMICRO" == "BACM_1M" ) then
    set DT = 450
+   set LONG_DT = 450
 endif
 
 ASKHB:
@@ -2461,8 +2372,6 @@ s^@DYCORE^$DYCORE^g
 s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
 s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
 
-s/@GOCART_DT/$DT/g
-
 s?@IS_FCST?$IS_FCST?g
 s^@BOOT^YES^g
 s^@BCSRES^$BCSRES^g
@@ -2474,9 +2383,8 @@ s^@TILEBIN^$TILEBIN^g
 s/@DT/$DT/g
 s/@SOLAR_DT/$SOLAR_DT/g
 s/@IRRAD_DT/$IRRAD_DT/g
-s/@SATSIM_DT/$SATSIM_DT/g
 s/@OCEAN_DT/$OCEAN_DT/g
-s/@CHEM_DT/$CHEM_DT/g
+s/@LONG_DT/$LONG_DT/g
 s/@NX/$NX/g
 s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
@@ -2506,6 +2414,9 @@ s/@END_DATE/${END_DATE}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
+s/@CONUS/${CONUS}/g
+s/@STRETCH_FAC/${STRETCH_FAC}/g
+
 /SATSIM_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
@@ -2530,23 +2441,24 @@ s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
 
-s?@GFDL_HYDRO?$GFDL_HYDRO?g
-
-s?@FV_MAKENH?$FV_MAKENH?g
-s?@FV_HYDRO?$FV_HYDRO?g
-
-s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
-s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
-
 EOF
 
-# Added FV3 Specific Parameters
-# -----------------------------
+# Added FV3/GFDL-MP Specific Parameters
+# -------------------------------------
 
 cat >> $HOMDIR/sedfile << EOF
 
 s^@HYDROSTATIC^$HYDROSTATIC^g
 s/@GRID_FILE/$GRID_FILE/g
+s?@FV_SCHMIDT?$SCHMIDT?g
+s?@FV_STRETCH_FAC?$STRETCH_FAC?g
+s?@FV_TARGET_LON?$TARGET_LON?g
+s?@FV_TARGET_LAT?$TARGET_LAT?g
+s?@FV_MAKENH?$FV_MAKENH?g
+s?@FV_HYDRO?$FV_HYDRO?g
+s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
+s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
+s?@GFDL_HYDRO?$GFDL_HYDRO?g
 
 EOF
 
@@ -2910,14 +2822,6 @@ if( $RATS_PROVIDER == PCHEM ) then
     awk '{ if ($1~"ENABLE_PCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 endif
 
-# Turn on GOCART.data
-# -------------------
-if( $AERO_PROVIDER == GOCART.data ) then
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-endif
-
 # Turn on TR GridComp
 # -------------------
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
@@ -2942,24 +2846,24 @@ else
     awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
-# Turn on GOCART
-# --------------
-if( $GOKART == TRUE ) then
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+# Enable DATA_DRIVEN GOCART2G
+# ---------------------------
+if( $AERO_PROVIDER == GOCART2G ) then
+    if ($DATA_DRIVEN == TRUE ) then
+       /bin/mv $EXPDIR/RC/GOCART2G_GridComp.rc $EXPDIR/RC/GOCART2G_GridComp.tmp
+       cat $EXPDIR/RC/GOCART2G_GridComp.tmp | \
+          sed -e '/ACTIVE_INSTANCES_DU:/ s/DU /DU.data /' \
+              -e '/ACTIVE_INSTANCES_SS:/ s/SS /SS.data /' \
+              -e '/ACTIVE_INSTANCES_SU:/ s/SU /SU.data /' \
+              -e '/ACTIVE_INSTANCES_NI:/ s/NI /NI.data /' \
+              -e '/ACTIVE_INSTANCES_CA:/ s/CA.oc /CA.oc.data /' \
+              -e '/ACTIVE_INSTANCES_CA:/ s/CA.bc /CA.bc.data /' \
+              -e '/ACTIVE_INSTANCES_CA:/ s/CA.br /CA.br.data /' > $EXPDIR/RC/GOCART2G_GridComp.rc
+    endif
 
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-else
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
 endif
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
@@ -2970,17 +2874,11 @@ endif
 
 # Turn on RATS_PROVIDER
 # ---------------------
-if( $RATS_PROVIDER == PCHEM ) then
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "PC") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
-endif
+# (By default, doing_PC is yes in RC/Chem_Registry.rc and RC/AMIP/Chem_Registry.rc)
 
 # Turn on TR GridComp
 # ---------------------
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
+# (By default, ENABLE_TR is TRUE in RC/GEOS_ChemGridComp.rc)
 
 
 #######################################################################
