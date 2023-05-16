@@ -401,47 +401,27 @@ if ( $SITE == 'NCCS' ) then
 
 else if ( $SITE == 'NAS' ) then
 
-   set BUILT_ON_ROME = @BUILT_ON_ROME@
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo " "
+   echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "      and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'sky'
+   endif
 
-   if ( $BUILT_ON_ROME == "TRUE") then
-
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}rom (AMD Rome) (default)${CN}"
-      echo " "
-      echo " NOTE GEOS is non-zero-diff when running on AMD Rome"
-      echo "      compared to the other Intel nodes."
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'rom'
-      endif
-
-      if( $MODEL != 'rom' ) goto ASKPROC
-   else
-
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}has (Haswell)${CN}"
-      echo "   ${C2}bro (Broadwell)${CN}"
-      echo "   ${C2}sky (Skylake)${CN} (default)"
-      echo "   ${C2}cas (Cascade Lake)${CN}"
-      echo " "
-      echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
-      echo "         and Ivy Bridge are not supported by current GEOS"
-      echo " "
-      echo " NOTE 2: Due to OS differences, if you want to run on the AMD"
-      echo "         Rome nodes at NAS, you must recompile on the Rome nodes"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'sky'
-      endif
-
-      if( $MODEL != 'has' & \
-          $MODEL != 'bro' & \
-          $MODEL != 'sky' & \
-          $MODEL != 'cas' ) goto ASKPROC
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    endif
 
@@ -472,8 +452,44 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 128
    endif
 
+else if( $SITE == 'AWS' ) then
+
+   # Because we do not know the name of the model or the number of CPUs
+   # per node. We ask the user to set these variables in the script
+
+   # AWS users must set the MODEL and NCPUS_PER_NODE
+   set MODEL = USER_MUST_SET
+   set NCPUS_PER_NODE = USER_MUST_SET
+
+   # Above we need a user to set the MODEL and NCPUS_PER_NODE
+   # variables. Here we check that they have been set. If not,
+   # we ask the user to set them 
+   # --------------------------------------------------------
+   
+   if ( $MODEL == USER_MUST_SET | $NCPUS_PER_NODE == USER_MUST_SET ) then
+      echo "ERROR: We have detected you are on AWS. As we do not have"
+      echo "       official nodes yet, we ask you to edit $0"
+      echo "       and set the MODEL and NCPUS_PER_NODE variables"
+      echo "       in the script $0."
+      echo "       Look for the section that says:"
+      echo " "
+      echo "       # AWS users must set the MODEL and NCPUS_PER_NODE"
+      exit 1
+   endif
+
 else
    set MODEL = 'UNKNOWN'
+   # As we do not know how many CPUs per node, we detect the number
+   # of CPUs per node by looking at the number of CPUs. This is different
+   # on Linux and macOS
+   if ( $ARCH == 'Linux' ) then
+      set NCPUS_PER_NODE = `grep -c ^processor /proc/cpuinfo`
+   else if ( $ARCH == 'Darwin' ) then
+      set NCPUS_PER_NODE = `sysctl -n hw.ncpu`
+   else
+      echo "ERROR: Unknown architecture $ARCH"
+      exit 1
+   endif
 endif
 
 #######################################################################
@@ -1684,11 +1700,6 @@ else if( $SITE == 'AWS' ) then
               setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   /ford1/share/gmao_SIteam/ModelData/GWD_RIDGE           # Location of GWD_RIDGE files
 
-              # By default on AWS, just ignore IOSERVER for now until testing
-              set USE_IOSERVER = 0
-              set NUM_OSERVER_NODES = 0
-              set NUM_BACKEND_PES = 0
-              set NCPUS_PER_NODE = 0
 else
 # These are defaults for the desktop
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
@@ -1733,7 +1744,6 @@ else
               set USE_IOSERVER = 0
               set NUM_OSERVER_NODES = 0
               set NUM_BACKEND_PES = 0
-              set NCPUS_PER_NODE = 0
 endif
 
 #######################################################################
