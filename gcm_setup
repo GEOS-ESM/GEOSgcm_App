@@ -452,12 +452,12 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 128
    endif
 
-else if( $SITE == 'AWS' ) then
+else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
 
    # Because we do not know the name of the model or the number of CPUs
    # per node. We ask the user to set these variables in the script
 
-   # AWS users must set the MODEL and NCPUS_PER_NODE
+   # AWS and Azure users must set the MODEL and NCPUS_PER_NODE
    set MODEL = USER_MUST_SET
    set NCPUS_PER_NODE = USER_MUST_SET
 
@@ -467,13 +467,13 @@ else if( $SITE == 'AWS' ) then
    # --------------------------------------------------------
    
    if ( $MODEL == USER_MUST_SET | $NCPUS_PER_NODE == USER_MUST_SET ) then
-      echo "ERROR: We have detected you are on AWS. As we do not have"
-      echo "       official nodes yet, we ask you to edit $0"
+      echo "ERROR: We have detected you are on $SITE. As we do not have"
+      echo "       official fixed node info yet, we ask you to edit $0"
       echo "       and set the MODEL and NCPUS_PER_NODE variables"
       echo "       in the script $0."
       echo "       Look for the section that says:"
       echo " "
-      echo "       # AWS users must set the MODEL and NCPUS_PER_NODE"
+      echo "       # AWS and Azure users must set the MODEL and NCPUS_PER_NODE"
       exit 1
    endif
 
@@ -1634,7 +1634,7 @@ else if( $SITE == 'NCCS' ) then
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
-else if( $SITE == 'AWS' ) then
+else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BATCH_CMD "sbatch"                                                    # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                    # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                           # SLURM Syntax for walltime
