@@ -611,57 +611,42 @@ if( $OGCM == TRUE ) then
             goto CORSLV
         endif
     else
-        echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default: 360 200)"
+        if ( $OCEAN_NAME == "MOM" ) then
+           set Resolution = `echo 360 200`
+        else if ( $OCEAN_NAME == "MOM6" ) then
+           # c12 MOM6 is default 72x36
+           if( $AGCM_IM ==  "c12" ) then
+              set Resolution = `echo 72 36`
+           else
+              set Resolution = `echo 360 210`
+           endif
+        endif
+
+        echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
         set Resolution = `echo $<`
         set num = $#Resolution
         if( $num == 2 ) then
-            set OGCM_IM = $Resolution[1]
-            set OGCM_JM = $Resolution[2]
+           set OGCM_IM = $Resolution[1]
+           set OGCM_JM = $Resolution[2]
         else
-            if( $num == 0 ) then
-                 set OGCM_IM = 360
-                 set OGCM_JM = 200
-            else
-                 goto CORSLV
-            endif
+           if ( $OCEAN_NAME == "MOM" ) then
+              set Resolution = `echo 360 200`
+           else if ( $OCEAN_NAME == "MOM6" ) then
+              # c12 MOM6 is default 72x36
+              if( $AGCM_IM ==  "c12" ) then
+                 set Resolution = `echo 72 36`
+              else
+                 set Resolution = `echo 360 210`
+              endif
+           endif
+
+           if( $num == 0 ) then
+              set OGCM_IM = $Resolution[1]
+              set OGCM_JM = $Resolution[2]
+           else
+              goto CORSLV
+           endif
         endif
-
-    if ( $OCEAN_NAME == "MOM" ) then
-       set Resolution = `echo 360 200`
-    else if ( $OCEAN_NAME == "MOM6" ) then
-       # c12 MOM6 is default 72x36
-       if( $AGCM_IM ==  "c12" ) then
-          set Resolution = `echo 72 36`
-       else
-          set Resolution = `echo 360 210`
-       endif
-    endif
-
-    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
-    set Resolution = `echo $<`
-    set num = $#Resolution
-    if( $num == 2 ) then
-        set OGCM_IM = $Resolution[1]
-        set OGCM_JM = $Resolution[2]
-    else
-       if ( $OCEAN_NAME == "MOM" ) then
-          set Resolution = `echo 360 200`
-       else if ( $OCEAN_NAME == "MOM6" ) then
-          # c12 MOM6 is default 72x36
-          if( $AGCM_IM ==  "c12" ) then
-             set Resolution = `echo 72 36`
-          else
-             set Resolution = `echo 360 210`
-          endif
-       endif
-
-       if( $num == 0 ) then
-          set OGCM_IM = $Resolution[1]
-          set OGCM_JM = $Resolution[2]
-       else
-          goto CORSLV
-       endif
-    endif
 
     endif
 
