@@ -128,13 +128,14 @@ OGCM.JM_WORLD: @OGCM_JM
 OGCM.LM: @OGCM_LM
 @COUPLED OGCM.NX: @OGCM_NX
 @COUPLED OGCM.NY: @OGCM_NY
-@COUPLED OGCM.GRIDSPEC: MAPL_Tripolar.nc
+@MOM5 OGCM.GRIDSPEC: MAPL_Tripolar.nc
+@MOM6 OGCM.GRIDSPEC: MAPL_Tripolar.nc
+@MIT  OGCM.GRIDSPEC: mit.ascii
 @DATAOCEAN @LATLON_OGCM OGCM.POLE: 'PE'
 @DATAOCEAN @LATLON_OGCM OGCM.DATELINE: 'DE'
 @DATAOCEAN @CUBE_OGCM OGCM.NF: @OGCM_NF
 OGCM_RUN_DT: @OCEAN_DT
 ###########################################################
-
 ##############################################################################################
 ####                                                                                      ####
 ####   SST REMAPPING                                                                      ####
