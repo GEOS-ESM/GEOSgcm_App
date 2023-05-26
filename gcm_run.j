@@ -976,6 +976,17 @@ end
 @COUPLED  endif
 @COUPLED  end
 @COUPLED
+@CICE6 # CICE6-Specific Output Files
+@CICE6 # -------------------------
+@CICE6 set dsets="iceh"
+@CICE6 foreach dset ( $dsets )
+@CICE6  set num = `/bin/ls -1 $dset.*.nc | wc -l`
+@CICE6  if($num != 0) then    
+@CICE6     if(! -e $EXPDIR/CICE_Output) mkdir -p $EXPDIR/CICE_Output
+@CICE6     /bin/mv $SCRDIR/$dset.*.nc $EXPDIR/CICE_Output/
+@CICE6  endif
+@CICE6 end     
+@CICE6     
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
