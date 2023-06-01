@@ -561,8 +561,14 @@ if( $OGCM == TRUE ) then
        set CICE4 = "#DELETE"
     endif
 
+    if ( $SEAICEMODEL == "CICE6" & $OCNMODEL != "MOM6" ) then
+       echo
+       echo "${C1}Ocean Model${CN} must be MOM6 when Seaice Model is CICE6!"
+       goto OCNMODEL
+    endif
+
     # combine seaice preload with ocean preload
-    set OCEAN_PRELOAD = ${OCEAN_PRELOAD}:${SEAICE_PRELOAD}
+    set OCEAN_PRELOAD = `echo ${OCEAN_PRELOAD}`:`echo ${SEAICE_PRELOAD}`
 
     # Coupled Ocean Resolution
     # ------------------------
@@ -2117,6 +2123,7 @@ s?@COUPLED?$COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
 s?@MOM5?$MOM5?g
 s?@MOM6?$MOM6?g
+s?@CICE4?$CICE4?g
 s?@CICE6?$CICE6?g
 s?@DATAOCEAN?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
