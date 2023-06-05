@@ -401,49 +401,27 @@ if ( $SITE == 'NCCS' ) then
 
 else if ( $SITE == 'NAS' ) then
 
-   set BUILT_ON_ROME = @BUILT_ON_ROME@
-
-   if ( $BUILT_ON_ROME == "TRUE") then
-
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}rom (AMD Rome) (default)${CN}"
-      echo " "
-      echo " NOTE GEOS is non-zero-diff when running on AMD Rome"
-      echo "      compared to the other Intel nodes."
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'rom'
-      endif
-
-      if( $MODEL != 'rom' ) goto ASKPROC
-   else
-
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}has (Haswell)${CN}"
-      echo "   ${C2}bro (Broadwell)${CN}"
-      echo "   ${C2}sky (Skylake)${CN} (default)"
-      echo "   ${C2}cas (Cascade Lake)${CN}"
-      echo " "
-      echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
-      echo "         and Ivy Bridge are not supported by current GEOS"
-      echo " "
-      echo " NOTE 2: Due to OS differences, if you want to run on the AMD"
-      echo "         Rome nodes at NAS, you must recompile on the Rome nodes"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'sky'
-      endif
-
-      if( $MODEL != 'has' & \
-          $MODEL != 'bro' & \
-          $MODEL != 'sky' & \
-          $MODEL != 'cas' ) goto ASKPROC
-
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo " "
+   echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "      and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'sky'
    endif
+
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
@@ -472,8 +450,43 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 128
    endif
 
+else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
+
+   # Because we do not know the name of the model or the number of CPUs
+   # per node. We ask the user to set these variables in the script
+
+   # AWS and Azure users must set the MODEL and NCPUS_PER_NODE
+   set MODEL = USER_MUST_SET
+   set NCPUS_PER_NODE = USER_MUST_SET
+
+   # Above we need a user to set the MODEL and NCPUS_PER_NODE
+   # variables. Here we check that they have been set. If not,
+   # we ask the user to set them
+   # --------------------------------------------------------
+
+   if ( $MODEL == USER_MUST_SET | $NCPUS_PER_NODE == USER_MUST_SET ) then
+      echo "ERROR: We have detected you are on $SITE. As we do not have"
+      echo "       official fixed node info yet, we ask you to edit $0"
+      echo "       and set the MODEL and NCPUS_PER_NODE variables."
+      echo "       Look for the section that says:"
+      echo " "
+      echo "       # AWS and Azure users must set the MODEL and NCPUS_PER_NODE"
+      exit 1
+   endif
+
 else
    set MODEL = 'UNKNOWN'
+   # As we do not know how many CPUs per node, we detect the number
+   # of CPUs per node by looking at the number of CPUs. This is different
+   # on Linux and macOS
+   if ( $ARCH == 'Linux' ) then
+      set NCPUS_PER_NODE = `grep -c ^processor /proc/cpuinfo`
+   else if ( $ARCH == 'Darwin' ) then
+      set NCPUS_PER_NODE = `sysctl -n hw.ncpu`
+   else
+      echo "ERROR: Unknown architecture $ARCH"
+      exit 1
+   endif
 endif
 
 #######################################################################
@@ -520,6 +533,7 @@ if( $OGCM == TRUE ) then
     echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM5${CN})"
     echo "   ${C2}MOM5${CN}"
     echo "   ${C2}MOM6${CN}"
+    echo "   ${C2}MIT${CN}"
 
     set OCNMODEL  = $<
     if ( .$OCNMODEL == . ) then
@@ -527,9 +541,9 @@ if( $OGCM == TRUE ) then
     else
        set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
 
-       if ( $OCNMODEL != "MOM5" & $OCNMODEL != "MOM6" ) then
+       if ( "$OCNMODEL" != "MOM5" & "$OCNMODEL" != "MOM6"  & "$OCNMODEL" != "MIT") then
           echo
-          echo "${C1}Ocean Model${CN} must be either MOM5 or MOM6!"
+          echo "${C1}Ocean Model${CN} must be either MOM5, MOM6 or MIT!"
           goto OCNMODEL
        else
           echo
@@ -538,7 +552,7 @@ if( $OGCM == TRUE ) then
 
     # NOTE: We use a CMake variable here because the shared library
     # suffix is different on Linux and macOS. This is set by configure_file()
-    if ( $OCNMODEL == "MOM5" ) then
+    if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
@@ -547,53 +561,106 @@ if( $OGCM == TRUE ) then
 
        set mom5_warning=">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
        echo "\033[31;5m"${mom5_warning}"\033[0m"
-    else if ( $OCNMODEL == "MOM6" ) then
+       set MIT  = "#DELETE"
+    else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
+       set MIT  = "#DELETE"
+       set OCEAN_NAME="MOM6"
+    else if ( "$OCNMODEL" == "MIT" ) then
+       set OCEAN_NAME="MIT"
+       set OGCM_GRID_TYPE = llc
+       set MIT = ""
+       set MOM5 = "#DELETE"
+       set MOM6 = "#DELETE"
     endif
 
     # Coupled Ocean Resolution
     # ------------------------
     CORSLV:
+    if( "$OCNMODEL" == "MIT" ) then
+        echo "Enter the ${C1}Ocean Horizontal Resolution: ${C2}llc90${CN} (1-deg, Lat-Lon-Cube) Default"
+        echo "                                            ${C2}llc1080${CN} (1/12-deg, Lat-Lon-Cube)"
+        echo "                                            ${C2}llc2160${CN} (1/24-deg, Lat-Lon-Cube)"
+        echo "                                            ${C2}llc270${CN} (1/3-deg, Lat-Lon-Cube)"
+        echo "                                            ${C2}cs32${CN}   (5-deg, cubed-sphere)"
+        set Resolution = `echo $<`
+        if( .$Resolution == . ) then
+           set Resolution = 'llc90'
+        endif
 
-    if ( $OCEAN_NAME == "MOM" ) then
-       set Resolution = `echo 360 200`
-    else if ( $OCEAN_NAME == "MOM6" ) then
-       # c12 MOM6 is default 72x36
-       if( $AGCM_IM ==  "c12" ) then
-          set Resolution = `echo 72 36`
-       else
-          set Resolution = `echo 360 210`
-       endif
-    endif
-
-    echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
-    set Resolution = `echo $<`
-    set num = $#Resolution
-    if( $num == 2 ) then
-        set OGCM_IM = $Resolution[1]
-        set OGCM_JM = $Resolution[2]
+        set num = $#Resolution
+        if ($Resolution[1] == "cs32" ) then
+            set OGCM_JM = 32
+            set OGCM_IM  = `expr $OGCM_JM \* 6`
+            set OGRIDTYP  = "CM"
+            set DOLEV = 15
+        else if ($Resolution[1] == "llc90" ) then
+            set OGRIDTYP  = "LL"
+            if ($AGCM_IM == c48) then
+                set OGCM_JM = 30
+                set OGCM_IM = `expr $OGCM_JM \* 96`
+            else
+                set OGCM_JM = 15
+                set OGCM_IM = `expr $OGCM_JM \* 360`
+            endif
+        else if ($Resolution[1] == "llc1080" ) then
+            set OGRIDTYP  = "LL"
+            if ($AGCM_IM == c720) then
+                set OGCM_JM = 60
+                set OGCM_IM = `expr $OGCM_JM \* 2880`
+            endif
+        else if ($Resolution[1] == "llc2160" ) then
+            set OGRIDTYP  = "LL"
+            set DOLEV = 90
+            if ($AGCM_IM == c1440) then
+                set OGCM_JM = 72
+                set OGCM_IM = `expr $OGCM_JM \* 7776`
+            endif
+        else
+            goto CORSLV
+        endif
     else
-       if ( $OCEAN_NAME == "MOM" ) then
-          set Resolution = `echo 360 200`
-       else if ( $OCEAN_NAME == "MOM6" ) then
-          # c12 MOM6 is default 72x36
-          if( $AGCM_IM ==  "c12" ) then
-             set Resolution = `echo 72 36`
-          else
-             set Resolution = `echo 360 210`
-          endif
-       endif
+        if ( $OCEAN_NAME == "MOM" ) then
+           set Resolution = `echo 360 200`
+        else if ( $OCEAN_NAME == "MOM6" ) then
+           # c12 MOM6 is default 72x36
+           if( $AGCM_IM ==  "c12" ) then
+              set Resolution = `echo 72 36`
+           else
+              set Resolution = `echo 360 210`
+           endif
+        endif
 
-       if( $num == 0 ) then
-          set OGCM_IM = $Resolution[1]
-          set OGCM_JM = $Resolution[2]
-       else
-          goto CORSLV
-       endif
+        echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
+        set Resolution = `echo $<`
+        set num = $#Resolution
+        if( $num == 2 ) then
+           set OGCM_IM = $Resolution[1]
+           set OGCM_JM = $Resolution[2]
+        else
+           if ( $OCEAN_NAME == "MOM" ) then
+              set Resolution = `echo 360 200`
+           else if ( $OCEAN_NAME == "MOM6" ) then
+              # c12 MOM6 is default 72x36
+              if( $AGCM_IM ==  "c12" ) then
+                 set Resolution = `echo 72 36`
+              else
+                 set Resolution = `echo 360 210`
+              endif
+           endif
+
+           if( $num == 0 ) then
+              set OGCM_IM = $Resolution[1]
+              set OGCM_JM = $Resolution[2]
+           else
+              goto CORSLV
+           endif
+        endif
+
     endif
 
     set IMO = ${OGCM_IM}
@@ -615,6 +682,9 @@ if( $OGCM == TRUE ) then
     endif
 
     set OCEAN_RES = TM${IMO}xTM${JMO}
+    if( "$OCNMODEL" == "MIT" ) then
+      set OCEAN_RES = ${OGRIDTYP}${IMO}x${OGRIDTYP}${JMO}
+    endif
     set OCEAN_TAG  = Reynolds
     set SSTNAME  = "#DELETE"
     set SSTFILE  = "#DELETE"
@@ -638,11 +708,43 @@ if( $OGCM == TRUE ) then
        set OGCM_NY = 10
     endif
     @   OGCM_NPROCS = $OGCM_NX * $OGCM_NY
-    set OGCM_GRID_TYPE = Tripolar
+    if ( "$OCNMODEL" != "MIT" ) then
+       set OGCM_GRID_TYPE = Tripolar
+    endif
     set LATLON_OGCM = ""
     set CUBE_OGCM = "#DELETE"
     set DATAOCEAN = "#DELETE"
     set OGCM_NF = 1
+
+    if( "$OCNMODEL" == "MIT" ) then
+        if (${OGRIDTYP} == 'CM') then
+            set OGCM_NX = 6
+            set OGCM_NY = 1
+            set OGCM_GRIDSPEC = mit.ascii
+        else
+            if ($AGCM_IM == c48) then
+                set OGCM_NX = 96
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit.ascii
+            else if ($AGCM_IM == c90) then
+                set OGCM_NX = 360
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit.ascii
+            else if ($AGCM_IM == c720) then
+                set OGCM_NX = 2880
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit-llc1080.ascii
+            else if ($AGCM_IM == c1440) then
+                # this set is valid for 72x72 ocean confuguration
+                set OGCM_NX = 7776
+                set OGCM_NY = 1
+                set OGCM_GRIDSPEC = mit-llc2160-${OGCM_JM}x${OGCM_JM}.bin
+            endif
+        endif
+        set DATASEAICE = ""
+    endif
+
+
 
 else
 
@@ -776,6 +878,7 @@ else
     set MOM6      = "#DELETE"
     set OCNMODEL  = "Data Ocean (${HRCODE})"
     set DEFAULT_HISTORY_TEMPLATE="HISTORY_GEOSCHEMCHEM.rc.tmpl"
+    set MIT       = "#DELETE"
 
     set OGCM_NX       = ""
     set OGCM_NY       = ""
@@ -879,9 +982,14 @@ if( $AGCM_IM ==  "c90" ) then
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NY
-          set  NY = $OGCM_NX
-     set OCEAN_DT = $DT
+          if( "$OCNMODEL" == "MIT" ) then
+              set  NX = 10
+              set  NY = 36
+          else
+              set  NX = $OGCM_NY
+              set  NY = $OGCM_NX
+          endif
+          set OCEAN_DT = $DT
      else
           set  NX = 4
           set  NY = `expr $NX \* 6`
@@ -1168,6 +1276,9 @@ if( $AGCM_IM == "c2160" ) then
      set CONUS = ''
      set STRETCH_FACTOR = 2.5
 endif
+if( "$OCNMODEL" == "MIT" ) then
+     set OCEAN_DT = $DT
+endif
 
 set IS_FCST = 0
 set FVCUBED         = ""
@@ -1175,7 +1286,11 @@ set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
 if( ${OGRIDTYP} == 'CF' ) then
    set OGCM_GRIDNAME   = "OC${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
 else
-   set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+    if( "$OCNMODEL" == "MIT" ) then
+        set OGCM_GRIDNAME   = "${OGRIDTYP}${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+    else
+        set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+    endif
 endif
 set BCSRES          = "${ATMOS_RES}_${OCEAN_RES}"
 set RES_DATELINE    = '${AGCM_IM}x${AGCM_JM}'
@@ -1199,17 +1314,17 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 
 set BACM_1M_ = "#"
 if ( "$CLDMICRO" == "BACM_1M" ) then
-   set BACM_1M_ = "" 
+   set BACM_1M_ = ""
 endif
 
 set GFDL_1M_ = "#"
 if ( "$CLDMICRO" == "GFDL_1M" ) then
-   set GFDL_1M_ = "" 
+   set GFDL_1M_ = ""
 endif
 
 set MGB2_2M_ = "#"
 if ( "$CLDMICRO" == "MGB2_2M" ) then
-   set MGB2_2M_ = "" 
+   set MGB2_2M_ = ""
 endif
 
 set GFDL_HYDRO = ".TRUE."
@@ -1602,10 +1717,18 @@ if( $SITE == 'NAS' ) then
               else
                    setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               endif
+              if (${OGRIDTYP} == "LL") then
+                setenv SSTDIR /nobackupp2/estrobac/geos5/SSTDIR
+              endif
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   /nobackup/gmao_SIteam/ModelData/GWD_RIDGE              # Location of GWD_RIDGE files
+              if ( "$OCNMODEL" == "MIT" ) then
+                setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
+              else
+                setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings     # Coupled Ocean/Atmos Forcing
+              endif
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -1634,7 +1757,7 @@ else if( $SITE == 'NCCS' ) then
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
-              setenv BCSDIR  /discover/nobackup/ltakacs/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv BCSDIR  /discover/nobackup/projects/gmao/bcs_shared/legacy_bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/merra2/data        # Default Analysis Location   for M2 REPLAY
@@ -1648,30 +1771,36 @@ else if( $SITE == 'NCCS' ) then
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
-else if( $SITE == 'AWS' ) then
-              setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
-              setenv BATCH_GROUP DELETE                                                # SLURM Syntax for account name
-              setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
-              setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
-              setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
-              setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
-              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
-              setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv  RUN_Q     DELETE                                                 # batch queue name for gcm_run.j
-              setenv  RUN_P   "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_run.j
-              setenv  RUN_FP  "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
-              setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  NULL                                                   # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
-              setenv    MOVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_moveplot.j
+              if (${OGRIDTYP} == "LL") then
+                setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
+              endif
+              if ( "$OCNMODEL" == "MIT" ) then
+                setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos Forcing
+              endif
+else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
+              setenv BATCH_CMD "sbatch"                                                    # SLURM Batch command
+              setenv BATCH_GROUP DELETE                                                    # SLURM Syntax for account name
+              setenv BATCH_TIME "SBATCH --time="                                           # SLURM Syntax for walltime
+              setenv BATCH_JOBNAME "SBATCH --job-name="                                    # SLURM Syntax for job name
+              setenv BATCH_OUTPUTNAME "SBATCH --output="                                   # SLURM Syntax for job output name
+              setenv BATCH_JOINOUTERR "DELETE"                                             # SLURM joins out and err by default
+              setenv RUN_FT "06:00:00"                                                     # Wallclock Time   for gcm_forecast.j
+              setenv RUN_T  "12:00:00"                                                     # Wallclock Time   for gcm_run.j
+              setenv POST_T  "8:00:00"                                                     # Wallclock Time   for gcm_post.j
+              setenv PLOT_T  "12:00:00"                                                    # Wallclock Time   for gcm_plot.j
+              setenv ARCHIVE_T  "1:00:00"                                                  # Wallclock Time   for gcm_archive.j
+              setenv RUN_Q     "SBATCH --constraint=${MODEL}"                              # batch queue name for gcm_run.j
+              setenv RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
+              setenv RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
+              setenv POST_Q  NULL                                                          # batch queue name for gcm_post.j
+              setenv PLOT_Q  NULL                                                          # batch queue name for gcm_plot.j
+              setenv MOVE_Q  NULL                                                          # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  NULL                                                       # batch queue name for gcm_archive.j
+              setenv POST_P  "SBATCH --ntasks=${POST_NPES}"                                # PE Configuration for gcm_post.j
+              setenv PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "SBATCH --ntasks=1"                                        # PE Configuration for gcm_archive.j
+              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                              # PE Configuration for gcm_convert.j
+              setenv MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
@@ -1684,11 +1813,6 @@ else if( $SITE == 'AWS' ) then
               setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   /ford1/share/gmao_SIteam/ModelData/GWD_RIDGE           # Location of GWD_RIDGE files
 
-              # By default on AWS, just ignore IOSERVER for now until testing
-              set USE_IOSERVER = 0
-              set NUM_OSERVER_NODES = 0
-              set NUM_BACKEND_PES = 0
-              set NCPUS_PER_NODE = 0
 else
 # These are defaults for the desktop
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
@@ -1733,7 +1857,6 @@ else
               set USE_IOSERVER = 0
               set NUM_OSERVER_NODES = 0
               set NUM_BACKEND_PES = 0
-              set NCPUS_PER_NODE = 0
 endif
 
 #######################################################################
@@ -2201,6 +2324,7 @@ s?@COUPLED?$COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
 s?@MOM5?$MOM5?g
 s?@MOM6?$MOM6?g
+s?@MIT?$MIT?g
 s?@DATAOCEAN?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
 s?@OPS_SPECIES?$OPS_SPECIES?g
@@ -2347,7 +2471,7 @@ set FILES = "gcm_run.j          \
              logging.yaml       "
 set FILES = `echo $FILES`
 
-if( $OGCM == TRUE ) then
+if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
    if ( $OCEAN_NAME == "MOM" ) then
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
       /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
@@ -2603,7 +2727,7 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/AGCM.rc.tmpl        $HOMDIR/AGCM.rc
 /bin/mv $HOMDIR/HISTORY.rc.tmpl     $HOMDIR/HISTORY.rc
 
-if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
+if( $OGCM == TRUE  & "$OCNMODEL" != "MIT" ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
 ## Modify AGCM.rc
 ## --------------
@@ -3017,7 +3141,7 @@ HOMDIR/gcm_emip.setup
 HOMDIR/logging.yaml
 EOF
 
-if( $OGCM == TRUE ) then
+if( $OGCM == TRUE & "$OCNMODEL" != MIT ) then
 
 # Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
@@ -3272,7 +3396,7 @@ exit 1
 
 USAGE:
 cat <<EOF
-geoschemchem_setup, a setup script for the GEOS-5 GCM
+geoschemchem_setup, a setup script for the GEOS GCM
 
    Usage: $0:t [optional flag]
 
