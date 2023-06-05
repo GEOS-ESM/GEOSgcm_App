@@ -1727,7 +1727,7 @@ if( $SITE == 'NAS' ) then
               if ( "$OCNMODEL" == "MIT" ) then
                 setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
               else
-                setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings     # Coupled Ocean/Atmos Forcing
+                setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                # Coupled Ocean/Atmos Forcing
               endif
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
