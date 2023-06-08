@@ -318,8 +318,13 @@ setenv EMISSIONS @EMISSIONS
 @MOM5setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM5/${OGCM_IM}x${OGCM_JM}
 @MOM6setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM6/@ATMOStag_@OCEANtag
 @MOM6setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM6/${OGCM_IM}x${OGCM_JM}
-@COUPLEDsetenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
-@COUPLEDsetenv BCTAG `basename $ABCSDIR`
+@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
+@MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
+@MOM5setenv BCTAG `basename $ABCSDIR`
+@MOM6setenv BCTAG `basename $ABCSDIR`
+#this is hard-wired for NAS for now - should make it more general
+@MITsetenv GRIDDIR /nobackupp18/afahad/GEOSMITgcmFiles/GRIDDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM} 
+@MITsetenv BCTAG `basename $GRIDDIR`
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
 
 set             FILE = linkbcs
@@ -331,13 +336,24 @@ cat << _EOF_ > $FILE
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
-@COUPLED/bin/ln -sf $OBCSDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
-@COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
-@COUPLED/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
-@COUPLED/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MOM5#/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
-@MOM6#/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@MOM5/bin/ln -sf $OBCSDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+@MOM6/bin/ln -sf $OBCSDIR/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+@MIT/bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/SEAWIFS_KPAR_mon_clim.data SEAWIFS_KPAR_mon_clim.data
+@MOM5/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
+@MOM6/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.til   tile.data
+## Should include this >>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+## Should include this >>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
+@MIT/bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/CF0090x6C_LL5400xLL0015-Pfafstetter.til   tile.data
+@MOM5/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+@MOM6/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
+@MIT/bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/CF0090x6C_LL5400xLL0015-Pfafstetter.TRN   runoff.bin
+@MOM5/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
+@MOM6/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
+@MIT/bin/ln -sf $GRIDDIR/mit.ascii
+@MOM5/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MOM6/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MIT/bin/ln -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MIT/bin/ln -sf /nobackupp18/afahad/GEOSMITgcmFiles/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -382,16 +398,7 @@ cat << _EOF_ > $FILE
 @COUPLED/bin/ln -sf $ABCSDIR/ndvi_clim_@RES_DATELINE.data ndvi.data
 
 >>>GCMRUN_CATCHCN<<<if ( -f $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data lnfm.data
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISVISmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISVISstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISVISstd.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRmean_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISNIRmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISNIRstd_${AGCM_IM}x${AGCM_JM}.dat  ) /bin/ln -s MODISNIRstd.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODELFPARmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODELFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODELFPARstd.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARmean_${AGCM_IM}x${AGCM_JM}.dat) /bin/ln -s MODISFPARmean.dat
->>>GCMRUN_CATCHCN<<<if (-f $BCSDIR/$BCRSLV/MODISFPARstd_${AGCM_IM}x${AGCM_JM}.dat ) /bin/ln -s MODISFPARstd.dat
->>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/CO2_MonthlyMean_DiurnalCycle.nc4
->>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/ssd/land/l_data/LandBCs_files_for_mkCatchParam/V001/FPAR_CDF_Params-M09.nc4
+>>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/bcs_shared/make_bcs_inputs/land/CO2/v1/CO2_MonthlyMean_DiurnalCycle.nc4
 
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
@@ -797,7 +804,9 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+### @MIT $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+### @MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+### @MOM6 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -819,7 +828,7 @@ else
 
    # If saltwater_internal_rst is in EXPDIR move to SCRDIR
    # -----------------------------------------------------
-   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/mv $EXPDIR/saltwater_internal_rst $SCRDIR
+   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/cp $EXPDIR/saltwater_internal_rst $SCRDIR
 
    # The splitter script requires an OutData directory
    # -------------------------------------------------
@@ -939,6 +948,78 @@ endif
 
 # Establish safe default number of OpenMP threads
 # -----------------------------------------------
+@MIT # ---------------------------------------------------
+@MIT # For MITgcm restarts - before running GEOSgcm.x
+@MIT # ---------------------------------------------------
+@MIT 
+@MIT # set time interval for segment in seconds
+@MIT 
+@MIT set yearc  = `echo $nymdc | cut -c1-4`
+@MIT set monthc = `echo $nymdc | cut -c5-6`
+@MIT set dayc   = `echo $nymdc | cut -c7-8`
+@MIT set hourc  = `echo $nhmsc | cut -c1-2`
+@MIT set minutec = `echo $nhmsc | cut -c3-4`
+@MIT set secondc = `echo $nhmsc | cut -c5-6`
+@MIT 
+@MIT set yearf  = `echo $nymdf | cut -c1-4`
+@MIT set monthf = `echo $nymdf | cut -c5-6`
+@MIT set dayf   = `echo $nymdf | cut -c7-8`
+@MIT set hourf  = `echo $nhmsf | cut -c1-2`
+@MIT set minutef = `echo $nhmsf | cut -c3-4`
+@MIT set secondf = `echo $nhmsf | cut -c5-6`
+@MIT 
+@MIT set yearf = `echo $nymdf | cut -c1-4`
+@MIT 
+@MIT set time1 = `date -u -d "${yearc}-${monthc}-${dayc}T${hourc}:${minutec}:${secondc}" "+%s"`
+@MIT set time2 = `date -u -d "${yearf}-${monthf}-${dayf}T${hourf}:${minutef}:${secondf}" "+%s"`
+@MIT 
+@MIT      @ mitdt = $time2 - $time1
+@MIT echo "Segment time: $mitdt"
+@MIT 
+@MIT 
+@MIT # Set-up MITgcm run directory
+@MIT if (! -e mitocean_run) mkdir -p mitocean_run
+@MIT cd mitocean_run
+@MIT 
+@MIT # link mit configuration and initialization files
+@MIT ln -sf $EXPDIR/mit_input/* .
+@MIT # link mitgcm restarts if exist
+@MIT /bin/ln -sf $EXPDIR/restarts/pic* .
+@MIT # make an archive folder for mitgcm run
+@MIT mkdir $EXPDIR/mit_output
+@MIT 
+@MIT # Calculate segment time steps
+@MIT set mit_nTimeSteps = `cat ${SCRDIR}/AGCM.rc | grep OGCM_RUN_DT: | cut -d: -f2 | tr -s " " | cut -d" " -f2`
+@MIT @ mit_nTimeSteps = ${mitdt} / $mit_nTimeSteps
+@MIT 
+@MIT #change namelist variables in data - nTimeSteps, chkptFreq and monitorFreq
+@MIT sed -i "s/nTimeSteps.*/nTimeSteps       = ${mit_nTimeSteps},/" data
+@MIT sed -i "s/chkptFreq.*/chkptFreq        = ${mitdt}.0,/" data
+@MIT sed -i "s/pChkptFreq.*/pChkptFreq        = ${mitdt}.0,/" data
+@MIT # get nIter0
+@MIT 
+@MIT if (! -e ${EXPDIR}/restarts/MITgcm_restart_dates.txt ) then
+@MIT   set nIter0 = `grep nIter0 data | tr -s " " | cut -d"=" -f2 | cut -d"," -f1 | awk '{$1=$1;print}'`
+@MIT else
+@MIT   set nIter0 = `grep "$nymdc $nhmsc" ${EXPDIR}/restarts/MITgcm_restart_dates.txt | cut -d" " -f5`
+@MIT   if ( $nIter0 == "" ) then
+@MIT     echo "No ocean restart file for $nymdc $nhmsc, exiting"
+@MIT     echo "If this is a new initialized experiment, delete:"
+@MIT     echo "${EXPDIR}/restarts/MITgcm_restart_dates.txt"
+@MIT     echo "and restart"
+@MIT     exit
+@MIT   else
+@MIT     sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
+@MIT   endif
+@MIT endif
+@MIT 
+@MIT cd ..
+@MIT # ---------------------------------------------------
+@MIT # End MITgcm restarts - before running GEOSgcm.x
+@MIT # ---------------------------------------------------
+
+# Set OMP_NUM_THREADS
+# -------------------
 setenv OMP_NUM_THREADS 1
 
 # Run GEOSgcm.x
@@ -965,6 +1046,88 @@ else
 endif
 echo GEOSgcm Run Status: $rc
 
+@MIT # ---------------------------------------------------
+@MIT # For MITgcm restarts - after running GEOSgcm.x
+@MIT # ---------------------------------------------------
+@MIT 
+@MIT set STEADY_STATE_OCEAN=`grep STEADY_STATE_OCEAN AGCM.rc | cut -d':' -f2 | tr -d " "`
+@MIT 
+@MIT # update ocean only if activated. Otherwize use the same pickups (passive ocean).
+@MIT if ( ${STEADY_STATE_OCEAN} != 0 ) then
+@MIT 
+@MIT   if ( ${rc} == 0 ) then
+@MIT 
+@MIT     # Update nIter0 for next segment
+@MIT     set znIter00 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
+@MIT     @ nIter0 = $nIter0 + $mit_nTimeSteps
+@MIT     set znIter0 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
+@MIT 
+@MIT     # to update MITgcm restart list file
+@MIT     sed -i "/${nIter0}/d" ${EXPDIR}/restarts/MITgcm_restart_dates.txt
+@MIT     echo "Date_GEOS5 $nymdf $nhmsf NITER0_MITgcm ${nIter0}" >> ${EXPDIR}/restarts/MITgcm_restart_dates.txt
+@MIT 
+@MIT     /bin/mv $SCRDIR/mitocean_run/STDOUT.0000 $EXPDIR/mit_output/STDOUT.${znIter00}
+@MIT 
+@MIT   endif
+@MIT 
+@MIT   cd $SCRDIR/mitocean_run
+@MIT 
+@MIT   # Check existance of roling pickups
+@MIT   set nonomatch rp =  ( pickup*ckptA* )
+@MIT   echo $rp
+@MIT   # Rename and move them if exist
+@MIT   if ( -e $rp[1] ) then
+@MIT     set timeStepNumber=`cat pickup.ckptA.meta | grep timeStepNumber | tr -s " " | cut -d" " -f5 | awk '{printf("%010d",$1)}'`
+@MIT     foreach fname ( pickup*ckptA* )
+@MIT       set bname = `echo ${fname} | cut -d "." -f1 | cut -d "/" -f2`
+@MIT       set aname = `echo ${fname} | cut -d "." -f3`
+@MIT       echo $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
+@MIT       /bin/mv ${fname} $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
+@MIT     end
+@MIT   endif
+@MIT 
+@MIT   # Check existance of permanent pickups
+@MIT   set nonomatch pp =  ( pickup* )
+@MIT   echo $pp
+@MIT   # Move them if exist
+@MIT   if ( -e $pp[1] ) then
+@MIT     foreach fname ( pickup* )
+@MIT       if ( ! -e $EXPDIR/restarts/${fname} ) /bin/mv ${fname} $EXPDIR/restarts/${fname}
+@MIT     end
+@MIT   endif
+@MIT 
+@MIT   /bin/mv T.* $EXPDIR/mit_output/
+@MIT   /bin/mv S.* $EXPDIR/mit_output/
+@MIT   /bin/mv U.* $EXPDIR/mit_output/
+@MIT   /bin/mv V.* $EXPDIR/mit_output/
+@MIT   /bin/mv W.* $EXPDIR/mit_output/
+@MIT   /bin/mv PH* $EXPDIR/mit_output/
+@MIT   /bin/mv Eta.* $EXPDIR/mit_output/
+@MIT 
+@MIT   /bin/mv AREA.* $EXPDIR/mit_output/
+@MIT   /bin/mv HEFF.* $EXPDIR/mit_output/
+@MIT   /bin/mv HSNOW.* $EXPDIR/mit_output/
+@MIT   /bin/mv UICE.* $EXPDIR/mit_output/
+@MIT   /bin/mv VICE.* $EXPDIR/mit_output/
+@MIT 
+@MIT   #copy mit output to mit_output
+@MIT   foreach i (`grep -i filename data.diagnostics  | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
+@MIT    /bin/mv ${i}* $EXPDIR/mit_output/
+@MIT   end
+@MIT 
+@MIT   foreach i (`grep -i stat_fName data.diagnostics | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
+@MIT    /bin/mv ${i}* $EXPDIR/mit_output/
+@MIT   end
+@MIT 
+@MIT   cd $SCRDIR
+@MIT 
+@MIT endif
+@MIT 
+@MIT # ---------------------------------------------------
+@MIT # End MITgcm restarts - after running GEOSgcm.x
+@MIT # ---------------------------------------------------
+
+ 
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
 #        Note: cap_restart contains the current NYMD and NHMS

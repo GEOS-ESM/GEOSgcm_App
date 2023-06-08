@@ -1,38 +1,54 @@
 
 # Atmospheric Model Configuration Parameters
 # ------------------------------------------
-           NX: @NX
-           NY: @NY
+NX: @NX
+NY: @NY
 
- IOSERVER_NODES: @NUM_OSERVER_NODES
+IOSERVER_NODES: @NUM_OSERVER_NODES
 NUM_BACKEND_PES: @NUM_BACKEND_PES
 
-      AGCM_IM: @AGCM_IM
-      AGCM_JM: @AGCM_JM
-      AGCM_LM: @AGCM_LM
+AGCM_IM: @AGCM_IM
+AGCM_JM: @AGCM_JM
+AGCM_LM: @AGCM_LM
 AGCM_GRIDNAME: @AGCM_GRIDNAME
 
-      AGCM.GRID_TYPE: @GRID_TYPE
-      AGCM.GRIDNAME: @AGCM_GRIDNAME
-      @CUBE_AGCM AGCM.NF: @AGCM_NF
-      AGCM.LM: @AGCM_LM
-      AGCM.IM_WORLD: @AGCM_IM
-      @LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
+AGCM.GRID_TYPE: @GRID_TYPE
+AGCM.GRIDNAME: @AGCM_GRIDNAME
+@CUBE_AGCM AGCM.NF: @AGCM_NF
+AGCM.LM: @AGCM_LM
+AGCM.IM_WORLD: @AGCM_IM
+@LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
+
+@CONUS AGCM.STRETCH_FACTOR: @STRETCH_FACTOR
+@CONUS AGCM.TARGET_LAT: 39.5
+@CONUS AGCM.TARGET_LON: -98.35
+
+###########################################################
+# long physics DT options
+# ----------------------------------------
+ADJUST_DT: .FALSE.
+CHEMISTRY_RUN_AT_INTERVAL_START: .TRUE.
+CHEMISTRY_DT: @LONG_DT
+GOCART_DT: @LONG_DT
+HEMCO_DT: @LONG_DT
+GF_DT: @LONG_DT
+UW_DT: @LONG_DT
+###########################################################
 
 ###########################################################
 # dynamics options
 # ----------------------------------------
 DYCORE: @DYCORE
-#FV3_CONFIG: MONOTONIC
+@CONUS FV3_CONFIG: HWT
 AdvCore_Advection: 0
 ###########################################################
 
 ###########################################################
 # radiation options
 # ----------------------------------------
- SOLAR_DT: 3600
- IRRAD_DT: 3600
-SATSIM_DT: 3600
+ SOLAR_DT: @SOLAR_DT
+ IRRAD_DT: @IRRAD_DT
+SATSIM_DT: @IRRAD_DT
 SOLARAvrg: 0
 IRRADAvrg: 0
 EOT: .TRUE.
@@ -50,7 +66,6 @@ ORBIT_ANAL2B: .TRUE.
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
 @GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
-@GFDL_1M_USE_BERGERON: .FALSE.
 ###########################################################
 
 ###########################################################
@@ -89,6 +104,20 @@ CLOSURE_CONGESTUS: 3
 # ------------------------
 ###########################################################
 
+>>>HIST_GOCART<<<###########################################################
+>>>HIST_GOCART<<<# Enable wet scavenging
+>>>HIST_GOCART<<<# NOTE: this section should be commented out when running gocart.data
+>>>HIST_GOCART<<<MCHEMTRI_increments::
+>>>HIST_GOCART<<<DU::DU default
+>>>HIST_GOCART<<<SS::SS default
+>>>HIST_GOCART<<<SU::SO4 default
+>>>HIST_GOCART<<<CA.bc::CA.bcphilic default
+>>>HIST_GOCART<<<CA.br::CA.brphilic default
+>>>HIST_GOCART<<<CA.oc::CA.ocphilic default
+>>>HIST_GOCART<<<NI::NO3an1 "NI::NO3an2,NI::NO3an3"
+>>>HIST_GOCART<<<::
+>>>HIST_GOCART<<<###########################################################
+
 ###########################################################
 # Ocean Model Configuration Parameters
 # ------------------------------------
@@ -99,13 +128,14 @@ OGCM.JM_WORLD: @OGCM_JM
 OGCM.LM: @OGCM_LM
 @COUPLED OGCM.NX: @OGCM_NX
 @COUPLED OGCM.NY: @OGCM_NY
-@COUPLED OGCM.GRIDSPEC: MAPL_Tripolar.nc
+@MOM5 OGCM.GRIDSPEC: MAPL_Tripolar.nc
+@MOM6 OGCM.GRIDSPEC: MAPL_Tripolar.nc
+@MIT  OGCM.GRIDSPEC: mit.ascii
 @DATAOCEAN @LATLON_OGCM OGCM.POLE: 'PE'
 @DATAOCEAN @LATLON_OGCM OGCM.DATELINE: 'DE'
 @DATAOCEAN @CUBE_OGCM OGCM.NF: @OGCM_NF
 OGCM_RUN_DT: @OCEAN_DT
 ###########################################################
-
 ##############################################################################################
 ####                                                                                      ####
 ####   SST REMAPPING                                                                      ####
@@ -793,16 +823,16 @@ USE_RRTMG_IRRAD: 1.0
 USE_RRTMG_SORAD: 1.0
 ISOLVAR: 2
 USE_NRLSSI2: .TRUE.
-SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2021.txt
+SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2022.txt
 
 NUM_BANDS: 30
 
 #USE_RRTMGP_IRRAD: 1.0
 #USE_RRTMGP_SORAD: 1.0
-#RRTMGP_DATA_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/rrtmgp/data/rrtmgp-data-lw-g128-210809.nc
-#RRTMGP_DATA_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/rrtmgp/data/rrtmgp-data-sw-g112-210809.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.5/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-sw.nc
+#RRTMGP_DATA_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/rrtmgp/data/rrtmgp-data-lw-g128-210809.nc
+#RRTMGP_DATA_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/rrtmgp/data/rrtmgp-data-sw-g112-210809.nc
+#RRTMGP_CLOUD_OPTICS_COEFFS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc
+#RRTMGP_CLOUD_OPTICS_COEFFS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-reordered-sw.nc
 
 DIURNAL_BIOMASS_BURNING: yes
 

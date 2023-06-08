@@ -2,6 +2,10 @@
  @FV_HYDRO
  range_warn = .T.
  fv_debug = .F.
+ @FV_SCHMIDT
+ @FV_STRETCH_FAC
+ @FV_TARGET_LON
+ @FV_TARGET_LAT
 /
 
 &main_nml
@@ -28,8 +32,8 @@
   do_qa = .false.
   tau_l2v  = 150.
   tau_i2v  = 150.
-  tau_revp = 300.
-  tau_frz  = 300.
+  tau_revp = 150.
+  tau_frz  = 450.
   dw_land  = 0.05
   dw_ocean = 0.10
   rh_inc = 0.30
