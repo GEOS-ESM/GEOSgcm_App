@@ -161,9 +161,14 @@ end
 # Copy Restarts to Regress directory
 # ----------------------------------
 foreach rst ( $rst_file_names )
-       cp $EXPDIR/$rst $EXPDIR/regress
+   cp $EXPDIR/$rst $EXPDIR/regress
 end
 cp $EXPDIR/cap_restart $EXPDIR/regress
+
+# Get proper ridge scheme GWD internal restart
+# --------------------------------------------
+/bin/rm gwd_internal_rst
+/bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
 
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
@@ -634,6 +639,11 @@ if ( $RUN_LAYOUT == TRUE) then
       /bin/rm -f $rst
       cp $EXPDIR/$rst $EXPDIR/regress
    end
+
+   # Get proper ridge scheme GWD internal restart
+   # --------------------------------------------
+   /bin/rm gwd_internal_rst
+   /bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
 
    @COUPLED /bin/rm -rf INPUT
    @COUPLED /bin/mkdir INPUT
