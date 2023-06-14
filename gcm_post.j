@@ -22,6 +22,8 @@ limit stacksize unlimited
 
 @SETENVS
 
+@MPT_SHEPHERD
+
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################

@@ -26,6 +26,6 @@ setenv EXPDIR  @EXPDIR
 
 cd $EXPDIR
 
-@EXTDATA2G $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
 $RUN_CMD 1 ./GEOSgcm.x

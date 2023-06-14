@@ -20,6 +20,8 @@ limit stacksize unlimited
 
 @SETENVS
 
+@MPT_SHEPHERD
+
 # Establish safe default number of OpenMP threads
 # -----------------------------------------------
 setenv OMP_NUM_THREADS 1
@@ -109,10 +111,10 @@ cp -f  $HOMDIR/*.yaml .
 
 cat fvcore_layout.rc >> input.nml
 
-@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_NATURE
+@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_CLIM
 @MP_NO_USE_WSUB# -------------------------------------------------
 @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_NATURE/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+@MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 @MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
 
 if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
@@ -509,6 +511,9 @@ set LOGFILE = "$CNVDIR/GEOSgcm.log"
 # Assume gcm_setup set these properly for the local platform
 /bin/rm -f EGRESS
 @SETENVS
+
+@MPT_SHEPHERD
+
 @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x >& $LOGFILE
 if( -e EGRESS ) then
    set rc = 0

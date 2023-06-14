@@ -1159,7 +1159,7 @@ else if( $SITE == 'NCCS' ) then
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_moveplot.j
-              setenv BCSDIR     /discover/nobackup/ltakacs/bcs/Ganymed-4_0/$BCSTAG     # location of     Boundary Conditions
+              setenv BCSDIR     /discover/nobackup/projects/gmao/bcs_shared/legacy_bcs/Ganymed-4_0/$BCSTAG     # location of     Boundary Conditions
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
@@ -1787,7 +1787,7 @@ s?>>>REGULAR_REPLAY<<<?#?g
 s?>>>REGULAR_REPLAY_GMAO<<<?#?g
 s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
 s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
-s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA2_MEANS/ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4?g
+s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@OX_RELAXTIME?259200.?g
 s?@PCHEM_CLIM_YEARS?228?g
