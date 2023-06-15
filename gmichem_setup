@@ -1266,7 +1266,7 @@ if( $AGCM_IM == "c270" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF270x6C
+     set ATMOS_RES = CF0270x6C
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
@@ -2575,7 +2575,7 @@ s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
 s/@CONUS/${CONUS}/g
-s/@STRETCH_FAC/${STRETCH_FAC}/g
+s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g

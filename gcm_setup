@@ -1346,12 +1346,12 @@ endif
 
 if ($CONUS == '#') then
   set SCHMIDT     = "do_schmidt  = .false."
-  set FV_STRETCH_FAC = "stretch_fac = 1.0"
+  set STRETCH_FAC = "stretch_fac = 1.0"
   set TARGET_LON  = "target_lon  = 0.0"
   set TARGET_LAT  = "target_lat  = 0.0"
 else
   set SCHMIDT     = "do_schmidt  = .true."
-  set FV_STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
+  set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
   set TARGET_LON  = "target_lon  = -98.35"
   set TARGET_LAT  = "target_lat  = 39.5"
 endif
@@ -2377,7 +2377,7 @@ s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
 s/@CONUS/${CONUS}/g
-s/@FV_STRETCH_FAC/${FV_STRETCH_FAC}/g
+s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
