@@ -1151,6 +1151,7 @@ if( $AGCM_IM == "c5760" ) then
 endif
 # CONUS Stretched Grids
 set CONUS = '#'
+set STRETCH_FACTOR = ""
 if( $AGCM_IM == "c270" ) then
      set       DT = 600
      set SOLAR_DT = 3600
