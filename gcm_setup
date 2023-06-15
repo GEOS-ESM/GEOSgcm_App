@@ -1158,7 +1158,7 @@ if( $AGCM_IM == "c270" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF270x6C
+     set ATMOS_RES = CF0270x6C
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
@@ -1182,7 +1182,7 @@ if( $AGCM_IM == "c540" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF540x6C
+     set ATMOS_RES = CF0540x6C
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
@@ -1346,12 +1346,12 @@ endif
 
 if ($CONUS == '#') then
   set SCHMIDT     = "do_schmidt  = .false."
-  set STRETCH_FAC = "stretch_fac = 1.0"
+  set FV_STRETCH_FAC = "stretch_fac = 1.0"
   set TARGET_LON  = "target_lon  = 0.0"
   set TARGET_LAT  = "target_lat  = 0.0"
 else
   set SCHMIDT     = "do_schmidt  = .true."
-  set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
+  set FV_STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
   set TARGET_LON  = "target_lon  = -98.35"
   set TARGET_LAT  = "target_lat  = 39.5"
 endif
@@ -2377,7 +2377,7 @@ s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
 s/@CONUS/${CONUS}/g
-s/@STRETCH_FAC/${STRETCH_FAC}/g
+s/@FV_STRETCH_FAC/${FV_STRETCH_FAC}/g
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
