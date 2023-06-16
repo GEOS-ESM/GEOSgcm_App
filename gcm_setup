@@ -609,11 +609,13 @@ if( $OGCM == TRUE ) then
        set SEAICE_PRELOAD = '$GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE4=""
        set CICE6 = "#DELETE"
+       set HIST_CICE4 = ""
     else if ( $SEAICEMODEL == "CICE6" ) then
        set SEAICE_NAME="CICE6"
        set SEAICE_PRELOAD = '$GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE6=""
        set CICE4 = "#DELETE"
+       set HIST_CICE4 = "#DELETE"
     endif
 
     if ( $SEAICEMODEL == "CICE6" & $OCNMODEL != "MOM6" ) then
@@ -925,6 +927,7 @@ else
     set MOM6      = "#DELETE"
     set CICE4     = "#DELETE"
     set CICE6     = "#DELETE"
+    set HIST_CICE4 = "#DELETE"
     set OCNMODEL  = "Data Ocean (${HRCODE})"
     set DEFAULT_HISTORY_TEMPLATE="HISTORY.AGCM.rc.tmpl"
     set MIT       = "#DELETE"
@@ -2345,6 +2348,7 @@ s?@MOM5?$MOM5?g
 s?@MOM6?$MOM6?g
 s?@CICE4?$CICE4?g
 s?@CICE6?$CICE6?g
+s?>>>HIST_CICE4<<<?$HIST_CICE4?g
 s?@MIT?$MIT?g
 s?@DATAOCEAN?$DATAOCEAN?g
 s?>>>GOCART<<<?$GOCART?g
