@@ -356,17 +356,17 @@ BCSTAG="Icarus_Reynolds"
 
 case $SITE in
    NCCS)
-   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v10.22/"
+   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v11.1/"
    BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput_nc3"
    ;;
    NAS)
-   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v10.22/"
+   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
    BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
-   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v10.22/"
+   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
    BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
@@ -385,6 +385,7 @@ SOURCEDIR=$SCMDIR/$selected_case
 mkdir -p $expdir
 
 /bin/cp $INSTALLDIR/bin/GEOSgcm.x $expdir
+/bin/cp $INSTALLDIR/etc/logging.yaml $expdir
 
 /bin/cp $SOURCEDIR/$DATFILE $expdir
 /bin/cp $SOURCEDIR/topo_dynave.data $expdir
