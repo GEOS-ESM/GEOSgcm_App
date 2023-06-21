@@ -25,8 +25,7 @@ program GEOS5_Main
    type (MAPL_CapOptions) :: cap_options
    integer :: status
 
-   cap_options = FargparseCLI(description = 'GEOS AGCM', &
-                                     authors     = 'GMAO')
+   cap_options = FargparseCLI()
    cap = MAPL_Cap('GCM', ROOT_SetServices, cap_options = cap_options)
 
    call cap%run(_RC)
