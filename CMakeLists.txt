@@ -3,6 +3,12 @@ ecbuild_add_executable (
   SOURCES GEOSgcm.F90
   LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
   )
+if (GPU_PHYSICS)
+  target_link_libraries (
+    GEOSgcm.x
+    -fopenacc -foffload="-lgfortran -lgomp -lm" -foffload=nvptx-none
+    )
+endif ()
 
 ecbuild_add_executable (
   TARGET idfupd.x
