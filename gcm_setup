@@ -1262,7 +1262,7 @@ if( $AGCM_IM == "c2160" ) then
      set CONUS = ''
      set STRETCH_FACTOR = 2.5
 endif
-if( "$OCNMODEL" == "MIT" ) then
+if( "$OGCM" == "TRUE" ) then
      set OCEAN_DT = $DT
 endif
 
