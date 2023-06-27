@@ -2696,8 +2696,8 @@ endif
 # and change MOM_override to match.
 
 if( $OGCM == TRUE & "$OCNMODEL" == "MOM6" ) then
-   sed -i -e "s/DT: [0-9]*\.[0-9]*/DT: $OCEAN_DT/g" \
-          -e "s/DT_THERM: [0-9]*\.[0-9]*/DT_THERM: $OCEAN_DT/g" $HOMDIR/MOM_override
+   sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
+          -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
 endif
 
 #######################################################################
