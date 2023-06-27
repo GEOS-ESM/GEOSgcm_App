@@ -117,7 +117,7 @@ end
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-if ($USER_SITE = "") then
+if ($USER_SITE == "") then
    setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
 else
    setenv SITE $USER_SITE
