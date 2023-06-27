@@ -1277,9 +1277,6 @@ if( $AGCM_IM == "c2160" ) then
      set CONUS = ''
      set STRETCH_FACTOR = 2.5
 endif
-if( "$OGCM" == "TRUE" ) then
-     set OCEAN_DT = $DT
-endif
 
 set IS_FCST = 0
 set FVCUBED         = ""
@@ -1546,6 +1543,10 @@ endif
 
 set DT = $HEARTBEAT
 
+# For now, in a coupled run, the ocean model must have the same time step as the atmosphere
+if( "$OGCM" == "TRUE" ) then
+     set OCEAN_DT = $HEARTBEAT
+endif
 
 #######################################################################
 #                    Create Desired HISTORY template
