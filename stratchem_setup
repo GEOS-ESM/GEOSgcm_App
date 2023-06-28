@@ -2801,7 +2801,7 @@ endif
     endif
 
 #######################################################################
-#              Modify MOM_override to match HEARTBEAT
+#              Modify MOM input files to match HEARTBEAT
 #######################################################################
 
 if( $OGCM == TRUE ) then
