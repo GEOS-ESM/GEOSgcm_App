@@ -1530,7 +1530,7 @@ set DT = $HEARTBEAT
 
 # For now, in a coupled run, the ocean model must have the same time step as the atmosphere
 if( "$OGCM" == "TRUE" ) then
-     set OCEAN_DT = $HEARTBEAT
+   set OCEAN_DT = $HEARTBEAT
 endif
 
 #######################################################################
@@ -2691,13 +2691,23 @@ endif
 #              Modify MOM_override to match HEARTBEAT
 #######################################################################
 
-# We also must change the MOM_override file to
-# have consistent DTs with the AGCM. So we use OCEAN_DT
-# and change MOM_override to match.
+if( $OGCM == TRUE ) then
 
-if( $OGCM == TRUE & "$OCNMODEL" == "MOM6" ) then
-   sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
-          -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
+   if ("$OCNMODEL" == "MOM6" ) then
+      # We also must change the MOM_override file to
+      # have consistent DTs with the AGCM. So we use OCEAN_DT
+      # and change MOM_override to match. NOTE: This sed
+      # assumes floating point number with a decimal
+
+      sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
+             -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
+   else if ("$OCNMODEL" == "MOM5" ) then
+      # With MOM5 we need to change dt lines in input.nml to 
+      # use $OCEAN_DT instead. NOTE: This sed assumes integer followed by comma
+
+      sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
+             -e "s/dt_atmos = [0-9]*,/dt_atmos = $OCEAN_DT,/g" $HOMDIR/input.nml
+
 endif
 
 #######################################################################
