@@ -243,25 +243,26 @@ endif
 
 cd $SCRDIR
 /bin/rm -rf *
-                             cp -f  $EXPDIR/RC/* .
-                             cp     $EXPDIR/cap_restart .
-                             cp -f  $HOMDIR/*.rc .
-                             cp -f  $HOMDIR/*.nml .
-                             cp -f  $HOMDIR/*.yaml .
-                             cp     $GEOSBIN/bundleParser.py .
 
-                             cat fvcore_layout.rc >> input.nml
-                             if (-z input.nml) then
-                                 echo "try cat for input.nml again"
-                                 cat fvcore_layout.rc >> input.nml
-                             endif
-                             if (-z input.nml) then
-                                 echo "input.nml is zero-length"
-                                 exit 0
-                             endif
+cp -f  $EXPDIR/RC/* .
+cp     $EXPDIR/cap_restart .
+cp -f  $HOMDIR/*.rc .
+cp -f  $HOMDIR/*.nml .
+cp -f  $HOMDIR/*.yaml .
+cp     $GEOSBIN/bundleParser.py .
 
-                             @MOM6cp -f  $HOMDIR/MOM_input .
-                             @MOM6cp -f  $HOMDIR/MOM_override .
+cat fvcore_layout.rc >> input.nml
+if (-z input.nml) then
+   echo "try cat for input.nml again"
+   cat fvcore_layout.rc >> input.nml
+endif
+if (-z input.nml) then
+   echo "input.nml is zero-length"
+   exit 0
+endif
+
+@MOM6cp -f  $HOMDIR/MOM_input .
+@MOM6cp -f  $HOMDIR/MOM_override .
 
 if( $GCMEMIP == TRUE ) then
     cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
