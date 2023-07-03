@@ -60,6 +60,7 @@ endif
 set LINKX = FALSE
 set EXE_VERB = "copied"
 set USING_SINGULARITY = FALSE
+set USER_SITE = ""
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -69,6 +70,22 @@ while ( $#argv > 0 )
       case -[Cc]:
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
+
+      # Testing with singularity found we need the ability to override
+      # the SITE variable below because images might be built on, say,
+      # AWS and thus "block" us from running at NCCS.
+      #
+      # So, we make a --site flag that allows us to override the SITE
+      # variable
+      case --site:
+         set USER_SITE = $1
+         # if USER_SITE is empty, then we error out
+         if ( "$USER_SITE" == "" ) then
+            echo "ERROR: --site flag requires a site name"
+            exit 1
+         endif
+         shift argv
+         breaksw
 
       # Symlink GEOSgcm.x
       case --link:
@@ -100,7 +117,11 @@ end
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
+if ($USER_SITE == "") then
+   setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
+else
+   setenv SITE $USER_SITE
+endif
 
 #######################################################################
 #                 Test for Compiler and MPI Setup

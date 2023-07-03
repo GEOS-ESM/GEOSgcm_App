@@ -32,8 +32,8 @@ setenv GEOSBIN          @GEOSBIN
 setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
-@NATIVE_BUILD source $GEOSBIN/g5_modules
-@NATIVE_BUILD setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
