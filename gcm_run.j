@@ -465,7 +465,7 @@ cp  linkbcs $EXPDIR
 @SINGULARITY_BUILD # Also look below for suggestions on Intel MPI, OpenMPI and MPT environment variables
 @SINGULARITY_BUILD #
 @SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
-@SINGULARITY_BUILD setenv SINGULARITY_SANDBOX ""
+@SINGULARITY_BUILD setenv SINGULARITY_SANDBOX @SINGULARITY_SANDBOX
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
 @SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
@@ -482,7 +482,10 @@ cp  linkbcs $EXPDIR
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
 @SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
-@SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}"
+@SINGULARITY_BUILD setenv REAL_BIND_PATH @REAL_BIND_PATH
+@SINGULARITY_BUILD setenv BASE_BIND_PATH @BASE_BIND_PATH
+@SINGULARITY_BUILD setenv BOUNDARY_DIR @BOUNDARY_DIR
+@SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}:rw,${REAL_BIND_PATH}:${REAL_BIND_PATH}:rw,${BASE_BIND_PATH}:${BASE_BIND_PATH}:ro,${BOUNDARY_DIR}:${BOUNDARY_DIR}:ro"
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # If you are running from a different location, you will need to change the bind path
 @SINGULARITY_BUILD # Also, note that often $NOBACKUP is, say, /discover/nobackup/username, but gcm_setup
