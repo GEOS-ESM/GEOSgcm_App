@@ -91,9 +91,21 @@ setenv BASE_BIND_PATH "/gpfsm"
 # Set default behavior of switches
 set LINKX = FALSE
 set EXE_VERB = "copied"
-set USER_SITE = ""
+set SINGULARITY_RUN_SITE = ""
 if ($singstat == 1) then
    set USING_SINGULARITY = TRUE
+
+   # If we are using Singularity, then where the image was built might
+   # not match where we run. We at least know NCCS and NAS, so
+   # we can use that to set the site.
+
+   if (($node =~ discover*) || ($node =~ borg*) || ($node =~ warp*)) then
+      set SINGULARITY_RUN_SITE = "NCCS"
+   else if (($node =~ pfe*) || \
+            ($node =~ r[0-9]*i[0-9]*n[0-9]*) || \
+            ($node =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*)) then
+      set SINGULARITY_RUN_SITE = "NAS"
+   endif
 else
    set USING_SINGULARITY = FALSE
 endif
@@ -106,22 +118,6 @@ while ( $#argv > 0 )
       case -[Cc]:
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
-
-      # Testing with singularity found we need the ability to override
-      # the SITE variable below because images might be built on, say,
-      # AWS and thus "block" us from running at NCCS.
-      #
-      # So, we make a --site flag that allows us to override the SITE
-      # variable
-      case --site:
-         set USER_SITE = $1
-         # if USER_SITE is empty, then we error out
-         if ( "$USER_SITE" == "" ) then
-            echo "ERROR: --site flag requires a site name"
-            exit 1
-         endif
-         shift argv
-         breaksw
 
       # Symlink GEOSgcm.x
       case --link:
@@ -148,10 +144,10 @@ end
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-if ($USER_SITE == "") then
+if ($SINGULARITY_RUN_SITE == "") then
    setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
 else
-   setenv SITE $USER_SITE
+   setenv SITE $SINGULARITY_RUN_SITE
 endif
 
 #######################################################################
@@ -2764,7 +2760,7 @@ if( $OGCM == TRUE ) then
       sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
    else if ("$OCNMODEL" == "MOM5" ) then
-      # With MOM5 we need to change dt lines in input.nml to 
+      # With MOM5 we need to change dt lines in input.nml to
       # use $OCEAN_DT instead. NOTE: This sed assumes integer followed by comma
 
       sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
