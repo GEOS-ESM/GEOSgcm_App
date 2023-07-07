@@ -390,21 +390,24 @@ endif
 
 ASKPROC:
 
+set NCCS_ANYWHERE = ""
 if ( $SITE == 'NCCS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}hasw (Haswell)${CN}"
-   echo "   ${C2}sky  (Skylake)${CN} (default)"
+   echo "   ${C2}sky  (Skylake)${CN}"
    echo "   ${C2}cas  (Cascade Lake)${CN}"
+   echo "   ${C2}any  (Any Node Type)${CN} (default)"
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      set MODEL = 'any'
    endif
 
    if( $MODEL != 'hasw' & \
        $MODEL != 'sky'  & \
-       $MODEL != 'cas' ) goto ASKPROC
+       $MODEL != 'cas'  & \
+       $MODEL != 'any' ) goto ASKPROC
 
    if (     $MODEL == 'hasw') then
       set NCPUS_PER_NODE = 28
@@ -418,6 +421,9 @@ if ( $SITE == 'NCCS' ) then
       # that doesn't waste too much
       #set NCPUS_PER_NODE = 48
       set NCPUS_PER_NODE = 45
+   else if ($MODEL == 'any') then
+      set NCPUS_PER_NODE = ANY
+      set NCCS_ANYWHERE = "#DELETE"
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -1617,38 +1623,60 @@ echo "Using ${C2}${HISTORY_TEMPLATE}${CN}"
 # Calculate OSERVER nodes based on recommended algorithm
 if ( $DO_IOS == TRUE ) then
 
-   # In the calculations below, the weird bc-awk command is to round up the floating point calcs
+   # In the calculations below, the weird bc-awk ceil command is to round up the floating point calcs
+   #
+   # First we deal with the "any" case for NCCS
 
-   # First we calculate the number of model nodes
-   set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+   if ( "$NCPUS_PER_NODE" == "ANY") then
 
-   # Next the number of frontend PEs is 10% of the model PEs
-   set NUM_FRONTEND_PES=`echo "scale=6;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+      # For the "any" case, we do things differently. First, we assume that 10% of the model PEs is a
+      # good guess for total NPEs, and we round up
 
-   # Now we roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
-   set NUM_HIST_COLLECTIONS=`cat $TMPHIST | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+      set TOTAL_NPES=`echo "scale=6;($MODEL_NPES * 1.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
-   # And the total number of oserver PEs is frontend PEs plus number of history collections
-   @ NUM_OSERVER_PES=$NUM_FRONTEND_PES + $NUM_HIST_COLLECTIONS
+   else
 
-   # Now calculate the number of oserver nodes
-   set NUM_OSERVER_NODES=`echo "scale=6;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+      # if not ANY, then we use the assigned NCPUS_PER_NODE to figure out the total number of model nodes needed
 
-   # And then the number of backend PEs is the number of history collections divided by the number of oserver nodes
-   set NUM_BACKEND_PES=`echo "scale=6;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+      # First we calculate the number of model nodes
+      set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
-   # multigroup requires at least two backend pes
-   if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+      # Next the number of frontend PEs is 10% of the model PEs
+      set NUM_FRONTEND_PES=`echo "scale=6;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
-   # Calculate the total number of nodes to request from batch
-   @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
+      # Now we roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
+      set NUM_HIST_COLLECTIONS=`cat $TMPHIST | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+
+      # And the total number of oserver PEs is frontend PEs plus number of history collections
+      @ NUM_OSERVER_PES=$NUM_FRONTEND_PES + $NUM_HIST_COLLECTIONS
+
+      # Now calculate the number of oserver nodes
+      set NUM_OSERVER_NODES=`echo "scale=6;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+      # And then the number of backend PEs is the number of history collections divided by the number of oserver nodes
+      set NUM_BACKEND_PES=`echo "scale=6;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+      # multigroup requires at least two backend pes
+      if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+
+      # Calculate the total number of nodes to request from batch
+      @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
+
+   endif
 
 else
-   # Calculate the number of model nodes
-   set NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
-   set NUM_OSERVER_NODES = 0
-   set NUM_BACKEND_PES   = 0
+   if ( "$NCPUS_PER_NODE" == "ANY) then
+
+      set TOTAL_NPES=$MODEL_NPES
+
+   else
+
+      # Calculate the number of model nodes
+      set NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+   endif
+
 endif
 
 @ CNV_NPES = $CNV_NX * $CNV_NY
@@ -1737,14 +1765,23 @@ else if( $SITE == 'NCCS' ) then
 
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
-              setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
-              setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
+              if ("$NCPUS_PER_NODE" == "ANY") then
+                 setenv    RUN_Q   "DELETE"                        # batch queue name for gcm_run.j
+                 setenv    RUN_P   "SBATCH --ntasks=${TOTAL_NPES}" # PE Configuration for gcm_run.j
+                 setenv    RUN_FP  "SBATCH --ntasks=${TOTAL_NPES}" # PE Configuration for gcm_forecast.j
+                 setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"  # PE Configuration for gcm_post.j
+                 setenv    POST_Q  "DELETE"                        # batch queue name for gcm_post.j
+                 setenv    PLOT_Q  "DELETE"                        # batch queue name for gcm_plot.j
+              else
+                 setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
+                 setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
+                 setenv    RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
+                 setenv    POST_P  "SBATCH --nodes=${NPCUS} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_post.j
+                 setenv    POST_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_post.j
+                 setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
+              endif
               setenv    MOVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_moveplot.j
               setenv ARCHIVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --nodes=${NPCUS} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_post.j
               setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
@@ -1848,8 +1885,6 @@ else
               set CNV_NY = ${NY}
               # By default on desktop, just ignore IOSERVER for now
               set USE_IOSERVER = 0
-              set NUM_OSERVER_NODES = 0
-              set NUM_BACKEND_PES = 0
 endif
 
 #######################################################################
@@ -2374,8 +2409,6 @@ s/@NX/$NX/g
 s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
 s/@USE_IOSERVER/$USE_IOSERVER/g
-s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
-s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g

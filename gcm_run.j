@@ -116,6 +116,9 @@ if ( $NCPUS != NULL ) then
       @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
       @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
 
+      # We roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
+      set NUM_HIST_COLLECTIONS=`cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
+
       if( $TOTAL_PES > $NCPUS ) then
          echo "CPU Resources are Over-Specified"
          echo "--------------------------------"
@@ -125,9 +128,9 @@ if ( $NCPUS != NULL ) then
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
          echo ""
-         echo "Specified model nodes: $NUM_MODEL_NODES"
-         echo "Specified oserver nodes: $NUM_OSERVER_NODES"
-         echo "Specified cores per node: $NCPUS_PER_NODE"
+         @NCCS_ANYWHERE echo "Specified model nodes: $NUM_MODEL_NODES"
+         @NCCS_ANYWHERE echo "Specified oserver nodes: $NUM_OSERVER_NODES"
+         @NCCS_ANYWHERE echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
@@ -144,8 +147,8 @@ if ( $NCPUS != NULL ) then
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
          echo ""
-         echo "Specified model nodes: $NUM_MODEL_NODES"
-         echo "Specified cores per node: $NCPUS_PER_NODE"
+         @NCCS_ANYWHERE echo "Specified model nodes: $NUM_MODEL_NODES"
+         @NCCS_ANYWHERE echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
@@ -324,7 +327,7 @@ setenv EMISSIONS @EMISSIONS
 @MOM5setenv BCTAG `basename $ABCSDIR`
 @MOM6setenv BCTAG `basename $ABCSDIR`
 #this is hard-wired for NAS for now - should make it more general
-@MITsetenv GRIDDIR /nobackupp18/afahad/GEOSMITgcmFiles/GRIDDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM} 
+@MITsetenv GRIDDIR /nobackupp18/afahad/GEOSMITgcmFiles/GRIDDIR/a${AGCM_IM}x${AGCM_JM}_o${OGCM_IM}x${OGCM_JM}
 @MITsetenv BCTAG `basename $GRIDDIR`
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
 
@@ -540,7 +543,7 @@ set tile_rsts = (catch catchcn route lake landice openwater saltwater seaicether
 # ----------------------------------
 set rst_by_face = NO
 if( $GCMEMIP == TRUE ) then
-   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_rst & -e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then 
+   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_rst & -e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
      echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
      echo "please remove all *internal_rst except these tile-based restarts :"
      foreach rst ( $tile_rsts )
@@ -548,7 +551,7 @@ if( $GCMEMIP == TRUE ) then
      end
      exit
    endif
-   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then 
+   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
    endif
 else
@@ -560,7 +563,7 @@ else
      end
      exit
    endif
-   if(-e $EXPDIR/fvcore_internal_face_1_rst) then 
+   if(-e $EXPDIR/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
    endif
 endif
@@ -605,7 +608,7 @@ foreach rst ( $dummy )
        if ( $rst =~ *$tile_rst* ) then
          set is_tile_rst = TRUE
          break
-       endif  
+       endif
      end
   endif
   if ($is_tile_rst == FALSE & $rst_by_face == YES) then
@@ -614,7 +617,7 @@ foreach rst ( $dummy )
          set rst = ${part1}_face_${n}_rst
          set rst_file_names = `echo $rst_file_names $rst`
       end
-  else   
+  else
     set rst_file_names = `echo $rst_file_names $rst`
   endif
 end
@@ -1034,53 +1037,53 @@ endif
 @MIT # ---------------------------------------------------
 @MIT # For MITgcm restarts - before running GEOSgcm.x
 @MIT # ---------------------------------------------------
-@MIT 
+@MIT
 @MIT # set time interval for segment in seconds
-@MIT 
+@MIT
 @MIT set yearc  = `echo $nymdc | cut -c1-4`
 @MIT set monthc = `echo $nymdc | cut -c5-6`
 @MIT set dayc   = `echo $nymdc | cut -c7-8`
 @MIT set hourc  = `echo $nhmsc | cut -c1-2`
 @MIT set minutec = `echo $nhmsc | cut -c3-4`
 @MIT set secondc = `echo $nhmsc | cut -c5-6`
-@MIT 
+@MIT
 @MIT set yearf  = `echo $nymdf | cut -c1-4`
 @MIT set monthf = `echo $nymdf | cut -c5-6`
 @MIT set dayf   = `echo $nymdf | cut -c7-8`
 @MIT set hourf  = `echo $nhmsf | cut -c1-2`
 @MIT set minutef = `echo $nhmsf | cut -c3-4`
 @MIT set secondf = `echo $nhmsf | cut -c5-6`
-@MIT 
+@MIT
 @MIT set yearf = `echo $nymdf | cut -c1-4`
-@MIT 
+@MIT
 @MIT set time1 = `date -u -d "${yearc}-${monthc}-${dayc}T${hourc}:${minutec}:${secondc}" "+%s"`
 @MIT set time2 = `date -u -d "${yearf}-${monthf}-${dayf}T${hourf}:${minutef}:${secondf}" "+%s"`
-@MIT 
+@MIT
 @MIT      @ mitdt = $time2 - $time1
 @MIT echo "Segment time: $mitdt"
-@MIT 
-@MIT 
+@MIT
+@MIT
 @MIT # Set-up MITgcm run directory
 @MIT if (! -e mitocean_run) mkdir -p mitocean_run
 @MIT cd mitocean_run
-@MIT 
+@MIT
 @MIT # link mit configuration and initialization files
 @MIT ln -sf $EXPDIR/mit_input/* .
 @MIT # link mitgcm restarts if exist
 @MIT /bin/ln -sf $EXPDIR/restarts/pic* .
 @MIT # make an archive folder for mitgcm run
 @MIT mkdir $EXPDIR/mit_output
-@MIT 
+@MIT
 @MIT # Calculate segment time steps
 @MIT set mit_nTimeSteps = `cat ${SCRDIR}/AGCM.rc | grep OGCM_RUN_DT: | cut -d: -f2 | tr -s " " | cut -d" " -f2`
 @MIT @ mit_nTimeSteps = ${mitdt} / $mit_nTimeSteps
-@MIT 
+@MIT
 @MIT #change namelist variables in data - nTimeSteps, chkptFreq and monitorFreq
 @MIT sed -i "s/nTimeSteps.*/nTimeSteps       = ${mit_nTimeSteps},/" data
 @MIT sed -i "s/chkptFreq.*/chkptFreq        = ${mitdt}.0,/" data
 @MIT sed -i "s/pChkptFreq.*/pChkptFreq        = ${mitdt}.0,/" data
 @MIT # get nIter0
-@MIT 
+@MIT
 @MIT if (! -e ${EXPDIR}/restarts/MITgcm_restart_dates.txt ) then
 @MIT   set nIter0 = `grep nIter0 data | tr -s " " | cut -d"=" -f2 | cut -d"," -f1 | awk '{$1=$1;print}'`
 @MIT else
@@ -1095,7 +1098,7 @@ endif
 @MIT     sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
 @MIT   endif
 @MIT endif
-@MIT 
+@MIT
 @MIT cd ..
 @MIT # ---------------------------------------------------
 @MIT # End MITgcm restarts - before running GEOSgcm.x
@@ -1132,29 +1135,29 @@ echo GEOSgcm Run Status: $rc
 @MIT # ---------------------------------------------------
 @MIT # For MITgcm restarts - after running GEOSgcm.x
 @MIT # ---------------------------------------------------
-@MIT 
+@MIT
 @MIT set STEADY_STATE_OCEAN=`grep STEADY_STATE_OCEAN AGCM.rc | cut -d':' -f2 | tr -d " "`
-@MIT 
+@MIT
 @MIT # update ocean only if activated. Otherwize use the same pickups (passive ocean).
 @MIT if ( ${STEADY_STATE_OCEAN} != 0 ) then
-@MIT 
+@MIT
 @MIT   if ( ${rc} == 0 ) then
-@MIT 
+@MIT
 @MIT     # Update nIter0 for next segment
 @MIT     set znIter00 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
 @MIT     @ nIter0 = $nIter0 + $mit_nTimeSteps
 @MIT     set znIter0 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
-@MIT 
+@MIT
 @MIT     # to update MITgcm restart list file
 @MIT     sed -i "/${nIter0}/d" ${EXPDIR}/restarts/MITgcm_restart_dates.txt
 @MIT     echo "Date_GEOS5 $nymdf $nhmsf NITER0_MITgcm ${nIter0}" >> ${EXPDIR}/restarts/MITgcm_restart_dates.txt
-@MIT 
+@MIT
 @MIT     /bin/mv $SCRDIR/mitocean_run/STDOUT.0000 $EXPDIR/mit_output/STDOUT.${znIter00}
-@MIT 
+@MIT
 @MIT   endif
-@MIT 
+@MIT
 @MIT   cd $SCRDIR/mitocean_run
-@MIT 
+@MIT
 @MIT   # Check existance of roling pickups
 @MIT   set nonomatch rp =  ( pickup*ckptA* )
 @MIT   echo $rp
@@ -1168,7 +1171,7 @@ echo GEOSgcm Run Status: $rc
 @MIT       /bin/mv ${fname} $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
 @MIT     end
 @MIT   endif
-@MIT 
+@MIT
 @MIT   # Check existance of permanent pickups
 @MIT   set nonomatch pp =  ( pickup* )
 @MIT   echo $pp
@@ -1178,7 +1181,7 @@ echo GEOSgcm Run Status: $rc
 @MIT       if ( ! -e $EXPDIR/restarts/${fname} ) /bin/mv ${fname} $EXPDIR/restarts/${fname}
 @MIT     end
 @MIT   endif
-@MIT 
+@MIT
 @MIT   /bin/mv T.* $EXPDIR/mit_output/
 @MIT   /bin/mv S.* $EXPDIR/mit_output/
 @MIT   /bin/mv U.* $EXPDIR/mit_output/
@@ -1186,31 +1189,31 @@ echo GEOSgcm Run Status: $rc
 @MIT   /bin/mv W.* $EXPDIR/mit_output/
 @MIT   /bin/mv PH* $EXPDIR/mit_output/
 @MIT   /bin/mv Eta.* $EXPDIR/mit_output/
-@MIT 
+@MIT
 @MIT   /bin/mv AREA.* $EXPDIR/mit_output/
 @MIT   /bin/mv HEFF.* $EXPDIR/mit_output/
 @MIT   /bin/mv HSNOW.* $EXPDIR/mit_output/
 @MIT   /bin/mv UICE.* $EXPDIR/mit_output/
 @MIT   /bin/mv VICE.* $EXPDIR/mit_output/
-@MIT 
+@MIT
 @MIT   #copy mit output to mit_output
 @MIT   foreach i (`grep -i filename data.diagnostics  | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
 @MIT    /bin/mv ${i}* $EXPDIR/mit_output/
 @MIT   end
-@MIT 
+@MIT
 @MIT   foreach i (`grep -i stat_fName data.diagnostics | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
 @MIT    /bin/mv ${i}* $EXPDIR/mit_output/
 @MIT   end
-@MIT 
+@MIT
 @MIT   cd $SCRDIR
-@MIT 
+@MIT
 @MIT endif
-@MIT 
+@MIT
 @MIT # ---------------------------------------------------
 @MIT # End MITgcm restarts - after running GEOSgcm.x
 @MIT # ---------------------------------------------------
 
- 
+
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
 #        Note: cap_restart contains the current NYMD and NHMS
