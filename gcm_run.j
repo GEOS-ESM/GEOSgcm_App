@@ -91,8 +91,6 @@ set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 # --------------------------------------------
 
 set USE_IOSERVER      = @USE_IOSERVER
-set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:'  $HOMDIR/AGCM.rc | cut -d: -f2`
-set NUM_BACKEND_PES   = `grep '^\s*NUM_BACKEND_PES:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Check for Over-Specification of CPU Resources
 # ---------------------------------------------
@@ -106,33 +104,49 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
-set NCPUS_PER_NODE = @NCPUS_PER_NODE
+@RUN_SPECIFIC set NCPUS_PER_NODE = @NCPUS_PER_NODE
+@RUN_ANYWHERE set NCPUS_PER_NODE=`echo "scale=6;($NCPUS / $SLURM_NNODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
 if ( $NCPUS != NULL ) then
 
    if ( $USE_IOSERVER == 1 ) then
 
-      @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
-      @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
+      # Next the number of frontend PEs is 10% of the model PEs
+      set NUM_FRONTEND_PES=`echo "scale=6;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
       # We roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
       set NUM_HIST_COLLECTIONS=`cat HISTORY.rc | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
 
-      if( $TOTAL_PES > $NCPUS ) then
-         echo "CPU Resources are Over-Specified"
-         echo "--------------------------------"
-         echo "Allotted  NCPUs: $NCPUS"
-         echo "Requested NCPUs: $TOTAL_PES"
-         echo ""
-         echo "Specified NX: $NX"
-         echo "Specified NY: $NY"
-         echo ""
-         @NCCS_ANYWHERE echo "Specified model nodes: $NUM_MODEL_NODES"
-         @NCCS_ANYWHERE echo "Specified oserver nodes: $NUM_OSERVER_NODES"
-         @NCCS_ANYWHERE echo "Specified cores per node: $NCPUS_PER_NODE"
-         exit
-      endif
+      # And the total number of oserver PEs is frontend PEs plus number of history collections
+      @ NUM_OSERVER_PES=$NUM_FRONTEND_PES + $NUM_HIST_COLLECTIONS
+
+      # Now calculate the number of oserver nodes
+      set NUM_OSERVER_NODES=`echo "scale=6;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+      # And then the number of backend PEs is the number of history collections divided by the number of oserver nodes
+      set NUM_BACKEND_PES=`echo "scale=6;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+      # multigroup requires at least two backend pes
+      if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+
+@RUN_ANYWHERE      @ TOTAL_PES = $NCPUS
+@RUN_SPECIFIC      @ TOTAL_NODES = $NUM_MODEL_NODES + $NUM_OSERVER_NODES
+@RUN_SPECIFIC      @ TOTAL_PES = $TOTAL_NODES * $NCPUS_PER_NODE
+@RUN_SPECIFIC      if( $TOTAL_PES > $NCPUS ) then
+@RUN_SPECIFIC         echo "CPU Resources are Over-Specified"
+@RUN_SPECIFIC         echo "--------------------------------"
+@RUN_SPECIFIC         echo "Allotted  NCPUs: $NCPUS"
+@RUN_SPECIFIC         echo "Requested NCPUs: $TOTAL_PES"
+@RUN_SPECIFIC         echo ""
+@RUN_SPECIFIC         echo "Specified NX: $NX"
+@RUN_SPECIFIC         echo "Specified NY: $NY"
+@RUN_SPECIFIC         echo ""
+@RUN_SPECIFIC         echo "Specified model nodes: $NUM_MODEL_NODES"
+@RUN_SPECIFIC         echo "Specified oserver nodes: $NUM_OSERVER_NODES"
+@RUN_SPECIFIC         echo "Specified cores per node: $NCPUS_PER_NODE"
+@RUN_SPECIFIC         exit
+@RUN_SPECIFIC      endif
 
    else
 
@@ -147,8 +161,8 @@ if ( $NCPUS != NULL ) then
          echo "Specified NX: $NX"
          echo "Specified NY: $NY"
          echo ""
-         @NCCS_ANYWHERE echo "Specified model nodes: $NUM_MODEL_NODES"
-         @NCCS_ANYWHERE echo "Specified cores per node: $NCPUS_PER_NODE"
+         @RUN_ANYWHERE echo "Specified model nodes: $NUM_MODEL_NODES"
+         @RUN_ANYWHERE echo "Specified cores per node: $NCPUS_PER_NODE"
          exit
       endif
 
@@ -1113,7 +1127,7 @@ setenv OMP_NUM_THREADS 1
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( $USE_IOSERVER == 1 ) then
-   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $NUM_OSERVER_NODES"
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES "
    set IOSERVER_EXTRA   = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
 else
    set IOSERVER_OPTIONS = ""

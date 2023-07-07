@@ -390,7 +390,9 @@ endif
 
 ASKPROC:
 
-set NCCS_ANYWHERE = ""
+set RUN_ANYWHERE = "#DELETE"
+set RUN_SPECIFIC = ""
+
 if ( $SITE == 'NCCS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}hasw (Haswell)${CN}"
@@ -423,7 +425,8 @@ if ( $SITE == 'NCCS' ) then
       set NCPUS_PER_NODE = 45
    else if ($MODEL == 'any') then
       set NCPUS_PER_NODE = ANY
-      set NCCS_ANYWHERE = "#DELETE"
+      set RUN_ANYWHERE = ""
+      set RUN_SPECIFIC = "#DELETE"
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -1141,7 +1144,6 @@ if( $AGCM_IM == "c2880" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
 endif
 if( $AGCM_IM == "c5760" ) then
      set       DT = 30
@@ -1164,7 +1166,6 @@ if( $AGCM_IM == "c5760" ) then
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
 endif
 # CONUS Stretched Grids
 set CONUS = '#'
@@ -1625,52 +1626,32 @@ if ( $DO_IOS == TRUE ) then
 
    # In the calculations below, the weird bc-awk ceil command is to round up the floating point calcs
    #
+   # function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'
+   #
+   # For rounding down, we use a floor function
+   #
+   # function floor(x, y){y=int(x); return(x<y?y-1:y)} {print floor($1)}'
+   #
    # First we deal with the "any" case for NCCS
 
-   if ( "$NCPUS_PER_NODE" == "ANY") then
+   set TOTAL_NPES=`echo "scale=6;($MODEL_NPES * 1.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
-      # For the "any" case, we do things differently. First, we assume that 10% of the model PEs is a
-      # good guess for total NPEs, and we round up
+   if ( "$NCPUS_PER_NODE" != "ANY" ) then
 
-      set TOTAL_NPES=`echo "scale=6;($MODEL_NPES * 1.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+      # We calculate the number of nodes the total number of PEs will fit on
+      set MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+      set NODES=`echo "scale=6;($TOTAL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
-   else
-
-      # if not ANY, then we use the assigned NCPUS_PER_NODE to figure out the total number of model nodes needed
-
-      # First we calculate the number of model nodes
-      set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
-
-      # Next the number of frontend PEs is 10% of the model PEs
-      set NUM_FRONTEND_PES=`echo "scale=6;($MODEL_NPES * 0.1)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
-
-      # Now we roughly figure out the number of collections in the HISTORY.rc (this is not perfect, but is close to right)
-      set NUM_HIST_COLLECTIONS=`cat $TMPHIST | sed -n '/^COLLECTIONS:/,/^ *::$/{p;/^ *::$/q}' | grep -v '^ *#' | wc -l`
-
-      # And the total number of oserver PEs is frontend PEs plus number of history collections
-      @ NUM_OSERVER_PES=$NUM_FRONTEND_PES + $NUM_HIST_COLLECTIONS
-
-      # Now calculate the number of oserver nodes
-      set NUM_OSERVER_NODES=`echo "scale=6;($NUM_OSERVER_PES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
-
-      # And then the number of backend PEs is the number of history collections divided by the number of oserver nodes
-      set NUM_BACKEND_PES=`echo "scale=6;($NUM_HIST_COLLECTIONS / $NUM_OSERVER_NODES)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
-
-      # multigroup requires at least two backend pes
-      if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
-
-      # Calculate the total number of nodes to request from batch
-      @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
+      # Now if NODES equals MODEL_NODES, then we need to add one to NODES as we need at least one node for the IO server
+      if ( $NODES == $MODEL_NODES ) @ NODES = $NODES + 1
 
    endif
 
 else
 
-   if ( "$NCPUS_PER_NODE" == "ANY) then
+   set TOTAL_NPES=$MODEL_NPES
 
-      set TOTAL_NPES=$MODEL_NPES
-
-   else
+   if ( "$NCPUS_PER_NODE" != "ANY" ) then
 
       # Calculate the number of model nodes
       set NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
@@ -1763,8 +1744,6 @@ else if( $SITE == 'NCCS' ) then
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
 
-              @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
-
               if ("$NCPUS_PER_NODE" == "ANY") then
                  setenv    RUN_Q   "DELETE"                        # batch queue name for gcm_run.j
                  setenv    RUN_P   "SBATCH --ntasks=${TOTAL_NPES}" # PE Configuration for gcm_run.j
@@ -1773,6 +1752,8 @@ else if( $SITE == 'NCCS' ) then
                  setenv    POST_Q  "DELETE"                        # batch queue name for gcm_post.j
                  setenv    PLOT_Q  "DELETE"                        # batch queue name for gcm_plot.j
               else
+                 @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
+
                  setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
                  setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
                  setenv    RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
@@ -2457,6 +2438,8 @@ s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
 
+s/@RUN_ANYWHERE/$RUN_ANYWHERE/g
+s/@RUN_SPECIFIC/$RUN_SPECIFIC/g
 EOF
 
 # Added FV3/GFDL-MP Specific Parameters
@@ -2756,7 +2739,7 @@ if( $OGCM == TRUE ) then
       sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
    else if ("$OCNMODEL" == "MOM5" ) then
-      # With MOM5 we need to change dt lines in input.nml to 
+      # With MOM5 we need to change dt lines in input.nml to
       # use $OCEAN_DT instead. NOTE: This sed assumes integer followed by comma
 
       sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
