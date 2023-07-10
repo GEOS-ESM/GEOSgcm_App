@@ -392,7 +392,6 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}hasw (Haswell)${CN}"
    echo "   ${C2}sky  (Skylake)${CN} (default)"
    echo "   ${C2}cas  (Cascade Lake)${CN}"
    echo " "
@@ -402,13 +401,10 @@ if ( $SITE == 'NCCS' ) then
       set MODEL = 'sky'
    endif
 
-   if( $MODEL != 'hasw' & \
-       $MODEL != 'sky'  & \
+   if( $MODEL != 'sky'  & \
        $MODEL != 'cas' ) goto ASKPROC
 
-   if (     $MODEL == 'hasw') then
-      set NCPUS_PER_NODE = 28
-   else if ($MODEL == 'sky') then
+   if ($MODEL == 'sky') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas') then
       # NCCS currently recommends that users do not run with
