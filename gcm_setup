@@ -34,6 +34,8 @@ endif
 # Set Current Working Path to gcm_setup
 # -------------------------------------
 setenv ARCH `uname -s`
+setenv NODE `uname -n`
+
 if ($ARCH == Darwin) then
    set FINDPATH = realpath
 else
@@ -99,11 +101,11 @@ if ($singstat == 1) then
    # not match where we run. We at least know NCCS and NAS, so
    # we can use that to set the site.
 
-   if (($node =~ discover*) || ($node =~ borg*) || ($node =~ warp*)) then
+   if (($NODE =~ discover*) || ($NODE =~ borg*) || ($NODE =~ warp*)) then
       set SINGULARITY_RUN_SITE = "NCCS"
-   else if (($node =~ pfe*) || \
-            ($node =~ r[0-9]*i[0-9]*n[0-9]*) || \
-            ($node =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*)) then
+   else if (($NODE =~ pfe*) || \
+            ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
+            ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*)) then
       set SINGULARITY_RUN_SITE = "NAS"
    endif
 else
@@ -142,8 +144,6 @@ end
 #                        Determine site
 #######################################################################
 
-setenv NODE `uname -n`
-setenv ARCH `uname -s`
 if ($SINGULARITY_RUN_SITE == "") then
    setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
 else
