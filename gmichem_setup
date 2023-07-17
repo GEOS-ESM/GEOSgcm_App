@@ -1309,7 +1309,7 @@ if( $AGCM_IM == "c540" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF540x6C
+     set ATMOS_RES = CF0540x6C
      set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
@@ -3324,7 +3324,7 @@ if ( $OGCM == 1 ) then
    set OGCM = TRUE
    # Now we need to find out if we are running MOM or MOM6 by looking
    # at OCEAN_NAME: val and checking if it is MOM or MOM6
-   set OCEAN_MODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+   set OCNMODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
 else if ( $OGCM == 0 ) then
    set OGCM = FALSE
 else
@@ -3391,7 +3391,9 @@ HOMDIR/gcm_emip.setup
 HOMDIR/logging.yaml
 EOF
 
-if( $OGCM == TRUE & "$OCNMODEL" != MIT ) then
+if( $OGCM == TRUE ) then
+
+if ("$OCNMODEL" != "MIT" ) then
 
 # Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
@@ -3400,16 +3402,17 @@ HOMDIR/diag_table
 HOMDIR/__init__.py
 EXPDIR/plot/plotocn.j
 EOF
+endif
 
 # Some files are specific to MOM
-if ( $OCEAN_MODEL == "MOM" ) then
+if ( "$OCNMODEL" == "MOM" ) then
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/field_table
 EOF
 endif
 
 # Some files are specific to MOM6
-if ( $OCEAN_MODEL == "MOM6" ) then
+if ( "$OCNMODEL" == "MOM6" ) then
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/MOM_override
 HOMDIR/MOM_input
