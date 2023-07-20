@@ -242,6 +242,18 @@ case $selected_case in
    "arm_97jul")
       DATFILE="arm_97jul.dat"
       ;;
+   "arm_97jun")
+      DATFILE="arm_97jul.dat"
+      ;;
+   "bomex")
+      DATFILE="bomex.dat"
+      ;;
+   "dycoms_rf01")
+      DATFILE="dycoms_rf01.dat"
+      ;;
+   "dry_cbl")
+      DATFILE="dcbl.dat"
+      ;;
    "merra_arm97jul")
       DATFILE="merra_arm97jul.dat"
       ;;
