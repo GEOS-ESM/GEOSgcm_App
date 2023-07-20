@@ -62,6 +62,10 @@ allowed_cases+=("merra2_arise_opnw_2014")
 allowed_cases+=("merra2_ascos2008")
 allowed_cases+=("merra2_barrow2013")
 allowed_cases+=("LASIC_aug2016")
+allowed_cases+=("bomex")
+allowed_cases+=("dycoms_rf01")
+allowed_cases+=("arm_97jun")
+allowed_cases+=("dry_cbl")
 
 sorted_cases=($(for each in ${allowed_cases[@]}; do echo $each; done | sort))
 
