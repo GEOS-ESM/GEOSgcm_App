@@ -2205,9 +2205,18 @@ if ( $SITE == 'NCCS' ) then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
+EOF
+
+#Testing at NCCS showed these caused crash at higher res
+#Crashed at restart read
+if ( $USING_SINGULARITY == FALSE ) then
+
+cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_EXTRA_FILESYSTEM 1
 setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
 EOF
+
+endif # if NOT Singularity
 
 endif # if NCCS
 
