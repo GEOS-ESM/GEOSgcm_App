@@ -161,8 +161,16 @@ PRINTRC: 1
 # RESTART_TYPE and or CHECKPOINT_TYPE are set to pbinary or pnc4
 #---------------------------------------------------------------
 PARALLEL_READFORCING: 0
+# The num_readers should be set to multiple of 6 if READ_RESTART_BY_FACE is set to YES
 NUM_READERS: @NUM_READERS
+# The num_writers should be set to multiple of 6 if WRITE_RESTART_BY_FACE is set to YES
 NUM_WRITERS: 1
+
+# If is is set to YES, users should have CS based restarts files split by faces
+# The filenames *_rst should be changed to *_face_x_rst ( x is from 1 to 6)
+READ_RESTART_BY_FACE: NO
+# If it is set to YES, it overwrites WRITE_RESTART_BY_OSERVER to NO
+WRITE_RESTART_BY_FACE: NO
 
 # Write restarts by oserver (Default: NO)
 WRITE_RESTART_BY_OSERVER: @RESTART_BY_OSERVER
@@ -528,18 +536,18 @@ LSM_CHOICE: @LSM_CHOICE
 # SURFRC: GEOS_SurfaceGridComp.rc
 
 
-# ****************************************************************
-# ******* REQUIRES MAJOR CLEAN-UP ACROSS SEVERAL GRIDCOMPs *******
-# ******* (retained to facilitate this cleanup in future)  *******
-# ******* IMPORTANT: This is merely for future reference   *******
-# *******   The model reads USE_CNNEE from CO2_GridComp.rc *******
-# *******   not from this file.                            *******
+# ----------------------------------------------------------------
+# ------- REQUIRES MAJOR CLEAN-UP ACROSS SEVERAL GRIDCOMPs -------
+# ------- (retained to facilitate this cleanup in future)  -------
+# ------- IMPORTANT: This is merely for future reference   -------
+# -------   The model reads USE_CNNEE from CO2_GridComp.rc -------
+# -------   not from this file.                            -------
 # Atmosphere-Land CO2 coupling
 # ----------------------------
 # USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc and AMIP/CO2_GridComp.rc,
 #                           in GOCART/ESMF/GOCART_GridComp/CO2_GridComp/ before you build the model.)
 #
-# ****************************************************************
+# ----------------------------------------------------------------
 
 ##############################################################################################
 ##############################################################################################

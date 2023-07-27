@@ -60,6 +60,7 @@ endif
 set LINKX = FALSE
 set EXE_VERB = "copied"
 set USING_SINGULARITY = FALSE
+set USER_SITE = ""
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -69,6 +70,22 @@ while ( $#argv > 0 )
       case -[Cc]:
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
+
+      # Testing with singularity found we need the ability to override
+      # the SITE variable below because images might be built on, say,
+      # AWS and thus "block" us from running at NCCS.
+      #
+      # So, we make a --site flag that allows us to override the SITE
+      # variable
+      case --site:
+         set USER_SITE = $1
+         # if USER_SITE is empty, then we error out
+         if ( "$USER_SITE" == "" ) then
+            echo "ERROR: --site flag requires a site name"
+            exit 1
+         endif
+         shift argv
+         breaksw
 
       # Symlink GEOSgcm.x
       case --link:
@@ -100,7 +117,11 @@ end
 
 setenv NODE `uname -n`
 setenv ARCH `uname -s`
-setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
+if ($USER_SITE == "") then
+   setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
+else
+   setenv SITE $USER_SITE
+endif
 
 #######################################################################
 #                 Test for Compiler and MPI Setup
@@ -198,11 +219,11 @@ echo "   ${C2}c1440 - 1/16 deg (${C1}  6.25   km${C2}) ${CN}"
 echo "   ${C2}c2880 - 1/32 deg (${C1}  3.125  km${C2}) ${CN}"
 echo "   ${C2}c5760 - 1/64 deg (${C1}  1.5625 km${C2}) ${CN}"
 echo "   ${C2}         CONUS Stretched Grids                "
-echo "   ${C2}c270 -- ${C1} 16.0 -100 km${C2}) ${CN} "
-echo "   ${C2}c540 -- ${C1}  8.0 - 50 km${C2}) ${CN} "
-echo "   ${C2}c1080 - ${C1}  4.0 - 25 km${C2}) ${CN} "
-echo "   ${C2}c1536 - ${C1}  2.0 - 20 km${C2}) ${CN} "
-echo "   ${C2}c2160 - ${C1}  2.0 - 12 km${C2}) ${CN} "
+echo "   ${C2}c270 -- (${C1} 16.0 -100 km${C2}) ${CN} "
+echo "   ${C2}c540 -- (${C1}  8.0 - 50 km${C2}) ${CN} "
+echo "   ${C2}c1080 - (${C1}  4.0 - 25 km${C2}) ${CN} "
+echo "   ${C2}c1536 - (${C1}  2.0 - 20 km${C2}) ${CN} "
+echo "   ${C2}c2160 - (${C1}  2.0 - 12 km${C2}) ${CN} "
 echo " "
 set HRCODE = `echo $<`
 set HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
@@ -371,7 +392,6 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}hasw (Haswell)${CN}"
    echo "   ${C2}sky  (Skylake)${CN} (default)"
    echo "   ${C2}cas  (Cascade Lake)${CN}"
    echo " "
@@ -381,13 +401,10 @@ if ( $SITE == 'NCCS' ) then
       set MODEL = 'sky'
    endif
 
-   if( $MODEL != 'hasw' & \
-       $MODEL != 'sky'  & \
+   if( $MODEL != 'sky'  & \
        $MODEL != 'cas' ) goto ASKPROC
 
-   if (     $MODEL == 'hasw') then
-      set NCPUS_PER_NODE = 28
-   else if ($MODEL == 'sky') then
+   if ($MODEL == 'sky') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas') then
       # NCCS currently recommends that users do not run with
@@ -1329,9 +1346,6 @@ if( $AGCM_IM == "c2160" ) then
      set CONUS = ''
      set STRETCH_FACTOR = 2.5
 endif
-if( "$OCNMODEL" == "MIT" ) then
-     set OCEAN_DT = $DT
-endif
 
 set IS_FCST = 0
 set FVCUBED         = ""
@@ -1598,6 +1612,10 @@ endif
 
 set DT = $HEARTBEAT
 
+# For now, in a coupled run, the ocean model must have the same time step as the atmosphere
+if( "$OGCM" == "TRUE" ) then
+   set OCEAN_DT = $HEARTBEAT
+endif
 
 #######################################################################
 #                    Create Desired HISTORY template
@@ -2860,6 +2878,31 @@ endif
     endif
 
 #######################################################################
+#              Modify MOM input files to match HEARTBEAT
+#######################################################################
+
+if( $OGCM == TRUE ) then
+
+   if ("$OCNMODEL" == "MOM6" ) then
+      # We also must change the MOM_override file to
+      # have consistent DTs with the AGCM. So we use OCEAN_DT
+      # and change MOM_override to match. NOTE: This sed
+      # assumes floating point number with a decimal
+
+      sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
+             -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
+   else if ("$OCNMODEL" == "MOM5" ) then
+      # With MOM5 we need to change dt lines in input.nml to
+      # use $OCEAN_DT instead. NOTE: This sed assumes integer followed by comma
+
+      sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
+             -e "s/dt_atmos = [0-9]*,/dt_atmos = $OCEAN_DT,/g" $HOMDIR/input.nml
+
+   endif
+
+endif
+
+#######################################################################
 #                       Echo Settings and Messages
 #######################################################################
 
@@ -3047,7 +3090,7 @@ if ( $OGCM == 1 ) then
    set OGCM = TRUE
    # Now we need to find out if we are running MOM or MOM6 by looking
    # at OCEAN_NAME: val and checking if it is MOM or MOM6
-   set OCEAN_MODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+   set OCNMODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
 else if ( $OGCM == 0 ) then
    set OGCM = FALSE
 else
@@ -3114,7 +3157,9 @@ HOMDIR/gcm_emip.setup
 HOMDIR/logging.yaml
 EOF
 
-if( $OGCM == TRUE & "$OCNMODEL" != MIT ) then
+if( $OGCM == TRUE ) then
+
+if ("$OCNMODEL" != "MIT" ) then
 
 # Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
@@ -3123,16 +3168,17 @@ HOMDIR/diag_table
 HOMDIR/__init__.py
 EXPDIR/plot/plotocn.j
 EOF
+endif
 
 # Some files are specific to MOM
-if ( $OCEAN_MODEL == "MOM" ) then
+if ( "$OCNMODEL" == "MOM" ) then
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/field_table
 EOF
 endif
 
 # Some files are specific to MOM6
-if ( $OCEAN_MODEL == "MOM6" ) then
+if ( "$OCNMODEL" == "MOM6" ) then
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/MOM_override
 HOMDIR/MOM_input
