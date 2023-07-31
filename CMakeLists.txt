@@ -3,12 +3,6 @@ ecbuild_add_executable (
   SOURCES GEOSgcm.F90
   LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
   )
-if (GPU_PHYSICS)
-  target_link_libraries (
-    GEOSgcm.x
-    -fopenacc -foffload="-lgfortran -lgomp -lm" -foffload=nvptx-none
-    )
-endif ()
 
 ecbuild_add_executable (
   TARGET idfupd.x
@@ -17,6 +11,10 @@ ecbuild_add_executable (
   )
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
+if (GPU_PHYSICS)
+  set (CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${GEOS_Fortran_OpenACC_Flags_Offload_Libs}")
+  set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${GEOS_Fortran_OpenACC_Flags_Offload_Libs}")
+endif ()
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 
