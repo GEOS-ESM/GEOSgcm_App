@@ -421,6 +421,8 @@ if ( $SITE == 'NCCS' ) then
       set NCPUS_PER_NODE = 45
    else if ($MODEL == 'any') then
       set NCPUS_PER_NODE = ANY
+      # We need to know the MAX_CPUS_PER_NODE for calculations
+      set MAX_CPUS_PER_NODE = 45
       set RUN_ANYWHERE = ""
       set RUN_SPECIFIC = "#DELETE"
    endif
@@ -1692,6 +1694,22 @@ if ( $DO_IOS == TRUE ) then
 
       # Now if NODES equals MODEL_NODES, then we need to add one to NODES as we need at least one node for the IO server
       if ( $NODES == $MODEL_NODES ) @ NODES = $NODES + 1
+
+   else
+
+      # Okay so we have the total NPEs but we need to guarantee we have at least one extra node for the IO server
+      # So we use MAX_CPUS_PER_NODE to calculate the worst case scenario. For example, if we have MODEL_NPES=96, then
+      # the above calculation will give us 105.6, rounded up to 106. But at 48 cores per node, both 96 and 106 result
+      # in 3 total nodes. So we need to take our total PEs, divide by MAX_CPUS_PER_NODE, round up, then add a node and then
+      # multiply by MAX_CPUS_PER_NODE to get our new TOTAL_NPES
+
+      set TOTAL_MAX_NODES=`echo "scale=6;($TOTAL_NPES / $MAX_CPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
+
+      # Now add one to TOTAL_MAX_NODES
+      @ TOTAL_MAX_NODES = $TOTAL_MAX_NODES + 1
+
+      # Now multiply by MAX_CPUS_PER_NODE to get new TOTAL_NPES
+      @ TOTAL_NPES = $TOTAL_MAX_NODES * $MAX_CPUS_PER_NODE
 
    endif
 
