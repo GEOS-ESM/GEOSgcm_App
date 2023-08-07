@@ -1219,7 +1219,7 @@ if( $AGCM_IM == "c270" ) then
      set  LONG_DT = $DT
      set AGCM_IM  = 270
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 18
+     set       NX = 6
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1243,7 +1243,7 @@ if( $AGCM_IM == "c540" ) then
      set  LONG_DT = $DT
      set AGCM_IM  = 540
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 36
+     set       NX = 12
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1267,7 +1267,7 @@ if( $AGCM_IM == "c1080" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 1080
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 72
+     set       NX = 20
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1291,7 +1291,7 @@ if( $AGCM_IM == "c1536" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 96
+     set       NX = 25
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1315,7 +1315,7 @@ if( $AGCM_IM == "c2160" ) then
      set  LONG_DT = 300
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 192
+     set       NX = 40
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -2779,7 +2779,7 @@ if( $OGCM == TRUE ) then
       sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
    else if ("$OCNMODEL" == "MOM5" ) then
-      # With MOM5 we need to change dt lines in input.nml to 
+      # With MOM5 we need to change dt lines in input.nml to
       # use $OCEAN_DT instead. NOTE: This sed assumes integer followed by comma
 
       sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
