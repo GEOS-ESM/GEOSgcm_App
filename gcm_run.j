@@ -447,26 +447,23 @@ cp  linkbcs $EXPDIR
 @SINGULARITY_BUILD #             Settings for Singularity - EXPERIMENTAL
 @SINGULARITY_BUILD #######################################################################
 @SINGULARITY_BUILD
-@SINGULARITY_BUILD # Note these have only really been tested on Discover
-@SINGULARITY_BUILD # and are not guaranteed to work on other systems
-
 @SINGULARITY_BUILD # Based on work on discover, to run you need to load the same compiler
 @SINGULARITY_BUILD # and MPI to match those in the container. For example, if your container was
 @SINGULARITY_BUILD # built with:
-@SINGULARITY_BUILD #   GNU 10.3.0
+@SINGULARITY_BUILD #   GNU 11.2.0
 @SINGULARITY_BUILD #   Intel Fortran 2021.6.0 (aka Intel oneAPI 2022.1.0)
 @SINGULARITY_BUILD #   Intel MPI 2021.6.0 (aka Intel oneAPI 2022.1.0)
 @SINGULARITY_BUILD # then you would need to load:
 @SINGULARITY_BUILD #   source /usr/share/modules/init/csh
 @SINGULARITY_BUILD #   module purge
-@SINGULARITY_BUILD #   module load comp/gcc/10.3.0
+@SINGULARITY_BUILD #   module load comp/gcc/11.2.0
 @SINGULARITY_BUILD #   module load comp/intel/2021.6.0
 @SINGULARITY_BUILD #   module load mpi/impi/2021.6.0
 @SINGULARITY_BUILD #
 @SINGULARITY_BUILD # And then also append ${GEOSDIR}/lib to LD_LIBRARY_PATH
 @SINGULARITY_BUILD #   setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
-
-@SINGULARITY_BUILD # Also look below for suggestions on Intel MPI, OpenMPI and MPT environment variables
+@SINGULARITY_BUILD #
+@SINGULARITY_BUILD # For now we use the fact that on discover we can source g5_modules
 @SINGULARITY_BUILD #
 @SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
 @SINGULARITY_BUILD setenv SINGULARITY_SANDBOX @SINGULARITY_SANDBOX
@@ -486,6 +483,7 @@ cp  linkbcs $EXPDIR
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
 @SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
+@SINGULARITY_BUILD
 @SINGULARITY_BUILD setenv REAL_BIND_PATH @REAL_BIND_PATH
 @SINGULARITY_BUILD setenv BASE_BIND_PATH @BASE_BIND_PATH
 @SINGULARITY_BUILD setenv BOUNDARY_DIR @BOUNDARY_DIR
