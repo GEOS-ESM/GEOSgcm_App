@@ -1762,7 +1762,6 @@ endif
 setenv BOUNDARY_DIR ""
 
 if( $SITE == 'NAS' ) then
-              setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
               setenv BATCH_CMD "qsub"                 # PBS Batch command
               setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
               setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
@@ -1791,6 +1790,7 @@ if( $SITE == 'NAS' ) then
               setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"    # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
 
+              setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
               setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG} # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                         # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                         # Default Analysis Location   for REPLAY
@@ -1814,7 +1814,6 @@ if( $SITE == 'NAS' ) then
                 setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                # Coupled Ocean/Atmos Forcing
               endif
 else if( $SITE == 'NCCS' ) then
-              setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
@@ -1842,6 +1841,7 @@ else if( $SITE == 'NCCS' ) then
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                                 # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
+              setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
               setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/legacy_bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
@@ -1863,7 +1863,6 @@ else if( $SITE == 'NCCS' ) then
                 setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos Forcing
               endif
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
-              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BATCH_CMD "sbatch"                                                    # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                    # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                           # SLURM Syntax for walltime
@@ -1888,6 +1887,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                              # PE Configuration for gcm_convert.j
               setenv MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
+              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
@@ -1901,7 +1901,6 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
 
 else
 # These are defaults for the desktop
-              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
@@ -1926,6 +1925,7 @@ else
               setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
+              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
