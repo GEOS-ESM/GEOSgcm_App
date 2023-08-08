@@ -536,18 +536,18 @@ LSM_CHOICE: @LSM_CHOICE
 # SURFRC: GEOS_SurfaceGridComp.rc
 
 
-# ****************************************************************
-# ******* REQUIRES MAJOR CLEAN-UP ACROSS SEVERAL GRIDCOMPs *******
-# ******* (retained to facilitate this cleanup in future)  *******
-# ******* IMPORTANT: This is merely for future reference   *******
-# *******   The model reads USE_CNNEE from CO2_GridComp.rc *******
-# *******   not from this file.                            *******
+# ----------------------------------------------------------------
+# ------- REQUIRES MAJOR CLEAN-UP ACROSS SEVERAL GRIDCOMPs -------
+# ------- (retained to facilitate this cleanup in future)  -------
+# ------- IMPORTANT: This is merely for future reference   -------
+# -------   The model reads USE_CNNEE from CO2_GridComp.rc -------
+# -------   not from this file.                            -------
 # Atmosphere-Land CO2 coupling
 # ----------------------------
 # USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc and AMIP/CO2_GridComp.rc,
 #                           in GOCART/ESMF/GOCART_GridComp/CO2_GridComp/ before you build the model.)
 #
-# ****************************************************************
+# ----------------------------------------------------------------
 
 ##############################################################################################
 ##############################################################################################
@@ -759,17 +759,24 @@ OPENWATER_INTERNAL_RESTART_FILE:        openwater_internal_rst
 OPENWATER_INTERNAL_CHECKPOINT_FILE:     openwater_internal_checkpoint
 OPENWATER_INTERNAL_CHECKPOINT_TYPE:     @CHECKPOINT_TYPE
 
+@CICE6SEAICETHERMO_IMPORT_RESTART_FILE:     seaicethermo_import_rst
+@CICE6SEAICETHERMO_IMPORT_CHECKPOINT_FILE:  seaicethermo_import_checkpoint
+@CICE6SEAICETHERMO_IMPORT_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
+
 SEAICETHERMO_INTERNAL_RESTART_FILE:     seaicethermo_internal_rst
 SEAICETHERMO_INTERNAL_CHECKPOINT_FILE:  seaicethermo_internal_checkpoint
 SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
-@COUPLEDCICE4_IMPORT_RESTART_FILE:             seaice_import_rst
-@COUPLEDCICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
-@COUPLEDCICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+@CICE4CICE4_IMPORT_RESTART_FILE:             seaice_import_rst
+@CICE4CICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
+@CICE4CICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+@CICE6CICE6_IMPORT_RESTART_FILE:             seaice_import_rst
+@CICE6CICE6_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
+@CICE6CICE6_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
 
-@COUPLEDCICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
-@COUPLEDCICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
-@COUPLEDCICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
+@CICE4CICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
+@CICE4CICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
+@CICE4CICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
 
 @COUPLEDOCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
 @COUPLEDOCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
@@ -910,22 +917,24 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 @MOM5#DATA_SST_FILE: sst.data
 @MOM5#DATA_FRT_FILE: fraci.data
 
-@COUPLED
-@COUPLED # Section for CICE
-@COUPLED # -----------------
-@COUPLED USE_CICE_Thermo: 1
-@COUPLED PRESCRIBED_ICE: 0
-@COUPLED CICE_DT: @OCEAN_DT
-@COUPLED CICE_NDTE: 300
-@COUPLED CICE_GRID: grid_cice.bin
-@COUPLED CICE_KMT: kmt_cice.bin
-@COUPLED CICE_N_ICE_CATEGORIES:5
-@COUPLED CICE_N_ICE_LAYERS:4
-@COUPLED CICE_MU_RDG: 3.0
-@COUPLED CICE_AH_MAX: 0.3
-@COUPLED CICE_STRENGTH: 0
-@COUPLED ALBICEV: 0.78
-@COUPLED ALBICEI: 0.36
-@COUPLED ALBSNOWV: 0.98
-@COUPLED ALBSNOWI: 0.7
-@COUPLED MIN_FREEZE_SALINITY: 5.0
+@COUPLED 
+@COUPLED# Section for CICE
+@COUPLED# -----------------
+@CICE4USE_CICE_Thermo: 1
+@CICE6USE_CICE_Thermo: 2
+@CICE6SEAICE_NAME: CICE6
+@CICE4PRESCRIBED_ICE: 0
+@CICE4CICE_DT: @OCEAN_DT
+@CICE4CICE_NDTE: 300
+@CICE4CICE_GRID: grid_cice.bin
+@CICE4CICE_KMT: kmt_cice.bin
+@COUPLEDCICE_N_ICE_CATEGORIES:5
+@CICE4CICE_N_ICE_LAYERS:4
+@CICE4CICE_MU_RDG: 3.0
+@CICE4CICE_AH_MAX: 0.3
+@CICE4CICE_STRENGTH: 0
+@CICE4ALBICEV: 0.78
+@CICE4ALBICEI: 0.36
+@CICE4ALBSNOWV: 0.98
+@CICE4ALBSNOWI: 0.7
+@CICE4MIN_FREEZE_SALINITY: 5.0

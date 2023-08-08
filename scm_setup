@@ -62,6 +62,10 @@ allowed_cases+=("merra2_arise_opnw_2014")
 allowed_cases+=("merra2_ascos2008")
 allowed_cases+=("merra2_barrow2013")
 allowed_cases+=("LASIC_aug2016")
+allowed_cases+=("bomex")
+allowed_cases+=("dycoms_rf01")
+allowed_cases+=("arm_97jun")
+allowed_cases+=("dry_cbl")
 
 sorted_cases=($(for each in ${allowed_cases[@]}; do echo $each; done | sort))
 
@@ -237,6 +241,18 @@ fi
 case $selected_case in
    "arm_97jul")
       DATFILE="arm_97jul.dat"
+      ;;
+   "arm_97jun")
+      DATFILE="arm_97jul.dat"
+      ;;
+   "bomex")
+      DATFILE="bomex.dat"
+      ;;
+   "dycoms_rf01")
+      DATFILE="dycoms_rf01.dat"
+      ;;
+   "dry_cbl")
+      DATFILE="dcbl.dat"
       ;;
    "merra_arm97jul")
       DATFILE="merra_arm97jul.dat"

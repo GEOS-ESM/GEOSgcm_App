@@ -263,6 +263,7 @@ endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
+@CICE6cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
     cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -418,8 +419,11 @@ cat << _EOF_ > $FILE
 
 @COUPLED cp $HOMDIR/*_table .
 @COUPLED cp $OBCSDIR/INPUT/* INPUT
-@COUPLED /bin/ln -sf $OBCSDIR/cice/kmt_cice.bin .
-@COUPLED /bin/ln -sf $OBCSDIR/cice/grid_cice.bin .
+@CICE4 /bin/ln -sf $OBCSDIR/cice/kmt_cice.bin .
+@CICE4 /bin/ln -sf $OBCSDIR/cice/grid_cice.bin .
+@CICE6 /bin/ln -sf $OBCSDIR/cice6/cice6_grid.nc .
+@CICE6 /bin/ln -sf $OBCSDIR/cice6/cice6_kmt.nc .
+@CICE6 /bin/ln -sf $OBCSDIR/cice6/cice6_global.bathy.nc .
 
 _EOF_
 
@@ -1307,6 +1311,17 @@ end
 @COUPLED  endif
 @COUPLED  end
 @COUPLED
+@CICE6 # CICE6-Specific Output Files
+@CICE6 # -------------------------
+@CICE6 set dsets="iceh"
+@CICE6 foreach dset ( $dsets )
+@CICE6  set num = `/bin/ls -1 $dset.*.nc | wc -l`
+@CICE6  if($num != 0) then    
+@CICE6     if(! -e $EXPDIR/CICE_Output) mkdir -p $EXPDIR/CICE_Output
+@CICE6     /bin/mv $SCRDIR/$dset.*.nc $EXPDIR/CICE_Output/
+@CICE6  endif
+@CICE6 end     
+@CICE6     
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
