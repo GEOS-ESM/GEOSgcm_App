@@ -32,8 +32,8 @@ setenv GEOSBIN          @GEOSBIN
 setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
-@NATIVE_BUILD source $GEOSBIN/g5_modules
-@NATIVE_BUILD setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
 
@@ -243,25 +243,27 @@ endif
 
 cd $SCRDIR
 /bin/rm -rf *
-                             cp -f  $EXPDIR/RC/* .
-                             cp     $EXPDIR/cap_restart .
-                             cp -f  $HOMDIR/*.rc .
-                             cp -f  $HOMDIR/*.nml .
-                             cp -f  $HOMDIR/*.yaml .
-                             cp     $GEOSBIN/bundleParser.py .
 
-                             cat fvcore_layout.rc >> input.nml
-                             if (-z input.nml) then
-                                 echo "try cat for input.nml again"
-                                 cat fvcore_layout.rc >> input.nml
-                             endif
-                             if (-z input.nml) then
-                                 echo "input.nml is zero-length"
-                                 exit 0
-                             endif
+cp -f  $EXPDIR/RC/* .
+cp     $EXPDIR/cap_restart .
+cp -f  $HOMDIR/*.rc .
+cp -f  $HOMDIR/*.nml .
+cp -f  $HOMDIR/*.yaml .
+cp     $GEOSBIN/bundleParser.py .
 
-                             @MOM6cp -f  $HOMDIR/MOM_input .
-                             @MOM6cp -f  $HOMDIR/MOM_override .
+cat fvcore_layout.rc >> input.nml
+if (-z input.nml) then
+   echo "try cat for input.nml again"
+   cat fvcore_layout.rc >> input.nml
+endif
+if (-z input.nml) then
+   echo "input.nml is zero-length"
+   exit 0
+endif
+
+@MOM6cp -f  $HOMDIR/MOM_input .
+@MOM6cp -f  $HOMDIR/MOM_override .
+@CICE6cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
     cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -398,7 +400,7 @@ cat << _EOF_ > $FILE
 @COUPLED/bin/ln -sf $ABCSDIR/ndvi_clim_@RES_DATELINE.data ndvi.data
 
 >>>GCMRUN_CATCHCN<<<if ( -f $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data lnfm.data
->>>GCMRUN_CATCHCN<<</bin/ln -s /discover/nobackup/projects/gmao/bcs_shared/make_bcs_inputs/land/CO2/v1/CO2_MonthlyMean_DiurnalCycle.nc4
+>>>GCMRUN_CATCHCN<<</bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
 
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
@@ -417,8 +419,11 @@ cat << _EOF_ > $FILE
 
 @COUPLED cp $HOMDIR/*_table .
 @COUPLED cp $OBCSDIR/INPUT/* INPUT
-@COUPLED /bin/ln -sf $OBCSDIR/cice/kmt_cice.bin .
-@COUPLED /bin/ln -sf $OBCSDIR/cice/grid_cice.bin .
+@CICE4 /bin/ln -sf $OBCSDIR/cice/kmt_cice.bin .
+@CICE4 /bin/ln -sf $OBCSDIR/cice/grid_cice.bin .
+@CICE6 /bin/ln -sf $OBCSDIR/cice6/cice6_grid.nc .
+@CICE6 /bin/ln -sf $OBCSDIR/cice6/cice6_kmt.nc .
+@CICE6 /bin/ln -sf $OBCSDIR/cice6/cice6_global.bathy.nc .
 
 _EOF_
 
@@ -531,16 +536,91 @@ set chk_file_names = `grep "CHECKPOINT_FILE" AGCM.rc | grep -v "#" | cut -d ":" 
 
 set monthly_chk_names = `cat $EXPDIR/HISTORY.rc | grep -v '^[\t ]*#' | sed -n 's/\([^\t ]\+\).monthly:[\t ]*1.*/\1/p' | sed 's/$/_rst/' `
 
-# Remove possible bootstrap parameters (+/-)
-# ------------------------------------------
 set dummy = `echo $rst_file_names`
 set rst_file_names = ''
+set tile_rsts = (catch catchcn route lake landice openwater saltwater seaicethermo)
+
+# check if it resarts by face
+# ----------------------------------
+set rst_by_face = NO
+if( $GCMEMIP == TRUE ) then
+   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_rst & -e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then 
+     echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
+     echo "please remove all *internal_rst except these tile-based restarts :"
+     foreach rst ( $tile_rsts )
+        echo ${rst}_internal_rst
+     end
+     exit
+   endif
+   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then 
+     set rst_by_face = YES
+   endif
+else
+   if(-e $EXPDIR/fvcore_internal_rst & -e $EXPDIR/fvcore_internal_face_1_rst) then
+     echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
+     echo "please remove all *internal_rst except these tile-based restarts :"
+     foreach rst ( $tile_rsts )
+        echo ${rst}_internal_rst
+     end
+     exit
+   endif
+   if(-e $EXPDIR/fvcore_internal_face_1_rst) then 
+     set rst_by_face = YES
+   endif
+endif
+
+set Rbyface = `grep READ_RESTART_BY_FACE: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+if ($rst_by_face == NO) then
+  if ($Rbyface == YES)  then
+     sed -i '/READ_RESTART_BY_FACE:/c\READ_RESTART_BY_FACE: NO' AGCM.rc
+  endif
+else
+  # make sure num_readers is multiple of 6
+  @ num_readers = `grep NUM_READERS: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+  @ remainer = $num_readers % 6
+  if ($remainer != 0) then
+     sed -i '/NUM_READERS:/c\NUM_READERS: 6' AGCM.rc
+  endif
+
+  if ($Rbyface != YES)  then
+     sed -i '/READ_RESTART_BY_FACE:/c\READ_RESTART_BY_FACE: YES' AGCM.rc
+  endif
+endif
+
+set Wbyface = `grep WRITE_RESTART_BY_FACE: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+if ($Wbyface == YES)  then
+  # make sure num_readers is multiple of 6
+  @ num_writers = `grep NUM_WRITERS: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+  @ remainer = $num_writers % 6
+  if ($remainer != 0) then
+     sed -i '/NUM_WRITERS:/c\NUM_WRITERS: 6' AGCM.rc
+  endif
+endif
+# Remove possible bootstrap parameters (+/-)
+# ------------------------------------------
 foreach rst ( $dummy )
   set length  = `echo $rst | awk '{print length($0)}'`
   set    bit  = `echo $rst | cut -c1`
   if(  "$bit" == "+" | \
        "$bit" == "-" ) set rst = `echo $rst | cut -c2-$length`
-  set rst_file_names = `echo $rst_file_names $rst`
+  set is_tile_rst = FALSE
+  if ($rst_by_face == YES) then
+     foreach tile_rst ($tile_rsts)
+       if ( $rst =~ *$tile_rst* ) then
+         set is_tile_rst = TRUE
+         break
+       endif  
+     end
+  endif
+  if ($is_tile_rst == FALSE & $rst_by_face == YES) then
+    set part1 = `echo $rst:q | sed 's/_rst/ /g'`
+      foreach n (1 2 3 4 5 6)
+         set rst = ${part1}_face_${n}_rst
+         set rst_file_names = `echo $rst_file_names $rst`
+      end
+  else   
+    set rst_file_names = `echo $rst_file_names $rst`
+  endif
 end
 
 # Copy Restarts to Scratch Directory
@@ -558,9 +638,16 @@ wait
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
-/bin/rm gwd_internal_rst
-/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
-
+if ( $rst_by_face == YES ) then
+  echo "WARNING: The generated gwd_internal_face_x_rst are used"
+  #foreach n (1 2 3 4 5 6)
+    #/bin/rm gwd_internal_face_${n}_rst
+    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+  #end
+else
+  /bin/rm gwd_internal_rst
+  /bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
+endif
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
@@ -1162,7 +1249,7 @@ end
 # Remove Initial RESTARTS
 # -----------------------
 set restarts = `/bin/ls -1 *_rst`
-/bin/rm  $restarts
+/bin/rm -f $restarts
 
 
 # Copy Renamed Final Checkpoints to RESTARTS directory
@@ -1221,6 +1308,17 @@ end
 @COUPLED  endif
 @COUPLED  end
 @COUPLED
+@CICE6 # CICE6-Specific Output Files
+@CICE6 # -------------------------
+@CICE6 set dsets="iceh"
+@CICE6 foreach dset ( $dsets )
+@CICE6  set num = `/bin/ls -1 $dset.*.nc | wc -l`
+@CICE6  if($num != 0) then    
+@CICE6     if(! -e $EXPDIR/CICE_Output) mkdir -p $EXPDIR/CICE_Output
+@CICE6     /bin/mv $SCRDIR/$dset.*.nc $EXPDIR/CICE_Output/
+@CICE6  endif
+@CICE6 end     
+@CICE6     
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################

@@ -62,6 +62,10 @@ allowed_cases+=("merra2_arise_opnw_2014")
 allowed_cases+=("merra2_ascos2008")
 allowed_cases+=("merra2_barrow2013")
 allowed_cases+=("LASIC_aug2016")
+allowed_cases+=("bomex")
+allowed_cases+=("dycoms_rf01")
+allowed_cases+=("arm_97jun")
+allowed_cases+=("dry_cbl")
 
 sorted_cases=($(for each in ${allowed_cases[@]}; do echo $each; done | sort))
 
@@ -238,6 +242,18 @@ case $selected_case in
    "arm_97jul")
       DATFILE="arm_97jul.dat"
       ;;
+   "arm_97jun")
+      DATFILE="arm_97jul.dat"
+      ;;
+   "bomex")
+      DATFILE="bomex.dat"
+      ;;
+   "dycoms_rf01")
+      DATFILE="dycoms_rf01.dat"
+      ;;
+   "dry_cbl")
+      DATFILE="dcbl.dat"
+      ;;
    "merra_arm97jul")
       DATFILE="merra_arm97jul.dat"
       ;;
@@ -356,17 +372,17 @@ BCSTAG="Icarus_Reynolds"
 
 case $SITE in
    NCCS)
-   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v10.22/"
+   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v11.1/"
    BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput_nc3"
    ;;
    NAS)
-   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v10.22/"
+   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
    BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
-   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v10.22/"
+   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
    BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
@@ -385,6 +401,7 @@ SOURCEDIR=$SCMDIR/$selected_case
 mkdir -p $expdir
 
 /bin/cp $INSTALLDIR/bin/GEOSgcm.x $expdir
+/bin/cp $INSTALLDIR/etc/logging.yaml $expdir
 
 /bin/cp $SOURCEDIR/$DATFILE $expdir
 /bin/cp $SOURCEDIR/topo_dynave.data $expdir
