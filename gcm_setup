@@ -1811,12 +1811,12 @@ else if( $SITE == 'NCCS' ) then
               setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
 
               if ("$NCPUS_PER_NODE" == "ANY") then
-                 setenv    RUN_Q   "DELETE"                        # batch queue name for gcm_run.j
+                 setenv    RUN_Q   "SBATCH --constraint=[sky|cas]" # batch queue name for gcm_run.j
                  setenv    RUN_P   "SBATCH --ntasks=${TOTAL_NPES}" # PE Configuration for gcm_run.j
                  setenv    RUN_FP  "SBATCH --ntasks=${TOTAL_NPES}" # PE Configuration for gcm_forecast.j
                  setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"  # PE Configuration for gcm_post.j
-                 setenv    POST_Q  "DELETE"                        # batch queue name for gcm_post.j
-                 setenv    PLOT_Q  "DELETE"                        # batch queue name for gcm_plot.j
+                 setenv    POST_Q  "SBATCH --constraint=[sky|cas]" # batch queue name for gcm_post.j
+                 setenv    PLOT_Q  "SBATCH --constraint=[sky|cas]" # batch queue name for gcm_plot.j
               else
                  @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
