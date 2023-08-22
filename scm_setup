@@ -423,6 +423,7 @@ mkdir -p $expdir
 /bin/cp $SOURCEDIR/datmodyn_internal_rst $expdir
 /bin/cp $SOURCEDIR/moist_internal_rst $expdir
 /bin/cp $SOURCEDIR/catch_internal_rst $expdir
+/bin/cp $SOURCEDIR/gwd_internal_rst $expdir
 
 mkdir -p $expdir/ExtData
 
