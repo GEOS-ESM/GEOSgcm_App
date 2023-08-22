@@ -34,6 +34,8 @@ endif
 # Set Current Working Path to gmichem_setup
 # -------------------------------------
 setenv ARCH `uname -s`
+setenv NODE `uname -n`
+
 if ($ARCH == Darwin) then
    set FINDPATH = realpath
 else
@@ -52,6 +54,51 @@ if (! -x ${BINDIR}/GEOSgcm.x) then
    exit 1
 endif
 
+######################################################################
+#                        Singularity Sandbox
+#######################################################################
+
+# This section is to determine if we are running in a Singularity
+# sandbox by looking for the .singularity.d directory. If we are,
+# then we set the SINGULARITY_SANDBOX environment variable to the
+# path to the sandbox. If we are not, then we set it to an empty
+# string.
+#
+# We also set the REAL_BIND_PATH and BASE_BIND_PATH environment
+# variables. These are used to set the bind paths for Singularity
+# runs. REAL_BIND_PATH is the physical path to the NOBACKUP directory
+# and BASE_BIND_PATH is the physical path to the /gpfsm directory
+# (needed for boundary conditions)
+
+setenv KEYFILE ".singularity.d"
+setenv singstat 0
+setenv ORIGPATH `pwd -P`
+cd $GEOSDEF
+while ($singstat == 0)
+   if (-d $KEYFILE) then
+      setenv singstat 1
+      setenv SINGPATH `pwd -P`
+   endif
+   if ($singstat == 0) then
+      if ("$cwd" == "/") then
+         break
+      else
+         cd ..
+      endif
+   endif
+end
+if ($singstat == 1) then
+   setenv SINGULARITY_SANDBOX $SINGPATH
+   setenv REAL_BIND_PATH `realpath $NOBACKUP`
+   setenv BASE_BIND_PATH "/gpfsm"
+else
+   setenv SINGULARITY_SANDBOX ""
+   setenv REAL_BIND_PATH ""
+   setenv BASE_BIND_PATH ""
+endif
+
+cd $ORIGPATH
+
 #######################################################################
 #                   Test for Command Line Flags
 #######################################################################
@@ -59,8 +106,24 @@ endif
 # Set default behavior of switches
 set LINKX = FALSE
 set EXE_VERB = "copied"
-set USING_SINGULARITY = FALSE
-set USER_SITE = ""
+set SINGULARITY_RUN_SITE = ""
+if ($singstat == 1) then
+   set USING_SINGULARITY = TRUE
+
+   # If we are using Singularity, then where the image was built (say
+   # AWS) might not match where we run. We at least know NCCS and NAS,
+   # so we can use that to set the site.
+
+   if (($NODE =~ discover*) || ($NODE =~ borg*) || ($NODE =~ warp*)) then
+      set SINGULARITY_RUN_SITE = "NCCS"
+   else if (($NODE =~ pfe*) || \
+            ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
+            ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*)) then
+      set SINGULARITY_RUN_SITE = "NAS"
+   endif
+else
+   set USING_SINGULARITY = FALSE
+endif
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -71,31 +134,10 @@ while ( $#argv > 0 )
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
 
-      # Testing with singularity found we need the ability to override
-      # the SITE variable below because images might be built on, say,
-      # AWS and thus "block" us from running at NCCS.
-      #
-      # So, we make a --site flag that allows us to override the SITE
-      # variable
-      case --site:
-         set USER_SITE = $1
-         # if USER_SITE is empty, then we error out
-         if ( "$USER_SITE" == "" ) then
-            echo "ERROR: --site flag requires a site name"
-            exit 1
-         endif
-         shift argv
-         breaksw
-
       # Symlink GEOSgcm.x
       case --link:
          set LINKX = TRUE
          set EXE_VERB = "linked"
-         breaksw
-
-      # Using Singularity
-      case --singularity:
-         set USING_SINGULARITY = TRUE
          breaksw
 
       # Avoid Symlink GEOSgcm.x
@@ -115,12 +157,10 @@ end
 #                        Determine site
 #######################################################################
 
-setenv NODE `uname -n`
-setenv ARCH `uname -s`
-if ($USER_SITE == "") then
+if ($SINGULARITY_RUN_SITE == "") then
    setenv SITE `awk '{print $2}' $ETCDIR/SITE.rc`
 else
-   setenv SITE $USER_SITE
+   setenv SITE $SINGULARITY_RUN_SITE
 endif
 
 #######################################################################
@@ -1870,6 +1910,8 @@ endif
               setenv ARCHIVE_N  `echo $EXPID | cut -b1-199`_ARCH                        # ARCHIVE  Job Name
               setenv REGRESS_N  `echo $EXPID | cut -b1-199`_RGRS                        # REGRESS  Job Name
 
+setenv BOUNDARY_DIR ""
+
 if( $SITE == 'NAS' ) then
               setenv BATCH_CMD "qsub"                 # PBS Batch command
               setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
@@ -1898,27 +1940,28 @@ if( $SITE == 'NAS' ) then
               setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"            # PE Configuration for gcm_archive.j
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
 
-              setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG} # location of Boundary Conditions
+              setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
+              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG} # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                         # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                         # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION /nobackup/gmao_SIteam/ModelData/merra2/data                # Default Analysis Location   for M2 REPLAY
+              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
-                   setenv SSTDIR     /nobackup/gmao_SIteam/ModelData/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               endif
               if (${OGRIDTYP} == "LL") then
                 setenv SSTDIR /nobackupp2/estrobac/geos5/SSTDIR
               endif
-              setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                  # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   /nobackup/gmao_SIteam/ModelData/GWD_RIDGE              # Location of GWD_RIDGE files
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                  # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE              # Location of GWD_RIDGE files
               if ( "$OCNMODEL" == "MIT" ) then
                 setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
               else
-                setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/aogcm                # Coupled Ocean/Atmos Forcing
+                setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                # Coupled Ocean/Atmos Forcing
               endif
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
@@ -1947,10 +1990,11 @@ else if( $SITE == 'NCCS' ) then
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
-              setenv BCSDIR  /discover/nobackup/projects/gmao/bcs_shared/legacy_bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
+              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/legacy_bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION /discover/nobackup/projects/gmao/merra2/data        # Default Analysis Location   for M2 REPLAY
+              setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data        # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" | $SST_REALTIME == "FALSE" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
@@ -1959,8 +2003,8 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  /discover/nobackup/projects/gmao/ssd/aogcm             # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/ssd/aogcm             # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
               if (${OGRIDTYP} == "LL") then
                 setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
               endif
@@ -1991,16 +2035,17 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                        # PE Configuration for gcm_archive.j
               setenv MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
-              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
+              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
-              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
+              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   /ford1/share/gmao_SIteam/ModelData/GWD_RIDGE           # Location of GWD_RIDGE files
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
 
 else
 # These are defaults for the desktop
@@ -2027,16 +2072,17 @@ else
               setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
-              setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
+              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
-              setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     /ford1/share/gmao_SIteam/ModelData/fvInput_nc3         # locations of Aerosol Chemistry BCs
+              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  /ford1/share/gmao_SIteam/ModelData/aogcm               # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   /ford1/share/gmao_SIteam/ModelData/GWD_RIDGE           # Location of GWD_RIDGE files
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
               set NX = 1
               set NY = 6
               # By default on desktop, just ignore IOSERVER for now
@@ -2285,47 +2331,6 @@ set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
-# If we are using singularity, we can advise on MPI stack settings
-
-if( $USING_SINGULARITY == TRUE ) then
-
-cat > $HOMDIR/SETENV.commands << EOF
-# These are recommended settings for MPI stacks
-
-# Intel MPI
-# ---------
-#setenv I_MPI_ADJUST_ALLREDUCE 12
-#setenv I_MPI_ADJUST_GATHERV 3
-# This flag prints out the Intel MPI state. Uncomment if needed
-#setenv I_MPI_DEBUG 9
-
-# OpenMPI
-# -------
-# Open MPI and GEOS has had issues with restart writing. Having the
-# oserver write them can be orders of magnitude faster. To enable this
-# set WRITE_RESTART_BY_OSERVER to YES in AGCM.rc
-
-# This turns off an annoying warning when running
-# Open MPI on a system where TMPDIRs are on a networked
-# file system
-#setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
-
-# HPE MPT
-# -------
-#setenv MPI_COLL_REPRODUCIBLE
-#setenv SLURM_DISTRIBUTION block
-#unsetenv MPI_MEMMAP_OFF
-#unsetenv MPI_NUM_MEMORY_REGIONS
-#setenv MPI_XPMEM_ENABLED yes
-#unsetenv SUPPRESS_XPMEM_TRIM_THRESH
-#setenv MPI_LAUNCH_TIMEOUT 40
-# Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
-# to run. We believe this is due to LD_PRELOAD. For now we only set
-# this for coupled runs.
-#setenv MPI_SHEPHERD true
-EOF
-
-else
 
 if( $MPI == openmpi ) then
 
@@ -2407,15 +2412,23 @@ if ( $SITE == 'NCCS' ) then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
+EOF
+
+# Testing at NCCS showed these caused a crash at higher resolutions at
+# restart read
+if ( $USING_SINGULARITY == FALSE ) then
+
+cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_EXTRA_FILESYSTEM 1
 setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
 EOF
+
+endif # if NOT Singularity
 
 endif # if NCCS
 
 endif # if mpi
 
-endif # if singularity
 
 #######################################################################
 #               Create Local Scripts and Resource Files
@@ -2487,6 +2500,10 @@ s?@GEOSUTIL?$GEOSUTIL?g
 s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
 s?@NATIVE_BUILD?$NATIVE_BUILD?g
 s?@MPT_SHEPHERD?$MPT_SHEPHERD?g
+s?@SINGULARITY_SANDBOX?$SINGULARITY_SANDBOX?g
+s?@REAL_BIND_PATH?$REAL_BIND_PATH?g
+s?@BASE_BIND_PATH?$BASE_BIND_PATH?g
+s?@BOUNDARY_DIR?$BOUNDARY_DIR?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -3149,7 +3166,7 @@ echo "Build Directory: ${C2}${GEOSDIR}${CN}"
 echo "----------------"
 echo " "
 if ( $USING_SINGULARITY == TRUE ) then
-   echo "Note: As --singularity was passed in, we will run "
+   echo "Note: Now that we're in a singularity sandbox, we will run "
    echo "      GEOSgcm.x from the installation bin directory."
 else
    echo " "
@@ -3648,7 +3665,6 @@ gmichem_setup, a setup script for the GEOS GCM
 
    -c --color        Set the colors for $0:t
       --link         Link GEOSgcm.x into experiment directory
-      --singularity  Setup Singularity experiment
    -h --help         Show usage
 
    If invoked alone, the script runs as normal.
