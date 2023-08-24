@@ -19,7 +19,6 @@ set (programs
    gcm_regress.j
    gcm_post.j
    gcm_archive.j
-   gcm_convert.j
    gcm_quickplot.csh
    gcm_moveplot.j
    gcm_forecast.setup

@@ -172,7 +172,6 @@ if ($nfail   == 0 && $npass == $ncollections) then
    /bin/rm -f $EXPDIR/GEOSgcm.x
    /bin/rm -f $EXPDIR/vegdyn.data
    /bin/rm -f $EXPDIR/linkbcs
-   /bin/rm -rf $EXPDIR/convert
    /bin/rm -rf $EXPDIR/[f-gm-s]*
    /bin/rm -rf $EXPDIR/[MR]*
 
