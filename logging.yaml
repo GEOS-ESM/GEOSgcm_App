@@ -15,21 +15,23 @@ locks:
 formatters:
    plain:
       class: Formatter
-      format:  '%(message)a'
+      format: '%(message)a'
 
    basic:
       class: Formatter
-      format:  '%(short_name)a15~: %(level_name)a~: %(message)a'
+      format: '%(short_name)a15~: %(level_name)a~: %(message)a'
 
    mpi:
       class: MpiFormatter
-      format:  '%(mpi_rank)i4.4~: %(name)~: %(level_name)a~: %(message)a'
+      format: '%(mpi_rank)i4.4~: %(name)~: %(level_name)a~: %(message)a'
       comm: MPI_COMM_WORLD
 
    column:
       class: Formatter
       format: '(%(i)i3.3,%(j)i3.3): %(level_name)'
 
+   # This makes an output like:
+   # AGCM Date: 2000/04/14  Time: 21:00:00         GENERIC: DEBUG: Message
    simtime:
       class: Formatter
       format: '%(simtime)a~ %(short_name)a15~: %(level_name)a~: %(message)a'
