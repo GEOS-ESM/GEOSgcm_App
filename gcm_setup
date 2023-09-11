@@ -431,29 +431,51 @@ endif
 ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}sky  (Skylake)${CN} (default)"
-   echo "   ${C2}cas  (Cascade Lake)${CN}"
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      set MODEL = 'sky'
-   endif
 
-   if( $MODEL != 'sky'  & \
-       $MODEL != 'cas' ) goto ASKPROC
+   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
 
-   if ($MODEL == 'sky') then
-      set NCPUS_PER_NODE = 40
-   else if ($MODEL == 'cas') then
-      # NCCS currently recommends that users do not run with
-      # 48 cores per node on SCU16 due to OS issues and
-      # recommends that CPU-intensive works run with 46 or less
-      # cores. As 45 is a multiple of 3, it's the best value
-      # that doesn't waste too much
-      #set NCPUS_PER_NODE = 48
-      set NCPUS_PER_NODE = 45
+   if ("$BUILT_ON_SLES15" == "TRUE") then
+      set DEFAULT_MODEL = 'mil'
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'mil'
+      endif
+
+      if( $MODEL != 'mil' ) goto ASKPROC
+
+      if ($MODEL == 'mil') then
+         set NCPUS_PER_NODE = 128
+      endif
+   else
+      set DEFAULT_MODEL = 'cas'
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}sky  (Skylake)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'sky'
+      endif
+
+      if( $MODEL != 'sky'  & \
+          $MODEL != 'cas' ) goto ASKPROC
+
+      if ($MODEL == 'sky') then
+         set NCPUS_PER_NODE = 40
+      else if ($MODEL == 'cas') then
+         # NCCS currently recommends that users do not run with
+         # 48 cores per node on SCU16 due to OS issues and
+         # recommends that CPU-intensive works run with 46 or less
+         # cores. As 45 is a multiple of 3, it's the best value
+         # that doesn't waste too much
+         #set NCPUS_PER_NODE = 48
+         set NCPUS_PER_NODE = 45
+      endif
    endif
 
 else if ( $SITE == 'NAS' ) then
