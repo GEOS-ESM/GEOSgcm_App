@@ -448,7 +448,8 @@ if ( $SITE == 'NCCS' ) then
       if( $MODEL != 'mil' ) goto ASKPROC
 
       if ($MODEL == 'mil') then
-         set NCPUS_PER_NODE = 128
+         # We save a couple processes for the kernel
+         set NCPUS_PER_NODE = 126
       endif
    else
       set DEFAULT_MODEL = 'cas'
