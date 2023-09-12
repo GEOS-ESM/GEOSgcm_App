@@ -2251,6 +2251,15 @@ EOF
 
 endif # if NOT Singularity
 
+# This is a temporary fix until NCCS can figure out a "real"
+# fix for this on SLES15
+if ("$BUILT_ON_SLES15" == "TRUE") then
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_TUNING_BIN "/usr/local/intel/oneapi/2021/mpi/2021.6.0/etc/tuning_generic_shm-ofi_mlx_hcoll.dat"
+EOF
+
+endif # if SLES15
+
 endif # if NCCS
 
 endif # if mpi
