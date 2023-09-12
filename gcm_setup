@@ -1716,6 +1716,15 @@ if ( $DO_IOS == TRUE ) then
    # multigroup requires at least two backend pes
    if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
 
+   # Next calculate the number of frontend PEs
+   @ NUM_FRONTEND_PES=$NCPUS_PER_NODE - $NUM_BACKEND_PES
+
+   # If models pes is less than frontend, then we need to reduce frontend by increasing backend
+   if ($MODEL_NPES < $NUM_FRONTEND_PES) then
+      @ NUM_FRONTEND_PES=$MODEL_NPES - 2
+      @ NUM_BACKEND_PES=$NCPUS_PER_NODE - $NUM_FRONTEND_PES
+   endif
+
    # Calculate the total number of nodes to request from batch
    @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
 
