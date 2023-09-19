@@ -1,0 +1,93 @@
+VERSION: 1
+EXPID:  @EXPID
+EXPDSC: @EXPDSC
+EXPSRC: @EXPSRC
+
+
+CONTACT: 'http://gmao.gsfc.nasa.gov'
+
+COLLECTIONS: 'geosgcm_radval'
+             ::
+
+GRID_LABELS: PC@HIST_IMx@HIST_JM-DC
+::
+
+PC@HIST_IMx@HIST_JM-DC.GRID_TYPE: LatLon
+PC@HIST_IMx@HIST_JM-DC.IM_WORLD: @HIST_IM
+PC@HIST_IMx@HIST_JM-DC.JM_WORLD: @HIST_JM
+PC@HIST_IMx@HIST_JM-DC.POLE: PC
+PC@HIST_IMx@HIST_JM-DC.DATELINE: DC
+PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
+
+# ---------------------------------------------------------------------------
+# specialized radiation diagnostics ...
+# (1) variations on cos(SZA)
+# (2) subcolumn generated super-layer cloud fractions and optical thicknesses
+# ---------------------------------------------------------------------------
+  geosgcm_radval.format:    'CFIO',
+  geosgcm_radval.mode:      'instantaneous',
+  geosgcm_radval.frequency:  030000,
+  geosgcm_radval.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_radval.archive:   '%c/Y%y4',
+  geosgcm_radval.grid_label: PC@HIST_IMx@HIST_JM-DC,
+  geosgcm_radval.regrid_method: 'BILINEAR_MONOTONIC',
+  geosgcm_radval.fields:    'PHIS'          , 'AGCM'      ,
+                            'FRLAND'        , 'SURFACE'   ,
+                            'PS'            , 'DYN'       ,
+                            'DELP'          , 'DYN'       ,
+                            'TROPP_BLENDED' , 'AGCM'      , 'TROPPB'    ,
+                            'COSZ'          , 'SOLAR'     ,
+                            'MCOSZ'         , 'SOLAR'     ,
+                            'COSZSW'        , 'SOLAR'     ,
+                            'FCLD'          , 'MOIST'     ,
+                            'CLDTT'         , 'SOLAR'     ,
+                            'CLDHI'         , 'SOLAR'     ,
+                            'CLDMD'         , 'SOLAR'     ,
+                            'CLDLO'         , 'SOLAR'     ,
+                            'CLDTTSW'       , 'SOLAR'     ,
+                            'CLDHISW'       , 'SOLAR'     ,
+                            'CLDMDSW'       , 'SOLAR'     ,
+                            'CLDLOSW'       , 'SOLAR'     ,
+                            'CLDTTLW'       , 'IRRAD'     ,
+                            'CLDLOLW'       , 'IRRAD'     ,
+                            'CLDMDLW'       , 'IRRAD'     ,
+                            'CLDHILW'       , 'IRRAD'     ,
+#                           'CLDTTSWHB'     , 'SOLAR'     ,
+#                           'CLDLOSWHB'     , 'SOLAR'     ,
+#                           'CLDMDSWHB'     , 'SOLAR'     ,
+#                           'CLDHISWHB'     , 'SOLAR'     ,
+                            'LWP'           , 'MOIST'     ,
+                            'IWP'           , 'MOIST'     ,
+                            'RL'            , 'MOIST'     ,
+                            'RI'            , 'MOIST'     ,
+                            'TAUCLI'        , 'SOLAR'     ,
+                            'TAUCLW'        , 'SOLAR'     ,
+                            'TAUTTX'        , 'SOLAR'     ,
+                            'TAUHI'         , 'SOLAR'     ,
+                            'TAUMD'         , 'SOLAR'     ,
+                            'TAULO'         , 'SOLAR'     ,
+                            'TAUTTPAR'      , 'SOLAR'     ,
+                            'TAUHIPAR'      , 'SOLAR'     ,
+                            'TAUMDPAR'      , 'SOLAR'     ,
+                            'TAULOPAR'      , 'SOLAR'     ,
+                            'FLNS'          , 'IRRAD'     ,    
+                            'FLNSC'         , 'IRRAD'     ,    
+                            'OLR'           , 'IRRAD'     ,    
+                            'OLC'           , 'IRRAD'     , 'OLRC'      ,
+                            'LWS'           , 'IRRAD'     ,    
+                            'LCS'           , 'IRRAD'     , 'LWSC'      ,
+                            'SFCEM'         , 'IRRAD'     ,    
+                            'OSR'           , 'SOLAR'     ,    
+                            'OSRCLR'        , 'SOLAR'     ,    
+                            'RSR'           , 'SOLAR'     , 'SWTNET'    ,
+                            'RSC'           , 'SOLAR'     , 'SWTNETC'   ,
+                            'SLRTP'         , 'SOLAR'     , 'RADSWT'    ,
+                            'SLRSF'         , 'SOLAR'     , 'SWGDWN'    ,
+                            'SLRSFC'        , 'SOLAR'     , 'SWGDWNC'   ,
+                            'RSRS'          , 'SOLAR'     , 'SWGNET'    ,
+                            'RSCS'          , 'SOLAR'     , 'SWGNETC'   ,
+                            'RADLW'         , 'RADIATION' , 'DTDTLW'    ,
+                            'RADLWC'        , 'RADIATION' , 'DTDTLWC'   ,
+                            'RADSW'         , 'RADIATION' , 'DTDTSW'    ,
+                            'RADSWC'        , 'RADIATION' , 'DTDTSWC'   ,
+                            ::
