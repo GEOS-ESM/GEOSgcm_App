@@ -1,6 +1,5 @@
 &fv_core_nml
  @FV_HYDRO
- fv_sg_adj = -1
  range_warn = .T.
  fv_debug = .F.
  @FV_SCHMIDT
