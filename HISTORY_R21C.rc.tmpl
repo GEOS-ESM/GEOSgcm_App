@@ -99,10 +99,10 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
              'aer_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72'
 #            'chm_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72'
 #            'tag_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72'
-             'aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv'
-             'aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
-             'adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv'
-             'adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
+             'aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv'
+             'aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
+             'adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv'
+             'adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
 #            'chm_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv'
 #            'chm_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
 #            'tag_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv'
@@ -130,7 +130,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
              'vtx.mix'
 #            'vtx.prs'
 #            'prog.sfc+-'
-             'bkg_clcv_rst'
+#             'bkg_clcv_rst'
 # Trajectory Files
              'asm.eta'
 #            'prog.eta+-'
@@ -1655,7 +1655,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
 # bkg.eta.nbits:                                             10 ,
   bkg.eta.deflate:                                           2 ,
   bkg.eta.regrid_method:                                    'BILINEAR_MONOTONIC' ,
-  bkg.eta.template:                                         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  bkg.eta.template:                                         '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   bkg.eta.ref_date:                                          >>>IOBBKGD<<< ,
   bkg.eta.ref_time:                                          >>>IOBBKGT<<< ,
   bkg.eta.end_date:                                          >>>IOEBKGD<<< ,
@@ -1688,7 +1688,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
 # bkg.sfc.nbits:                                             10 ,
   bkg.sfc.deflate:                                           2 ,
   bkg.sfc.regrid_method:                                    'BILINEAR_MONOTONIC' ,
-  bkg.sfc.template:                                         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  bkg.sfc.template:                                         '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   bkg.sfc.ref_date:                                          >>>IOBBKGD<<< ,
   bkg.sfc.ref_time:                                          >>>IOBBKGT<<< ,
   bkg.sfc.end_date:                                          >>>IOEBKGD<<< ,
@@ -1796,7 +1796,7 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                              ::
 
   cbkg.eta.format:                                          'CFIO' ,
-  cbkg.eta.template:                                        '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  cbkg.eta.template:                                        '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
 # cbkg.eta.nbits:                                            10 ,
   cbkg.eta.deflate:                                          2 ,
   cbkg.eta.regrid_method:                                   'BILINEAR_MONOTONIC' ,
@@ -1832,7 +1832,6 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
   gaas_bkg.sfc.duration:                                     030000 ,
   gaas_bkg.sfc.mode:                                        'instantaneous' ,
   gaas_bkg.sfc.grid_label:                                   PC@HIST_IMx@HIST_JM-DC ,
-  gaas_bkg.sfc.splitField:                                   1 ,
   gaas_bkg.sfc.fields:                                      'U10M;V10M'    , 'SURFACE'   ,
                                                             'DUEXTTAU'     , 'DU'        ,
                                                             'SSEXTTAU'     , 'SS'        ,
@@ -1904,20 +1903,20 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'NIINC'    , 'GAAS'     ,
                                                              ::
 
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics' ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'CONSERVE_MONOTONIC' ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.mode:             'time-averaged' ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.splitField:        1 ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:         030000 ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.duration:          030000 ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:          >>>IOEDATE<<< ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
-  aer_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,1-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics' ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'CONSERVE_MONOTONIC' ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:             'time-averaged' ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.splitField:        1 ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:         010000 ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:          010000 ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:          >>>IOEDATE<<< ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
+  aer_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
 # Black Carbon
                                                             'CA.bcCMASS'     , 'CA.bc'     , 'BCCMASS'     ,
                                                             'CA.bcEXTTAU'    , 'CA.bc'     , 'BCEXTTAU'    ,
@@ -2013,21 +2012,23 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'TOTANGSTR'      , 'GOCART2G'  ,
                                                             'TOTSTEXTTAU'    , 'GOCART2G'  ,
                                                             'TOTSTSCATAU'    , 'GOCART2G'  ,
+							    'PM25'           , 'GOCART2G'  ,
+                                                            'PM'             , 'GOCART2G'  ,
                                                              ::
 
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics' ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'CONSERVE_MONOTONIC' ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:           'time-averaged' ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:       030000 ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:        030000 ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:        >>>IOEDATE<<< ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.splitField:      1 ,
-  aer_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics' ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'CONSERVE_MONOTONIC' ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:           'time-averaged' ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:       010000 ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:        010000 ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:        >>>IOEDATE<<< ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.splitField:      1 ,
+  aer_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
 # Black Carbon
                                                             'CA.bcCMASS'     , 'CA.bc'     , 'BCCMASS'     ,
                                                             'CA.bcEXTTAU'    , 'CA.bc'     , 'BCEXTTAU'    ,
@@ -2123,22 +2124,24 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'TOTANGSTR'      , 'GOCART2G'  ,
                                                             'TOTSTEXTTAU'    , 'GOCART2G'  ,
                                                             'TOTSTSCATAU'    , 'GOCART2G'  ,
+							    'PM25'           , 'GOCART2G'  ,
+                                                            'PM'             , 'GOCART2G'  ,
                                                              ::
 
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'CONSERVE_MONOTONIC' ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.mode:             'time-averaged' ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:         030000 ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.duration:          030000 ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:          >>>IOEDATE<<< ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.splitField:        1 ,
-  adg_tavg_3hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'CA.bcEM'      , 'CA.bc'  , 'BCEM001;BCEM002'                          ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'CONSERVE_MONOTONIC' ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:             'time-averaged' ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:         010000 ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:          010000 ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:          >>>IOEDATE<<< ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.splitField:        1 ,
+  adg_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'CA.bcEM'      , 'CA.bc'  , 'BCEM001;BCEM002'                          ,
 # Black Carbon
                                                             'CA.bcDP'      , 'CA.bc'  ,                         'BCDP001;BCDP002',
                                                             'CA.bcWT'      , 'CA.bc'  ,                         'BCWT001;BCWT002',
@@ -2215,19 +2218,19 @@ COLLECTIONS: 'asm_inst_3hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'DNI2gDT'      , 'MOIST'  ,                              'NISV'      ,
                                                              ::
 
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'CONSERVE_MONOTONIC' ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:           'time-averaged' ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:       030000 ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:        030000 ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:        >>>IOEDATE<<< ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.splitField:      1 ,
-  adg_tavg_3hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'CA.bcEM'      , 'CA.bc'  , 'BCEM001;BCEM002'                          ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'CONSERVE_MONOTONIC' ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:           'time-averaged' ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:       010000 ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:        010000 ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:        >>>IOEDATE<<< ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.splitField:      1 ,
+  adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'CA.bcEM'      , 'CA.bc'  , 'BCEM001;BCEM002'                          ,
 # Black Carbon
                                                             'CA.bcDP'      , 'CA.bc'  ,                         'BCDP001;BCDP002',
                                                             'CA.bcWT'      , 'CA.bc'  ,                         'BCWT001;BCWT002',
