@@ -2260,6 +2260,17 @@ EOF
 
 endif # if NOT Singularity
 
+# Testing on SLES15 showed that the mlx provider did not seem
+# to work at scale. So we move to use the verbs provider. Note:
+# still seems to have issues at c720
+if ("$BUILT_ON_SLES15" == "TRUE") then
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_OFI_PROVIDER verbs
+setenv I_MPI_COLL_EXTERNAL 0
+EOF
+
+endif # if SLES15
+
 endif # if NCCS
 
 endif # if mpi
