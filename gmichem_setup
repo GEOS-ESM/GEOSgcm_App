@@ -638,6 +638,7 @@ if( $OGCM == TRUE ) then
        set OCEAN_NAME="MIT"
        set OGCM_GRID_TYPE = llc
        set MIT = ""
+       set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM_MITgcm.rc.tmpl"
        set MOM5 = "#DELETE"
        set MOM6 = "#DELETE"
     endif
