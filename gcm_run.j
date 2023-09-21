@@ -841,16 +841,16 @@ if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv       
 set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
 if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
 
-@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_CLIM
-@MP_NO_USE_WSUB# -------------------------------------------------
+@MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
+@MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 else
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 endif
-@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -892,9 +892,6 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-### @MIT $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
-### @MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
-### @MOM6 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
