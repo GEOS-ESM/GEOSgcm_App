@@ -317,16 +317,16 @@ if( @EMISSIONS == AMIP_EMISSIONS ) then
     endif
 endif
 
-@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_CLIM
-@MP_NO_USE_WSUB# -------------------------------------------------
+@MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
+@MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 else
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 endif
-@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
 # --------------------------------
