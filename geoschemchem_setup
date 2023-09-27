@@ -633,6 +633,7 @@ if( $OGCM == TRUE ) then
        set OCEAN_NAME="MIT"
        set OGCM_GRID_TYPE = llc
        set MIT = ""
+       set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM_MITgcm.rc.tmpl"
        set MOM5 = "#DELETE"
        set MOM6 = "#DELETE"
     endif
@@ -1405,9 +1406,9 @@ set GFDL_USE_CCN  = "use_ccn = .true."
 
 # BACM_1M and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
-   set MP_NO_USE_WSUB = ""
+   set MP_TURN_OFF_WSUB_EXTDATA = ""
 else
-   set MP_NO_USE_WSUB = "#DELETE#"
+   set MP_TURN_OFF_WSUB_EXTDATA = "#DELETE#"
 endif
 
 # Settings for fvcore_layout.rc
@@ -1415,16 +1416,7 @@ if ( "$USE_HYDROSTATIC" == "TRUE" ) then
    set FV_MAKENH     = "Make_NH     = .F."
    set FV_HYDRO      = "hydrostatic = .T."
 else
-   # Logic for NH runs based on build type
-   if ( "$DEFAULT_HYDROSTATIC" == "TRUE") then
-      # If you built for hydrostatic, but want an NH run, run make_nh
-      set FV_MAKENH     = "Make_NH     = .T."
-   else
-      # If you built for non-hydrostatic and want an NH run, do not run
-      # NOTE: If you run regrid.pl it will make restarts that should trigger
-      #       make_nh automatically in FV3
-      set FV_MAKENH     = "Make_NH     = .F."
-   endif
+   set FV_MAKENH     = "Make_NH     = .T."
    set FV_HYDRO      = "hydrostatic = .F."
    if ( "$CLDMICRO" == "GFDL_1M" ) then
       set GFDL_HYDRO = ".FALSE."
@@ -1660,23 +1652,7 @@ while( $check == FALSE )
   # Check to see if the HISTORY template exists in the $ETCDIR
   if( -f $ETCDIR/$HISTORY_TEMPLATE ) then
      set check = TRUE
-     set TMPHIST1 = `mktemp`
-     /bin/cp -f $ETCDIR/$HISTORY_TEMPLATE $TMPHIST1
-
-     set  EXPID_old = `grep  "EXPID:" $TMPHIST1 | cut -d: -f2`
-     set EXPDSC_old = `grep "EXPDSC:" $TMPHIST1 | cut -d: -f2`
-
-     set  TMPCMD = `mktemp`
-     set  string = "EXPID:"
-     echo cat $TMPHIST1 \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-           \{sub \( \"${EXPID_old}\" , \"${EXPID}\"  \)\;print\} else print\}\' \> $TMPHIST > $TMPCMD
-     chmod +x   $TMPCMD
-                $TMPCMD
-     /bin/rm -f $TMPCMD
-     /bin/mv -f $TMPHIST $TMPHIST1
-     cat $TMPHIST1 | sed -e "s|${EXPDSC_old}|${EXPDSC}|g" > $TMPHIST
-     /bin/rm -f $TMPHIST1
-
+     /bin/cp -f $ETCDIR/$HISTORY_TEMPLATE $TMPHIST
   # else check if the file exists (assuming they sent in full path)
   else if( -e $HISTORY_TEMPLATE ) then
      set check = TRUE
@@ -2461,7 +2437,7 @@ s/@ANALYZE_TS/0/g
 
 s/@LSM_CHOICE/$LSM_CHOICE/g
 
-s/@MP_NO_USE_WSUB/$MP_NO_USE_WSUB/g
+s/@MP_TURN_OFF_WSUB_EXTDATA/$MP_TURN_OFF_WSUB_EXTDATA/g
 
 s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
