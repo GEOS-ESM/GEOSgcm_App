@@ -119,7 +119,6 @@ loggers:
    # To enable this logger, set the console handler
    # above to DEBUG level
    CAP.EXTDATA:
-      handlers: [console]
       level: WARNING
       root_level: DEBUG
 
