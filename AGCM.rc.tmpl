@@ -328,10 +328,15 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   Regular REPLAY to ERA5
 #   ----------------------
-#ERA5  REPLAY_ANA_EXPID: era5_eta2eta_L137
-#ERA5  REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/osse2/Ops12KM_R/forecasts_EC/ERA5/UV
-#ERA5  REPLAY_MODE: Regular
-#ERA5  REPLAY_FILE: /discover/nobackup/projects/gmao/osse2/Ops12KM_R/forecasts_EC/ERA5/UV/%y4%m2%d2_%h20000/era5_eta2eta_L137.%y4%m2%d2_%h2z.nc4
+#ERA5  REPLAY_MODE:                 Regular
+#ERA5  REPLAY_FILE_FREQUENCY:       21600
+#ERA5  REPLAY_FILE_REFERENCE_TIME:  000000
+#ERA5  REPLAY_ANA_EXPID:            era5
+#ERA5  REPLAY_ANA_LOCATION:         /gpfsm/dnb78s1/projects/p18/sdrabenh/valdat/era5/ana
+#ERA5  REPLAY_FILE:                 /gpfsm/dnb78s1/projects/p18/sdrabenh/valdat/era5/ana/Y%y4/M%m2/era5_eta2eta_L137.%y4%m2%d2_%h2z.nc4
+#ERA5  REPLAY_O3:          NO
+#ERA5  REPLAY_DAMPBEG:  500.0
+#ERA5  REPLAY_DAMPEND: 5000.0
 
 #   Typical Exact REPLAY Configuration
 #   ----------------------------------
