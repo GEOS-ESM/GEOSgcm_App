@@ -458,7 +458,10 @@ cp  linkbcs $EXPDIR
 #                    Get Executable and RESTARTS
 #######################################################################
 
-cp $EXPDIR/GEOSgcm.x .
+ echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+ echo ""
+ /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+ setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -826,12 +829,11 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
      set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
 
-     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # Disable GAAS and Link REPLAY files
      # ---------------------------------------------
-     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
-     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/${ANA_EXPID}.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
+     /bin/mv -f GEOS_ChemGridComp.rc GEOS_ChemGridComp.rc.tmp
+     cat GEOS_ChemGridComp.rc.tmp | sed "s?ENABLE_GAAS:.*?ENABLE_GAAS:        .FALSE.?g" > GEOS_ChemGridComp.rc
 
-     /bin/ln -sf ${ANA_LOCATION}/aod .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
