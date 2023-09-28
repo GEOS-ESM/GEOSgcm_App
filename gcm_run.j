@@ -841,16 +841,16 @@ if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv       
 set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
 if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
 
-@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_CLIM
-@MP_NO_USE_WSUB# -------------------------------------------------
+@MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
+@MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 else
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 endif
-@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -892,9 +892,6 @@ setenv YEAR $yearc
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-### @MIT $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
-### @MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
-### @MOM6 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -1023,12 +1020,15 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
      set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
 
-     # Modify GAAS_GridComp.rc and Link REPLAY files
+     # Modify GAAS_GridComp_ExtData and Link REPLAY files
      # ---------------------------------------------
-     /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
-     cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/${ANA_EXPID}.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
+     /bin/mv -f GAAS_GridComp_ExtData.yaml GAAS_GridComp_ExtData.yaml.tmpl
+     cat GAAS_GridComp_ExtData.yaml.tmpl | sed -e "s?das.aod_?chem/Y%y4/M%m2/${ANA_EXPID}.aod_?g" > GAAS_GridComp_ExtData.yaml
 
-     /bin/ln -sf ${ANA_LOCATION}/aod .
+     /bin/mv -f GAAS_GridComp_ExtData.rc GAAS_GridComp_ExtData.rc.tmpl
+     cat GAAS_GridComp_ExtData.rc.tmpl | sed -e "s?das.aod_?chem/Y%y4/M%m2/${ANA_EXPID}.aod_?g" > GAAS_GridComp_ExtData.rc
+
+     /bin/ln -sf ${ANA_LOCATION}/chem .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 

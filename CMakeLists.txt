@@ -44,12 +44,6 @@ install (
    DESTINATION etc
    )
 
-if(HYDROSTATIC)
-   set(CFG_HYDROSTATIC TRUE)
-else()
-   set(CFG_HYDROSTATIC FALSE)
-endif()
-
 if(INSTALL_SOURCE_TARFILE)
   set(CFG_INSTALL_SOURCE_TARFILE TRUE)
 else()
