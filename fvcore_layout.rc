@@ -30,9 +30,9 @@
   do_evap = .false.
   do_subl = .false.
   do_qa = .false.
-  tau_l2v  = 150.
-  tau_i2v  = 150.
-  tau_revp = 150.
+  tau_l2v  = 450.
+  tau_i2v  = 450.
+  tau_revp = 450.
   tau_frz  = 450.
   dw_land  = 0.05
   dw_ocean = 0.10
