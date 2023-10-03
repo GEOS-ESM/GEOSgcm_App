@@ -1400,12 +1400,15 @@ endif
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
    set FV_MAKENH     = "Make_NH     = .F."
    set FV_HYDRO      = "hydrostatic = .T."
+   set FV_HWT        = '#'
 else
    set FV_MAKENH     = "Make_NH     = .T."
    set FV_HYDRO      = "hydrostatic = .F."
    if ( "$CLDMICRO" == "GFDL_1M" ) then
       set GFDL_HYDRO = ".FALSE."
    endif
+   # Enable FV3_CONFIG: HWT when running non-hydrostatic
+   set FV_HWT        = ''
 endif
 
 if ($CONUS == '#') then
@@ -1418,6 +1421,8 @@ else
   set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
   set TARGET_LON  = "target_lon  = -98.35"
   set TARGET_LAT  = "target_lat  = 39.5"
+  # Always enable FV3_CONFIG: HWT for CONUS
+  set FV_HWT        = ''
 endif
 
 #######################################################################
@@ -2387,6 +2392,7 @@ s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
 s/@CONUS/${CONUS}/g
+s/@FV_HWT/${FV_HWT}/g
 s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
