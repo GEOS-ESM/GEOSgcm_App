@@ -431,7 +431,6 @@ if ( $SITE == 'NCCS' ) then
    set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
 
    if ("$BUILT_ON_SLES15" == "TRUE") then
-      set DEFAULT_MODEL = 'mil'
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
       echo "   ${C2}mil  (Milan)${CN} (default)"
       echo " "
@@ -448,7 +447,6 @@ if ( $SITE == 'NCCS' ) then
          set NCPUS_PER_NODE = 126
       endif
    else
-      set DEFAULT_MODEL = 'cas'
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
       echo "   ${C2}sky  (Skylake)${CN} (default)"
       echo "   ${C2}cas  (Cascade Lake)${CN}"
