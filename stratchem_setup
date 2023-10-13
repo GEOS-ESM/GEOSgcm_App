@@ -1008,6 +1008,11 @@ endif
      set NUM_READERS = 1
      set NUM_WRITERS = 1
 
+# Set default CONVPAR_OPTION to GF
+# (set to NONE at C2880 and C5760)
+# --------------------------------
+     set CONVPAR_OPTION = GF
+
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
@@ -1211,6 +1216,7 @@ if( $AGCM_IM == "c2880" ) then
      set POST_NDS = 32
      set USE_SHMEM = 1
      set DEF_IOS_NDS = 4
+     set CONVPAR_OPTION = NONE
 endif
 if( $AGCM_IM == "c5760" ) then
      set       DT = 30
@@ -1233,6 +1239,7 @@ if( $AGCM_IM == "c5760" ) then
      set POST_NDS = 32
      set USE_SHMEM = 1
      set DEF_IOS_NDS = 4
+     set CONVPAR_OPTION = NONE
 endif
 # CONUS Stretched Grids
 set CONUS = '#'
@@ -1415,12 +1422,15 @@ endif
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
    set FV_MAKENH     = "Make_NH     = .F."
    set FV_HYDRO      = "hydrostatic = .T."
+   set FV_HWT        = '#'
 else
    set FV_MAKENH     = "Make_NH     = .T."
    set FV_HYDRO      = "hydrostatic = .F."
    if ( "$CLDMICRO" == "GFDL_1M" ) then
       set GFDL_HYDRO = ".FALSE."
    endif
+   # Enable FV3_CONFIG: HWT when running non-hydrostatic
+   set FV_HWT        = ''
 endif
 
 if ($CONUS == '#') then
@@ -1433,6 +1443,8 @@ else
   set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
   set TARGET_LON  = "target_lon  = -98.35"
   set TARGET_LAT  = "target_lat  = 39.5"
+  # Always enable FV3_CONFIG: HWT for CONUS
+  set FV_HWT        = ''
 endif
 
 #######################################################################
@@ -2306,7 +2318,7 @@ s?@OGCM_NY?$OGCM_NY?g
 s?@OGCM_NPROCS?$OGCM_NPROCS?g
 
 s?@OBSERVER_FRQ?0?g
-s?RECORD_?#RECORD_?g
+s?^[ \t]*RECORD_?#RECORD_?g
 
 s?@DASTUNING?#?g
 
@@ -2403,6 +2415,8 @@ s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
 s/@CONUS/${CONUS}/g
+s/@FV_HWT/${FV_HWT}/g
+s/@CONVPAR_OPTION/${CONVPAR_OPTION}/g
 s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
