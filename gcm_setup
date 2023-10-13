@@ -314,10 +314,6 @@ if( $HRCODE == 'c180'  | \
 
     set DEFAULT_DO_IOS = TRUE
     echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
-# MVAPICH2 requires ioserver for history (issue with MPI_Put and MAPL)
-else if( $MPI == mvapich2 ) then
-    set DEFAULT_DO_IOS = TRUE
-    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
 else
     set DEFAULT_DO_IOS = FALSE
     echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
@@ -357,67 +353,29 @@ endif
 ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}hasw (Haswell)${CN}"
-   echo "   ${C2}sky  (Skylake)${CN} (default)"
-   echo "   ${C2}cas  (Cascade Lake)${CN}"
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      set MODEL = 'sky'
-   endif
 
-   if( $MODEL != 'hasw' & \
-       $MODEL != 'sky'  & \
-       $MODEL != 'cas' ) goto ASKPROC
+   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
 
-   if (     $MODEL == 'hasw') then
-      set NCPUS_PER_NODE = 28
-   else if ($MODEL == 'sky') then
-      set NCPUS_PER_NODE = 40
-   else if ($MODEL == 'cas') then
-      # NCCS currently recommends that users do not run with
-      # 48 cores per node on SCU16 due to OS issues and
-      # recommends that CPU-intensive works run with 46 or less
-      # cores. As 45 is a multiple of 3, it's the best value
-      # that doesn't waste too much
-      #set NCPUS_PER_NODE = 48
-      set NCPUS_PER_NODE = 45
-   endif
-
-else if ( $SITE == 'NAS' ) then
-
-   set BUILT_ON_ROME = @BUILT_ON_ROME@
-
-   if ( $BUILT_ON_ROME == "TRUE") then
-
+   if ("$BUILT_ON_SLES15" == "TRUE") then
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}rom (AMD Rome) (default)${CN}"
-      echo " "
-      echo " NOTE GEOS is non-zero-diff when running on AMD Rome"
-      echo "      compared to the other Intel nodes."
+      echo "   ${C2}mil  (Milan)${CN} (default)"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
       if ( .$MODEL == .) then
-         set MODEL = 'rom'
+         set MODEL = 'mil'
       endif
 
-      if( $MODEL != 'rom' ) goto ASKPROC
-   else
+      if( $MODEL != 'mil' ) goto ASKPROC
 
+      if ($MODEL == 'mil') then
+         # We save a couple processes for the kernel
+         set NCPUS_PER_NODE = 126
+      endif
+   else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}has (Haswell)${CN}"
-      echo "   ${C2}bro (Broadwell)${CN}"
-      echo "   ${C2}sky (Skylake)${CN} (default)"
-      echo "   ${C2}cas (Cascade Lake)${CN}"
-      echo " "
-      echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
-      echo "         and Ivy Bridge are not supported by current GEOS"
-      echo " "
-      echo " NOTE 2: Due to OS differences, if you want to run on the AMD"
-      echo "         Rome nodes at NAS, you must recompile on the Rome nodes"
+      echo "   ${C2}sky  (Skylake)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -425,12 +383,45 @@ else if ( $SITE == 'NAS' ) then
          set MODEL = 'sky'
       endif
 
-      if( $MODEL != 'has' & \
-          $MODEL != 'bro' & \
-          $MODEL != 'sky' & \
+      if( $MODEL != 'sky'  & \
           $MODEL != 'cas' ) goto ASKPROC
 
+      if ($MODEL == 'sky') then
+         set NCPUS_PER_NODE = 40
+      else if ($MODEL == 'cas') then
+         # NCCS currently recommends that users do not run with
+         # 48 cores per node on SCU16 due to OS issues and
+         # recommends that CPU-intensive works run with 46 or less
+         # cores. As 45 is a multiple of 3, it's the best value
+         # that doesn't waste too much
+         #set NCPUS_PER_NODE = 48
+         set NCPUS_PER_NODE = 45
+      endif
    endif
+
+else if ( $SITE == 'NAS' ) then
+
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo " "
+   echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "      and Ivy Bridge are not supported by current GEOS"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'sky'
+   endif
+
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
@@ -461,6 +452,17 @@ else if ( $SITE == 'NAS' ) then
 
 else
    set MODEL = 'UNKNOWN'
+   # As we do not know how many CPUs per node, we detect the number
+   # of CPUs per node by looking at the number of CPUs. This is different
+   # on Linux and macOS
+   if ( $ARCH == 'Linux' ) then
+      set NCPUS_PER_NODE = `grep -c ^processor /proc/cpuinfo`
+   else if ( $ARCH == 'Darwin' ) then
+      set NCPUS_PER_NODE = `sysctl -n hw.ncpu`
+   else
+      echo "ERROR: Unknown architecture $ARCH"
+      exit 1
+   endif
 endif
 
 #######################################################################
@@ -1396,6 +1398,15 @@ if ( $DO_IOS == TRUE ) then
    # multigroup requires at least two backend pes
    if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
 
+   # Next calculate the number of frontend PEs
+   @ NUM_FRONTEND_PES=$NCPUS_PER_NODE - $NUM_BACKEND_PES
+
+   # If models pes is less than frontend, then we need to reduce frontend by increasing backend
+   if ($MODEL_NPES < $NUM_FRONTEND_PES) then
+      @ NUM_FRONTEND_PES=$MODEL_NPES - 2
+      @ NUM_BACKEND_PES=$NCPUS_PER_NODE - $NUM_FRONTEND_PES
+   endif
+
    # Calculate the total number of nodes to request from batch
    @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
 
@@ -1892,9 +1903,13 @@ cat > $HOMDIR/SETENV.commands << EOF
 EOF
 
 # The below settings seem to be recommended for hybrid
-# systems using MVAPICH2 but could change
+# systems using MVAPICH but could change
 
-else if( $MPI == mvapich2 ) then
+else if( $MPI == mvapich ) then
+
+# MVAPICH and GEOS has issues with restart writing. Having the
+# oserver write them seems to...work
+set RESTART_BY_OSERVER = YES
 
 cat > $HOMDIR/SETENV.commands << EOF
    setenv MV2_ENABLE_AFFINITY     0
@@ -1960,6 +1975,17 @@ setenv PSM2_MEMORY large
 setenv I_MPI_EXTRA_FILESYSTEM 1
 setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
 EOF
+
+# Testing on SLES15 showed that the mlx provider did not seem
+# to work at scale. So we move to use the verbs provider. Note:
+# still seems to have issues at c720
+if ("$BUILT_ON_SLES15" == "TRUE") then
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_OFI_PROVIDER verbs
+setenv I_MPI_COLL_EXTERNAL 0
+EOF
+
+endif # if SLES15
 
 endif # if NCCS
 
