@@ -33,7 +33,7 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
 setenv RUN_CMD "@RUN_CMD"
 
@@ -951,8 +951,8 @@ setenv GEOSBIN   $GEOSBIN
 setenv GEOSETC   $GEOSETC
 setenv GEOSUTIL  $GEOSUTIL
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
-echo $LD_LIBRARY_PATH
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+echo $@LD_LIBRARY_PATH_CMD
 cd $statsdir
 $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files -ana $ana_files -cli $clim_files -rc $GEOSUTIL/post/stats.rc \
                                  -levs $levs_clim -tag $EXPID -nfreq 060000 -fhour $fHOURS

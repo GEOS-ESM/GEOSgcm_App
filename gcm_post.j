@@ -36,7 +36,7 @@ setenv GEOSUTIL         @GEOSSRC
 setenv BATCHNAME       "@POST_N"
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
 
 if( $?SLURM_NTASKS ) then
       setenv RUN_CMD "@RUN_CMD"
