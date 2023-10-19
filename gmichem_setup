@@ -38,8 +38,14 @@ setenv NODE `uname -n`
 
 if ($ARCH == Darwin) then
    set FINDPATH = realpath
+   set PRELOAD_COMMAND = 'DYLD_INSERT_LIBRARIES'
+   # On macOS we seem to need to call mpirun directly and not use esma_mpirun
+   # For some reason SIP does not let the libraries be preloaded
+   set RUN_CMD = 'mpirun -np'
 else
    set FINDPATH = 'readlink -f'
+   set PRELOAD_COMMAND = 'LD_PRELOAD'
+   set RUN_CMD = '$GEOSBIN/esma_mpirun -np'
 endif
 set GCMSETUP = `$FINDPATH $0`
 set BINDIR   = `dirname $GCMSETUP`
@@ -635,7 +641,7 @@ if( $OGCM == TRUE ) then
     # suffix is different on Linux and macOS. This is set by configure_file()
     if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
-       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
@@ -645,7 +651,7 @@ if( $OGCM == TRUE ) then
        set MIT  = "#DELETE"
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
-       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -2663,6 +2669,9 @@ s/@MP_TURN_OFF_WSUB_EXTDATA/$MP_TURN_OFF_WSUB_EXTDATA/g
 s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
+
+s/@PRELOAD_COMMAND/$PRELOAD_COMMAND/g
+s/@RUN_CMD/$RUN_CMD/g
 
 EOF
 
