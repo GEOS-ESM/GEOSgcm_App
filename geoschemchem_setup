@@ -42,12 +42,12 @@ if ($ARCH == Darwin) then
    set LD_LIBRARY_PATH_CMD = 'DYLD_LIBRARY_PATH'
    # On macOS we seem to need to call mpirun directly and not use esma_mpirun
    # For some reason SIP does not let the libraries be preloaded
-   set RUN_CMD = 'mpirun -np'
+   set RUN_CMD = 'mpirun -np '
 else
    set FINDPATH = 'readlink -f'
    set PRELOAD_COMMAND = 'LD_PRELOAD'
    set LD_LIBRARY_PATH_CMD = 'LD_LIBRARY_PATH'
-   set RUN_CMD = '$GEOSBIN/esma_mpirun -np'
+   set RUN_CMD = '$GEOSBIN/esma_mpirun -np '
 endif
 set GCMSETUP = `$FINDPATH $0`
 set BINDIR   = `dirname $GCMSETUP`
