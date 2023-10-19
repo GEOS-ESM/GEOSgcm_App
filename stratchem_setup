@@ -39,12 +39,14 @@ setenv NODE `uname -n`
 if ($ARCH == Darwin) then
    set FINDPATH = realpath
    set PRELOAD_COMMAND = 'DYLD_INSERT_LIBRARIES'
+   set LD_LIBRARY_PATH_CMD = 'DYLD_LIBRARY_PATH'
    # On macOS we seem to need to call mpirun directly and not use esma_mpirun
    # For some reason SIP does not let the libraries be preloaded
    set RUN_CMD = 'mpirun -np'
 else
    set FINDPATH = 'readlink -f'
    set PRELOAD_COMMAND = 'LD_PRELOAD'
+   set LD_LIBRARY_PATH_CMD = 'LD_LIBRARY_PATH'
    set RUN_CMD = '$GEOSBIN/esma_mpirun -np'
 endif
 set GCMSETUP = `$FINDPATH $0`
@@ -2489,6 +2491,7 @@ s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
 
 s/@PRELOAD_COMMAND/$PRELOAD_COMMAND/g
+s/@LD_LIBRARY_PATH_CMD/$LD_LIBRARY_PATH_CMD/g
 s/@RUN_CMD/$RUN_CMD/g
 
 EOF
