@@ -2161,7 +2161,14 @@ if( $MPI == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
-set RESTART_BY_OSERVER = YES
+
+# Note that at low res, this is not strictly needed and can interfere with some
+# testing. So, if LOW_ATM_RES is TRUE then we set to NO, otherwise set to YES
+# as at high res this flag is *needed* 
+
+if( $LOW_ATM_RES == 'FALSE') then
+   set RESTART_BY_OSERVER = YES
+endif
 
 # This turns off an annoying warning when running
 # Open MPI on a system where TMPDIRs are on a networked
