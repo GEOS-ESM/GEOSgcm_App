@@ -14,8 +14,8 @@ set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
 if (GPU_PHYSICS)
   # We need the SHELL prefix to get around the error where the flags are quoted as in
   # gfortran: error: unrecognized command-line option '-fopenacc -foffload=nvptx-none’
-  target_link_options(GEOSgcm.x PRIVATE SHELL:${GEOS_Fortran_OpenACC_Flags_Offload_Libs})
-  target_link_options(idfupd.x PRIVATE SHELL:${GEOS_Fortran_OpenACC_Flags_Offload_Libs})
+  target_link_options(GEOSgcm.x PRIVATE SHELL:${GEOS_Fortran_OpenMP_Offload_Flags_Libs})
+  target_link_options(idfupd.x PRIVATE SHELL:${GEOS_Fortran_OpenMP_Offload_Flags_Libs})
 endif ()
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
