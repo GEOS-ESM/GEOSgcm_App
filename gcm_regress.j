@@ -456,6 +456,16 @@ if( $RUN_STARTSTOP == TRUE ) then
    foreach chk ( $chk_file_names )
       /bin/mv -v $chk ${chk}.${nymde1}_${nhmse1}.1
    end
+
+   # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+   # and we need to move those as well if they exist
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+   # Need also make another variable storing all the mkiau_checkpoint files
+   set complete_startstop_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+   foreach chk ( $replay_chk_file_names )
+      /bin/mv -v $chk ${chk}.${nymde1}_${nhmse1}.1
+   end
+
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.1
 
    # Move history as well
@@ -520,6 +530,16 @@ endif
 foreach chk ( $chk_file_names )
    $MOVE_OR_COPY $chk ${chk}.${nymde2}_${nhmse2}.2
 end
+
+# Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+# and we need to move those as well if they exist
+set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+# Need also make another variable storing all the replay checkpoint files
+set complete_layout_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+foreach chk ( $replay_chk_file_names )
+   $MOVE_OR_COPY $chk ${chk}.${nymde1}_${nhmse1}.2
+end
+
 @MOM6 $MOVE_OR_COPY RESTART/MOM.res.nc MOM.res.nc.2
 
 # *Copy* history as well
@@ -607,6 +627,13 @@ if ($RUN_STARTSTOP == TRUE) then
 
    foreach chk ( $chk_file_names )
       /bin/mv -v $chk ${chk}.${nymde3}_${nhmse3}.3
+   end
+
+   # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+   # and we need to move those as well if they exist
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+   foreach chk ( $replay_chk_file_names )
+      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.3
    end
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
 
@@ -703,6 +730,14 @@ if ( $RUN_LAYOUT == TRUE) then
    foreach chk ( $chk_file_names )
       /bin/mv -v $chk ${chk}.${nymde4}_${nhmse4}.4
    end
+
+   # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+   # and we need to move those as well if they exist
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+   foreach chk ( $replay_chk_file_names )
+      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.4
+   end
+
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
 
    # Move history as well
@@ -787,6 +822,32 @@ if ($RUN_STARTSTOP == TRUE) then
    @MOM6      endif
    @MOM6endif
 
+   echo "=== Comparing replay checkpoint files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
+
+   # Check history files
+   foreach chk ( $complete_startstop_replay_chk_file_names )
+   set file1 = ${chk}.${nymde1}_${nhmse1}.1
+   set file2 = ${chk}.${nymde3}_${nhmse3}.3
+   if( -e $file1 && -e $file2 ) then
+         set check = true
+         if( $check == true ) then
+            echo Comparing ${chk}
+
+            # compare checkpoint files
+            ${NCCMP} $file1 $file2
+            if( $status == 0 ) then
+               echo Start-Stop Success!
+               echo " "
+            else
+               echo Start-Stop Failed!
+               echo " "
+               set startstop_pass = false
+            endif
+
+         endif
+   endif
+   end
+
    echo "=== Comparing history files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
    # Check history files
@@ -798,7 +859,7 @@ if ($RUN_STARTSTOP == TRUE) then
          if( $check == true ) then
             echo Comparing ${hist}
 
-   # compare history files
+            # compare history files
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -898,6 +959,32 @@ if ($RUN_LAYOUT == TRUE) then
    @MOM6         endif
    @MOM6      endif
    @MOM6endif
+
+   echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
+
+   # Check history files
+   foreach chk ( $complete_layout_replay_chk_file_names )
+   set file1 = ${chk}.${nymde2}_${nhmse4}.2
+   set file2 = ${chk}.${nymde2}_${nhmse4}.4
+   if( -e $file1 && -e $file2 ) then
+         set check = true
+         if( $check == true ) then
+            echo Comparing ${chk}
+
+   # compare checkpoint files
+            ${NCCMP} $file1 $file2
+            if( $status == 0 ) then
+               echo Layout Success!
+               echo " "
+            else
+               echo Layout Failed!
+               echo " "
+               set layout_pass = false
+            endif
+
+         endif
+   endif
+   end
 
    echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
 
