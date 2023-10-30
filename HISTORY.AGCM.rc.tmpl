@@ -6,6 +6,7 @@ EXPSRC: @EXPSRC
 
 COLLECTIONS: 'geosgcm_prog'
 #             'prog.eta'
+             'geosgcm_gigatraj'
              'geosgcm_surf'
              'geosgcm_ocn'
              'geosgcm_moist'
@@ -74,6 +75,26 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                  'O3'     , 'CHEMISTRY'  ,
                                   ::
 
+  geosgcm_gigatraj.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  geosgcm_gigatraj.archive:          '%c/Y%y4' ,
+  geosgcm_gigatraj.format:           'CFIO' ,
+  geosgcm_gigatraj.deflate:           1 ,
+  geosgcm_gigatraj.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_gigatraj.regrid_method:    'BILINEAR',
+  geosgcm_gigatraj.frequency:         240000 ,
+  geosgcm_gigatraj.vscale:            100.0 ,
+  geosgcm_gigatraj.vunit:            'hPa' ,
+  geosgcm_gigatraj.vvars:            'log(PLE)' , 'DYN' ,
+  geosgcm_gigatraj.levels:            1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.2 0.1 0.07 0.05 0.04 0.03 0.02 ,
+  geosgcm_gigatraj.fields:           'CA.bcphobic', 'CA.bc',
+                                 'CA.ocphobic', 'CA.oc',
+                                 'CA.bcphilic', 'CA.bc',
+                                 'CA.ocphilic', 'CA.oc',
+                                 'CA.bcDP'    , 'CA.bc'  , 'CA.bcDP001;CA.bcDP002',
+                                 'CA.ocWT'    , 'CA.oc'  , 'CA.ocWT001;CA.ocWT002',
+                                  ::
+
+  prog.eta.template:             '%y4%m2%d2_%h2%n2z.nc4' ,
   prog.eta.template:             '%y4%m2%d2_%h2%n2z.nc4' ,
   prog.eta.archive:              '%c/Y%y4' ,
   prog.eta.format:               'CFIO' ,
