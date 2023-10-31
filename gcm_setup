@@ -2161,6 +2161,7 @@ if( $MPI == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
+
 set RESTART_BY_OSERVER = YES
 
 # This turns off an annoying warning when running
