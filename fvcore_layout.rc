@@ -6,6 +6,7 @@
  @FV_STRETCH_FAC
  @FV_TARGET_LON
  @FV_TARGET_LAT
+ compute_coords_locally = .false.
 /
 
 &main_nml
