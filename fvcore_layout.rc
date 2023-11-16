@@ -1,5 +1,6 @@
 &fv_core_nml
  @FV_HYDRO
+ fv_sg_adj = -1
  range_warn = .T.
  fv_debug = .F.
  @FV_SCHMIDT
@@ -30,10 +31,12 @@
   do_evap = .false.
   do_subl = .false.
   do_qa = .false.
-  tau_l2v  = 450.
-  tau_i2v  = 450.
-  tau_revp = 450.
-  tau_frz  = 450.
+  tau_l2v  = 300.
+  tau_i2v  = 300.
+  tau_s2v  = 300.
+  tau_g2v  = 300.
+  tau_revp = 300.
+  tau_frz  = 300.
   dw_land  = 0.05
   dw_ocean = 0.10
   rh_inc = 0.30
