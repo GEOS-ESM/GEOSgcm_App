@@ -783,6 +783,8 @@ if( $OGCM == TRUE ) then
        # c12      1x6        12x72      3x2          72x36        50
        # c90      5x36       90x540     90x2         540x458      50
        # c180     30x36      180x1080   36x30        1440x1080    75
+       #
+       # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
 
        if ( $AGCM_IM == "c12" ) then
           set OGCM_NX = 3
