@@ -804,7 +804,7 @@ if( $OGCM == TRUE ) then
           set OGCM_LM = 75
        else
           echo
-          echo "ERROR: MOM6 is currently only supported for c12, c90 and c180 atmospheric resolutions"
+          echo "ERROR: MOM6 is currently only supported for c12, c90, and c180 atmospheric resolutions"
           exit 1
        endif
     endif
