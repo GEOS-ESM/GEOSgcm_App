@@ -1801,6 +1801,10 @@ set  RATS_PROVIDER = GMICHEM
 if( "$CLDMICRO" == "BACM_1M" ) then
    set DT = 450
    set LONG_DT = 450
+   set SOLAR_DT  = `expr $DT \* 2`
+   set IRRAD_DT  = `expr $DT \* 2`
+   set OCEAN_DT = $IRRAD_DT
+   set GMICHEM_DT = `expr $DT \* 2`
 endif
 
 ASKHB:
