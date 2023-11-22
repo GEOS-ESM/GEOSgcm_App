@@ -1103,7 +1103,7 @@ if( $AGCM_IM ==  "c48" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c90" ) then
-     set       DT = 450
+     set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
@@ -1179,7 +1179,7 @@ if( $AGCM_IM == "c360" ) then
      set POST_NDS = 12
 endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 225
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
@@ -1204,7 +1204,7 @@ if( $AGCM_IM == "c1440" ) then
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
      set SC_SPLIT = 1
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1225,7 +1225,7 @@ if( $AGCM_IM == "c2880" ) then
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
      set SC_SPLIT = 1
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1244,11 +1244,11 @@ if( $AGCM_IM == "c2880" ) then
      set CONVPAR_OPTION = NONE
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 30
+     set       DT = 45
      set SOLAR_DT = 900
      set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
      set SC_SPLIT = 1
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
