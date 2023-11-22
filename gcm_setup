@@ -781,7 +781,7 @@ if( $OGCM == TRUE ) then
        # Atm Res  Atm NXxNY  Atm IMxJM  Ocean NXxNY  Ocean IMxJM  Ocean LM
        # -------  ---------  ---------  -----------  -----------  --------
        # c12      1x6        12x72      3x2          72x36        50
-       # c90      5x36       90x540     90x2         540x448      50
+       # c90      5x36       90x540     90x2         540x458      50
        # c180     30x36      180x1080   36x30        1440x1080    75
 
        if ( $AGCM_IM == "c12" ) then
@@ -794,7 +794,7 @@ if( $OGCM == TRUE ) then
           set OGCM_NX = 90
           set OGCM_NY = 2
           set OGCM_IM = 540
-          set OGCM_JM = 448
+          set OGCM_JM = 458
           set OGCM_LM = 50
        else if ( $AGCM_IM == "c180" ) then
           set OGCM_NX = 36
