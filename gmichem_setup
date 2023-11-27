@@ -780,7 +780,7 @@ if( $OGCM == TRUE ) then
         endif
 
     else if ( "$OCNMODEL" == "MOM6" ) then
-       # For MOM6 we currently have only 3 allowed ocean resolutions based on the 
+       # For MOM6 we currently have only 3 allowed ocean resolutions based on the
        # atmospheric resolution. The allowed are:
        #
        # Atm Res  Atm NXxNY  Atm IMxJM  Ocean NXxNY  Ocean IMxJM  Ocean LM
@@ -2002,6 +2002,7 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                  # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE              # Location of GWD_RIDGE files
               if ( "$OCNMODEL" == "MIT" ) then
                 setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
@@ -2091,6 +2092,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
 
 else
@@ -2128,6 +2130,7 @@ else
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
               set NX = 1
               set NY = 6
@@ -2382,6 +2385,7 @@ if( $MPI == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
+
 set RESTART_BY_OSERVER = YES
 
 # This turns off an annoying warning when running
