@@ -38,8 +38,16 @@ setenv NODE `uname -n`
 
 if ($ARCH == Darwin) then
    set FINDPATH = realpath
+   set PRELOAD_COMMAND = 'DYLD_INSERT_LIBRARIES'
+   set LD_LIBRARY_PATH_CMD = 'DYLD_LIBRARY_PATH'
+   # On macOS we seem to need to call mpirun directly and not use esma_mpirun
+   # For some reason SIP does not let the libraries be preloaded
+   set RUN_CMD = 'mpirun -np '
 else
    set FINDPATH = 'readlink -f'
+   set PRELOAD_COMMAND = 'LD_PRELOAD'
+   set LD_LIBRARY_PATH_CMD = 'LD_LIBRARY_PATH'
+   set RUN_CMD = '$GEOSBIN/esma_mpirun -np '
 endif
 set GCMSETUP = `$FINDPATH $0`
 set BINDIR   = `dirname $GCMSETUP`
@@ -169,8 +177,8 @@ endif
 
 setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
 
-     if ( `echo $BASEDIR | grep -i mvapich2` != '') then
-   set MPI = mvapich2
+     if ( `echo $BASEDIR | grep -i mvapich`  != '') then
+   set MPI = mvapich
 else if ( `echo $BASEDIR | grep -i mpich`    != '') then
    set MPI = mpich
 else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
@@ -388,10 +396,6 @@ if( $HRCODE == 'c180'  | \
 
     set DEFAULT_DO_IOS = TRUE
     echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
-# MVAPICH2 requires ioserver for history (issue with MPI_Put and MAPL)
-else if( $MPI == mvapich2 ) then
-    set DEFAULT_DO_IOS = TRUE
-    echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}YES${CN} or ${C2}TRUE${CN})"
 else
     set DEFAULT_DO_IOS = FALSE
     echo "Do you wish to ${C1}IOSERVER${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
@@ -431,29 +435,50 @@ endif
 ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}sky  (Skylake)${CN} (default)"
-   echo "   ${C2}cas  (Cascade Lake)${CN}"
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      set MODEL = 'sky'
-   endif
 
-   if( $MODEL != 'sky'  & \
-       $MODEL != 'cas' ) goto ASKPROC
+   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
 
-   if ($MODEL == 'sky') then
-      set NCPUS_PER_NODE = 40
-   else if ($MODEL == 'cas') then
-      # NCCS currently recommends that users do not run with
-      # 48 cores per node on SCU16 due to OS issues and
-      # recommends that CPU-intensive works run with 46 or less
-      # cores. As 45 is a multiple of 3, it's the best value
-      # that doesn't waste too much
-      #set NCPUS_PER_NODE = 48
-      set NCPUS_PER_NODE = 45
+   if ("$BUILT_ON_SLES15" == "TRUE") then
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'mil'
+      endif
+
+      if( $MODEL != 'mil' ) goto ASKPROC
+
+      if ($MODEL == 'mil') then
+         # We save a couple processes for the kernel
+         set NCPUS_PER_NODE = 126
+      endif
+   else
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}sky  (Skylake)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'sky'
+      endif
+
+      if( $MODEL != 'sky'  & \
+          $MODEL != 'cas' ) goto ASKPROC
+
+      if ($MODEL == 'sky') then
+         set NCPUS_PER_NODE = 40
+      else if ($MODEL == 'cas') then
+         # NCCS currently recommends that users do not run with
+         # 48 cores per node on SCU16 due to OS issues and
+         # recommends that CPU-intensive works run with 46 or less
+         # cores. As 45 is a multiple of 3, it's the best value
+         # that doesn't waste too much
+         #set NCPUS_PER_NODE = 48
+         set NCPUS_PER_NODE = 45
+      endif
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -613,7 +638,7 @@ if( $OGCM == TRUE ) then
     # suffix is different on Linux and macOS. This is set by configure_file()
     if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
-       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
@@ -623,7 +648,7 @@ if( $OGCM == TRUE ) then
        set MIT  = "#DELETE"
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
-       set OCEAN_PRELOAD = 'env LD_PRELOAD=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -1696,6 +1721,15 @@ if ( $DO_IOS == TRUE ) then
    # multigroup requires at least two backend pes
    if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
 
+   # Next calculate the number of frontend PEs
+   @ NUM_FRONTEND_PES=$NCPUS_PER_NODE - $NUM_BACKEND_PES
+
+   # If models pes is less than frontend, then we need to reduce frontend by increasing backend
+   if ($MODEL_NPES < $NUM_FRONTEND_PES) then
+      @ NUM_FRONTEND_PES=$MODEL_NPES - 2
+      @ NUM_BACKEND_PES=$NCPUS_PER_NODE - $NUM_FRONTEND_PES
+   endif
+
    # Calculate the total number of nodes to request from batch
    @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
 
@@ -2153,9 +2187,13 @@ cat > $HOMDIR/SETENV.commands << EOF
 EOF
 
 # The below settings seem to be recommended for hybrid
-# systems using MVAPICH2 but could change
+# systems using MVAPICH but could change
 
-else if( $MPI == mvapich2 ) then
+else if( $MPI == mvapich ) then
+
+# MVAPICH and GEOS has issues with restart writing. Having the
+# oserver write them seems to...work
+set RESTART_BY_OSERVER = YES
 
 cat > $HOMDIR/SETENV.commands << EOF
    setenv MV2_ENABLE_AFFINITY     0
@@ -2230,6 +2268,17 @@ setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
 EOF
 
 endif # if NOT Singularity
+
+# Testing on SLES15 showed that the mlx provider did not seem
+# to work at scale. So we move to use the verbs provider. Note:
+# still seems to have issues at c720
+if ("$BUILT_ON_SLES15" == "TRUE") then
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_OFI_PROVIDER verbs
+setenv I_MPI_COLL_EXTERNAL 0
+EOF
+
+endif # if SLES15
 
 endif # if NCCS
 
@@ -2440,6 +2489,10 @@ s/@MP_TURN_OFF_WSUB_EXTDATA/$MP_TURN_OFF_WSUB_EXTDATA/g
 s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
+
+s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
+s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
+s?@RUN_CMD?$RUN_CMD?g
 
 EOF
 
