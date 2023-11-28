@@ -788,8 +788,11 @@ if( $OGCM == TRUE ) then
        set JMO = 0$JMO
     endif
 
-    set OCEAN_RES = TM${IMO}xTM${JMO}
-    if( "$OCNMODEL" == "MIT" ) then
+    if( "$OCNMODEL" == "MOM5" ) then
+      set OCEAN_RES = M5TP${IMO}x${JMO}
+    else if( "$OCNMODEL" == "MOM6" ) then 
+      set OCEAN_RES = M6TP${IMO}x${JMO}
+    else if( "$OCNMODEL" == "MIT" ) then
       set OCEAN_RES = ${OGRIDTYP}${IMO}x${OGRIDTYP}${JMO}
     endif
     set OCEAN_TAG  = Reynolds
@@ -1451,7 +1454,7 @@ else
 endif
 
     if( $LSM_BCS == 1 ) then
-                        set LSM_BCS = "Icarus"
+                        set LSM_BCS = "ICA"
                         set LSM_PARMS = "#DELETE"
                         set EMIP_BCS_IN = "Ganymed-4_0"
                         set EMIP_OLDLAND = ""
@@ -1459,7 +1462,7 @@ endif
                         set EMIP_MERRA2  = "MERRA2"
     endif
     if( $LSM_BCS == 2 ) then
-                        set LSM_BCS = "Icarus-NLv3"
+                        set LSM_BCS = "NL3"
                         set LSM_PARMS = ""
                         set EMIP_BCS_IN = "Icarus-NLv3"
                         set EMIP_OLDLAND = "#DELETE"
@@ -1469,7 +1472,7 @@ endif
 
 # Check for Catch-Carbon
 # ----------------------
-if( $LSM_BCS == "Icarus-NLv3" ) then
+if( $LSM_BCS == "NL3" ) then
     LSM_CHOICE:
     echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"
     set   LSM_CHOICE = $<
@@ -1788,7 +1791,7 @@ else if( $SITE == 'NCCS' ) then
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
-              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/legacy_bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
+              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS}    # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data        # Default Analysis Location   for M2 REPLAY
@@ -1800,14 +1803,14 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/ssd/aogcm             # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
               if (${OGRIDTYP} == "LL") then
                 setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
               endif
               if ( "$OCNMODEL" == "MIT" ) then
-                setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos Forcing
-              endif
+                setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos 
+	      endif
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BATCH_CMD "sbatch"                                                    # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                    # SLURM Syntax for account name
@@ -2313,6 +2316,7 @@ s?@COUPLED?$COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
 s?@MOM5?$MOM5?g
 s?@MOM6?$MOM6?g
+s?@OCNMODEL?$OCNMODEL?g
 s?@CICE4?$CICE4?g
 s?@CICE6?$CICE6?g
 s?>>>HIST_CICE4<<<?$HIST_CICE4?g
@@ -2658,7 +2662,7 @@ endif
 
 # Update LAND_PARAMS Choices
 # ------------------------------------------------------------------
-if( $LSM_BCS == "Icarus-NLv3" ) then
+if( $LSM_BCS == "NL3" ) then
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 else
