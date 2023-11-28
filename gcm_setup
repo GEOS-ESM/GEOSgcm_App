@@ -2172,6 +2172,24 @@ cat > $HOMDIR/SETENV.commands << EOF
    setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
 EOF
 
+# Testing by Bill Putman determined some useful
+# Open MPI parameters
+if ("$BUILT_ON_SLES15" == "TRUE") then
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv OMPI_MCA_mpi_preconnect_all 1
+setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
+setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
+setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 4
+setenv OMPI_MCA_coll_tuned_allreduce_algorithm 4
+setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
+setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
+setenv OMPI_MCA_coll_tuned_gather_algorithm 0
+setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+setenv OMPI_MCA_sharedfp "^lockedfile,individual"
+EOF
+endif # if SLES15
+
 # The below settings seem to be recommended for hybrid
 # systems using MVAPICH but could change
 
