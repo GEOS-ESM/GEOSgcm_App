@@ -333,22 +333,21 @@ cat << _EOF_ > $FILE
 
 @MOM5/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
 @MOM6/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@MIT/bin/ln  -sf /nobackupp18/afahad/GEOSMITgcmFiles/SEAWIFS_KPAR_mon_clim.data SEAWIFS_KPAR_mon_clim.data
+@MIT/bin/ln  -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
 @MOM5/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
 @MOM6/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
+@MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
 ## Should include this >>>MOM5<<</bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 ## Should include this >>>MOM6<<</bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
-@MIT/bin/ln  -sf /nobackupp18/afahad/GEOSMITgcmFiles/CF0090x6C_LL5400xLL0015-Pfafstetter.til   tile.data
 @MOM5/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
 @MOM6/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin 
-@MIT/bin/ln  -sf /nobackupp18/afahad/GEOSMITgcmFiles/CF0090x6C_LL5400xLL0015-Pfafstetter.TRN   runoff.bin
+@MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
 @MOM5/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
 @MOM6/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
-@MIT/bin/ln  -sf $GRIDDIR/mit.ascii
+@MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/mit.ascii
 @MOM5/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 @MOM6/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MIT/bin/ln  -sf $GRIDDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MIT/bin/ln  -sf /nobackupp18/afahad/GEOSMITgcmFiles/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
+@MIT/bin/ln  -sf @COUPLEDIR/@OCNMODEL/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
 # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP

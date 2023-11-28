@@ -689,47 +689,10 @@ if( $OGCM == TRUE ) then
     # ------------------------
     CORSLV:
     if( "$OCNMODEL" == "MIT" ) then
-        echo "Enter the ${C1}Ocean Horizontal Resolution: ${C2}llc90${CN} (1-deg, Lat-Lon-Cube) Default"
-        echo "                                            ${C2}llc1080${CN} (1/12-deg, Lat-Lon-Cube)"
-        echo "                                            ${C2}llc2160${CN} (1/24-deg, Lat-Lon-Cube)"
-        echo "                                            ${C2}llc270${CN} (1/3-deg, Lat-Lon-Cube)"
-        echo "                                            ${C2}cs32${CN}   (5-deg, cubed-sphere)"
-        set Resolution = `echo $<`
-        if( .$Resolution == . ) then
-           set Resolution = 'llc90'
-        endif
-
-        set num = $#Resolution
-        if ($Resolution[1] == "cs32" ) then
-            set OGCM_JM = 32
-            set OGCM_IM  = `expr $OGCM_JM \* 6`
-            set OGRIDTYP  = "CM"
-            set DOLEV = 15
-        else if ($Resolution[1] == "llc90" ) then
-            set OGRIDTYP  = "LL"
-            if ($AGCM_IM == c48) then
-                set OGCM_JM = 30
-                set OGCM_IM = `expr $OGCM_JM \* 96`
-            else
-                set OGCM_JM = 15
-                set OGCM_IM = `expr $OGCM_JM \* 360`
-            endif
-        else if ($Resolution[1] == "llc1080" ) then
-            set OGRIDTYP  = "LL"
-            if ($AGCM_IM == c720) then
-                set OGCM_JM = 60
-                set OGCM_IM = `expr $OGCM_JM \* 2880`
-            endif
-        else if ($Resolution[1] == "llc2160" ) then
-            set OGRIDTYP  = "LL"
-            set DOLEV = 90
-            if ($AGCM_IM == c1440) then
-                set OGCM_JM = 72
-                set OGCM_IM = `expr $OGCM_JM \* 7776`
-            endif
-        else
-            goto CORSLV
-        endif
+        set OGRIDTYP  = "LL"
+        set OGCM_JM = 15
+        set OGCM_IM = `expr $OGCM_JM \* 360`
+        
     else
         if ( $OCEAN_NAME == "MOM" ) then
            set Resolution = `echo 360 200`
