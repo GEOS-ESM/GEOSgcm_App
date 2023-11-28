@@ -2369,7 +2369,9 @@ cat > $HOMDIR/SETENV.commands << EOF
 EOF
 
 # Testing by Bill Putman determined some useful
-# Open MPI parameters
+# Open MPI parameters. Since we trigger off 
+# of BUILT_ON_SLES15, we only set these on NCCS
+if ( $SITE == 'NCCS' ) then 
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv OMPI_MCA_mpi_preconnect_all 1
@@ -2385,6 +2387,7 @@ setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
 setenv OMPI_MCA_sharedfp "^lockedfile,individual"
 EOF
 endif # if SLES15
+endif # if NCCS
 
 # The below settings seem to be recommended for hybrid
 # systems using MVAPICH but could change
