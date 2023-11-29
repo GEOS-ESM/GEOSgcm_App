@@ -1299,11 +1299,11 @@ if( $AGCM_IM == "c360" ) then
      set POST_NDS = 12
 endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 225
+     set       DT = 300
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 450
+     set  LONG_DT = $DT
      set GMICHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1324,7 +1324,7 @@ if( $AGCM_IM == "c1440" ) then
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
      set GMICHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1345,7 +1345,7 @@ if( $AGCM_IM == "c2880" ) then
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
      set GMICHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1364,11 +1364,11 @@ if( $AGCM_IM == "c2880" ) then
      set CONVPAR_OPTION = NONE
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 30
+     set       DT = 45
      set SOLAR_DT = 900
      set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
      set GMICHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1440,7 +1440,7 @@ if( $AGCM_IM == "c1080" ) then
      set SOLAR_DT = 900
      set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
      set GMICHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1080
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1463,7 +1463,7 @@ if( $AGCM_IM == "c1536" ) then
      set SOLAR_DT = 900
      set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 900
+     set  LONG_DT = 300
      set GMICHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1824,6 +1824,10 @@ set  RATS_PROVIDER = GMICHEM
 if( "$CLDMICRO" == "BACM_1M" ) then
    set DT = 450
    set LONG_DT = 450
+   set SOLAR_DT  = `expr $DT \* 2`
+   set IRRAD_DT  = `expr $DT \* 2`
+   set OCEAN_DT = $IRRAD_DT
+   set GMICHEM_DT = `expr $DT \* 2`
 endif
 
 ASKHB:
