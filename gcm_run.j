@@ -317,6 +317,7 @@ setenv EMISSIONS @EMISSIONS
 
 @MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 @MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
+
 #this is hard-wired for NAS for now - should make it more general
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
 
