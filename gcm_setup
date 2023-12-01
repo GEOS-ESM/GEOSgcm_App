@@ -1728,23 +1728,23 @@ if( $SITE == 'NAS' ) then
 
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
 
-              setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                              # batch queue name for gcm_run.j
-              setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_run.j
-              setenv    RUN_FP  "PBS -l select=24:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"           # PE Configuration for gcm_forecast.j
-              setenv    POST_Q  "PBS -q normal"                                                                                # batch queue name for gcm_post.j
-              setenv    PLOT_Q  "PBS -q normal"                                                                                # batch queue name for gcm_plot.j
-              setenv    MOVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_moveplot.j
-              setenv ARCHIVE_Q  "PBS -q normal"                                                                                # batch queue name for gcm_archive.j
-              setenv    POST_P  "PBS -l select=${NPCUS}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"     # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=1:model=${MODEL}"                            # PE Configuration for gcm_plot.j
-              setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"            # PE Configuration for gcm_archive.j
-              setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                      # PE Configuration for gcm_moveplot.j
+              setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                          # batch queue name for gcm_run.j
+              setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}" # PE Configuration for gcm_run.j
+              setenv    RUN_FP  "PBS -l select=24:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"       # PE Configuration for gcm_forecast.j
+              setenv    POST_Q  "PBS -q normal"                                                                            # batch queue name for gcm_post.j
+              setenv    PLOT_Q  "PBS -q normal"                                                                            # batch queue name for gcm_plot.j
+              setenv    MOVE_Q  "PBS -q normal"                                                                            # batch queue name for gcm_moveplot.j
+              setenv ARCHIVE_Q  "PBS -q normal"                                                                            # batch queue name for gcm_archive.j
+              setenv    POST_P  "PBS -l select=${NPCUS}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}" # PE Configuration for gcm_post.j
+              setenv    PLOT_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=1:model=${MODEL}"                        # PE Configuration for gcm_plot.j
+              setenv ARCHIVE_P  "PBS -l select=1:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"        # PE Configuration for gcm_archive.j
+              setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                  # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
-              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG} # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                         # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                         # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                # Default Analysis Location   for M2 REPLAY
+              setenv BCSDIR     ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS}                            # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                                                    # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
@@ -1754,16 +1754,11 @@ if( $SITE == 'NAS' ) then
               if (${OGRIDTYP} == "LL") then
                 setenv SSTDIR /nobackupp2/estrobac/geos5/SSTDIR
               endif
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3            # locations of Aerosol Chemistry BCs
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                  # Coupled Ocean/Atmos Forcing
-              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE              # Location of GWD_RIDGE files
-              if ( "$OCNMODEL" == "MIT" ) then
-                setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
-              else
-                setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                # Coupled Ocean/Atmos Forcing
-              endif
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
+	      setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
+
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -1792,10 +1787,10 @@ else if( $SITE == 'NCCS' ) then
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
-              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS}    # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID x0039                                                     # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039   # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data        # Default Analysis Location   for M2 REPLAY
+              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS}  # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID x0039                                                   # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
 
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
@@ -1805,13 +1800,11 @@ else if( $SITE == 'NCCS' ) then
               setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/osse2/stage/BCS_FILES/GWD_RIDGE        # Location of GWD_RIDGE files
               if (${OGRIDTYP} == "LL") then
                 setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
               endif
-              if ( "$OCNMODEL" == "MIT" ) then
-                setenv COUPLEDIR  /gpfsm/dnb32/estrobac/geos5/GRIDDIR                  # Coupled Ocean/Atmos 
-	      endif
+              
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BATCH_CMD "sbatch"                                                    # SLURM Batch command
               setenv BATCH_GROUP DELETE                                                    # SLURM Syntax for account name
@@ -1838,21 +1831,20 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
 
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
-              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
+              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     /home/$LOGNAME                                          # user work directory
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean        # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                               # Location of GWD_RIDGE files
 
 else
 # These are defaults for the desktop
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
-              setenv BATCH_GROUP "SBATCH --account="                                    # SLURM Syntax for account name
+              setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
               setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
               setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
@@ -1875,17 +1867,16 @@ else
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
-              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                                                # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                                # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
+              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG} # location of Boundary Conditions
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                            # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
 
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
+              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
-              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
               set NX = 1
               set NY = 6
               # By default on desktop, just ignore IOSERVER for now
@@ -2294,7 +2285,6 @@ s?@ICEFILE?$ICEFILE?g
 s?@KPARFILE?$KPARFILE?g
 s?@CHMDIR?$CHMDIR?g
 s?@COUPLEDIR?$COUPLEDIR?g
-s?@shared_COUPLED?$shared_COUPLED?g
 s?@GWDRSDIR?$GWDRSDIR?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
