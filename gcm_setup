@@ -1908,6 +1908,8 @@ setenv I_MPI_OFI_PROVIDER verbs
 setenv I_MPI_COLL_EXTERNAL 0
 EOF
 
+endif # built on SLES15
+
 endif # if NCCS
 
 endif # if mpi
