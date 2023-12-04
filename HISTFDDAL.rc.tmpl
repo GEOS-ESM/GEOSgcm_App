@@ -5,6 +5,8 @@
 EXPID:  @EXPID
 EXPDSC: @EXPDSC
 
+CONTACT: 'http://gmao.gsfc.nasa.gov'
+
 COLLECTIONS: 'asm.eta'
              'bkg.eta'
              'bkg.sfc'
@@ -593,7 +595,7 @@ COLLECTIONS: 'asm.eta'
                               'TAUYI'    , 'SURFACE'     ,  'TAUYICE'  ,
                               'FRACI'    , 'SURFACE'     ,  'FRSEAICE' ,
                               'TSKINW'   , 'SURFACE'     ,  'TSKINWTR' ,
-                              'TSKINI'   , 'SURFACE'     ,  'TSKINICE' ,
+                              'TSKINICE' , 'SURFACE'     ,
                                ::
 
   tavg1_2d_int_Nx.format:    'CFIO',
@@ -956,10 +958,10 @@ COLLECTIONS: 'asm.eta'
                            'SO4',              'SU'      , 
                            'MSA',              'SU'      , 
 # Carbonaceous (main)
-                           'CAphobicCA.bc',     'CA.bc'   , 'BCphobic' ,
-                           'CAphilicCA.bc',     'CA.bc'   , 'BCphilic' ,
-                           'CAphobicCA.oc',     'CA.oc'   , 'OCphobic' ,
-                           'CAphilicCA.oc',     'CA.oc'   , 'OCphilic' ,
+                           'CA.bcphobic',     'CA.bc'   , 'BCphobic' ,
+                           'CA.bcphilic',     'CA.bc'   , 'BCphilic' ,
+                           'CA.ocphobic',     'CA.oc'   , 'OCphobic' ,
+                           'CA.ocphilic',     'CA.oc'   , 'OCphilic' ,
                            ::
  
   tavg2d_chm_x.format:     'CFIO',
@@ -1057,20 +1059,20 @@ COLLECTIONS: 'asm.eta'
                            'SUPMSA'      , 'SU'      ,
                            'SUEXTTAU'    , 'SU'      ,
                            'SUSCATAU'    , 'SU'      ,
-                           'CAEMCA.bc'     , 'CA.bc'    , 'BCEM001;BCEM002' ,
-                           'CADPCA.bc'     , 'CA.bc'    , 'BCDP001;BCDP002' ,
-                           'CAWTCA.bc'     , 'CA.bc'    , 'BCWT001;BCWT002' ,
-                           'CASMASSCA.bc'  , 'CA.bc'    , 'BCSMASS'  ,
-                           'CACMASSCA.bc'  , 'CA.bc'    , 'BCCMASS'  ,
-                           'CAEXTTAUCA.bc' , 'CA.bc'    , 'BCEXTTAU' ,
-                           'CASCATAUCA.bc' , 'CA.bc'    , 'BCSCATAU' ,
-                           'CAEMCA.oc'     , 'CA.oc'    , 'OCEM001;OCEM002' ,
-                           'CADPCA.oc'     , 'CA.oc'    , 'OCDP001;OCDP002' ,
-                           'CAWTCA.oc'     , 'CA.oc'    , 'OCWT001;OCWT002' ,
-                           'CASMASSCA.oc'  , 'CA.oc'    , 'OCSMASS' ,
-                           'CACMASSCA.oc'  , 'CA.oc'    , 'OCCMASS' ,
-                           'CAEXTTAUCA.oc' , 'CA.oc'    , 'OCEXTTAU' ,
-                           'CASCATAUCA.oc' , 'CA.oc'    , 'OCSCATAU' ,
+                           'CA.bcEM'     , 'CA.bc'    , 'BCEM001;BCEM002' ,
+                           'CA.bcDP'     , 'CA.bc'    , 'BCDP001;BCDP002' ,
+                           'CA.bcWT'     , 'CA.bc'    , 'BCWT001;BCWT002' ,
+                           'CA.bcSMASS'  , 'CA.bc'    , 'BCSMASS'  ,
+                           'CA.bcCMASS'  , 'CA.bc'    , 'BCCMASS'  ,
+                           'CA.bcEXTTAU' , 'CA.bc'    , 'BCEXTTAU' ,
+                           'CA.bcSCATAU' , 'CA.bc'    , 'BCSCATAU' ,
+                           'CA.ocEM'     , 'CA.oc'    , 'OCEM001;OCEM002' ,
+                           'CA.ocDP'     , 'CA.oc'    , 'OCDP001;OCDP002' ,
+                           'CA.ocWT'     , 'CA.oc'    , 'OCWT001;OCWT002' ,
+                           'CA.ocSMASS'  , 'CA.oc'    , 'OCSMASS' ,
+                           'CA.ocCMASS'  , 'CA.oc'    , 'OCCMASS' ,
+                           'CA.ocEXTTAU' , 'CA.oc'    , 'OCEXTTAU' ,
+                           'CA.ocSCATAU' , 'CA.oc'    , 'OCSCATAU' ,
                            ::
  
  tavg3d_aer_p.format:     'CFIO' ,
@@ -1092,8 +1094,8 @@ COLLECTIONS: 'asm.eta'
                           'AIRDENS'     , 'CHEMENV'    ,
                           'DUMASS'      , 'DU'         , 'DU'        ,
                           'SSMASS'      , 'SS'         , 'SS'        ,
-                          'CAMASSCA.bc' , 'CA.bc'      , 'BC'        ,
-                          'CAMASSCA.oc' , 'CA.oc'      , 'OC'        ,
+                          'CA.bcMASS' , 'CA.bc'      , 'BC'        ,
+                          'CA.ocMASS' , 'CA.oc'      , 'OC'        ,
                           'SO2'         , 'SU'         , 'SO2'       ,
                           'SO4'         , 'SU'         , 'SO4'       ,
                           ::
@@ -1113,8 +1115,8 @@ COLLECTIONS: 'asm.eta'
                            'DUEXTTAU'      , 'DU'       ,
                            'SSEXTTAU'      , 'SS'       ,
                            'SUEXTTAU'      , 'SU'       ,
-                           'CAEXTTAUCA.bc' , 'CA.bc'    , 'BCEXTTAU'   ,
-                           'CAEXTTAUCA.oc' , 'CA.oc'    , 'OCEXTTAU'   ,
+                           'CA.bcEXTTAU' , 'CA.bc'    , 'BCEXTTAU'   ,
+                           'CA.ocEXTTAU' , 'CA.oc'    , 'OCEXTTAU'   ,
                            'CO2CL001'      , 'GOCART'   ,
                            'COCL'          , 'GOCART'   ,
                            'TOX'           , 'AGCM'     , 'O3DU'       ,
@@ -1254,8 +1256,8 @@ COLLECTIONS: 'asm.eta'
   gaas_bkg.sfc.fields:     'U10M;V10M'      , 'SURFACE' ,
                            'DUEXTTAU'       , 'DU'      ,
                            'SSEXTTAU'       , 'SS'      ,
-                           'CAEXTTAUCA.bc'  , 'CA.bc'   , 'BCEXTTAU' ,
-                           'CAEXTTAUCA.oc'  , 'CA.oc'   , 'OCEXTTAU' ,
+                           'CA.bcEXTTAU'  , 'CA.bc'   , 'BCEXTTAU' ,
+                           'CA.ocEXTTAU'  , 'CA.oc'   , 'OCEXTTAU' ,
                            'SUEXTTAU'       , 'SU'      ,
                            'NIEXTTAU'       , 'NI'      ,
                            'TOTEXTTAU'      , 'GOCART2G'   ,

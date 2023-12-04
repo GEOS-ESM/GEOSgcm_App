@@ -571,11 +571,6 @@ endif
      set FORCEDAS = "#"
      set FORCEGCM = "#"
 
-# Set Default Convert Parameters
-# ------------------------------
-     set CNV_NX = 2
-     set CNV_NY = 24     # Best set to number of cores per node
-
 # Set Default Readers and Writers
 # -------------------------------
      set NUM_READERS = 1
@@ -781,7 +776,6 @@ if( $AGCM_IM == "1152" ) then
      set OCEAN_DT = $IRRAD_DT
      endif
      set ATMOStag = DC1152xPC0721
-     set   CNV_NX = 4
      set POST_NDS = 12
 endif
 if( $AGCM_IM == "c360" ) then
@@ -802,7 +796,6 @@ if( $AGCM_IM == "c360" ) then
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOStag = CF0360x6C
-     set   CNV_NX = 4
      set POST_NDS = 12
 endif
 if( $AGCM_IM == "c500" ) then
@@ -823,7 +816,6 @@ if( $AGCM_IM == "c500" ) then
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOStag = CF0500x6C
-     set   CNV_NX = 8
      set POST_NDS = 12
      set USE_SHMEM = 1
 endif
@@ -845,7 +837,6 @@ if( $AGCM_IM == "c720" ) then
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
      set ATMOStag = CF0720x6C
-     set   CNV_NX = 8
      set POST_NDS = 16
      set USE_SHMEM = 1
 endif
@@ -867,7 +858,6 @@ if( $AGCM_IM == "c1440" ) then
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOStag = CF1440x6C
-     set   CNV_NX = 8
      set POST_NDS = 32
      set USE_SHMEM = 1
 endif
@@ -1060,7 +1050,6 @@ set  RATS_PROVIDER   = PCHEM
 #######################################################################
 
 @ NPES = $NX * $NY
-@ CNV_NPES = $CNV_NX * $CNV_NY
 # Here we need to convert POST_NDS to total tasks. Using 16 cores
 # per task as a good default
 @ POST_NPES = $POST_NDS * 16
@@ -1076,10 +1065,6 @@ setenv SITE `$GEOSDEF/src/g5_modules site`
               setenv ARCHIVE_N  `echo $EXPID | cut -b1-11`_`echo $EXPYR `A`echo $ENSM`   # ARCHIVE  Job Name
               setenv ARCHIVE_D  `echo $ARCHBASE/Y$EXPYR/$EXPID/ens$ENSM`                 # ARCHIVE  Path Name
               setenv REGRESS_N  `echo $EXPID | cut -b1-10`_RGRS                          # REGRESS  Job Name
-              setenv CONVERT_N  `echo $EXPID | cut -b1-11`_CNV                           # CONVERT  Job Name
-
-# Default converter time
-              setenv CONVERT_T  "0:15:00"                                              # Wallclock Time   for gcm_convert.j
 
 if( $SITE == 'NAS' ) then
               setenv BATCH_GROUP "PBS -W group_list="                                  # PBS Syntax for GROUP
@@ -1110,7 +1095,6 @@ if( $SITE == 'NAS' ) then
               setenv    POST_P  "PBS -l select=${POST_NDS}:ncpus=24:mpiprocs=24:model=has" # PE Configuration for gcm_post.j
               setenv    PLOT_P  "PBS -l select=2:ncpus=24:mpiprocs=24:model=has"           # PE Configuration for gcm_plot.j
               setenv ARCHIVE_P  "PBS -l select=1:ncpus=24:mpiprocs=24:model=has"           # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "PBS -l select=${CNV_NX}:ncpus=24:mpiprocs=24:model=has"   # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                  # PE Configuration for gcm_moveplot.j
               setenv BCSDIR     /nobackup/gmao_SIteam/ModelData/bcs/Ganymed-4_0/$BCSTAG # location of     Boundary Conditions
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
@@ -1153,9 +1137,8 @@ else if( $SITE == 'NCCS' ) then
               setenv    POST_P  "SBATCH --ntasks=${POST_NPES}"                         # PE Configuration for gcm_post.j
               setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                          # PE Configuration for gcm_plot.j
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  "SBATCH --ntasks=${CNV_NPES}"                          # PE Configuration for gcm_convert.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                    # PE Configuration for gcm_moveplot.j
-              setenv BCSDIR     /discover/nobackup/ltakacs/bcs/Ganymed-4_0/$BCSTAG     # location of     Boundary Conditions
+              setenv BCSDIR     /discover/nobackup/projects/gmao/bcs_shared/legacy_bcs/Ganymed-4_0/$BCSTAG     # location of     Boundary Conditions
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/dao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
@@ -1186,7 +1169,6 @@ else
               setenv    POST_P  NULL                                                   # PE Configuration for gcm_run.j
               setenv    PLOT_P  NULL                                                   # PE Configuration for gcm_post.j
               setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
-              setenv CONVERT_P  NULL                                                   # PE Configuration for gcm_convert.j
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
               setenv BCSDIR     /ford1/share/gmao_SIteam/ModelData/bcs/Ganymed-4_0/$BCSTAG         # location of     Boundary Conditions
               setenv SSTDIR     /ford1/share/gmao_SIteam/ModelData/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
@@ -1201,8 +1183,6 @@ else
                  set NX = 2
                  set NY = 4
               endif
-              set CNV_NX = ${NX}
-              set CNV_NY = ${NY}
 endif
 
 
@@ -1389,11 +1369,6 @@ set root = `echo $EXPDIR | cut -d / -f$n`
 end
 if( -e $HOME/.EXPDIRroot ) /bin/rm $HOME/.EXPDIRroot
 echo $EXPDIRroot > $HOME/.EXPDIRroot
-
-# Set CNVDIR alias
-# ----------------
-
-setenv CNVDIR $EXPDIR/convert
 
 #######################################################################
 #                       Locate Build Directory  
@@ -1634,7 +1609,6 @@ set FILES = "gcm_run_CPLFCST360S2S.j \
              gcm_archive.j      \
              gcm_archive_CPLFCST.j     \
              gcm_regress.j      \
-             gcm_convert.j      \
              gcm_plot.tmpl      \
              gcm_quickplot.csh  \
              gcm_moveplot.j     \
@@ -1724,11 +1698,6 @@ s?@ARCHIVE_P?$ARCHIVE_P?g
 s?@ARCHIVE_Q?$ARCHIVE_Q?g
 s?@ARCHIVE_D?$ARCHIVE_D?g
 s?@REGRESS_N?$REGRESS_N?g
-s?@CONVERT_N?$CONVERT_N?g
-s?@CONVERT_P?$CONVERT_P?g
-s?@CONVERT_T?$CONVERT_T?g
-s?@CNV_NX?$CNV_NX?g
-s?@CNV_NY?$CNV_NY?g
 s?@BCSDIR?$BCSDIR?g
 s?@SSTDIR?$SSTDIR?g
 s?@SSTNAME?$SSTNAME?g
@@ -1740,7 +1709,6 @@ s?@COUPLEDIR?$COUPLEDIR?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
-s?@CNVDIR?$CNVDIR?g
 s?@BATCH_GROUP?${BATCH_GROUP}${GROUP}?g
 s?@BATCH_TIME?$BATCH_TIME?g
 s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
@@ -1768,6 +1736,7 @@ s?@DASTUNING?#?g
 s?>>>FORCEDAS<<<?$FORCEDAS?g
 s?>>>FORCEGCM<<<?$FORCEGCM?g
 s?@COUPLED?$COUPLED?g
+s?@shared_COUPLED?$shared_COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
 s?>>>FORCAST<<<?$FORCAST?g
 s?@DATAOCEAN?$DATAOCEAN?g
@@ -1782,7 +1751,7 @@ s?>>>REGULAR_REPLAY<<<?#?g
 s?>>>REGULAR_REPLAY_GMAO<<<?#?g
 s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
 s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
-s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/share/gmao_ops/verification/MERRA2_MEANS/ana/Y%y4/M%m2/MERRA-2.ana.eta.%y4%m2%d2_%h2z.nc4?g
+s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@OX_RELAXTIME?259200.?g
 s?@PCHEM_CLIM_YEARS?228?g
@@ -1935,7 +1904,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_convert.j gcm_regress.j gcm_post_full.j gcm_post_part.j gcm_plot.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_regress.j gcm_post_full.j gcm_post_part.j gcm_plot.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -1949,7 +1918,6 @@ if( -e $EXPDIR/$FILE ) set LOCDIR = $EXPDIR
 end
 
 chmod   +x $HOMDIR/gcm_run.j
-chmod   +x $HOMDIR/gcm_convert.j
 chmod   +x $HOMDIR/gcm_forecast.setup
 chmod   +x $HOMDIR/gcm_regress.j
 chmod   +x $HOMDIR/gcm_post_full.j
@@ -1966,7 +1934,6 @@ if(! -e $EXPDIR/plot      ) mkdir -p $EXPDIR/plot
 if(! -e $EXPDIR/archive   ) mkdir -p $EXPDIR/archive
 if(! -e $EXPDIR/regress   ) mkdir -p $EXPDIR/regress
 if(! -e $EXPDIR/forecasts ) mkdir -p $EXPDIR/forecasts
-if(! -e $EXPDIR/convert   ) mkdir -p $EXPDIR/convert
 
 if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
@@ -1980,7 +1947,6 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/gcm_moveplot.j      $EXPDIR/plot
 /bin/mv $HOMDIR/gcm_archive.j       $EXPDIR/archive
 /bin/mv $HOMDIR/gcm_regress.j       $EXPDIR/regress
-/bin/mv $HOMDIR/gcm_convert.j       $EXPDIR/convert
 /bin/mv $HOMDIR/gcm_forecast.tmpl   $EXPDIR/forecasts
 /bin/mv $HOMDIR/gcm_forecast.setup  $EXPDIR/forecasts
 /bin/cp $GEOSUTIL/post/plot_CPLFCST.rc      $EXPDIR/plot/plot.rc
@@ -2392,7 +2358,6 @@ EXPDIR/plot/gcm_quickplot.csh
 EXPDIR/plot/gcm_moveplot.j
 EXPDIR/archive/gcm_archive.j
 EXPDIR/regress/gcm_regress.j
-EXPDIR/convert/gcm_convert.j
 EXPDIR/forecasts/gcm_forecast.tmpl
 EXPDIR/forecasts/gcm_forecast.setup
 EXPDIR/plot/plot.rc
@@ -2469,7 +2434,6 @@ echo "$NEWHOMDIR" >> $NEWEXPDIR/.HOMDIR
 cat > $SEDFILE << EOF
 /^setenv \+EXPDIR/ s#$OLDEXPDIR#$NEWEXPDIR#
 /^setenv \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
-/^setenv \+CNVDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
 /^setenv \+EXPID/  s#$OLDEXPID#$NEWEXPID#
 /^EXPID:/  s#$OLDEXPID#$NEWEXPID#
 /GEOSUTIL\/post\/gcmpost.script/ s#$OLDEXPDIR#$NEWEXPDIR#
@@ -2501,7 +2465,6 @@ end
    set MOVE_N=`echo $NEWEXPID | cut -b1-11`_MOVE
 set ARCHIVE_N=`echo $NEWEXPID | cut -b1-10`_ARCH
 set REGRESS_N=`echo $NEWEXPID | cut -b1-10`_RGRS
-set CONVERT_N=`echo $NEWEXPID | cut -b1-11`_CNV
 
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_N#"     \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_N#"     $NEWHOMDIR/gcm_run.j
@@ -2522,8 +2485,6 @@ sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$ARCHIVE_N#" \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$ARCHIVE_N#" $NEWEXPDIR/archive/gcm_archive.j
 sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$REGRESS_N#" \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$REGRESS_N#" $NEWEXPDIR/regress/gcm_regress.j
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$CONVERT_N#" \
-       -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$CONVERT_N#" $NEWEXPDIR/convert/gcm_convert.j
 
 # --------------------------
 # Echo Settings and Messages

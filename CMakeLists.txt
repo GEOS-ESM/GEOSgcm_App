@@ -1,19 +1,16 @@
 ecbuild_add_executable (
   TARGET GEOSgcm.x
   SOURCES GEOSgcm.F90
-  LIBS GEOSgcm_GridComp 
+  LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
   )
 
 ecbuild_add_executable (
   TARGET idfupd.x
   SOURCES idfupd.F90
-  LIBS GEOSgcm_GridComp 
+  LIBS GEOSgcm_GridComp esmf
   )
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
-
-target_link_libraries (GEOSgcm.x OpenMP::OpenMP_Fortran)
-target_include_directories (GEOSgcm.x PUBLIC ${INC_ESMF})
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 
@@ -22,7 +19,6 @@ set (programs
    gcm_regress.j
    gcm_post.j
    gcm_archive.j
-   gcm_convert.j
    gcm_quickplot.csh
    gcm_moveplot.j
    gcm_forecast.setup
@@ -30,6 +26,7 @@ set (programs
    scm_setup
    gcm_quickstat.j
    scm_run.j
+   construct_extdata_yaml_list.py
    )
 
 install (
@@ -46,12 +43,6 @@ install (
    FILES fvcore_layout.rc saverst.rc logging.yaml
    DESTINATION etc
    )
-
-if(HYDROSTATIC)
-   set(CFG_HYDROSTATIC TRUE)
-else()
-   set(CFG_HYDROSTATIC FALSE)
-endif()
 
 if(INSTALL_SOURCE_TARFILE)
   set(CFG_INSTALL_SOURCE_TARFILE TRUE)
