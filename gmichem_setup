@@ -1582,7 +1582,7 @@ if ($CONUS == '#') then
   set SCHMIDT     = "do_schmidt  = .false."
   set STRETCH_FAC = "stretch_fac = 1.0"
   set TARGET_LON  = "target_lon  = 0.0"
-  set TARGET_LAT  = "target_lat  = 0.0"
+  set TARGET_LAT  = "target_lat  = -90.0"
 else
   set SCHMIDT     = "do_schmidt  = .true."
   set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
