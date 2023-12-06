@@ -2358,6 +2358,7 @@ if( $MPI == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
+
 set RESTART_BY_OSERVER = YES
 
 # This turns off an annoying warning when running
@@ -2472,13 +2473,25 @@ EOF
 
 endif # if NOT Singularity
 
-# Testing on SLES15 showed that the mlx provider did not seem
-# to work at scale. So we move to use the verbs provider. Note:
-# still seems to have issues at c720
+# Testing by Bill Putman found these to be
+# useful flags with Intel MPI on SLES15
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_OFI_PROVIDER verbs
-setenv I_MPI_COLL_EXTERNAL 0
+setenv UCX_TLS "^ud,ud:aux"
+setenv I_MPI_FALLBACK 0
+setenv I_MPI_FABRICS ofi
+setenv I_MPI_OFI_PROVIDER mlx
+setenv I_MPI_ADJUST_SCATTER 2
+setenv I_MPI_ADJUST_SCATTERV 2
+setenv I_MPI_ADJUST_GATHER 2
+setenv I_MPI_ADJUST_GATHERV 3
+setenv I_MPI_ADJUST_ALLGATHER 3
+setenv I_MPI_ADJUST_ALLGATHERV 3
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_REDUCE 10
+setenv I_MPI_ADJUST_BCAST 11
+setenv I_MPI_ADJUST_REDUCE_SCATTER 4
+setenv I_MPI_ADJUST_BARRIER 9
 EOF
 
 endif # if SLES15
