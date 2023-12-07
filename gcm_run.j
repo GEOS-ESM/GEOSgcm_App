@@ -346,7 +346,7 @@ cat << _EOF_ > $FILE
 @MOM6/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 @MIT/bin/ln  -sf @COUPLEDIR/@OCNMODEL/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
-# Precip correction
+ # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
 @DATAOCEAN /bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
