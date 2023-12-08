@@ -19,7 +19,6 @@ set (programs
    gcm_regress.j
    gcm_post.j
    gcm_archive.j
-   gcm_convert.j
    gcm_quickplot.csh
    gcm_moveplot.j
    gcm_forecast.setup
@@ -44,12 +43,6 @@ install (
    FILES fvcore_layout.rc saverst.rc logging.yaml
    DESTINATION etc
    )
-
-if(HYDROSTATIC)
-   set(CFG_HYDROSTATIC TRUE)
-else()
-   set(CFG_HYDROSTATIC FALSE)
-endif()
 
 if(INSTALL_SOURCE_TARFILE)
   set(CFG_INSTALL_SOURCE_TARFILE TRUE)
