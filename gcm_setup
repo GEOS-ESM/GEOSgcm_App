@@ -1830,8 +1830,8 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
-              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG}  # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
+              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS} # location of Boundary Conditions
+	      setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
@@ -1867,7 +1867,7 @@ else
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
-              setenv BCSDIR     ${BOUNDARY_DIR}/bcs/${LSM_BCS}/${LSM_BCS}_${OCEAN_TAG} # location of Boundary Conditions
+              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS} # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                            # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
