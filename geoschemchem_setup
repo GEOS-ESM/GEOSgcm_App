@@ -614,14 +614,14 @@ if( $OGCM == TRUE ) then
     # Ocean Model
     # -----------
     OCNMODEL:
-    echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM5${CN})"
+    echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM6${CN})"
     echo "   ${C2}MOM5${CN}"
     echo "   ${C2}MOM6${CN}"
     echo "   ${C2}MIT${CN}"
 
     set OCNMODEL  = $<
     if ( .$OCNMODEL == . ) then
-       set OCNMODEL  = "MOM5"
+       set OCNMODEL  = "MOM6"
     else
        set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
 
@@ -653,7 +653,6 @@ if( $OGCM == TRUE ) then
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
        set MIT  = "#DELETE"
-       set OCEAN_NAME="MOM6"
     else if ( "$OCNMODEL" == "MIT" ) then
        set OCEAN_NAME="MIT"
        set OGCM_GRID_TYPE = llc
@@ -755,17 +754,8 @@ if( $OGCM == TRUE ) then
         else
             goto CORSLV
         endif
-    else
-        if ( $OCEAN_NAME == "MOM" ) then
-           set Resolution = `echo 360 200`
-        else if ( $OCEAN_NAME == "MOM6" ) then
-           # c12 MOM6 is default 72x36
-           if( $AGCM_IM ==  "c12" ) then
-              set Resolution = `echo 72 36`
-           else
-              set Resolution = `echo 360 210`
-           endif
-        endif
+    else if ( $OCEAN_NAME == "MOM" ) then
+        set Resolution = `echo 360 200`
 
         echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
         set Resolution = `echo $<`
@@ -774,16 +764,7 @@ if( $OGCM == TRUE ) then
            set OGCM_IM = $Resolution[1]
            set OGCM_JM = $Resolution[2]
         else
-           if ( $OCEAN_NAME == "MOM" ) then
-              set Resolution = `echo 360 200`
-           else if ( $OCEAN_NAME == "MOM6" ) then
-              # c12 MOM6 is default 72x36
-              if( $AGCM_IM ==  "c12" ) then
-                 set Resolution = `echo 72 36`
-              else
-                 set Resolution = `echo 360 210`
-              endif
-           endif
+           set Resolution = `echo 360 200`
 
            if( $num == 0 ) then
               set OGCM_IM = $Resolution[1]
@@ -793,6 +774,41 @@ if( $OGCM == TRUE ) then
            endif
         endif
 
+    else if ( "$OCNMODEL" == "MOM6" ) then
+       # For MOM6 we currently have only 3 allowed ocean resolutions based on the
+       # atmospheric resolution. The allowed are:
+       #
+       # Atm Res  Atm NXxNY  Atm IMxJM  Ocean NXxNY  Ocean IMxJM  Ocean LM
+       # -------  ---------  ---------  -----------  -----------  --------
+       # c12      1x6        12x72      3x2          72x36        50
+       # c90      5x36       90x540     90x2         540x458      50
+       # c180     30x36      180x1080   36x30        1440x1080    75
+       #
+       # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
+
+       if ( $AGCM_IM == "c12" ) then
+          set OGCM_NX = 3
+          set OGCM_NY = 2
+          set OGCM_IM = 72
+          set OGCM_JM = 36
+          set OGCM_LM = 50
+       else if ( $AGCM_IM == "c90" ) then
+          set OGCM_NX = 90
+          set OGCM_NY = 2
+          set OGCM_IM = 540
+          set OGCM_JM = 458
+          set OGCM_LM = 50
+       else if ( $AGCM_IM == "c180" ) then
+          set OGCM_NX = 36
+          set OGCM_NY = 30
+          set OGCM_IM = 1440
+          set OGCM_JM = 1080
+          set OGCM_LM = 75
+       else
+          echo
+          echo "ERROR: MOM6 is currently only supported for c12, c90, and c180 atmospheric resolutions"
+          exit 1
+       endif
     endif
 
     set IMO = ${OGCM_IM}
@@ -825,17 +841,14 @@ if( $OGCM == TRUE ) then
     set OSTIA    = "#DELETE"
     set OCEANOUT = "#DELETE"
 
-    echo "Enter the Ocean Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 50)"
-    set   OGCM_LM = $<
-    if( .$OGCM_LM == . ) then
-    set   OGCM_LM = 50
-    endif
+    # We only ask this if not MOM6
+    if ( "$OCNMODEL" != "MOM6" ) then
+       echo "Enter the Ocean Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 50)"
+       set   OGCM_LM = $<
+       if( .$OGCM_LM == . ) then
+          set   OGCM_LM = 50
+       endif
 
-    # At the moment c12 MOM6 is default 3x2 ocean (and 1x6 atmos)
-    if( $AGCM_IM ==  "c12" ) then
-       set OGCM_NX = 3
-       set OGCM_NY = 2
-    else
        set OGCM_NX = 36
        set OGCM_NY = 10
     endif
@@ -1050,10 +1063,10 @@ if( $AGCM_IM ==  "c12" ) then
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
-     if ( $OCEAN_NAME == "MOM6") then
-     set       NX = 1
+     if ( "$OCNMODEL" == "MOM6") then
+        set    NX = 1
      else
-     set       NX = 2
+        set    NX = 2
      endif
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
@@ -1103,24 +1116,28 @@ if( $AGCM_IM ==  "c48" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c90" ) then
-     set       DT = 1800
+     set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
-          if( "$OCNMODEL" == "MIT" ) then
-              set  NX = 10
-              set  NY = 36
-          else
-              set  NX = $OGCM_NY
-              set  NY = $OGCM_NX
-          endif
-          set OCEAN_DT = $DT
+        if( "$OCNMODEL" == "MIT" ) then
+           set  NX = 10
+           set  NY = 36
+        else if ( "$OCNMODEL" == "MOM6") then
+           # For MOM6 c90 means atm NXxNY = 5x36
+           set  NX = 5
+           set  NY = 36
+        else
+           set  NX = $OGCM_NY
+           set  NY = $OGCM_NX
+        endif
+        set OCEAN_DT = $DT
      else
-          set  NX = 4
-          set  NY = `expr $NX \* 6`
-     set OCEAN_DT = $IRRAD_DT
+        set  NX = 3
+        set  NY = `expr $NX \* 6`
+        set OCEAN_DT = $IRRAD_DT
      endif
      set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -1133,7 +1150,7 @@ if( $AGCM_IM ==  "c90" ) then
      set POST_NDS = 8
 endif
 if( $AGCM_IM ==  "c180" ) then
-     set       DT = 900
+     set       DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set  LONG_DT = $DT
@@ -1141,13 +1158,19 @@ if( $AGCM_IM ==  "c180" ) then
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
-          set  NX = $OGCM_NY
-          set  NY = $OGCM_NX
-     set OCEAN_DT = $DT
+        if ( "$OCNMODEL" == "MOM6") then
+           # For MOM6 c180 means atm NXxNY = 30x36
+           set  NX = 30
+           set  NY = 36
+        else
+           set  NX = $OGCM_NY
+           set  NY = $OGCM_NX
+        endif
+        set OCEAN_DT = $DT
      else
-          set  NX = 6
-          set  NY = `expr $NX \* 6`
-     set OCEAN_DT = $IRRAD_DT
+        set  NX = 6
+        set  NY = `expr $NX \* 6`
+        set OCEAN_DT = $IRRAD_DT
      endif
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1179,11 +1202,11 @@ if( $AGCM_IM == "c360" ) then
      set POST_NDS = 12
 endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 225
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 450
+     set  LONG_DT = $DT
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1244,7 +1267,7 @@ if( $AGCM_IM == "c2880" ) then
      set CONVPAR_OPTION = NONE
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 30
+     set       DT = 45
      set SOLAR_DT = 900
      set IRRAD_DT = 900
      set OCEAN_DT = $IRRAD_DT
@@ -1462,7 +1485,7 @@ if ($CONUS == '#') then
   set SCHMIDT     = "do_schmidt  = .false."
   set STRETCH_FAC = "stretch_fac = 1.0"
   set TARGET_LON  = "target_lon  = 0.0"
-  set TARGET_LAT  = "target_lat  = 0.0"
+  set TARGET_LAT  = "target_lat  = -90.0"
 else
   set SCHMIDT     = "do_schmidt  = .true."
   set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
@@ -1818,6 +1841,7 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                  # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE              # Location of GWD_RIDGE files
               if ( "$OCNMODEL" == "MIT" ) then
                 setenv COUPLEDIR  /nobackupp2/estrobac/geos5/GRIDDIR                   # Coupled Ocean/Atmos Forcing
@@ -1864,7 +1888,8 @@ else if( $SITE == 'NCCS' ) then
               endif
               setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/ssd/aogcm             # Coupled Ocean/Atmos Forcing
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/ssd/aogcm             # OLD Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/osse2/stage/BCS_FILES/GWD_RIDGE # Location of GWD_RIDGE files
               if (${OGRIDTYP} == "LL") then
                 setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
@@ -1906,6 +1931,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
 
 else
@@ -1943,6 +1969,7 @@ else
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /home/$LOGNAME                                         # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
               set NX = 1
               set NY = 6
@@ -2385,6 +2412,7 @@ s?@ICEFILE?$ICEFILE?g
 s?@KPARFILE?$KPARFILE?g
 s?@CHMDIR?$CHMDIR?g
 s?@COUPLEDIR?$COUPLEDIR?g
+s?@shared_COUPLED?$shared_COUPLED?g
 s?@GWDRSDIR?$GWDRSDIR?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
