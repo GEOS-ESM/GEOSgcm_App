@@ -2191,19 +2191,14 @@ if( $MPI == openmpi ) then
 
 set RESTART_BY_OSERVER = YES
 
-# This turns off an annoying warning when running
-# Open MPI on a system where TMPDIRs are on a networked
-# file system
-
-cat > $HOMDIR/SETENV.commands << EOF
-setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
-EOF
-
 # Testing by Bill Putman determined some useful
 # Open MPI parameters. Testing shows these work
-# on both OSs at NCCS
-if ( $SITE == 'NCCS' ) then
-cat >> $HOMDIR/SETENV.commands << EOF
+# on both OSs at NCCS and on macOS
+
+cat > $HOMDIR/SETENV.commands << EOF
+# Turn off warning about TMPDIR on NFS
+setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# pre-connect MPI procs on mpi_init
 setenv OMPI_MCA_mpi_preconnect_all 1
 setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
 setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
@@ -2211,12 +2206,13 @@ setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 3
 setenv OMPI_MCA_coll_tuned_allreduce_algorithm 3
 setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
 setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
-setenv OMPI_MCA_coll_tuned_gather_algorithm 0
+setenv OMPI_MCA_coll_tuned_gather_algorithm 1
 setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+# required for a tuned flag to be effective
 setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+# disable file locks
 setenv OMPI_MCA_sharedfp "^lockedfile,individual"
 EOF
-endif # if NCCS
 
 # The below settings seem to be recommended for hybrid
 # systems using MVAPICH but could change
