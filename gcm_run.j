@@ -320,6 +320,7 @@ setenv EMISSIONS @EMISSIONS
 
 #this is hard-wired for NAS for now - should make it more general
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
+@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
 
 set             FILE = linkbcs
 /bin/rm -f     $FILE
