@@ -750,13 +750,7 @@ if( $OGCM == TRUE ) then
        set JMO = 0$JMO
     endif
 
-    if( "$OCNMODEL" == "MOM5" ) then
-      set OCEAN_RES = M5TP${IMO}x${JMO}
-    else if( "$OCNMODEL" == "MOM6" ) then
-      set OCEAN_RES = M6TP${IMO}x${JMO}
-    else if( "$OCNMODEL" == "MIT" ) then
-      set OCEAN_RES = MITLLC${IMO}x${JMO}
-    endif
+    set OCEAN_RES = ${OGRIDTYP}${IMO}x${JMO}
     set OCEAN_TAG  = Reynolds
     set SSTNAME  = "#DELETE"
     set SSTFILE  = "#DELETE"
