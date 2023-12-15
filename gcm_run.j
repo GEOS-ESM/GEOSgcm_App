@@ -310,6 +310,7 @@ done:
 
 setenv BCSDIR    @BCSDIR
 @DATAOCEAN setenv SSTDIR    @SSTDIR
+@COUPLED setenv CPLDIR @COUPLEDIR/@OCNMODEL
 setenv CHMDIR    @CHMDIR
 setenv BCRSLV    @ATMOStag_@OCEANtag
 setenv DATELINE  DC
@@ -320,7 +321,7 @@ setenv EMISSIONS @EMISSIONS
 
 #this is hard-wired for NAS for now - should make it more general
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
-@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
+@COUPLEDsetenv BCTAG `basename $CPLDIR/${OGCM_IM}x${OGCM_JM}`
 
 set             FILE = linkbcs
 /bin/rm -f     $FILE
@@ -331,21 +332,15 @@ cat << _EOF_ > $FILE
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
-@MOM5/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@MOM6/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@MIT/bin/ln  -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@MOM5/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
-@MOM6/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
-@MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
-@MOM5/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
-@MOM6/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin 
-@MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
+@COUPLED/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
+@COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
+@COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
 @MOM5/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
 @MOM6/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
 @MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/mit.ascii
-@MOM5/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MOM6/bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MIT/bin/ln  -sf @COUPLEDIR/@OCNMODEL/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
+@MOM5/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MOM6/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
+@MIT/bin/ln  -sf $CPLDIR/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
  # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
@@ -390,12 +385,12 @@ set MERRA2OX_SPECIES = "#"
 
 
 @COUPLED cp $HOMDIR/*_table .
-@COUPLED cp @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/INPUT/* INPUT
-@CICE4 /bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/cice/kmt_cice.bin .
-@CICE4 /bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/cice/grid_cice.bin .
-@CICE6 /bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/cice6/cice6_grid.nc .
-@CICE6 /bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/cice6/cice6_kmt.nc .
-@CICE6 /bin/ln -sf @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}/cice6/cice6_global.bathy.nc .
+@COUPLED cp $CPLDIR/${OGCM_IM}x${OGCM_JM}/INPUT/* INPUT
+@CICE4 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice/kmt_cice.bin .
+@CICE4 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice/grid_cice.bin .
+@CICE6 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice6/cice6_grid.nc .
+@CICE6 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice6/cice6_kmt.nc .
+@CICE6 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice6/cice6_global.bathy.nc .
 
 _EOF_
 
