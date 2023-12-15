@@ -1268,14 +1268,21 @@ end
 @COUPLED # -------------------------
 @MOM5 set dsets="ocean_month"
 @MOM6 set dsets="ocean_state prog_z sfc_ave forcing"
-@COUPLED  foreach dset ( $dsets )
-@COUPLED  set num = `/bin/ls -1 $dset.nc | wc -l`
-@COUPLED  if($num != 0) then
-@COUPLED     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-@COUPLED     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-@COUPLED  endif
-@COUPLED  end
-@COUPLED
+@MOM5  foreach dset ( $dsets )
+@MOM5  set num = `/bin/ls -1 $dset.nc | wc -l`
+@MOM5  if($num != 0) then
+@MOM5     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+@MOM5     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+@MOM5  endif
+@MOM5  end 
+@MOM6  foreach dset ( $dsets )
+@MOM6  set num = `/bin/ls -1 $dset.nc | wc -l`
+@MOM6  if($num != 0) then
+@MOM6     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+@MOM6     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+@MOM6  endif
+@MOM6  end
+
 @CICE6 # CICE6-Specific Output Files
 @CICE6 # -------------------------
 @CICE6 set dsets="iceh"
