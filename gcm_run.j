@@ -378,7 +378,6 @@ cat << _EOF_ > $FILE
 >>>GCMRUN_CATCHCN<<</bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
 
 
-set MERRA2OX_SPECIES = "#"
 /bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 /bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
