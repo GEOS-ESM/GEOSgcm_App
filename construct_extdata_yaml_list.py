@@ -55,6 +55,7 @@ if __name__ == '__main__':
    Extras:
    - ChemEnv_ExtData.yaml
    - WSUB_ExtData.yaml
+   - DataSea_ExtData.yaml
    """)
    components = {}
    for line in temp_text:
