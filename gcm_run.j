@@ -340,7 +340,7 @@ cat << _EOF_ > $FILE
 @MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/mit.ascii
 @MOM5/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
 @MOM6/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MIT/bin/ln  -sf $CPLDIR/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
+@MIT/bin/ln  -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}//DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
  # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
