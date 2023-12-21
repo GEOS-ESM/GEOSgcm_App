@@ -2338,7 +2338,6 @@ endif # if NOT Singularity
 # Intel chips.
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv UCX_TLS "^ud,ud:aux"
 setenv I_MPI_FALLBACK 0
 setenv I_MPI_FABRICS ofi
 setenv I_MPI_OFI_PROVIDER mlx
