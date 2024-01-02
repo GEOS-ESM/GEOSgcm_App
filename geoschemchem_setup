@@ -2330,8 +2330,9 @@ endif # if NOT Singularity
 # Testing by Bill Putman found these to be
 # useful flags with Intel MPI on SLES15 on the
 # Milan nodes.
-# Note 1: in testing, Intel MPI still does
-# not run reliably with these flags
+# Note 1: Testing by NCCS shows the PSM3 provider
+# runs on the Infiniband fabric. Tests show it runs
+# up to C720.
 # Note 2: When the Cascade Lakes are moved to
 # SLES15, these will need to be Milan-only flags
 # as Intel MPI will probably work just fine with
@@ -2340,7 +2341,7 @@ if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_FALLBACK 0
 setenv I_MPI_FABRICS ofi
-setenv I_MPI_OFI_PROVIDER mlx
+setenv I_MPI_OFI_PROVIDER psm3
 setenv I_MPI_ADJUST_SCATTER 2
 setenv I_MPI_ADJUST_SCATTERV 2
 setenv I_MPI_ADJUST_GATHER 2
