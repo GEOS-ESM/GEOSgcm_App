@@ -2425,38 +2425,38 @@ else if( $MPI == mvapich ) then
 set RESTART_BY_OSERVER = YES
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY 0
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
+setenv MV2_ENABLE_AFFINITY 0
+setenv SLURM_DISTRIBUTION block
+setenv MV2_MPIRUN_TIMEOUT 100
+setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else if( $MPI == mpt ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 
-   setenv MPI_COLL_REPRODUCIBLE
-   setenv SLURM_DISTRIBUTION block
+setenv MPI_COLL_REPRODUCIBLE
+setenv SLURM_DISTRIBUTION block
 
-   #setenv MPI_DISPLAY_SETTINGS 1
-   #setenv MPI_VERBOSE 1
+#setenv MPI_DISPLAY_SETTINGS 1
+#setenv MPI_VERBOSE 1
 
-   unsetenv MPI_MEMMAP_OFF
-   unsetenv MPI_NUM_MEMORY_REGIONS
-   setenv MPI_XPMEM_ENABLED yes
-   unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+unsetenv MPI_MEMMAP_OFF
+unsetenv MPI_NUM_MEMORY_REGIONS
+setenv MPI_XPMEM_ENABLED yes
+unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 
-   setenv MPI_LAUNCH_TIMEOUT 40
+setenv MPI_LAUNCH_TIMEOUT 40
 
-   # For some reason, PMI_RANK is randomly set and interferes
-   # with binarytile.x and other executables.
-   unsetenv PMI_RANK
+# For some reason, PMI_RANK is randomly set and interferes
+# with binarytile.x and other executables.
+unsetenv PMI_RANK
 
-   # Often when debugging on MPT, the traceback from Intel Fortran
-   # is "absorbed" and only MPT's errors are displayed. To allow the
-   # compiler's traceback to be displayed, uncomment this environment
-   # variable
-   #setenv FOR_IGNORE_EXCEPTIONS false
+# Often when debugging on MPT, the traceback from Intel Fortran
+# is "absorbed" and only MPT's errors are displayed. To allow the
+# compiler's traceback to be displayed, uncomment this environment
+# variable
+#setenv FOR_IGNORE_EXCEPTIONS false
 
 EOF
 
