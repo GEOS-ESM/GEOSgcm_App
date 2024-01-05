@@ -62,12 +62,7 @@ if (! -e $EXPDIR/archive    ) mkdir -p $EXPDIR/archive
 if (! -e $EXPDIR/post       ) mkdir -p $EXPDIR/post
 if (! -e $EXPDIR/plot       ) mkdir -p $EXPDIR/plot
 
-if( $GCMEMIP == TRUE ) then
-    if (! -e $EXPDIR/restarts/$RSTDATE ) mkdir -p $EXPDIR/restarts/$RSTDATE
-    setenv  SCRDIR  $EXPDIR/scratch.$RSTDATE
-else
-    setenv  SCRDIR  $EXPDIR/scratch
-endif
+setenv  SCRDIR  $EXPDIR/scratch
 
 if (! -e $SCRDIR ) mkdir -p $SCRDIR
 
@@ -82,10 +77,6 @@ set  AGCM_JM  = `grep '^\s*AGCM_JM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
 set  AGCM_LM  = `grep '^\s*AGCM_LM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_IM  = `grep '^\s*OGCM\.IM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
-
-@COUPLED set  OGCM_LM  = `grep '^\s*OGCM\.LM:'       $HOMDIR/AGCM.rc | cut -d: -f2`
-@COUPLED set       NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
-@COUPLED set       NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
@@ -159,85 +150,6 @@ else
 endif
 
 #######################################################################
-#                       GCMEMIP Setup
-#######################################################################
-
-if( $GCMEMIP == TRUE & ! -e $EXPDIR/restarts/$RSTDATE/cap_restart ) then
-
-cd $EXPDIR/restarts/$RSTDATE
-
-cp $HOMDIR/CAP.rc CAP.rc.orig
-awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
-
-set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
-set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
-
->>>EMIP_OLDLAND<<<# Copy MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# ---------------------
->>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ----------------------------------------------
-cp /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
-tar xf  restarts.${year}${month}.tar
-/bin/rm restarts.${year}${month}.tar
->>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
-
-
->>>EMIP_OLDLAND<<<# Regrid MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# -----------------------
->>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ------------------------------------------------
-set RSTID = `/bin/ls *catch* | cut -d. -f1`
-set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
-$GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
->>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
-
-     set IMC = $AGCM_IM
-if(     $IMC < 10 ) then
-     set IMC = 000$IMC
-else if($IMC < 100) then
-     set IMC = 00$IMC
-else if($IMC < 1000) then
-     set IMC = 0$IMC
-endif
-
-set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}[cef]_${RSTID}.*catch*`
-if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
-if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
-
-$GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
-$GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
->>>EMIP_OLDLAND<<</bin/mv gocart_internal_rst gocart_internal_rst.merra2
->>>EMIP_OLDLAND<<<$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
-
-
-# Create CAP.rc and cap_restart
-# -----------------------------
-set   nymd = ${year}${month}${day}
-set   nhms = 210000
-echo $nymd $nhms > cap_restart
-
-set curmonth = $month
-      @ count = 0
-while( $count < 4 )
-       set date  = `$GEOSBIN/tick $nymd $nhms 86400`
-       set nymd  =  $date[1]
-       set nhms  =  $date[2]
-       set year  = `echo $nymd | cut -c1-4`
-       set month = `echo $nymd | cut -c5-6`
-       if( $curmonth != $month ) then
-        set curmonth  = $month
-             @ count  = $count + 1
-       endif
-end
-set oldstring =  `grep '^\s*END_DATE:' CAP.rc`
-set newstring =  "END_DATE: ${year}${month}01 210000"
-/bin/mv CAP.rc CAP.tmp
-cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-/bin/rm CAP.tmp
-
-endif
-
-#######################################################################
 #   Move to Scratch Directory and Copy RC Files from Home Directory
 #######################################################################
 
@@ -264,11 +176,6 @@ endif
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
 @CICE6cp -f  $HOMDIR/ice_in .
-
-if( $GCMEMIP == TRUE ) then
-    cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
-    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
-endif
 
 set END_DATE  = `grep '^\s*END_DATE:'     CAP.rc | cut -d: -f2`
 set NUM_SGMT  = `grep '^\s*NUM_SGMT:'     CAP.rc | cut -d: -f2`
@@ -544,30 +451,16 @@ set tile_rsts = (catch catchcn route lake landice openwater saltwater seaicether
 # check if it resarts by face
 # ----------------------------------
 set rst_by_face = NO
-if( $GCMEMIP == TRUE ) then
-   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_rst & -e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
-     echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
-     echo "please remove all *internal_rst except these tile-based restarts :"
-     foreach rst ( $tile_rsts )
-        echo ${rst}_internal_rst
-     end
-     exit
-   endif
-   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
-     set rst_by_face = YES
-   endif
-else
-   if(-e $EXPDIR/fvcore_internal_rst & -e $EXPDIR/fvcore_internal_face_1_rst) then
-     echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
-     echo "please remove all *internal_rst except these tile-based restarts :"
-     foreach rst ( $tile_rsts )
-        echo ${rst}_internal_rst
-     end
-     exit
-   endif
-   if(-e $EXPDIR/fvcore_internal_face_1_rst) then
-     set rst_by_face = YES
-   endif
+if(-e $EXPDIR/fvcore_internal_rst & -e $EXPDIR/fvcore_internal_face_1_rst) then
+  echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
+  echo "please remove all *internal_rst except these tile-based restarts :"
+  foreach rst ( $tile_rsts )
+	  echo ${rst}_internal_rst
+  end
+  exit
+endif
+if(-e $EXPDIR/fvcore_internal_face_1_rst) then
+  set rst_by_face = YES
 endif
 
 set Rbyface = `grep READ_RESTART_BY_FACE: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
@@ -623,19 +516,6 @@ foreach rst ( $dummy )
     set rst_file_names = `echo $rst_file_names $rst`
   endif
 end
-
-# Copy Restarts to Scratch Directory
-# ----------------------------------
-if( $GCMEMIP == TRUE ) then
-    foreach rst ( $rst_file_names $monthly_chk_names )
-      if(-e $EXPDIR/restarts/$RSTDATE/$rst ) cp $EXPDIR/restarts/$RSTDATE/$rst . &
-    end
-else
-    foreach rst ( $rst_file_names $monthly_chk_names )
-      if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
-    end
-endif
-wait
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
@@ -703,13 +583,14 @@ endif
 @ counter    = 1
 while ( $counter <= ${NUM_SGMT} )
 
-/bin/rm -f  EGRESS
+# Link restarts to scratch
+set sdate  = `awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut -c1-4`z
+foreach rst ( $rst_file_names $monthly_chk_names )
+   if(-e $EXPDIR/restarts/${sdate}/${rst}.${sdate}.nc4 ) ln -s $EXPDIR/restarts/${sdate}/${rst}.${sdate}.nc4 $rst &
+end
+wait
 
-if( $GCMEMIP == TRUE ) then
-    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
-else
-    cp -f $HOMDIR/CAP.rc .
-endif
+/bin/rm -f  EGRESS
 
 /bin/mv CAP.rc CAP.rc.orig
 awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
@@ -1134,157 +1015,60 @@ else
 endif
 echo GEOSgcm Run Status: $rc
 
-@MIT # ---------------------------------------------------
-@MIT # For MITgcm restarts - after running GEOSgcm.x
-@MIT # ---------------------------------------------------
-@MIT
-@MIT set STEADY_STATE_OCEAN=`grep STEADY_STATE_OCEAN AGCM.rc | cut -d':' -f2 | tr -d " "`
-@MIT
-@MIT # update ocean only if activated. Otherwize use the same pickups (passive ocean).
-@MIT if ( ${STEADY_STATE_OCEAN} != 0 ) then
-@MIT
-@MIT   if ( ${rc} == 0 ) then
-@MIT
-@MIT     # Update nIter0 for next segment
-@MIT     set znIter00 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
-@MIT     @ nIter0 = $nIter0 + $mit_nTimeSteps
-@MIT     set znIter0 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
-@MIT
-@MIT     # to update MITgcm restart list file
-@MIT     sed -i "/${nIter0}/d" ${EXPDIR}/restarts/MITgcm_restart_dates.txt
-@MIT     echo "Date_GEOS5 $nymdf $nhmsf NITER0_MITgcm ${nIter0}" >> ${EXPDIR}/restarts/MITgcm_restart_dates.txt
-@MIT
-@MIT     /bin/mv $SCRDIR/mitocean_run/STDOUT.0000 $EXPDIR/mit_output/STDOUT.${znIter00}
-@MIT
-@MIT   endif
-@MIT
-@MIT   cd $SCRDIR/mitocean_run
-@MIT
-@MIT   # Check existance of roling pickups
-@MIT   set nonomatch rp =  ( pickup*ckptA* )
-@MIT   echo $rp
-@MIT   # Rename and move them if exist
-@MIT   if ( -e $rp[1] ) then
-@MIT     set timeStepNumber=`cat pickup.ckptA.meta | grep timeStepNumber | tr -s " " | cut -d" " -f5 | awk '{printf("%010d",$1)}'`
-@MIT     foreach fname ( pickup*ckptA* )
-@MIT       set bname = `echo ${fname} | cut -d "." -f1 | cut -d "/" -f2`
-@MIT       set aname = `echo ${fname} | cut -d "." -f3`
-@MIT       echo $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
-@MIT       /bin/mv ${fname} $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
-@MIT     end
-@MIT   endif
-@MIT
-@MIT   # Check existance of permanent pickups
-@MIT   set nonomatch pp =  ( pickup* )
-@MIT   echo $pp
-@MIT   # Move them if exist
-@MIT   if ( -e $pp[1] ) then
-@MIT     foreach fname ( pickup* )
-@MIT       if ( ! -e $EXPDIR/restarts/${fname} ) /bin/mv ${fname} $EXPDIR/restarts/${fname}
-@MIT     end
-@MIT   endif
-@MIT
-@MIT   /bin/mv T.* $EXPDIR/mit_output/
-@MIT   /bin/mv S.* $EXPDIR/mit_output/
-@MIT   /bin/mv U.* $EXPDIR/mit_output/
-@MIT   /bin/mv V.* $EXPDIR/mit_output/
-@MIT   /bin/mv W.* $EXPDIR/mit_output/
-@MIT   /bin/mv PH* $EXPDIR/mit_output/
-@MIT   /bin/mv Eta.* $EXPDIR/mit_output/
-@MIT
-@MIT   /bin/mv AREA.* $EXPDIR/mit_output/
-@MIT   /bin/mv HEFF.* $EXPDIR/mit_output/
-@MIT   /bin/mv HSNOW.* $EXPDIR/mit_output/
-@MIT   /bin/mv UICE.* $EXPDIR/mit_output/
-@MIT   /bin/mv VICE.* $EXPDIR/mit_output/
-@MIT
-@MIT   #copy mit output to mit_output
-@MIT   foreach i (`grep -i filename data.diagnostics  | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
-@MIT    /bin/mv ${i}* $EXPDIR/mit_output/
-@MIT   end
-@MIT
-@MIT   foreach i (`grep -i stat_fName data.diagnostics | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
-@MIT    /bin/mv ${i}* $EXPDIR/mit_output/
-@MIT   end
-@MIT
-@MIT   cd $SCRDIR
-@MIT
-@MIT endif
-@MIT
-@MIT # ---------------------------------------------------
-@MIT # End MITgcm restarts - after running GEOSgcm.x
-@MIT # ---------------------------------------------------
-
-
 #######################################################################
 #   Rename Final Checkpoints => Restarts for Next Segment and Archive
 #        Note: cap_restart contains the current NYMD and NHMS
 #######################################################################
 
-set edate  = e`awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut -c1-2`z
-
-@COUPLED cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
-@COUPLED cp RESTART/* INPUT
-
 # Move Intermediate Checkpoints to RESTARTS directory
+# Use fvcore to find the dates
 # ---------------------------------------------------
-set   checkpoints  =    `/bin/ls -1 *_checkpoint.*`
-if( $#checkpoints != 0 ) /bin/mv -f *_checkpoint.* ${EXPDIR}/restarts
+set dates = ( )
+set files = `/bin/ls -1 *fvcore_internal_checkpoint*.nc4`
+foreach file ($files)
+  set date = `echo  $file | cut -d '.' -f2`
+  set dates = ( ${dates} ${date} )
+end
+
+set checkpoints = `/bin/ls -1 *_checkpoint`
+foreach  date ($dates)
+   if (! -e ${EXPDIR}/restarts/${date} ) mkdir -p $EXPDIR/restarts/${date}
+   foreach checkpoint ($checkpoints)
+       mv  $checkpoint.$date.nc4 ${EXPDIR}/restarts/${date}/
+   end
+   set capdate = `echo $date | cut -d '_' -f1`
+   set captime = `echo $date | cut -d '_' -f2 | cut -d 'z' -f1 `
+   echo ${capdate}" "${captime}"00" > new_cap_restart
+   cp new_cap_restart ${EXPDIR}/restarts/${date}/cap_restart
+end
 
 
-# Rename Final Checkpoints for Archive
+set edate  = `awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut -c1-4`z
+# Rename Final Checkpoints for moving to storage
 # ------------------------------------
     set checkpoints = `/bin/ls -1 *_checkpoint`
 foreach checkpoint ($checkpoints)
-        set   chk_type = `/usr/bin/file -Lb --mime-type $checkpoint`
-            if ( $chk_type =~ "application/octet-stream" ) then
-                  set ext  = bin
-            else
-                  set ext  = nc4
-            endif
-       /bin/mv            $checkpoint      $EXPID.${checkpoint}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.$ext
-       $GEOSBIN/stripname _checkpoint _rst $EXPID.${checkpoint}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.$ext
+       /bin/mv            $checkpoint      ${checkpoint}.${edate}.nc4
+       $GEOSBIN/stripname _checkpoint _rst ${checkpoint}.${edate}.nc4
 end
-
 
 # Remove Initial RESTARTS
 # -----------------------
 set restarts = `/bin/ls -1 *_rst`
 /bin/rm -f $restarts
 
-
-# Copy Renamed Final Checkpoints to RESTARTS directory
+# mv Final Checkpoints to RESTARTS directory
 # ----------------------------------------------------
-    set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
+if (! -e ${EXPDIR}/restarts/${edate} ) mkdir -p $EXPDIR/restarts/${edate}
+    set  restarts = `/bin/ls -1 *_rst.${edate}.nc4`
 foreach  restart ($restarts)
-cp $restart ${EXPDIR}/restarts
+mv $restart ${EXPDIR}/restarts/${edate}/
 end
 
-# Remove EXPID from RESTART name
-# ------------------------------
-    set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-foreach  restart ($restarts)
-$GEOSBIN/stripname $EXPID. '' $restart
-end
+cp cap_restart ${EXPDIR}/restarts/${edate}/
 
-# Remove DATE and VERSION Stamps from RESTART name
-# ------------------------------------------------
-    set  restarts = `/bin/ls -1 *_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-foreach  restart ($restarts)
-$GEOSBIN/stripname .${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.\* '' $restart
-end
-
-
-# TAR ARCHIVED RESTARTS
-# ---------------------
-cd $EXPDIR/restarts
-if( $FSEGMENT == 00000000 ) then
-        @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-        @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
-     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-        @COUPLED /bin/rm -rf RESTART.${edate}
-endif
-
+if (! -e ${EXPDIR}/restarts/iau_increments ) mkdir -p $EXPDIR/restarts/iau_increments
+mv agcm_import* ${EXPDIR}/restarts/iau_increments/
 
 #######################################################################
 #               Move HISTORY Files to Holding Directory
@@ -1292,55 +1076,32 @@ endif
 
 # Move current files to /holding
 # ------------------------------
-cd $SCRDIR
-foreach collection ( $collections )
-   /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
-end
+#cd $SCRDIR
+#foreach collection ( $collections )
+   #/bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
+#end
 
-@COUPLED # MOM-Specific Output Files
-@COUPLED # -------------------------
-@MOM5 set dsets="ocean_month"
-@MOM6 set dsets="ocean_state prog_z sfc_ave forcing"
-@COUPLED  foreach dset ( $dsets )
-@COUPLED  set num = `/bin/ls -1 $dset.nc | wc -l`
-@COUPLED  if($num != 0) then
-@COUPLED     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-@COUPLED     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-@COUPLED  endif
-@COUPLED  end
-@COUPLED
-@CICE6 # CICE6-Specific Output Files
-@CICE6 # -------------------------
-@CICE6 set dsets="iceh"
-@CICE6 foreach dset ( $dsets )
-@CICE6  set num = `/bin/ls -1 $dset.*.nc | wc -l`
-@CICE6  if($num != 0) then
-@CICE6     if(! -e $EXPDIR/CICE_Output) mkdir -p $EXPDIR/CICE_Output
-@CICE6     /bin/mv $SCRDIR/$dset.*.nc $EXPDIR/CICE_Output/
-@CICE6  endif
-@CICE6 end
-@CICE6
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
 
-$GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
+#$GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
 
-if( $FSEGMENT != 00000000 ) then
-     set REPLAY_BEG_DATE = `grep '^\s*BEG_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
-     set REPLAY_END_DATE = `grep '^\s*END_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
-     set nday            = `echo $FSEGMENT | bc`
-         @ dt  = 10800 - 86400 * $nday
-     set date  = `$GEOSBIN/tick $nymdc $nhmsc $dt`
-     set nymdz =  $date[1]
-     set nhmsz =  $date[2]
+#if( $FSEGMENT != 00000000 ) then
+     #set REPLAY_BEG_DATE = `grep '^\s*BEG_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
+     #set REPLAY_END_DATE = `grep '^\s*END_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
+     #set nday            = `echo $FSEGMENT | bc`
+         #@ dt  = 10800 - 86400 * $nday
+     #set date  = `$GEOSBIN/tick $nymdc $nhmsc $dt`
+     #set nymdz =  $date[1]
+     #set nhmsz =  $date[2]
 
-     if( $nymdz >= ${REPLAY_BEG_DATE} & \
-         $nymdz <= ${REPLAY_END_DATE} ) then
-         setenv CYCLED .TRUE.
-         $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $nday TRUE
-     endif
-endif
+     #if( $nymdz >= ${REPLAY_BEG_DATE} & \
+         #$nymdz <= ${REPLAY_END_DATE} ) then
+         #setenv CYCLED .TRUE.
+         #$EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $nday TRUE
+     #endif
+#endif
 
 #######################################################################
 #                         Update Iteration Counter
@@ -1361,35 +1122,9 @@ end   # end of segment loop; remain in $SCRDIR
 #                              Re-Submit Job
 #######################################################################
 
-if( $GCMEMIP == TRUE ) then
-     foreach rst ( `/bin/ls -1 *_rst` )
-        /bin/rm -f $EXPDIR/restarts/$RSTDATE/$rst
-     end
-        /bin/rm -f $EXPDIR/restarts/$RSTDATE/cap_restart
-     foreach rst ( `/bin/ls -1 *_rst` )
-       cp $rst $EXPDIR/restarts/$RSTDATE/$rst &
-     end
-     wait
-     cp cap_restart $EXPDIR/restarts/$RSTDATE/cap_restart
-else
-     foreach rst ( `/bin/ls -1 *_rst` )
-        /bin/rm -f $EXPDIR/$rst
-     end
-        /bin/rm -f $EXPDIR/cap_restart
-     foreach rst ( `/bin/ls -1 *_rst` )
-       cp $rst $EXPDIR/$rst &
-     end
-     wait
-     cp cap_restart $EXPDIR/cap_restart
-endif
-
-@COUPLED cp -rf RESTART $EXPDIR
+cp cap_restart $EXPDIR/cap_restart
 
 if ( $rc == 0 ) then
       cd  $HOMDIR
-      if ( $GCMEMIP == TRUE ) then
-          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
-          else
-          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
-      endif
+      if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
 endif
