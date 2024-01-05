@@ -532,26 +532,6 @@ endif
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
-# Copy and Tar Initial Restarts to Restarts Directory
-# ---------------------------------------------------
-set edate = e`cat cap_restart | cut -c1-8`_`cat cap_restart | cut -c10-11`z
-set numrs = `/bin/ls -1 ${EXPDIR}/restarts/*${edate}* | wc -l`
-if($numrs == 0) then
-   foreach rst ( $rst_file_names )
-      if( -e $rst & ! -e ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} ) then
-            cp $rst ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} &
-      endif
-   end
-   wait
-@COUPLED    cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
-   cd $EXPDIR/restarts
-      @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-      @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
-     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
-     @COUPLED /bin/rm -rf RESTART.${edate}
-   cd $SCRDIR
-endif
-
 # If any restart is binary, set NUM_READERS to 1 so that
 # +-style bootstrapping of missing files can occur in
 # MAPL. pbinary cannot do this, but pnc4 can.
