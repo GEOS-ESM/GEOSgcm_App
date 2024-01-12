@@ -246,6 +246,7 @@ cd $SCRDIR
 
 cp -f  $EXPDIR/RC/* .
 cp     $EXPDIR/cap_restart .
+cp     $EXPDIR/linkbcs .
 cp -f  $HOMDIR/*.rc .
 cp -f  $HOMDIR/*.nml .
 cp -f  $HOMDIR/*.yaml .
@@ -307,104 +308,22 @@ done:
 #######################################################################
 #                        Link Boundary Datasets
 #######################################################################
-
 setenv BCSDIR    @BCSDIR
-@DATAOCEAN setenv SSTDIR    @SSTDIR
-@COUPLED setenv CPLDIR @COUPLEDIR/@OCNMODEL
-setenv CHMDIR    @CHMDIR
+@DATAOCEANsetenv SSTDIR    @SSTDIR
 setenv BCRSLV    @ATMOStag_@OCEANtag
-setenv DATELINE  DC
-setenv EMISSIONS @EMISSIONS
-
 @MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 @MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
 @COUPLEDsetenv BCTAG `basename $CPLDIR/${OGCM_IM}x${OGCM_JM}`
-
-set             FILE = linkbcs
-/bin/rm -f     $FILE
-cat << _EOF_ > $FILE
-#!/bin/csh -f
-
-@COUPLED /bin/mkdir -p RESTART
-/bin/mkdir -p            ExtData
-/bin/ln    -sf $CHMDIR/* ExtData
-
-@COUPLED/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM} SEAWIFS_KPAR_mon_clim.data
-@COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
-@COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
-@MOM5/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
-@MOM6/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
-@MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/mit.ascii
-@MOM5/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MOM6/bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MIT/bin/ln  -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}//DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
-
- # Precip correction
-#/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
-
-@DATAOCEAN /bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
-@DATAOCEAN if(     -e  $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
-@DATAOCEAN /bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
-@DATAOCEAN endif
-
-# DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
-# --------------------------------------------------------------------
-@OPS_SPECIES/bin/ln -sf $BCSDIR/PCHEM/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
-
-# CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
-# ----------------------------------------------------------
-@CMIP_SPECIES/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
-
-# S2S pre-industrial with prod/loss of stratospheric water vapor
-# (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
-# --------------------------------------------------------------
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4 species.data
-
-# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
-# ----------------------------------------------------------
-@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
-
-/bin/ln -sf $BCSDIR/land/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
-/bin/ln -sf $BCSDIR/land/$BCRSLV/nirdf_@RES_DATELINE.dat nirdf.dat
-/bin/ln -sf $BCSDIR/land/$BCRSLV/vegdyn_@RES_DATELINE.dat vegdyn.data
-/bin/ln -sf $BCSDIR/land/$BCRSLV/lai_clim_@RES_DATELINE.data lai.data
-/bin/ln -sf $BCSDIR/land/$BCRSLV/green_clim_@RES_DATELINE.data green.data
-/bin/ln -sf $BCSDIR/land/$BCRSLV/ndvi_clim_@RES_DATELINE.data ndvi.data
-
->>>GCMRUN_CATCHCN<<<if ( -f $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data lnfm.data
->>>GCMRUN_CATCHCN<<</bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
-
-
-/bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
-/bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
-/bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
-
-
-@COUPLED cp $HOMDIR/*_table .
-@COUPLED cp $CPLDIR/${OGCM_IM}x${OGCM_JM}/INPUT/* INPUT
-@CICE4 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice/kmt_cice.bin .
-@CICE4 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice/grid_cice.bin .
-@CICE6 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice6/cice6_grid.nc .
-@CICE6 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice6/cice6_kmt.nc .
-@CICE6 /bin/ln -sf $CPLDIR/${OGCM_IM}x${OGCM_JM}/cice6/cice6_global.bathy.nc .
-
-_EOF_
+setenv EMISSIONS @EMISSIONS
+chmod +x linkbcs
 
 >>>GCMRUN_CATCHCN<<<set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
 >>>GCMRUN_CATCHCN<<<if ($LSM_CHOICE == 2) then
 >>>GCMRUN_CATCHCN<<<  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
 >>>GCMRUN_CATCHCN<<<endif
-
-@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
-@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE
-@DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@KPARFILE SEAWIFS_KPAR_mon_clim.data' >> $FILE
-
-chmod +x linkbcs
-cp  linkbcs $EXPDIR
-
 #######################################################################
 #                  Setup executable
 #######################################################################

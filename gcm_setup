@@ -2476,7 +2476,8 @@ set FILES = "gcm_run.j          \
              CAP.rc.tmpl        \
              AGCM.rc.tmpl       \
              HISTORY.rc.tmpl    \
-             logging.yaml       "
+             logging.yaml       \
+             linkbcs.tmpl       "
 set FILES = `echo $FILES`
 
 if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
@@ -2589,7 +2590,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl linkbcs.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2607,6 +2608,7 @@ chmod   +x $HOMDIR/gcm_forecast.setup
 chmod   +x $HOMDIR/gcm_regress.j
 chmod   +x $HOMDIR/gcm_post.j
 chmod   +x $HOMDIR/gcm_emip.setup
+chmod   +x $HOMDIR/linkbcs.tmpl
 
 #######################################################################
 #         Finalizing Experiment Directories and Chem Registry
@@ -2635,6 +2637,7 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/gcm_forecast.setup  $EXPDIR/forecasts
 /bin/cp $GEOSUTIL/post/plot.rc      $EXPDIR/plot
 /bin/cp $GEOSUTIL/post/post.rc      $EXPDIR/post
+/bin/mv $HOMDIR/linkbcs.tmpl        $EXPDIR/linkbcs
 
 /bin/mv $HOMDIR/CAP.rc.tmpl         $HOMDIR/CAP.rc
 /bin/mv $HOMDIR/AGCM.rc.tmpl        $HOMDIR/AGCM.rc
@@ -2994,6 +2997,7 @@ EXPDIR/forecasts/gcm_forecast.tmpl
 EXPDIR/forecasts/gcm_forecast.setup
 EXPDIR/plot/plot.rc
 EXPDIR/post/post.rc
+EXPDIR/linkbcs
 HOMDIR/CAP.rc
 HOMDIR/AGCM.rc
 HOMDIR/HISTORY.rc
