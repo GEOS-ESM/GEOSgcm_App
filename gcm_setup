@@ -1614,9 +1614,11 @@ EMISSIONS:
      if(  $EMISSIONS == OPS_EMISSIONS ) then
         set OPS_SPECIES = ''
         set PCHEM_CLIM_YEARS = 1
+        set OX_RELAXTIME = 0.00
      else
         set MERRA2OX_SPECIES = ''
         set PCHEM_CLIM_YEARS = 39
+        set OX_RELAXTIME = 259200.
      endif
 
 
@@ -2191,12 +2193,27 @@ if( $MPI == openmpi ) then
 
 set RESTART_BY_OSERVER = YES
 
-# This turns off an annoying warning when running
-# Open MPI on a system where TMPDIRs are on a networked
-# file system
+# Testing by Bill Putman determined some useful
+# Open MPI parameters. Testing shows these work
+# on both OSs at NCCS and on macOS
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# Turn off warning about TMPDIR on NFS
+setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# pre-connect MPI procs on mpi_init
+setenv OMPI_MCA_mpi_preconnect_all 1
+setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
+setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
+setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 3
+setenv OMPI_MCA_coll_tuned_allreduce_algorithm 3
+setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
+setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
+setenv OMPI_MCA_coll_tuned_gather_algorithm 1
+setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+# required for a tuned flag to be effective
+setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+# disable file locks
+setenv OMPI_MCA_sharedfp "^lockedfile,individual"
 EOF
 
 # The below settings seem to be recommended for hybrid
@@ -2209,38 +2226,42 @@ else if( $MPI == mvapich ) then
 set RESTART_BY_OSERVER = YES
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY     0
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
+setenv MV2_ENABLE_AFFINITY 0
+setenv SLURM_DISTRIBUTION block
+setenv MV2_MPIRUN_TIMEOUT 100
+setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else if( $MPI == mpt ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 
-   setenv MPI_COLL_REPRODUCIBLE
-   setenv SLURM_DISTRIBUTION block
+setenv MPI_COLL_REPRODUCIBLE
+setenv SLURM_DISTRIBUTION block
 
-   #setenv MPI_DISPLAY_SETTINGS 1
-   #setenv MPI_VERBOSE 1
+#setenv MPI_DISPLAY_SETTINGS 1
+#setenv MPI_VERBOSE 1
 
-   unsetenv MPI_MEMMAP_OFF
-   unsetenv MPI_NUM_MEMORY_REGIONS
-   setenv MPI_XPMEM_ENABLED yes
-   unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+setenv MPI_MEMMAP_OFF
+unsetenv MPI_NUM_MEMORY_REGIONS
+setenv MPI_XPMEM_ENABLED yes
+unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 
-   setenv MPI_LAUNCH_TIMEOUT 40
+setenv MPI_LAUNCH_TIMEOUT 40
 
-   # For some reason, PMI_RANK is randomly set and interferes
-   # with binarytile.x and other executables.
-   unsetenv PMI_RANK
+setenv MPI_COMM_MAX  1024
+setenv MPI_GROUP_MAX 1024
+setenv MPI_BUFS_PER_PROC 256
 
-   # Often when debugging on MPT, the traceback from Intel Fortran
-   # is "absorbed" and only MPT's errors are displayed. To allow the
-   # compiler's traceback to be displayed, uncomment this environment
-   # variable
-   #setenv FOR_IGNORE_EXCEPTIONS false
+# For some reason, PMI_RANK is randomly set and interferes
+# with binarytile.x and other executables.
+unsetenv PMI_RANK
+
+# Often when debugging on MPT, the traceback from Intel Fortran
+# is "absorbed" and only MPT's errors are displayed. To allow the
+# compiler's traceback to be displayed, uncomment this environment
+# variable
+#setenv FOR_IGNORE_EXCEPTIONS false
 
 EOF
 
@@ -2282,13 +2303,32 @@ EOF
 
 endif # if NOT Singularity
 
-# Testing on SLES15 showed that the mlx provider did not seem
-# to work at scale. So we move to use the verbs provider. Note:
-# still seems to have issues at c720
+# Testing by Bill Putman found these to be
+# useful flags with Intel MPI on SLES15 on the
+# Milan nodes.
+# Note 1: Testing by NCCS shows the PSM3 provider
+# runs on the Infiniband fabric. Tests show it runs
+# up to C720.
+# Note 2: When the Cascade Lakes are moved to
+# SLES15, these will need to be Milan-only flags
+# as Intel MPI will probably work just fine with
+# Intel chips.
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_OFI_PROVIDER verbs
-setenv I_MPI_COLL_EXTERNAL 0
+setenv I_MPI_FALLBACK 0
+setenv I_MPI_FABRICS ofi
+setenv I_MPI_OFI_PROVIDER psm3
+setenv I_MPI_ADJUST_SCATTER 2
+setenv I_MPI_ADJUST_SCATTERV 2
+setenv I_MPI_ADJUST_GATHER 2
+setenv I_MPI_ADJUST_GATHERV 3
+setenv I_MPI_ADJUST_ALLGATHER 3
+setenv I_MPI_ADJUST_ALLGATHERV 3
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_REDUCE 10
+setenv I_MPI_ADJUST_BCAST 11
+setenv I_MPI_ADJUST_REDUCE_SCATTER 4
+setenv I_MPI_ADJUST_BARRIER 9
 EOF
 
 endif # if SLES15
@@ -2422,7 +2462,7 @@ s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
 s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
-s?@OX_RELAXTIME?259200.?g
+s?@OX_RELAXTIME?$OX_RELAXTIME?g
 s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
