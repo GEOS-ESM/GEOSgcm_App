@@ -857,7 +857,7 @@ else
         set OGCM_NF = 1
         set OCEAN_TAG = Reynolds
         set SSTNAME  = SST
-        set OCEANOUT = c
+        set OCEANOUT = "360x180"
         set SSTFILE  = dataoceanfile_MERRA_sst_1971-current.${OGCM_IM}x${OGCM_JM}.LE
         set ICEFILE  = dataoceanfile_MERRA_fraci_1971-current.${OGCM_IM}x${OGCM_JM}.LE
         set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
@@ -875,7 +875,7 @@ else
         set OGCM_NF = 1
         set OCEAN_TAG = MERRA-2
         set SSTNAME  = MERRA2
-        set OCEANOUT = e
+        set OCEANOUT = "1440x720"
         set SSTFILE  = dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
         set ICEFILE  = dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
         set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
@@ -895,7 +895,7 @@ else
         set CUBE_OGCM = "#DELETE"
         set OCEAN_TAG = Ostia
         set SSTNAME  = OSTIA_REYNOLDS
-        set OCEANOUT = f
+        set OCEANOUT = "2880x1440"
         set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
         set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
         set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
@@ -918,7 +918,7 @@ else
 
              set OCEAN_TAG = Ostia
              set SSTNAME  = OSTIA_REYNOLDS
-             set OCEANOUT = f
+             set OCEANOUT = "CS"
              set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
              set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
              set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
@@ -1443,7 +1443,7 @@ endif
     if( $LSM_BCS == 1 ) then
                         set LSM_BCS = "ICA"
                         set LSM_PARMS = "#DELETE"
-                        set EMIP_BCS_IN = "Ganymed-4_0"
+                        set EMIP_BCS_IN = "GM4"
                         set EMIP_OLDLAND = ""
                         set EMIP_NEWLAND = "#DELETE"
                         set EMIP_MERRA2  = "MERRA2"
@@ -1451,7 +1451,7 @@ endif
     if( $LSM_BCS == 2 ) then
                         set LSM_BCS = "NL3"
                         set LSM_PARMS = ""
-                        set EMIP_BCS_IN = "Icarus-NLv3"
+                        set EMIP_BCS_IN = "NL3"
                         set EMIP_OLDLAND = "#DELETE"
                         set EMIP_NEWLAND = ""
                         set EMIP_MERRA2  = "MERRA2_NewLand"
@@ -1737,7 +1737,8 @@ if( $SITE == 'NAS' ) then
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                  # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
-              setenv BCSDIR     ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS}                            # location of Boundary Conditions
+              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
+              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                                                         # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                                                    # Default Analysis Location   for M2 REPLAY
@@ -1783,7 +1784,8 @@ else if( $SITE == 'NCCS' ) then
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
-              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS}  # location of Boundary Conditions
+              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
+              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                            # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID x0039                                                   # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
@@ -1826,7 +1828,8 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
-              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS} # location of Boundary Conditions
+              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
+              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                      # location of Boundary Conditions
 	      setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
@@ -1863,7 +1866,8 @@ else
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
-              setenv BCSDIR  ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles/${LSM_BCS} # location of Boundary Conditions
+              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
+              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                     # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                            # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
@@ -2307,6 +2311,7 @@ s?@MPT_SHEPHERD?$MPT_SHEPHERD?g
 s?@SINGULARITY_SANDBOX?$SINGULARITY_SANDBOX?g
 s?@REAL_BIND_PATH?$REAL_BIND_PATH?g
 s?@BASE_BIND_PATH?$BASE_BIND_PATH?g
+s?@BC_BASE?$BC_BASE?g
 s?@BOUNDARY_DIR?$BOUNDARY_DIR?g
 
 s?@CHECKPOINT_TYPE?default?g
