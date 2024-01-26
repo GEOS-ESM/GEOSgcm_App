@@ -65,10 +65,6 @@ ORBIT_ANAL2B: .TRUE.
 # GFDL_1M microphysics options
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
-@GFDL_1M_USE_BERGERON: .FALSE.
-@GFDL_1M_USE_AEROSOL_NN: .TRUE.
-@GFDL_1M_ICE_RADII_PARAM: 1
-@GFDL_1M_MELTFRZ: .TRUE.
 @GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
 ###########################################################
 
@@ -106,6 +102,7 @@ CLOSURE_CONGESTUS: 3
 ###########################################################
 # TRB/GWD Parameterization
 # ------------------------
+@FV_HWT RAYLEIGH_TAU1: 0.0
 ###########################################################
 
 >>>HIST_GOCART<<<###########################################################
@@ -329,6 +326,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #X_EXP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@ANA_EXPID
 #X_EXP REPLAY_MODE: Regular
 #X_EXP REPLAY_FILE: ana/Y%y4/M%m2/@ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#X_EXP REPLAY_FILE_FREQUENCY: 7200
 
 #   Regular REPLAY to ERA5
 #   ----------------------
@@ -843,11 +841,15 @@ HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
 # Set RADIATION Parameterizations
 # -------------------------------
 USE_RRTMG_IRRAD: 1.0
-
 USE_RRTMG_SORAD: 1.0
 ISOLVAR: 2
 USE_NRLSSI2: .TRUE.
-SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.v2022.txt
+SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.txt
+# NOTE: The NRLSSI2.txt file is a symlink pointing to the latest NRLSSI2 file
+#       in the ExtData/g5gcm/solar directory.  The symlink is updated by the
+#       Boundary Conditions maintainers as new NRLSSI2 files are created. To
+#       use a specific NRLSSI2 file, you must change the above to a specific
+#       file, e.g., NRLSSI2.v2022.txt
 
 NUM_BANDS: 30
 
