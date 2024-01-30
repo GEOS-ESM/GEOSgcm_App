@@ -456,13 +456,13 @@ if ( $SITE == 'NCCS' ) then
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}sky  (Skylake)${CN} (default)"
-      echo "   ${C2}cas  (Cascade Lake)${CN}"
+      echo "   ${C2}sky  (Skylake)${CN}"
+      echo "   ${C2}cas  (Cascade Lake)${CN} (default)"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
       if ( .$MODEL == .) then
-         set MODEL = 'sky'
+         set MODEL = 'cas'
       endif
 
       if( $MODEL != 'sky'  & \
@@ -1695,6 +1695,8 @@ endif
 #                    Create Desired HISTORY template
 #######################################################################
 
+onintr TRAP
+
     set check =  FALSE
 while( $check == FALSE )
 
@@ -2471,7 +2473,7 @@ s?@OPS_SPECIES?$OPS_SPECIES?g
 s?@CMIP_SPECIES?$CMIP_SPECIES?g
 s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
 s?>>>FVCUBED<<<?$FVCUBED?g
-s?>>>HIST_GOCART<<<?$HIST_GOCART?g
+s?@HIST_GOCART?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
@@ -2615,26 +2617,32 @@ set FILES = "gcm_run.j          \
              logging.yaml       "
 set FILES = `echo $FILES`
 
+# We need to make a temporary directory for these files as
+# other users might not be able to copy into the install/bin
+# directory where this is running
+
+set TMPOCEANDIR = `mktemp -d`
+
 if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
    if ( $OCEAN_NAME == "MOM" ) then
-      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table ${TMPOCEANDIR}
       set FILES = "$FILES field_table "
    else if ( $OCEAN_NAME == "MOM6" ) then
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml .
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table ${TMPOCEANDIR}
       set FILES = "$FILES MOM_input MOM_override data_table "
    endif
 
    if ( $SEAICE_NAME == "CICE6" ) then
-      /bin/cp ${ETCDIR}/CICE6/cice6_app/${OGCM_IM}x${OGCM_JM}/ice_in .
+      /bin/cp ${ETCDIR}/CICE6/cice6_app/${OGCM_IM}x${OGCM_JM}/ice_in ${TMPOCEANDIR}
       set FILES = "$FILES ice_in "
    endif
 
-   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
-   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j ${TMPOCEANDIR}
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py ${TMPOCEANDIR}/__init__.py
 
 set FILES = "$FILES      \
              input.nml   \
@@ -2664,6 +2672,8 @@ foreach FILE ($FILES)
       cat       $BINDIR/$FILE > $HOMDIR/tmpfile
    else if ( -e $ETCDIR/$FILE ) then
       cat       $ETCDIR/$FILE > $HOMDIR/tmpfile
+   else if ( -e $TMPOCEANDIR/$FILE ) then
+      cat       $TMPOCEANDIR/$FILE > $HOMDIR/tmpfile
    else
       echo "ERROR! Cannot find $FILE in $BINDIR or $ETCDIR!"
       exit 2
@@ -3279,8 +3289,6 @@ endif
 # Make all our needed temporary files
 # -----------------------------------
 
-onintr TRAP
-
 set FILES_TO_PROCESS=`mktemp`
 set OLDEXPFILES=`mktemp`
 set NEWEXPFILES=`mktemp`
@@ -3484,6 +3492,8 @@ echo ""
 /bin/rm $NEWEXPFILES
 /bin/rm $COPYSCRIPT
 /bin/rm $SEDFILE
+/bin/rm $TMPHIST
+/bin/rm -rf $TMPOCEANDIR
 
 # ------------------------
 # Cloned Experiment Source
@@ -3521,7 +3531,8 @@ exit
 # ------------------------------------------
 TRAP:
    echo "Interrupt received, cleaning up temporary files"
-   /bin/rm $FILES_TO_PROCESS $OLDEXPFILES $NEWEXPFILES $COPYSCRIPT $SEDFILE
+   /bin/rm -f $FILES_TO_PROCESS $OLDEXPFILES $NEWEXPFILES $COPYSCRIPT $SEDFILE $TMPHIST
+   /bin/rm -rf $TMPOCEANDIR
    exit 1
 
 #######################################################################
