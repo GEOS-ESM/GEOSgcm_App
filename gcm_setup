@@ -1614,9 +1614,11 @@ EMISSIONS:
      if(  $EMISSIONS == OPS_EMISSIONS ) then
         set OPS_SPECIES = ''
         set PCHEM_CLIM_YEARS = 1
+        set OX_RELAXTIME = 0.
      else
         set MERRA2OX_SPECIES = ''
         set PCHEM_CLIM_YEARS = 39
+        set OX_RELAXTIME = 259200.
      endif
 
 
@@ -2189,7 +2191,7 @@ if( $MPI == openmpi ) then
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
 
-set RESTART_BY_OSERVER = YES
+set RESTART_BY_OSERVER = NO
 
 # This turns off an annoying warning when running
 # Open MPI on a system where TMPDIRs are on a networked
@@ -2206,7 +2208,7 @@ else if( $MPI == mvapich ) then
 
 # MVAPICH and GEOS has issues with restart writing. Having the
 # oserver write them seems to...work
-set RESTART_BY_OSERVER = YES
+set RESTART_BY_OSERVER = NO
 
 cat > $HOMDIR/SETENV.commands << EOF
    setenv MV2_ENABLE_AFFINITY     0
@@ -2422,7 +2424,7 @@ s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
 s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
-s?@OX_RELAXTIME?259200.?g
+s?@OX_RELAXTIME?$OX_RELAXTIME?g
 s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
