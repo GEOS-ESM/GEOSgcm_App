@@ -4,6 +4,17 @@ ecbuild_add_executable (
   LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
   )
 
+# Using JeMalloc will be optional, default OFF
+option (USE_JEMALLOC "Use JeMalloc" OFF)
+if (USE_JEMALLOC)
+  find_package (JeMalloc)
+  if (JeMalloc_FOUND)
+    target_link_libraries (GEOSgcm.x JeMalloc::JeMalloc)
+  else ()
+    message (FATAL_ERROR "USE_JEMALLOC is ON but JeMalloc is not found")
+  endif ()
+endif ()
+
 ecbuild_add_executable (
   TARGET idfupd.x
   SOURCES idfupd.F90
