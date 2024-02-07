@@ -456,13 +456,13 @@ if ( $SITE == 'NCCS' ) then
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}sky  (Skylake)${CN} (default)"
-      echo "   ${C2}cas  (Cascade Lake)${CN}"
+      echo "   ${C2}sky  (Skylake)${CN}"
+      echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
       if ( .$MODEL == .) then
-         set MODEL = 'sky'
+         set MODEL = 'cas'
       endif
 
       if( $MODEL != 'sky'  & \
@@ -1550,9 +1550,11 @@ EMISSIONS:
      if(  $EMISSIONS == OPS_EMISSIONS ) then
         set OPS_SPECIES = ''
         set PCHEM_CLIM_YEARS = 1
+        set OX_RELAXTIME = 0.00
      else
         set MERRA2OX_SPECIES = ''
         set PCHEM_CLIM_YEARS = 39
+        set OX_RELAXTIME = 259200.
      endif
 
 
@@ -1598,6 +1600,8 @@ endif
 #######################################################################
 #                    Create Desired HISTORY template
 #######################################################################
+
+onintr TRAP
 
     set check =  FALSE
 while( $check == FALSE )
@@ -2121,12 +2125,27 @@ if( $MPI == openmpi ) then
 
 set RESTART_BY_OSERVER = YES
 
-# This turns off an annoying warning when running
-# Open MPI on a system where TMPDIRs are on a networked
-# file system
+# Testing by Bill Putman determined some useful
+# Open MPI parameters. Testing shows these work
+# on both OSs at NCCS and on macOS
 
 cat > $HOMDIR/SETENV.commands << EOF
+# Turn off warning about TMPDIR on NFS
 setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# pre-connect MPI procs on mpi_init
+setenv OMPI_MCA_mpi_preconnect_all 1
+setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
+setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
+setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 3
+setenv OMPI_MCA_coll_tuned_allreduce_algorithm 3
+setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
+setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
+setenv OMPI_MCA_coll_tuned_gather_algorithm 1
+setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+# required for a tuned flag to be effective
+setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+# disable file locks
+setenv OMPI_MCA_sharedfp "^lockedfile,individual"
 EOF
 
 # The below settings seem to be recommended for hybrid
@@ -2139,10 +2158,10 @@ else if( $MPI == mvapich ) then
 set RESTART_BY_OSERVER = YES
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY     0
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
+setenv MV2_ENABLE_AFFINITY 0
+setenv SLURM_DISTRIBUTION block
+setenv MV2_MPIRUN_TIMEOUT 100
+setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else if( $MPI == mpt ) then
@@ -2216,13 +2235,32 @@ EOF
 
 endif # if NOT Singularity
 
-# Testing on SLES15 showed that the mlx provider did not seem
-# to work at scale. So we move to use the verbs provider. Note:
-# still seems to have issues at c720
+# Testing by Bill Putman found these to be
+# useful flags with Intel MPI on SLES15 on the
+# Milan nodes.
+# Note 1: Testing by NCCS shows the PSM3 provider
+# runs on the Infiniband fabric. Tests show it runs
+# up to C720.
+# Note 2: When the Cascade Lakes are moved to
+# SLES15, these will need to be Milan-only flags
+# as Intel MPI will probably work just fine with
+# Intel chips.
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_OFI_PROVIDER verbs
-setenv I_MPI_COLL_EXTERNAL 0
+setenv I_MPI_FALLBACK 0
+setenv I_MPI_FABRICS ofi
+setenv I_MPI_OFI_PROVIDER psm3
+setenv I_MPI_ADJUST_SCATTER 2
+setenv I_MPI_ADJUST_SCATTERV 2
+setenv I_MPI_ADJUST_GATHER 2
+setenv I_MPI_ADJUST_GATHERV 3
+setenv I_MPI_ADJUST_ALLGATHER 3
+setenv I_MPI_ADJUST_ALLGATHERV 3
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_REDUCE 10
+setenv I_MPI_ADJUST_BCAST 11
+setenv I_MPI_ADJUST_REDUCE_SCATTER 4
+setenv I_MPI_ADJUST_BARRIER 9
 EOF
 
 endif # if SLES15
@@ -2336,7 +2374,7 @@ s?@OPS_SPECIES?$OPS_SPECIES?g
 s?@CMIP_SPECIES?$CMIP_SPECIES?g
 s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
 s?>>>FVCUBED<<<?$FVCUBED?g
-s?>>>HIST_GOCART<<<?$HIST_GOCART?g
+s?@HIST_GOCART?$HIST_GOCART?g
 s?>>>OSTIA<<<?$OSTIA?g
 s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
 s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
@@ -2357,7 +2395,7 @@ s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
 s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
 s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
 
-s?@OX_RELAXTIME?259200.?g
+s?@OX_RELAXTIME?$OX_RELAXTIME?g
 s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
@@ -2479,26 +2517,32 @@ set FILES = "gcm_run.j          \
              linkbcs.tmpl       "
 set FILES = `echo $FILES`
 
+# We need to make a temporary directory for these files as
+# other users might not be able to copy into the install/bin
+# directory where this is running
+
+set TMPOCEANDIR = `mktemp -d`
+
 if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
    if ( $OCEAN_NAME == "MOM" ) then
-      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml .
-      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table .
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table ${TMPOCEANDIR}
       set FILES = "$FILES field_table "
    else if ( $OCEAN_NAME == "MOM6" ) then
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input .
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override .
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml .
-      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table .
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml ${TMPOCEANDIR}
+      /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table ${TMPOCEANDIR}
       set FILES = "$FILES MOM_input MOM_override data_table "
    endif
 
    if ( $SEAICE_NAME == "CICE6" ) then
-      /bin/cp ${ETCDIR}/CICE6/cice6_app/${OGCM_IM}x${OGCM_JM}/ice_in .
+      /bin/cp ${ETCDIR}/CICE6/cice6_app/${OGCM_IM}x${OGCM_JM}/ice_in ${TMPOCEANDIR}
       set FILES = "$FILES ice_in "
    endif
 
-   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j .
-   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py __init__.py
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j ${TMPOCEANDIR}
+   /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/confocn.py ${TMPOCEANDIR}/__init__.py
 
 set FILES = "$FILES      \
              input.nml   \
@@ -2528,6 +2572,8 @@ foreach FILE ($FILES)
       cat       $BINDIR/$FILE > $HOMDIR/tmpfile
    else if ( -e $ETCDIR/$FILE ) then
       cat       $ETCDIR/$FILE > $HOMDIR/tmpfile
+   else if ( -e $TMPOCEANDIR/$FILE ) then
+      cat       $TMPOCEANDIR/$FILE > $HOMDIR/tmpfile
    else
       echo "ERROR! Cannot find $FILE in $BINDIR or $ETCDIR!"
       exit 2
@@ -2977,8 +3023,6 @@ endif
 # Make all our needed temporary files
 # -----------------------------------
 
-onintr TRAP
-
 set FILES_TO_PROCESS=`mktemp`
 set OLDEXPFILES=`mktemp`
 set NEWEXPFILES=`mktemp`
@@ -3183,6 +3227,8 @@ echo ""
 /bin/rm $NEWEXPFILES
 /bin/rm $COPYSCRIPT
 /bin/rm $SEDFILE
+/bin/rm $TMPHIST
+/bin/rm -rf $TMPOCEANDIR
 
 # ------------------------
 # Cloned Experiment Source
@@ -3220,7 +3266,8 @@ exit
 # ------------------------------------------
 TRAP:
    echo "Interrupt received, cleaning up temporary files"
-   /bin/rm $FILES_TO_PROCESS $OLDEXPFILES $NEWEXPFILES $COPYSCRIPT $SEDFILE
+   /bin/rm -f $FILES_TO_PROCESS $OLDEXPFILES $NEWEXPFILES $COPYSCRIPT $SEDFILE $TMPHIST
+   /bin/rm -rf $TMPOCEANDIR
    exit 1
 
 #######################################################################

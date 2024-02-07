@@ -253,6 +253,9 @@ cp -f  $HOMDIR/*.nml .
 cp -f  $HOMDIR/*.yaml .
 cp     $GEOSBIN/bundleParser.py .
 
+cp -f  $HOMDIR/RC.ww3/mod_def.* .
+cp -f  $HOMDIR/RC.ww3/ww3*.nml .
+
 cat fvcore_layout.rc >> input.nml
 if (-z input.nml) then
    echo "try cat for input.nml again"
@@ -510,6 +513,11 @@ foreach rst ( $dummy )
   endif
 end
 
+# WGCM runtime parameters
+# -----------------------
+set USE_WAVES = `grep '^\s*USE_WAVES:' AGCM.rc| cut -d: -f2`
+set wavemodel = `cat WGCM.rc | grep "wave_model:" | cut -d "#" -f1 | cut -d ":" -f 2 | sed 's/\s//g'`
+
 # Copy Restarts to Scratch Directory
 # ----------------------------------
 if( $GCMEMIP == TRUE ) then
@@ -520,6 +528,12 @@ else
     foreach rst ( $rst_file_names $monthly_chk_names )
       if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
     end
+
+    # WW3 restart file
+    if( $wavemodel == "WW3" ) then
+        set rst_ww3 = "restart.ww3"
+        if(-e $EXPDIR/${rst_ww3} ) /bin/cp $EXPDIR/${rst_ww3} . &
+    endif
 endif
 wait
 
@@ -550,6 +564,11 @@ if($numrs == 0) then
    end
    wait
 @COUPLED    cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
+   # WW3 restart file
+   if( $wavemodel == "WW3" ) then
+       set rst_ww3 = "restart.ww3"
+       if( -e ${rst_ww3} ) cp ${rst_ww3}  ${EXPDIR}/restarts/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   endif
    cd $EXPDIR/restarts
       @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
       @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
@@ -702,6 +721,29 @@ if( ${EMISSIONS} == AMIP_EMISSIONS ) then
         end
     endif
 
+endif
+
+# Set WW3 start date and time
+# ---------------------------
+if ( $USE_WAVES != 0 && $wavemodel == "WW3" ) then
+    cp ww3_multi.nml ww3_multi.nml.orig
+    awk '{$1=$1};1' < ww3_multi.nml.orig > ww3_multi.nml
+
+    # set start date
+    set oldstring =  `grep '^\s*DOMAIN%START' ww3_multi.nml`
+    set newstring =  "DOMAIN%START = '${nymdc} ${nhmsc}'"
+
+    /bin/mv ww3_multi.nml ww3_multi.nml.tmp
+    cat ww3_multi.nml.tmp | sed -e "s?$oldstring?$newstring?g" > ww3_multi.nml
+    /bin/rm ww3_multi.nml.tmp
+
+    # set end date
+    set oldstring =  `grep '^\s*DOMAIN%STOP' ww3_multi.nml`
+    set newstring =  "DOMAIN%STOP = '${nymde} ${nhmse}'"
+
+    /bin/mv ww3_multi.nml ww3_multi.nml.tmp
+    cat ww3_multi.nml.tmp | sed -e "s?$oldstring?$newstring?g" > ww3_multi.nml
+    /bin/rm ww3_multi.nml.tmp
 endif
 
 if( $AGCM_LM  != 72 ) then
@@ -1160,6 +1202,19 @@ foreach  restart ($restarts)
 $GEOSBIN/stripname .${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.\* '' $restart
 end
 
+# WW3 restarts - assumes that there is at least one NEW restart file
+# ------------------------------------------------------------------
+if( $wavemodel == "WW3" ) then
+
+    set ww3checkpoint  = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1`
+    set rst_ww3 = "restart.ww3"
+    if ( $#ww3checkpoint != 0 ) /bin/mv -f $ww3checkpoint $rst_ww3
+    cp $rst_ww3 ${EXPDIR}/restarts/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.bin
+
+    # remove intermediate restarts
+    set ww3checkpoint  = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1` 
+    if ( $#ww3checkpoint != 0 ) /bin/rm  ./restart[0-9][0-9][0-9].ww3
+endif
 
 # TAR ARCHIVED RESTARTS
 # ---------------------
@@ -1274,6 +1329,13 @@ else
      end
      wait
      cp cap_restart $EXPDIR/cap_restart
+
+     if( $wavemodel == "WW3" ) then 
+        set rst_ww3 = "restart.ww3"
+        /bin/rm -f $EXPDIR/$rst_ww3
+        cp $rst_ww3 $EXPDIR/$rst_ww3 &
+        wait
+     endif
 endif
 
 @COUPLED cp -rf RESTART $EXPDIR
