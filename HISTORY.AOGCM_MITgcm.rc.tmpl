@@ -3,25 +3,26 @@ EXPID:  @EXPID
 EXPDSC: @EXPDSC
 EXPSRC: @EXPSRC
 
-
 CONTACT: 'http://gmao.gsfc.nasa.gov'
 
 COLLECTIONS: 'geosgcm_prog'
 #             'prog.eta'
              'geosgcm_surf'
-             'geosgcm_ocn'
+#             'geosgcm_ocn'
+             'geosgcm_ocean'
              'geosgcm_moist'
              'geosgcm_turb'
-             'geosgcm_gwd'
+#             'geosgcm_gwd'
+             'geosgcm_tendmoist'
              'geosgcm_tend'
-             'geosgcm_budi'
-             'geosgcm_buda'
+#             'geosgcm_budi'
+#             'geosgcm_buda'
 #            'geosgcm_landice'
 #            'geosgcm_meltwtr'
 #            'geosgcm_snowlayer'
-             'geosgcm_tracer'
-@HIST_GOCART             'tavg2d_aer_x'
-@HIST_GOCART             'tavg3d_aer_p'
+#             'geosgcm_tracer'
+#             'tavg2d_aer_x'
+#             'tavg3d_aer_p'
 #             'geosgcm_iau'
 #             'geosgcm_conv'
 #             'goswim_catch'
@@ -40,10 +41,10 @@ COLLECTIONS: 'geosgcm_prog'
 #             'geosgcm_int'
               'geosgcm_seaice'
               'geosgcm_icethm'
-              'geosgcm_ocn2dT'
-	      'geosgcm_ocn2d'
-	      'geosgcm_ocn3dT'
-	      'geosgcm_ocn3d'
+#              'geosgcm_ocn2dT'
+#	      'geosgcm_ocn2d'
+#	      'geosgcm_ocn3dT'
+#	      'geosgcm_ocn3d'
 #             'geosgcm_aoflux'
 #             'geosgcm_icecat'
 #             'geosgcm_icesig'
@@ -56,22 +57,22 @@ COLLECTIONS: 'geosgcm_prog'
 #  list of COLLECTIONS for scripting purposes.   #
 ##################################################
 
-GRID_LABELS: PC@HIST_IMx@HIST_JM-DC
+GRID_LABELS: PC360x181-DC
 ::
 
-PC@HIST_IMx@HIST_JM-DC.GRID_TYPE: LatLon
-PC@HIST_IMx@HIST_JM-DC.IM_WORLD: @HIST_IM
-PC@HIST_IMx@HIST_JM-DC.JM_WORLD: @HIST_JM
-PC@HIST_IMx@HIST_JM-DC.POLE: PC
-PC@HIST_IMx@HIST_JM-DC.DATELINE: DC
-PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
-
+PC360x181-DC.GRID_TYPE: LatLon
+PC360x181-DC.IM_WORLD: 360
+PC360x181-DC.JM_WORLD: 181
+PC360x181-DC.POLE: PC
+PC360x181-DC.DATELINE: DC
+PC360x181-DC.LM: 72
+PC360x181-DC.GRIDNAME: PC360x181-DC 
 
   geosgcm_prog.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
   geosgcm_prog.archive:          '%c/Y%y4' ,
   geosgcm_prog.format:           'CFIO' ,
   geosgcm_prog.deflate:           1 ,
-  geosgcm_prog.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_prog.grid_label:        PC360x181-DC ,
   geosgcm_prog.regrid_method:    'BILINEAR',
   geosgcm_prog.frequency:         060000 ,
   geosgcm_prog.vscale:            100.0 ,
@@ -96,7 +97,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   prog.eta.archive:              '%c/Y%y4' ,
   prog.eta.format:               'CFIO' ,
   prog.eta.deflate:               1 ,
-  prog.eta.grid_label:            PC@HIST_IMx@HIST_JM-DC ,
+  prog.eta.grid_label:            PC360x181-DC ,
   prog.eta.regrid_method:        'BILINEAR',
   prog.eta.mode:                 'instantaneous' ,
   prog.eta.frequency:             060000 ,
@@ -105,6 +106,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   prog.eta.fields:               'PHIS'       , 'AGCM'       , 'phis'       ,
                                  'SGH'        , 'AGCM'       , 'hs_stdv'    ,
                                  'TS'         , 'SURFACE'    , 'ts'         ,
+                                 'TPREC'      , 'MOIST'      , 'PRECTOT'    ,
                                  'FRLAND'     , 'SURFACE'    , 'frland'     ,
                                  'FRLANDICE'  , 'SURFACE'    , 'frlandice'  ,
                                  'FRLAKE'     , 'SURFACE'    , 'frlake'     ,
@@ -126,14 +128,15 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_surf.archive:          '%c/Y%y4' ,
   geosgcm_surf.format:           'CFIO' ,
   geosgcm_surf.deflate:           1 ,
-  geosgcm_surf.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_surf.grid_label:        PC360x181-DC ,
   geosgcm_surf.regrid_method:    'BILINEAR',
   geosgcm_surf.mode:             'time-averaged' ,
-  geosgcm_surf.monthly:           1 ,
-# geosgcm_surf.frequency:         030000 ,
+#  geosgcm_surf.monthly:           1 ,
+  geosgcm_surf.frequency:         030000 ,
 # geosgcm_surf.ref_time:          210000 ,
   geosgcm_surf.fields:           'PHIS'           , 'AGCM'        ,
                                  'SGH'            , 'AGCM'        ,
+                                 'TPREC'          , 'MOIST'       , 'PRECTOT'    ,
                                  'VARFLT'         , 'AGCM'        ,
                                  'TROPP_EPV'      , 'AGCM'        , 'TROPPV'     ,
                                  'TROPP_THERMAL'  , 'AGCM'        , 'TROPPT'     ,
@@ -147,6 +150,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                  'US;VS'          , 'DYN'         ,
                                  'PS'             , 'DYN'         ,
                                  'SPEED'          , 'DYN'         ,
+                                 'DISCHARGE'      , 'SURFACE'     ,
                                  'ZPBL'           , 'TURBULENCE'  , 'PBLH'       ,
                                  'TS'             , 'SURFACE'     ,
                                  'QS'             , 'SURFACE'     ,
@@ -280,56 +284,18 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                  'PHIW'           , 'SURFACE'     ,
                                  'TAUTW'          , 'SURFACE'     ,
                                  'ZETA_W'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNLAI'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNTLAI'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNSAI'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNTOTC'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNVEGC'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNROOT'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNFROOTC'       , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNNPP'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNGPP'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNSR'           , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNNEE'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNXSMR'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNADD'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'PARABS'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'PARINC'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'SCSAT'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'SCUNS'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'BTRANT'         , 'SURFACE'     , 'BTRAN'     ,
->>>HIST_CATCHCN<<<               'SIF'            , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'CNLOSS'         , 'SURFACE'     , 'CLOSS'     ,
->>>HIST_CATCHCN<<<               'CNBURN'         , 'SURFACE'     , 'BURN'      ,
->>>HIST_CATCHCN<<<               'CNFSEL'         , 'SURFACE'     , 'FSEL'      ,
->>>HIST_CATCHCN<<<               'EVPICE'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'EVPSNO'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'EVPINT'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'EVPSOI'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'EVPVEG'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'FRSAT'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'FRUST'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'FRWLT'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'TPSAT'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'TPUNST'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'TPWLT'          , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'TPSURF'         , 'SURFACE'     , 'TSURF'     ,
->>>HIST_CATCHCN<<<               'GHTSKIN'        , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'WAT10CM'        , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'WATSOI'         , 'SURFACE'     ,
->>>HIST_CATCHCN<<<               'ICESOI'         , 'SURFACE'     ,
                                   ::
 
   geosgcm_ocn.template:          '%y4%m2%d2_%h2%n2z.nc4' ,
   geosgcm_ocn.archive:           '%c/Y%y4' ,
   geosgcm_ocn.format:            'CFIO' ,
   geosgcm_ocn.deflate:            1 ,
-  geosgcm_ocn.grid_label:         PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_ocn.grid_label:         PC360x181-DC ,
   geosgcm_ocn.regrid_method:     'BILINEAR',
   geosgcm_ocn.mode:              'time-averaged' ,
-  geosgcm_ocn.monthly:            1 ,
+#  geosgcm_ocn.monthly:            1 ,
 # geosgcm_ocn.ref_time:           210000 ,
-# geosgcm_ocn.frequency:          010000 ,
+  geosgcm_ocn.frequency:          001000 ,
 # geosgcm_ocn.duration:           010000 ,
   geosgcm_ocn.fields:            'U10M;V10M'    , 'SURFACE'  ,
                                  'T10M'         , 'SURFACE'  ,
@@ -381,9 +347,9 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_meltwtr.archive:       '%c/Y%y4' ,
   geosgcm_meltwtr.format:        'CFIO' ,
   geosgcm_meltwtr.deflate:        1 ,
-  geosgcm_meltwtr.regrid_name:   '@AGCM_GRIDNAME' ,
+  geosgcm_meltwtr.regrid_name:   'PE90x540-CF' ,
   geosgcm_meltwtr.regrid_exch:   'tile.bin' ,
-  geosgcm_meltwtr.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_meltwtr.grid_label:     PC360x181-DC ,
   geosgcm_meltwtr.regrid_method: 'BILINEAR',
   geosgcm_meltwtr.mode:          'time-averaged' ,
   geosgcm_meltwtr.monthly:        1 ,
@@ -396,9 +362,9 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_landice.archive:       '%c/Y%y4' ,
   geosgcm_landice.format:        'CFIO' ,
   geosgcm_landice.deflate:        1 ,
-  geosgcm_landice.regrid_name:   '@AGCM_GRIDNAME' ,
+  geosgcm_landice.regrid_name:   'PE90x540-CF' ,
   geosgcm_landice.regrid_exch:   'tile.bin' ,
-  geosgcm_landice.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_landice.grid_label:     PC360x181-DC ,
   geosgcm_landice.regrid_method: 'BILINEAR',
   geosgcm_landice.mode:          'time-averaged' ,
   geosgcm_landice.monthly:        1 ,
@@ -427,13 +393,32 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                  'SWNDSRF'    , 'LANDICE'  ,
                                   ::
 
+  geosgcm_ocean.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_ocean.archive:   '%c/Y%y4',
+  geosgcm_ocean.format:    'CFIO',
+##  geosgcm_ocean.mode:      'time-averaged',
+  geosgcm_ocean.frequency:  001500,
+  geosgcm_ocean.grid_label: PC360x181-DC
+  geosgcm_ocean.regrid_exch:'DC0360xPC0181_LL5400x15-LL.bin',
+  geosgcm_ocean.fields:   'SWFLX'    , 'OCEAN'  ,  'SWFLXOCN' ,
+                          'LWFLX'    , 'OCEAN'  ,  'LWFLXOCN' ,
+                          'PEN_OCN'  , 'OCEAN'  ,
+                          'MASKO'    , 'OCEAN'  ,
+                          'FRZMLT'    , 'OCEAN' ,
+                          'TW'        , 'OCEAN' ,
+                          'TW'        , 'MIT'   ,  'TWMIT'    ,
+                          'DEL_TEMP'  , 'MIT'   ,
+                          'LWFLX'    , 'MIT'    ,  'LWFLXMIT' ,
+                          'SWFLX'    , 'MIT'    ,  'SWFLXMIT' ,
+                          ::
+
   geosgcm_snowlayer.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
   geosgcm_snowlayer.archive:     '%c/Y%y4' ,
   geosgcm_snowlayer.format:      'CFIO' ,
   geosgcm_snowlayer.deflate:      1 ,
-  geosgcm_snowlayer.regrid_name: '@AGCM_GRIDNAME' ,
+  geosgcm_snowlayer.regrid_name: 'PE90x540-CF' ,
   geosgcm_snowlayer.regrid_exch: 'tile.bin' ,
-  geosgcm_snowlayer.grid_label:   PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_snowlayer.grid_label:   PC360x181-DC ,
   geosgcm_snowlayer.regrid_method: 'BILINEAR',
   geosgcm_snowlayer.mode:        'time-averaged' ,
   geosgcm_snowlayer.monthly:      1 ,
@@ -455,7 +440,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_moist.archive:         '%c/Y%y4' ,
   geosgcm_moist.format:          'CFIO' ,
   geosgcm_moist.deflate:          1 ,
-  geosgcm_moist.grid_label:       PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_moist.grid_label:       PC360x181-DC ,
   geosgcm_moist.regrid_method:   'BILINEAR',
   geosgcm_moist.mode:            'time-averaged' ,
   geosgcm_moist.monthly:          1 ,
@@ -496,7 +481,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_turb.archive:          '%c/Y%y4' ,
   geosgcm_turb.format:           'CFIO' ,
   geosgcm_turb.deflate:           1 ,
-  geosgcm_turb.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_turb.grid_label:        PC360x181-DC ,
   geosgcm_turb.regrid_method:    'BILINEAR',
   geosgcm_turb.mode:             'time-averaged' ,
   geosgcm_turb.monthly:           1 ,
@@ -527,7 +512,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_gwd.archive:           '%c/Y%y4' ,
   geosgcm_gwd.format:            'CFIO' ,
   geosgcm_gwd.deflate:            1 ,
-  geosgcm_gwd.grid_label:         PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_gwd.grid_label:         PC360x181-DC ,
   geosgcm_gwd.regrid_method:     'BILINEAR',
   geosgcm_gwd.mode:              'time-averaged' ,
   geosgcm_gwd.monthly:            1 ,
@@ -547,11 +532,34 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                  'DTDT_RAY'           , 'GWD'  , 'DTDTRAY'  ,
                                   ::
 
+
+  geosgcm_tendmoist.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  geosgcm_tendmoist.archive:          '%c/Y%y4' ,
+  geosgcm_tendmoist.format:           'CFIO' ,
+  geosgcm_tendmoist.deflate:           1 ,
+  geosgcm_tendmoist.grid_label:        PC360x181-DC ,
+  geosgcm_tendmoist.regrid_method:    'BILINEAR',
+  geosgcm_tendmoist.mode:             'time-averaged' ,
+#  geosgcm_tendmoist.monthly:           1 ,
+# geosgcm_tendmoist.frequency:         240000 ,
+# geosgcm_tendmoist.ref_time:          210000 ,
+  geosgcm_tendmoist.vscale:            100.0 ,
+  geosgcm_tendmoist.vunit:            'hPa' ,
+  geosgcm_tendmoist.vvars:            'log(PLE)' , 'DYN' ,
+  geosgcm_tendmoist.levels:            1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 ,
+  geosgcm_tendmoist.fields:           'DTDT'        , 'MOIST'    ,     'DTDTMST'    ,
+                                 'DTDT_macro'       , 'MOIST'    ,     'DTDT_macro' ,
+                                 'DTDT_micro'       , 'MOIST'    ,     'DTDT_micro' ,
+                                 'DTDT_SC'          , 'MOIST'    ,     'DTDT_SC'    ,
+                                 'DTDT_DC'          , 'MOIST'    ,     'DTDT_DC'    ,
+                                 'DTDT_GF'          , 'MOIST'    ,     'DTDT_GF'    ,
+                                  ::
+
   geosgcm_tend.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
   geosgcm_tend.archive:          '%c/Y%y4' ,
   geosgcm_tend.format:           'CFIO' ,
   geosgcm_tend.deflate:           1 ,
-  geosgcm_tend.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_tend.grid_label:        PC360x181-DC ,
   geosgcm_tend.regrid_method:    'BILINEAR',
   geosgcm_tend.mode:             'time-averaged' ,
   geosgcm_tend.monthly:           1 ,
@@ -588,7 +596,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_budi.archive:          '%c/Y%y4' ,
   geosgcm_budi.format:           'CFIO' ,
   geosgcm_budi.deflate:           1 ,
-  geosgcm_budi.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_budi.grid_label:        PC360x181-DC ,
   geosgcm_budi.regrid_method:    'CONSERVE',
   geosgcm_budi.frequency:         030000 ,
   geosgcm_budi.fields:           'TQV'   , 'AGCM'  ,
@@ -602,10 +610,10 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_buda.archive:          '%c/Y%y4' ,
   geosgcm_buda.format:           'CFIO' ,
   geosgcm_buda.deflate:           1 ,
-  geosgcm_buda.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_buda.grid_label:        PC360x181-DC ,
   geosgcm_buda.regrid_method:    'CONSERVE',
   geosgcm_buda.mode:             'time-averaged' ,
-  geosgcm_buda.monthly:           1 ,
+#  geosgcm_buda.monthly:           1 ,
 # geosgcm_buda.frequency:         030000 ,
   geosgcm_buda.fields:           'DMDTDYN'      , 'DYN'      , 'DMDTDYN'   ,
                                  'DMDTANA'      , 'DYN'      , 'DMDTANA'   ,
@@ -634,7 +642,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_iau.archive:           '%c/Y%y4' ,
   geosgcm_iau.format:            'CFIO' ,
   geosgcm_iau.deflate:            1 ,
-  geosgcm_iau.grid_label:         PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_iau.grid_label:         PC360x181-DC ,
   geosgcm_iau.regrid_method:     'BILINEAR',
   geosgcm_iau.mode:              'time-averaged' ,
 # geosgcm_iau.monthly:            1 ,
@@ -658,7 +666,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_conv.archive:          '%c/Y%y4' ,
   geosgcm_conv.format:           'CFIO' ,
   geosgcm_conv.deflate:           1 ,
-  geosgcm_conv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_conv.grid_label:        PC360x181-DC ,
   geosgcm_conv.regrid_method:    'BILINEAR',
   geosgcm_conv.frequency:         010000 ,
   geosgcm_conv.fields:           'TQV'          , 'AGCM'    ,
@@ -683,7 +691,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_bud.archive:           '%c/Y%y4' ,
   geosgcm_bud.format:            'CFIO' ,
   geosgcm_bud.deflate:            1 ,
-  geosgcm_bud.grid_label:         PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_bud.grid_label:         PC360x181-DC ,
   geosgcm_bud.regrid_method:     'BILINEAR',
   geosgcm_bud.mode:              'time-averaged' ,
   geosgcm_bud.frequency:          240000 ,
@@ -734,9 +742,9 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   goswim_catch.archive:          '%c/Y%y4' ,
   goswim_catch.format:           'CFIO' ,
   goswim_catch.deflate:           1 ,
-  goswim_catch.regrid_name:      '@AGCM_GRIDNAME' ,
+  goswim_catch.regrid_name:      'PE90x540-CF' ,
   goswim_catch.regrid_exch:      'tile.bin' ,
-  goswim_catch.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  goswim_catch.grid_label:        PC360x181-DC ,
   goswim_catch.regrid_method:    'BILINEAR',
   goswim_catch.mode:             'time-averaged' ,
   goswim_catch.frequency:         240000 ,
@@ -768,7 +776,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   goswim_land.archive:           '%c/Y%y4' ,
   goswim_land.format:            'CFIO' ,
   goswim_land.deflate:            1 ,
-  goswim_land.grid_label:         PC@HIST_IMx@HIST_JM-DC ,
+  goswim_land.grid_label:         PC360x181-DC ,
   goswim_land.regrid_method:     'BILINEAR',
   goswim_land.mode:              'time-averaged' ,
   goswim_land.frequency:          240000 ,
@@ -797,9 +805,9 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   goswim_landice.archive:        '%c/Y%y4' ,
   goswim_landice.format:         'CFIO' ,
   goswim_landice.deflate:         1 ,
-  goswim_landice.regrid_name:    '@AGCM_GRIDNAME'
+  goswim_landice.regrid_name:    'PE90x540-CF'
   goswim_landice.regrid_exch:    'tile.bin' ,
-  goswim_landice.grid_label:      PC@HIST_IMx@HIST_JM-DC ,
+  goswim_landice.grid_label:      PC360x181-DC ,
   goswim_landice.regrid_method:  'BILINEAR',
   goswim_landice.mode:           'time-averaged' ,
   goswim_landice.frequency:       240000 ,
@@ -826,7 +834,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   tavg2d_aer_x.archive:        '%c/Y%y4',
   tavg2d_aer_x.format:         'CFIO',
   tavg2d_aer_x.deflate:         1,
-  tavg2d_aer_x.grid_label:      PC@HIST_IMx@HIST_JM-DC,
+  tavg2d_aer_x.grid_label:      PC360x181-DC,
   tavg2d_aer_x.mode:           'time-averaged',
   tavg2d_aer_x.monthly:         1,
 # tavg2d_aer_x.frequency:       240000,
@@ -1005,7 +1013,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   tavg3d_aer_p.archive:        '%c/Y%y4',
   tavg3d_aer_p.format:         'CFIO',
   tavg3d_aer_p.deflate:         1,
-  tavg3d_aer_p.grid_label:      PC@HIST_IMx@HIST_JM-DC,
+  tavg3d_aer_p.grid_label:      PC360x181-DC,
   tavg3d_aer_p.mode:           'time-averaged',
   tavg3d_aer_p.monthly:         1,
 # tavg3d_aer_p.frequency:       240000,
@@ -1050,7 +1058,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_tracer.archive:        '%c/Y%y4' ,
   geosgcm_tracer.format:         'CFIO' ,
   geosgcm_tracer.deflate:         1 ,
-  geosgcm_tracer.grid_label:      PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_tracer.grid_label:      PC360x181-DC ,
   geosgcm_tracer.regrid_method:  'BILINEAR',
   geosgcm_tracer.mode:           'time-averaged' ,
   geosgcm_tracer.monthly:         1 ,
@@ -1080,7 +1088,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_lidar.archive:         '%c/Y%y4' ,
   geosgcm_lidar.format:          'CFIO' ,
   geosgcm_lidar.deflate:          1 ,
-  geosgcm_lidar.grid_label:       PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_lidar.grid_label:       PC360x181-DC ,
   geosgcm_lidar.regrid_method:   'BILINEAR',
   geosgcm_lidar.mode:            'time-averaged' ,
   geosgcm_lidar.frequency:        030000 ,
@@ -1123,7 +1131,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_parasol.archive:       '%c/Y%y4' ,
   geosgcm_parasol.format:        'CFIO' ,
   geosgcm_parasol.deflate:        1 ,
-  geosgcm_parasol.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_parasol.grid_label:     PC360x181-DC ,
   geosgcm_parasol.regrid_method: 'BILINEAR',
   geosgcm_parasol.mode:          'time-averaged' ,
   geosgcm_parasol.frequency:      030000 ,
@@ -1139,7 +1147,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_radar.archive:         '%c/Y%y4' ,
   geosgcm_radar.format:          'CFIO' ,
   geosgcm_radar.deflate:          1 ,
-  geosgcm_radar.grid_label:       PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_radar.grid_label:       PC360x181-DC ,
   geosgcm_radar.regrid_method:   'BILINEAR',
   geosgcm_radar.mode:            'time-averaged' ,
   geosgcm_radar.frequency:        030000 ,
@@ -1182,7 +1190,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_isccp.archive:         '%c/Y%y4' ,
   geosgcm_isccp.format:          'CFIO' ,
   geosgcm_isccp.deflate:          1 ,
-  geosgcm_isccp.grid_label:       PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_isccp.grid_label:       PC360x181-DC ,
   geosgcm_isccp.regrid_method:   'BILINEAR',
   geosgcm_isccp.mode:            'time-averaged' ,
   geosgcm_isccp.frequency:        030000 ,
@@ -1252,7 +1260,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_modis.archive:         '%c/Y%y4' ,
   geosgcm_modis.format:          'CFIO' ,
   geosgcm_modis.deflate:          1 ,
-  geosgcm_modis.grid_label:       PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_modis.grid_label:       PC360x181-DC ,
   geosgcm_modis.regrid_method:   'BILINEAR',
   geosgcm_modis.mode:            'time-averaged' ,
   geosgcm_modis.frequency:        030000 ,
@@ -1334,7 +1342,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_misr.archive:          '%c/Y%y4' ,
   geosgcm_misr.format:           'CFIO' ,
   geosgcm_misr.deflate:           1 ,
-  geosgcm_misr.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_misr.grid_label:        PC360x181-DC ,
   geosgcm_misr.regrid_method:    'BILINEAR',
   geosgcm_misr.mode:             'time-averaged' ,
   geosgcm_misr.frequency:         030000 ,
@@ -1368,7 +1376,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_rad.archive:         '%c/Y%y4',
   geosgcm_rad.format:          'CFIO',
   geosgcm_rad.deflate:         1 ,
-  geosgcm_rad.grid_label:      PC@HIST_IMx@HIST_JM-DC,
+  geosgcm_rad.grid_label:      PC360x181-DC,
   geosgcm_rad.regrid_method:  'BILINEAR',
   geosgcm_rad.mode:           'time-averaged',
   geosgcm_rad.monthly:        1,
@@ -1421,7 +1429,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_int.archive:       '%c/Y%y4',
   geosgcm_int.format:        'CFIO' ,
   geosgcm_int.deflate:       1 ,
-  geosgcm_int.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_int.grid_label:    PC360x181-DC ,
   geosgcm_int.regrid_method: 'BILINEAR',
   geosgcm_int.mode:          'time-averaged' ,
   geosgcm_int.monthly:       1 ,
@@ -1447,7 +1455,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
    geosgcm_seaice.archive:        '%c/Y%y4',
    geosgcm_seaice.format:         'CFIO',
    geosgcm_seaice.deflate:        1 ,
-#  geosgcm_seaice.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+#  geosgcm_seaice.grid_label:     PC360x181-DC ,
 #  geosgcm_seaice.regrid_method:  'BILINEAR',
    geosgcm_seaice.mode:              'time-averaged' ,
    geosgcm_seaice.monthly:            1 ,
@@ -1495,13 +1503,13 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_icethm.archive:       '%c/Y%y4',
   geosgcm_icethm.format:        'CFIO',
   geosgcm_icethm.deflate:       1 ,
-# geosgcm_icethm.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
+# geosgcm_icethm.grid_label:    PC360x181-DC ,
 # geosgcm_icethm.regrid_method: 'BILINEAR',
   geosgcm_icethm.mode:          'time-averaged' ,
   geosgcm_icethm.monthly:        1 ,
 # geosgcm_icethm.frequency:   240000,
   geosgcm_icethm.regrid_exch:'tile.bin',
-  geosgcm_icethm.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_icethm.regrid_name:'LL5400x15-LL',
   geosgcm_icethm.fields:   'DVIDTT'              , 'SEAICETHERMO',  'dvidtt',
                            'DAIDTT'              , 'SEAICETHERMO',  'daidtt',
                            'FBOT'                , 'SEAICETHERMO',  'fbot',
@@ -1528,7 +1536,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_ocn3d.deflate:   1 ,
   geosgcm_ocn3d.monthly: 1 ,
   geosgcm_ocn3d.mode:      'time-averaged',
-  geosgcm_ocn3d.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_ocn3d.grid_label:     PC360x181-DC ,
   geosgcm_ocn3d.levels: 'vgrid.ascii'
   geosgcm_ocn3d.fields:  'DH'    , 'MOM',
                      'T'     , 'MOM',
@@ -1547,7 +1555,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_ocn2d.deflate:   1 ,
   geosgcm_ocn2d.monthly: 1 ,
   geosgcm_ocn2d.mode:      'time-averaged',
-  geosgcm_ocn2d.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+  geosgcm_ocn2d.grid_label:     PC360x181-DC ,
   geosgcm_ocn2d.fields:    'UW'    , 'MOM', 'US'
   	           'VW'    , 'MOM', 'VS'
 		   'TW'    , 'MOM', 'TS'
@@ -1631,13 +1639,13 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_aoflux.archive:   '%c/Y%y4',
   geosgcm_aoflux.format:     'CFIO',
   geosgcm_aoflux.deflate:            1 ,
-# geosgcm_aoflux.grid_label:         PC@HIST_IMx@HIST_JM-DC ,
+# geosgcm_aoflux.grid_label:         PC360x181-DC ,
 # geosgcm_aoflux.regrid_method:     'BILINEAR',
   geosgcm_aoflux.mode:              'time-averaged' ,
   geosgcm_aoflux.monthly:            1 ,
   geosgcm_aoflux.frequency:    240000,
 # geosgcm_aoflux.regrid_exch:'tile.bin',
-  geosgcm_aoflux.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_aoflux.regrid_name:'LL5400x15-LL',
   geosgcm_aoflux.fields:     'TS_FOUND'    , 'OPENWATER',
                             'SS_FOUND'    , 'OPENWATER',
                             'AO_DRNIR'    , 'OPENWATER',
@@ -1699,7 +1707,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_iceflxn.mode:       'time-averaged',
 # geosgcm_iceflxn.frequency:   240000,
   geosgcm_iceflxn.regrid_exch:'tile.bin',
-  geosgcm_iceflxn.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_iceflxn.regrid_name:'LL5400x15-LL',
   geosgcm_iceflxn.fields:     'FCONDBOTN'      , 'SEAICETHERMO', 'fcondbotn',
                               'SHICEN'         , 'SEAICETHERMO',
                               'FSWSFCN'      , 'SEAICETHERMO',
@@ -1720,7 +1728,7 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
   geosgcm_iceflx.mode: 'time-averaged',
 # geosgcm_iceflx.frequency:   240000,
   geosgcm_iceflx.regrid_exch:'tile.bin',
-  geosgcm_iceflx.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_iceflx.regrid_name:'LL5400x15-LL',
   geosgcm_iceflx.fields:   'LWDNSRF'             , 'SEAICETHERMO',
                            'SWDNSRF'             , 'SEAICETHERMO',
                            'HLWUPICE'            , 'SEAICETHERMO',

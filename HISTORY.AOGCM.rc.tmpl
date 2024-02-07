@@ -20,8 +20,8 @@ COLLECTIONS: 'geosgcm_prog'
 #            'geosgcm_meltwtr'
 #            'geosgcm_snowlayer'
              'geosgcm_tracer'
->>>HIST_GOCART<<<             'tavg2d_aer_x'
->>>HIST_GOCART<<<             'tavg3d_aer_p'
+@HIST_GOCART             'tavg2d_aer_x'
+@HIST_GOCART             'tavg3d_aer_p'
 #             'geosgcm_iau'
 #             'geosgcm_conv'
 #             'goswim_catch'
@@ -39,7 +39,7 @@ COLLECTIONS: 'geosgcm_prog'
               'geosgcm_rad'
 #             'geosgcm_int'
               'geosgcm_seaice'
-              'geosgcm_icethm'
+>>>HIST_CICE4<<<              'geosgcm_icethm'
               'geosgcm_ocn2dT'
 #             'geosgcm_aoflux'
 #             'geosgcm_icecat'
@@ -115,8 +115,8 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                                  'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                                  'QITOT'      , 'AGCM'       , 'qitot'      ,
                                  'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                                 'QRTOT'      , 'MOIST'      , 'qrtot'      ,
-                                 'QSTOT'      , 'MOIST'      , 'qstot'      ,
+                                 'QR'         , 'MOIST'      , 'qrtot'      ,
+                                 'QS'         , 'MOIST'      , 'qstot'      ,
                                   ::
 
   geosgcm_surf.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
@@ -1451,41 +1451,41 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
 #  geosgcm_seaice.frequency:  240000,
    geosgcm_seaice.fields:    'UI'          , 'SEAICE',
                              'VI'          , 'SEAICE',
-                             'VEL'         , 'SEAICE',
-                             'STRENGTH'    , 'SEAICE',
-                             'SHEAR'       , 'SEAICE',
-                             'DIVU'        , 'SEAICE',
+>>>HIST_CICE4<<<                             'VEL'         , 'SEAICE',
+>>>HIST_CICE4<<<                             'STRENGTH'    , 'SEAICE',
+>>>HIST_CICE4<<<                             'SHEAR'       , 'SEAICE',
+>>>HIST_CICE4<<<                             'DIVU'        , 'SEAICE',
                              'HICE'        , 'SEAICE',
-                             'HICE0'       , 'SEAICE',
+>>>HIST_CICE4<<<                             'HICE0'       , 'SEAICE',
                              'HSNO'        , 'SEAICE',
-                             'HSNO0'       , 'SEAICE',
-                             'DRAFT'       , 'SEAICE',
-                             'DRAFT0'      , 'SEAICE',
+>>>HIST_CICE4<<<                             'HSNO0'       , 'SEAICE',
+>>>HIST_CICE4<<<                             'DRAFT'       , 'SEAICE',
+>>>HIST_CICE4<<<                             'DRAFT0'      , 'SEAICE',
                              'AICE'        , 'SEAICE',
-                             'DVIDTD'      , 'SEAICE',
-                             'DAIDTD'      , 'SEAICE',
-                             'DVIRDGDT'    , 'SEAICE',
-                             'STRCORX'     , 'SEAICE',
-                             'STRCORY'     , 'SEAICE',
-                             'STRTLTX'     , 'SEAICE',
-                             'STRTLTY'     , 'SEAICE',
-                             'STRINTX'     , 'SEAICE',
-                             'STRINTY'     , 'SEAICE',
-                             'TAUXOCNB'    , 'SEAICE',
-                             'TAUYOCNB'    , 'SEAICE',
-                             'TAUXI'       , 'SEAICE',
-                             'TAUYI'       , 'SEAICE',
-                             'TAUXIB'      , 'SEAICE',
-                             'TAUYIB'      , 'SEAICE',
+>>>HIST_CICE4<<<                             'DVIDTD'      , 'SEAICE',
+>>>HIST_CICE4<<<                             'DAIDTD'      , 'SEAICE',
+>>>HIST_CICE4<<<                             'DVIRDGDT'    , 'SEAICE',
+>>>HIST_CICE4<<<                             'STRCORX'     , 'SEAICE',
+>>>HIST_CICE4<<<                             'STRCORY'     , 'SEAICE',
+>>>HIST_CICE4<<<                             'STRTLTX'     , 'SEAICE',
+>>>HIST_CICE4<<<                             'STRTLTY'     , 'SEAICE',
+>>>HIST_CICE4<<<                             'STRINTX'     , 'SEAICE',
+>>>HIST_CICE4<<<                             'STRINTY'     , 'SEAICE',
+>>>HIST_CICE4<<<                             'TAUXOCNB'    , 'SEAICE',
+>>>HIST_CICE4<<<                             'TAUYOCNB'    , 'SEAICE',
+>>>HIST_CICE4<<<                             'TAUXI'       , 'SEAICE',
+>>>HIST_CICE4<<<                             'TAUYI'       , 'SEAICE',
+>>>HIST_CICE4<<<                             'TAUXIB'      , 'SEAICE',
+>>>HIST_CICE4<<<                             'TAUYIB'      , 'SEAICE',
                              'TAUXBOT'     , 'SEAICE',
                              'TAUYBOT'     , 'SEAICE',
-                             'UOCN'        , 'SEAICE',
-                             'VOCN'        , 'SEAICE',
-                             'SSH'         , 'SEAICE',
-                             'SLV'         , 'SEAICE',
-                             'AREA'        , 'SEAICE',
-                             'FROCEAN'     , 'SEAICE',
-                             'TMASK'       , 'SEAICE',
+>>>HIST_CICE4<<<                             'UOCN'        , 'SEAICE',
+>>>HIST_CICE4<<<                             'VOCN'        , 'SEAICE',
+>>>HIST_CICE4<<<                             'SSH'         , 'SEAICE',
+>>>HIST_CICE4<<<                             'SLV'         , 'SEAICE',
+>>>HIST_CICE4<<<                             'AREA'        , 'SEAICE',
+>>>HIST_CICE4<<<                             'FROCEAN'     , 'SEAICE',
+>>>HIST_CICE4<<<                             'TMASK'       , 'SEAICE',
                               ::
 
   geosgcm_icethm.template:      '%y4%m2%d2_%h2%n2z.nc4',
