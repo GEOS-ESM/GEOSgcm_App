@@ -459,7 +459,7 @@ if( $RUN_STARTSTOP == TRUE ) then
 
    # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
    # and we need to move those as well if they exist
-   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    # Need also make another variable storing all the mkiau_checkpoint files
    set complete_startstop_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
@@ -533,7 +533,7 @@ end
 
 # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
 # and we need to move those as well if they exist
-set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
 # Need also make another variable storing all the replay checkpoint files
 set complete_layout_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
 foreach chk ( $replay_chk_file_names )
@@ -631,7 +631,7 @@ if ($RUN_STARTSTOP == TRUE) then
 
    # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
    # and we need to move those as well if they exist
-   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
       /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.3
    end
@@ -745,7 +745,7 @@ if ( $RUN_LAYOUT == TRUE) then
 
    # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
    # and we need to move those as well if they exist
-   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4` 
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
       /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.4
    end
