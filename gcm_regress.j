@@ -692,6 +692,7 @@ if ( $RUN_LAYOUT == TRUE) then
    /bin/mv CAP.rc CAP.tmp
    cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
+   # Set the new NX and NY
    ./strip AGCM.rc
    set oldstring = `cat AGCM.rc | grep "^ *NX:"`
    set newstring = "NX: ${test_NX}"
@@ -701,6 +702,17 @@ if ( $RUN_LAYOUT == TRUE) then
    set newstring = "NY: ${test_NY}"
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+   # Set the new number of writers and readers
+   set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`
+   set newstring = "NUM_WRITERS: 6"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`
+   set newstring = "NUM_READERS: 6"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
    @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
    @COUPLED set newstring = "OGCM.NX: ${test_NY}"
    @COUPLED /bin/mv AGCM.rc AGCM.tmp
@@ -777,8 +789,8 @@ if ($RUN_STARTSTOP == TRUE) then
          if( $check == true ) then
             echo Comparing ${chk}
 
-   # compare binary checkpoint files
-            cmp $file1 $file2
+            # compare NetCDF-4 checkpoint files
+            ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
                echo " "
@@ -787,17 +799,6 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
-   # compare NetCDF-4 checkpoint files
-   # 	 ${NCCMP} $file1 $file2
-   # 	 if( status == 0 ) then
-   # 	     echo Start-Stop Success!
-   # 	     echo " "
-   # 	 else
-   # 	     echo Start-Stop Failed!
-   # 	     echo " "
-   # 	     set startstop_pass = false
-   # 	 endif
 
          endif
    endif
@@ -915,8 +916,8 @@ if ($RUN_LAYOUT == TRUE) then
          if( $check == true ) then
             echo Comparing ${chk}
 
-   # compare binary checkpoint files
-            cmp $file1 $file2
+            # compare NetCDF-4 checkpoint files
+            ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
                echo " "
@@ -925,17 +926,6 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
-   # compare NetCDF-4 checkpoint files
-   # 	 ${NCCMP} $file1 $file2
-   # 	 if( status == 0 ) then
-   # 	     echo Layout Success!
-   # 	     echo " "
-   # 	 else
-   # 	     echo Layout Failed!
-   # 	     echo " "
-   # 	     set layout_pass = false
-   # 	 endif
 
          endif
    endif
