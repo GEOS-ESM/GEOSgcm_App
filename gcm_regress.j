@@ -761,6 +761,9 @@ if ( $RUN_LAYOUT == TRUE) then
 
 endif
 
+# Set the comparison command for netCDF-4 files
+set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
+
 #######################################################################
 #                          Compare Restarts
 #                      for start stop regression
@@ -770,8 +773,6 @@ endif
 # restarts at the end of the 6-hour + 18-hour runs (.3)
 
 if ($RUN_STARTSTOP == TRUE) then
-
-   set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
 
    if( -e startstop_regress_test ) /bin/rm startstop_regress_test
 
@@ -898,8 +899,6 @@ endif
 
 if ($RUN_LAYOUT == TRUE) then
 
-   set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
-
    if( -e layout_regress_test ) /bin/rm layout_regress_test
 
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step2} with restarts from ${test_NX}x${test_NY} run of duration ${test_duration_step4} ==="
@@ -961,7 +960,7 @@ if ($RUN_LAYOUT == TRUE) then
          if( $check == true ) then
             echo Comparing ${chk}
 
-   # compare checkpoint files
+            # compare checkpoint files
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
@@ -987,7 +986,7 @@ if ($RUN_LAYOUT == TRUE) then
          if( $check == true ) then
             echo Comparing ${hist}
 
-   # compare history files
+            # compare history files
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
