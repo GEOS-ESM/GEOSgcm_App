@@ -1524,7 +1524,7 @@ if( $LSM_BCS == "Icarus-NLv3" ) then
     if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
     if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 ) then
         echo
-        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} or ${C2}2${CN}!"
+        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1${CN} or ${C2}2${CN}!"
         goto LSM_CHOICE
     else
         echo
