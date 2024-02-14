@@ -1426,7 +1426,7 @@ endif
 #           Check for land surface and runoff routing  models         #
 #######################################################################
 
-# Check for Old vs New Land Surface Model Boundary Conditions
+# Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
 echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Default: Icarus-NLv3), or ${C2}v11${CN}"
@@ -1459,7 +1459,7 @@ else
     goto LSM_BCS
 endif
 
-# Check for Catch-Carbon
+# Enter Catch-Carbon
 # ----------------------
 LSM_CHOICE:
 echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"

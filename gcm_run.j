@@ -188,7 +188,6 @@ tar xf  restarts.${year}${month}.tar
 >>>EMIP_NEWLAND<<<# ------------------------------------------------
 set RSTID = `/bin/ls *catch* | cut -d. -f1`
 set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
-#$GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
 $GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin @EMIP_BCS_IN -oceanin 1440x720 -nobkg -lbl -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -in_bc_base @BC_BASE -out_bc_base @BC_BASE
 >>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
 
