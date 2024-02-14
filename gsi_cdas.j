@@ -4,12 +4,11 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#SBATCH --time=04:00:00
-#SBATCH --ntasks=240 --ntasks-per-node=30
-#SBATCH --job-name=gsi_cdas
-#SBATCH --output=gsi_cdas_%j
-#SBATCH --error=gsi_cdas_%j
-#SBATCH --constraint=sky
+#SBATCH --time=06:00:00
+#SBATCH --ntasks=320 --ntasks-per-node=80
+#SBATCH --job-name=CFv2_gsi
+#SBATCH --output=CFv2_gsi_%j
+#SBATCH --constraint=mil
 #SBATCH --qos=chmdev
 #SBATCH --account=s1866
 #@BATCH_NAME -o gcm_run.o@RSTDATE
@@ -28,173 +27,70 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv EXPID <<<EXPID>>>
-
-setenv FVROOT        /discover/nobackup/cakelle2/CDAS/code/GEOSadas-5_29_3/GEOSadas/install 
-setenv FVBIN          $FVROOT/bin
-setenv RUN_CMDGSI      "$FVROOT/bin/esma_mpirun -np "
+setenv EXPID @EXPID
 
 setenv  EXPDIR `pwd`
+setenv  FVROOT  $EXPDIR/analyze
 setenv  SCRDIR  $EXPDIR/scratch_gsi
 setenv  GEOSDIR $EXPDIR/scratch
 setenv  ANADIR  $EXPDIR/analyze
 setenv  SPLDIR  $EXPDIR/analyze/spool
 setenv  BKGDIR  $EXPDIR/holding_bkg
+setenv  RSTDIR  $EXPDIR/cdas_restarts
+setenv  FVBUILD @FVBUILD 
+#setenv  TOOLSDIR /discover/nobackup/cakelle2/CDAS/analyze/omno2/omno2
+
+setenv FVBIN          $FVROOT/bin
+setenv RUN_CMDGSI      "$FVROOT/bin/esma_mpirun -np "
 
 if (! -e $SCRDIR) mkdir -p $SCRDIR
 if (! -e $SPLDIR) mkdir -p $SPLDIR
 if (! -e $BKGDIR) mkdir -p $BKGDIR
+if (! -e $RSTDIR) mkdir -p $RSTDIR
 
 # manually add inc.eta collection for data assimilation
 if (! -e $EXPDIR/holding/ana2inc ) mkdir -p $EXPDIR/holding/ana2inc
-if (! -e $EXPDIR/holding/ana_after_gsi ) /bin/mkdir -p $EXPDIR/holding/ana_after_gsi
 if (! -e $EXPDIR/ods ) mkdir -p $EXPDIR/ods
 if (! -e $EXPDIR/diags_nc ) mkdir -p $EXPDIR/diags_nc
+
+# also add collection to hold the analysis files
+#if (! -e $EXPDIR/holding/ana_no2_after_gsi ) /bin/mkdir -p $EXPDIR/holding/ana_no2_after_gsi
 
 # gsi checkpoint file names
 set gsi_restart_file = "${GEOSDIR}/gsi_restart.runme"
 set geos_done = "${GEOSDIR}/geos_run.done"
 
-# Experiment environment
-# Not sure how much of the following is really needed...
-# ----------------------
-  setenv GID s1866
-  setenv group_list "SBATCH --account=$GID"
-  setenv ARCH `uname -s`
-  setenv HOST `uname -n`
-  setenv NCPUS       384       # Number of CPUs to run GCM
-  setenv NCPUS_IDF   96   # Number of CPUs to run IDF
-  setenv NCPUS_IAU   96   # Number of CPUs to run IAU
-  setenv NCPUS_GSI   240   # Number of CPUs to run GSI
-  setenv NCPUS_GPERT 216 # Number of CPUs to run gcmPERT
-  setenv NCPUS_AOD   1   # Number of CPUs to run PSAS-AOD
-  setenv GAAS_RUN_SLURM 1 # launch AOD analysis as separate batch job
-  setenv AODBLOCKJOB 1
-  setenv NCPUS_PER_NODE 30
-  setenv NODES      sky
-  setenv N_CPU   $NCPUS
-  setenv CASE    $EXPID  # experiment ID (for LSM's sake)
+#### Experiment environment
+unsetenv LD_LIBRARY_PATH
+source $FVROOT/bin/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${FVBUILD}/lib
 
-  unsetenv LD_LIBRARY_PATH
-  source $FVROOT/bin/g5_modules
-  setenv LD_LIBRARY_PATH ${BASEDIR}/${ARCH}/lib:${FVROOT}/lib:${LD_LIBRARY_PATH}
-
-# MPI/OMP specific environment variables
-# --------------------------------------
-  setenv NUMBER_CPUS_IN_MACHINE      $NCPUS    # Total No CPU on this queue
-  setenv OMP_NUM_THREADS             $NCPUS    # Number OMP Threads (generic)
-  setenv OMP_SET_NUMTHREADS          1         # allows dynamic change of #threads
-  setenv PSAS_NUM_MPI                1 # 24      # No. MPI processes for PSAS
-  setenv PSAS_NUM_THREADS            1 # 16      # No. OMP threads   for PSAS
-  setenv AGCM_N_PROCESSES            24      # N_PROC X N_THREADS = NCPUS
-  setenv AGCM_N_THREADS_PER_PROCESS  16
-  setenv AGCM_NUM_MPI                $AGCM_N_PROCESSES           # No. MPI processes for GCM
-  setenv AGCM_NUM_THREADS            $AGCM_N_THREADS_PER_PROCESS # No. OMP threads   for GCM
-  setenv OMP_NUM_THREADS             $AGCM_N_THREADS_PER_PROCESS # Number OMP Threads (generic)
-
-  setenv MKL_CBWR SSE4_2
-
-# MVAPICH variables
-# -----------------
-  if ($?MVAPICH) then
-     setenv MV2_DEFAULT_TIME_OUT 23
-     setenv MV2_USE_SHMEM_ALLREDUCE 0
-     setenv MV2_ON_DEMAND_THRESHOLD 8192
-     setenv MV2_USE_UD_HYBRID 0
-     setenv MV2_USE_SHMEM_COLL      0
-     setenv MV2_USE_UD_HYBRID       0
-     setenv MV2_HYBRID_MAX_RC_CONN 16
-     setenv MV2_SHOW_ENV_INFO 2
-  endif
-
-# The following are from OPS parallel
-
-  if ($?I_MPI_ROOT) then
-#    The following as recommended by Scott and SI Team
-#    setenv I_MPI_USE_DYNAMIC_CONNECTIONS 0
-     setenv I_MPI_SHM_HEAP_VSIZE   512
-     setenv PSM2_MEMORY            large
-     setenv I_MPI_ADJUST_GATHERV   3
-     setenv I_MPI_ADJUST_ALLREDUCE 12
-#    setenv I_MPI_EXTRA_FILESYSTEM 1
-#    setenv I_MPI_EXTRA_FILESYSTEM_LIST gpfs
-#    setenv ROMIO_FSTYPE_FORCE         "gpfs:"
-#    setenv I_MPI_FABRICS shm:dapl
-#    setenv I_MPI_FABRICS_LIST "dapl,ofa"
-#    setenv I_MPI_FALLBACK "enable"
-#    setenv I_MPI_MPD_RSH sshmpi
-#    setenv I_MPI_DAPL_CHECK_MAX_RDMA_SIZE 1
-#    setenv I_MPI_DAPL_UD_SEND_BUFFER_NUM 4096
-#    setenv I_MPI_DAPL_UD_RECV_BUFFER_NUM 4096
-#    setenv I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE 4096
-#    setenv I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE 4096
-#    setenv I_MPI_DAPL_UD_RNDV_EP_NUM 2
-#    setenv I_MPI_DAPL_UD_REQ_EVD_SIZE 2000
-  endif
-  if ($?MPT_VERSION) then
-     setenv DAPL_UCM_CQ_SIZE 4096
-     setenv DAPL_UCM_QP_SIZE 4096
-     setenv DAPL_UCM_REP_TIME 2000
-     setenv DAPL_UCM_RTU_TIME 2000
-     setenv DAPL_UCM_RETRY 7
-     setenv DAPL_ACK_RETRY 7
-     setenv DAPL_ACK_TIMER 20
-     setenv DAPL_UCM_RETRY 10
-     setenv DAPL_ACK_RETRY 10
-# MPT env variables
-# -----------------
-     setenv MPI_COLL_REPRODUCIBLE
-     setenv MPI_DISPLAY_SETTINGS
-     setenv MPI_COMM_MAX  1024
-     setenv MPI_GROUP_MAX 1024
-     setenv MPI_BUFS_PER_PROC 1024
-     setenv MPI_IB_TIMEOUT 23
-     setenv MPI_XPMEM_ENABLE no
-     setenv MPI_NUM_MEMORY_REGIONS 0
-     setenv SUPRESS_XPMEM_TRIM_THRESH 1
-  endif
-  setenv SLURM_DISTRIBUTION block
-
-# For some reason, PMI_RANK is randomly set and interferes
-# with binarytile.x and other executables.
-  unsetenv PMI_RANK
-
-# Needed for TLM/ADM
-# ------------------
-  setenv N_SMP                        $NCPUS   # number of CPUS
-  setenv N_MPI                        $NCPUS   # number of MPI processes
-  setenv NUMBER_MLP_PROCESSES         ${N_MPI} # still used by GCM
-  setenv NUMBER_CPUS_PER_MLP_PROCESS  ${N_SMP} # still used by GCM
-
-# Add FVROOT/bin to front of path so fvDAS binaries are found first
-# -----------------------------------------------------------------
-  if ( `uname -s` == "Linux" ) then
-    set path = ( . $FVROOT/bin $SHARE/dasilva/opengrads/Contents $BASEDIR/$ARCH/bin $path )
-  else
-    set path = ( . $FVROOT/bin $SHARE/dasilva/opengrads/Contents $path )
-  endif
-
-  setenv OMP_NUM_THREADS 1
-
-# Discover specific configuration
-# ----------------------------
-  limit stacksize unlimited
-  limit coredumpsize 0
-  setenv KMP_STACKSIZE    450m
-  unsetenv F_UFMTENDIAN
-  setenv KMP_LIBRARY turnaround
-
-# Node list
-# ------------------------------
-  if (`uname -n` =~ borg*) then
-   cat $PBS_NODEFILE > $SCRDIR/ANA_list
-  endif
-  set PBS_NODEFILE=SCRDIR/ANA_list
+# milan stuff
+# Turn off warning about TMPDIR on NFS
+setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# pre-connect MPI procs on mpi_init
+setenv OMPI_MCA_mpi_preconnect_all 1
+setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
+setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
+setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 3
+setenv OMPI_MCA_coll_tuned_allreduce_algorithm 3
+setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
+setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
+setenv OMPI_MCA_coll_tuned_gather_algorithm 1
+setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+# required for a tuned flag to be effective
+setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+# disable file locks
+setenv OMPI_MCA_sharedfp "^lockedfile,individual"
 
 # Move into GSI scratch directory
 # -------------------------------
 cd $SCRDIR
 /bin/rm -rf *
+
+# Initialize variables
+set nymdf = "99999999"
+set hourf = "99"
 
 # ---------------
 # main while loop 
@@ -212,9 +108,12 @@ while ( ! -f $geos_done )
   /bin/ln -sf . Obsloc
 
   /bin/cp -f  $EXPDIR/GSIsa.x   .
-  /bin/cp -f  $EXPDIR/analyze/ana2inc.x .
-  /bin/cp -f  $EXPDIR/analyze/RC/* .
-  /bin/cp -f  $EXPDIR/analyze/*.rc .
+#  /bin/cp -f  $EXPDIR/analyze/ana2inc.x .
+  /bin/cp -f  $EXPDIR/analyze/ana2inc.py .
+#  /bin/cp -f  $EXPDIR/analyze/RC/* .
+#  /bin/cp -f  $EXPDIR/analyze/*.rc .
+  /bin/cp -f  $EXPDIR/analyze/codas.rc .
+  /bin/cp -f  $EXPDIR/analyze/etc/* .
 
   # get time stamps from gsi_restart checkpoint file 
   set edate = e`cat $gsi_restart_file | cut -c1-8`_`cat $gsi_restart_file | cut -c10-13`z
@@ -256,17 +155,30 @@ while ( ! -f $geos_done )
   # Check for initial background files. These might be missing if 
   # doing a cold-start run.
   # eventually get left shoulder background files from restart file
-  if ( ! -e ${GEOSDIR}/$EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4 ) then
-    if ( -e ${GEOSDIR}/codas_background_rst ) then
-       tar xf ${GEOSDIR}/codas_background_rst
-       /bin/mv  bkg.eta.nc4 ${GEOSDIR}/$EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4
-       /bin/mv  bkg.sfc.nc4 ${GEOSDIR}/$EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4
-       /bin/mv cbkg.eta.nc4 ${GEOSDIR}/$EXPID.cbkg.eta.${nymdc}_${hourc}00z.nc4
+  if ( ! -e ${GEOSDIR}/$EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4 ) then
+    if ( -e ${RSTDIR}/codas_background_rst.${nymdc}_${hourc}00z.tar ) then
+       echo "extracting codas background files from ${RSTDIR}/codas_background_rst.${nymdc}_${hourc}00z.tar..."
+       tar xvf ${RSTDIR}/codas_background_rst.${nymdc}_${hourc}00z.tar
+       if ( -e $EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4 ) then
+        /bin/mv  $EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4 ${GEOSDIR}/$EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4
+       else
+        echo "Warning: file not found: $EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4"
+       endif
+       if ( -e $EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4 ) then
+        /bin/mv $EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4 ${GEOSDIR}/$EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4
+       else
+        echo "Warning: file not found: $EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4"
+       endif
+       if ( -e $EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4 ) then
+        /bin/mv $EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4 ${GEOSDIR}/$EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4
+       else
+        echo "Warning: file not found: $EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4"
+       endif
     endif 
   endif
 
   # if background restart file is still missing, skip GSI analysis
-  if ( -e ${GEOSDIR}/$EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4 ) then
+  if ( -e ${GEOSDIR}/$EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4 ) then
    set do_gsi = 1
   else
    set do_gsi = 0 
@@ -290,8 +202,13 @@ while ( ! -f $geos_done )
    ./$fname
  
    # Acquire observation files
+#   set fname = "codas_acqobs1.jtmp"
+#   sed -e "s/@ACQOBS_O/codas_acqobs1.log.o%j/" $EXPDIR/analyze/codas_acqobs.j >! $fname
+#   echo "acquire_obsys -v -d $SCRDIR -s $SPLDIR -ssh -e 999 ${nymdm} ${nhmsm} 060000 4 $OBSCLASS" >> $fname
+#   chmod 755 $fname
+#   sbatch --wait ./$fname
    set fname = "codas_acqobs1.jtmp"
-   sed -e "s/@ACQOBS_O/codas_acqobs1.log.o%j/" $EXPDIR/analyze/codas_acqobs.j >! $fname
+   sed -e "s?@ACQOBS_O?codas_acqobs1.log.o%j?; s?@FVROOT?$FVROOT?" $EXPDIR/analyze/codas_acqobs.j >! $fname
    echo "acquire_obsys -v -d $SCRDIR -s $SPLDIR -ssh -e 999 ${nymdm} ${nhmsm} 060000 4 $OBSCLASS" >> $fname
    chmod 755 $fname
    sbatch --wait ./$fname
@@ -300,20 +217,27 @@ while ( ! -f $geos_done )
    set nymdt =  $tmrw[1]
    set nhmst =  $tmrw[2]
  
+#   set fname = "codas_acqobs2.jtmp"
+#   sed -e "s/@ACQOBS_O/codas_acqobs2.log.o%j/" $EXPDIR/analyze/codas_acqobs.j >! $fname
+#   echo "acquire_obsys -v -d $SPLDIR -s $SPLDIR -ssh -e 999 ${nymdt} ${nhmst} 060000 4 $OBSCLASS" >> $fname
+#   chmod 755 $fname
+#   sbatch ./$fname
+
    set fname = "codas_acqobs2.jtmp"
-   sed -e "s/@ACQOBS_O/codas_acqobs2.log.o%j/" $EXPDIR/analyze/codas_acqobs.j >! $fname
+   sed -e "s?@ACQOBS_O?codas_acqobs2.log.o%j?; s?@FVROOT?$FVROOT?" $EXPDIR/analyze/codas_acqobs.j >! $fname
    echo "acquire_obsys -v -d $SPLDIR -s $SPLDIR -ssh -e 999 ${nymdt} ${nhmst} 060000 4 $OBSCLASS" >> $fname
    chmod 755 $fname
    sbatch ./$fname
  
-#   set NX_GSI = `grep NX: GSI_GridComp.rc | cut -d':' -f2`
-#   set NY_GSI = `grep NY: GSI_GridComp.rc | cut -d':' -f2`
-#   @ NPES_GSI = $NX_GSI * $NY_GSI
-
    # Get background files for CoDAS
+   # Note: for the cbkg field at the beginning of the time window, use the 'corrected' fields generated during 
+   # the previous predictor step
    /bin/cp ${GEOSDIR}/$EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4  . 
    /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4  .
-   /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.${nymdc}_${hourc}00z.nc4 .
+   /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4 $EXPID.cbkg.eta.${nymdc}_${hourc}00z.nc4 
+#   /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.${nymdc}_${hourc}00z.nc4 .
+#   /bin/cp ${GEOSDIR}/$EXPID.bkg.eta.corrector.${nymdc}_${hourc}00z.nc4  $EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4 
+#   /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.corrector.${nymdc}_${hourc}00z.nc4  $EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4 
    /bin/cp ${GEOSDIR}/$EXPID.bkg.eta.${nymdm}_${hourm}00z.nc4  . 
    /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.${nymdm}_${hourm}00z.nc4  .
    /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.${nymdm}_${hourm}00z.nc4 .
@@ -325,7 +249,7 @@ while ( ! -f $geos_done )
    # For testing, also write to temporary 'background' directory
    /bin/cp ${GEOSDIR}/$EXPID.bkg.eta.${nymdc}_${hourc}00z.nc4  ${BKGDIR} 
    /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.${nymdc}_${hourc}00z.nc4  ${BKGDIR} 
-   /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.${nymdc}_${hourc}00z.nc4 ${BKGDIR}
+   /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.corrector.${nymdc}_${hourc}00z.nc4 ${BKGDIR}
    /bin/cp ${GEOSDIR}/$EXPID.bkg.eta.${nymdm}_${hourm}00z.nc4  ${BKGDIR}
    /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.${nymdm}_${hourm}00z.nc4  ${BKGDIR}
    /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.${nymdm}_${hourm}00z.nc4 ${BKGDIR}
@@ -334,19 +258,19 @@ while ( ! -f $geos_done )
    /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.${nymdf}_${hourf}00z.nc4  ${BKGDIR}
    /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.${nymdf}_${hourf}00z.nc4 ${BKGDIR}
 
-   # Get bias coefficients: Copy pre-fetched files in exp dir if not yet locally available
-   if (! -e satbias_ang.in ) /bin/cp $EXPDIR/satbias/satbang satbias_ang.in
-   if (! -e satbias_angle  ) /bin/cp $EXPDIR/satbias/satbang satbias_angle
-   if (! -e satbias_in     ) /bin/cp $EXPDIR/satbias/satbias satbias_in
-   if (! -e satbias_pc     ) /bin/cp $EXPDIR/satbias/satbiaspc satbias_pc
+#   # Get bias coefficients: Copy pre-fetched files in exp dir if not yet locally available
+#   if (! -e satbias_ang.in ) /bin/cp $EXPDIR/satbias/satbang satbias_ang.in
+#   if (! -e satbias_angle  ) /bin/cp $EXPDIR/satbias/satbang satbias_angle
+#   if (! -e satbias_in     ) /bin/cp $EXPDIR/satbias/satbias satbias_in
+#   if (! -e satbias_pc     ) /bin/cp $EXPDIR/satbias/satbiaspc satbias_pc
 
-   # Datasets needed for radiances assimilation
-   /bin/ln -s gmao_global_convinfo.rc convinfo
-   /bin/ln -sf /discover/nobackup/projects/gmao/obsdev/bkarpowi/x46a_tst//fvInput/gsi/etc/fix_ncep20210525/REL-2.2.3-r60152_local-rev_5/CRTM_Coeffs/Little_Endian CRTM_Coeffs
-
-   # for radiance assimilation
-   setenv MKSI_SIDB $EXPDIR/gmao_satinfo.db/
-
+#   # Datasets needed for radiances assimilation
+#   /bin/ln -s gmao_global_convinfo.rc convinfo
+#   /bin/ln -sf /discover/nobackup/projects/gmao/obsdev/bkarpowi/x46a_tst//fvInput/gsi/etc/fix_ncep20210525/REL-2.2.3-r60152_local-rev_5/CRTM_Coeffs/Little_Endian CRTM_Coeffs
+#
+#   # for radiance assimilation
+#   setenv MKSI_SIDB $EXPDIR/gmao_satinfo.db/
+ 
    # the observation files now need to be linked outside of GSI (see /discover/nobackup/cakelle2/CDAS/code/GEOSadas-5_29_3/GEOSadas/install/bin/GEOSdas.csm @L941)
    $FVROOT/bin/match_obcls_obsys.pl ${nymdm} ${nhmsm} GSI_GridComp.rc gsiparm.anl
  
@@ -355,7 +279,7 @@ while ( ! -f $geos_done )
    #$RUN_CMDGSI $NPES_GSI ./GSIsa.x
    #$RUN_CMDGSI 192 ./GSIsa.x
    #esma_mpirun -perhost 8 -np 240 ./GSIsa.x 
-   esma_mpirun -np 240 ./GSIsa.x 
+   mpirun -np 320 ./GSIsa.x 
    if( -e GSI_EGRESS ) then
     set rc = 0
    else
@@ -365,19 +289,20 @@ while ( ! -f $geos_done )
    if( $rc == -1 ) exit
 
    # deal with satbias files
-   if (! -e $EXPDIR/satbias/${nymdm}_${hourm}z ) mkdir -p $EXPDIR/satbias/${nymdm}_${hourm}z
-   /bin/cp satbias_angle  $EXPDIR/satbias/${nymdm}_${hourm}z/satbang_${nymdm}_${hourm}z 
-   /bin/cp satbias_out    $EXPDIR/satbias/${nymdm}_${hourm}z/satbias_out_${nymdm}_${hourm}z 
-   /bin/cp satbias_pc.out $EXPDIR/satbias/${nymdm}_${hourm}z/satbiaspc.out_${nymdm}_${hourm}z 
-   /bin/mv satbias_out satbias_in
-   /bin/mv satbias_pc.out satbias_pc
+#   if (! -e $EXPDIR/satbias/${nymdm}_${hourm}z ) mkdir -p $EXPDIR/satbias/${nymdm}_${hourm}z
+#   /bin/cp satbias_angle  $EXPDIR/satbias/${nymdm}_${hourm}z/satbang_${nymdm}_${hourm}z 
+#   /bin/cp satbias_out    $EXPDIR/satbias/${nymdm}_${hourm}z/satbias_out_${nymdm}_${hourm}z 
+#   /bin/cp satbias_pc.out $EXPDIR/satbias/${nymdm}_${hourm}z/satbiaspc.out_${nymdm}_${hourm}z 
+#   /bin/mv satbias_out satbias_in
+#   /bin/mv satbias_pc.out satbias_pc
 
    # Compute analysis increment
    /bin/cp $EXPID.cbkg.eta.${nymdm}_${hourm}00z.nc4 cbkg.eta.nc4
    /bin/cp $EXPID.bkg.eta.${nymdm}_${hourm}00z.nc4   bkg.eta.nc4
    /bin/cp $EXPID.ana.eta.${nymdm}_${hourm}00z.nc4   ana.eta.nc4
-   /bin/cp ana.eta.nc4 inc.eta.nc4
-   ./ana2inc.x
+   #/bin/cp ana.eta.nc4 inc.eta.nc4
+   #./ana2inc.x
+   /usr/local/other/GEOSpyD/23.5.2-0_py3.11/2023-11-02/bin/python ana2inc.py -a ana.eta.nc4 -b bkg.eta.nc4 -c cbkg.eta.nc4 -o inc.eta.nc4
 
    # Copy increment file to holding directory and rename to full date stamp for proper reference
    /bin/cp ana.eta.nc4 $EXPDIR/holding/ana2inc/$EXPID.ana.eta.${nymdm}_${hourm}00z.nc4
@@ -387,17 +312,17 @@ while ( ! -f $geos_done )
    # Accumulate statistics and diagnostics 
    # TODO: something doesn't work yet here...
    if( 0 ) then
-   cat fort.206 fort.216 > $EXPID.ana_stats.log.${nymdm}_${hourm}z.txt
-   $FVROOT/bin/gsidiags ${nymdm} ${nhmsm} $EXPID set -rc gsidiags.rc
-   $FVROOT/bin/diag2ods ${nymdm} ${nhmsm} $EXPID
-   # copy ods files to ods directory
-   set odsfiles = `/bin/ls -1 *.ods`
-   foreach odsfile ($odsfiles)
-    /bin/cp $odsfile $EXPDIR/ods
-   end
-   if ( -e ods.log ) then
-    /bin/cp ods.log $EXPDIR/ods/ods.log.${nymdm}_${hourm}z
-   endif
+    cat fort.206 fort.216 > $EXPID.ana_stats.log.${nymdm}_${hourm}z.txt
+    $FVROOT/bin/gsidiags ${nymdm} ${nhmsm} $EXPID set -rc gsidiags.rc
+    $FVROOT/bin/diag2ods ${nymdm} ${nhmsm} $EXPID
+    # copy ods files to ods directory
+    set odsfiles = `/bin/ls -1 *.ods`
+    foreach odsfile ($odsfiles)
+     /bin/cp $odsfile $EXPDIR/ods
+    end
+    if ( -e ods.log ) then
+     /bin/cp ods.log $EXPDIR/ods/ods.log.${nymdm}_${hourm}z
+    endif
    else
     echo "skip ods statistics for now..."
    endif
@@ -408,7 +333,10 @@ while ( ! -f $geos_done )
      /bin/rm -r $EXPDIR/diags_nc/${nymdm}_${hourm}z
     endif
     mkdir -p $EXPDIR/diags_nc/${nymdm}_${hourm}z
-    /bin/mv pe*.nc4 $EXPDIR/diags_nc/${nymdm}_${hourm}z
+    set pefiles = `/bin/ls -1 pe*.nc4`
+    foreach pefile ($pefiles)
+     /bin/mv $pefile $EXPDIR/diags_nc/${nymdm}_${hourm}z
+    end
    endif
 
    # Clean up pe files
@@ -418,29 +346,39 @@ while ( ! -f $geos_done )
     /bin/rm -f pe*.${coltag}_??
    end
 
+   # this is for NO2/SO2
+   # Create analysis NO2 file for use by GEOS: this includes the nearest observation hour for each location with an increment
+#   set datestring = "${nymdm}_${hourm}00z"
+#   #set satfile = "omi_minds_no2.${nymdm}.t${hourm}z.nc"
+#   set satfile = "omno2.${nymdm}.t${hourm}z.nc"
+#   set outfile = "ana_no2.after_gsi.${nymdm}_${hourm}00z.nc4"
+#   /usr/local/other/python/GEOSpyD/2019.03_py3.7/2019-04-22/bin/python ${TOOLSDIR}/omno2_post.py -d $datestring -a ana.eta.nc4 -b cbkg.eta.nc4 -s $satfile -v 'NO2' -on 'ColumnAmountNO2' -o $outfile
+#   /bin/cp $outfile $GEOSDIR/$outfile
+#   /bin/cp $outfile $EXPDIR/holding/ana_no2_after_gsi
+
+   # this is for O3
+   # Move a copy of the updated ana.eta file to a specified run directory
+   /bin/cp $EXPID.ana.eta.${nymdm}_${hourm}00z.nc4 ${GEOSDIR}/$EXPID.ana.eta.after_gsi.${nymdm}_${hourm}00z.nc4
+
   else
    echo "skip GSI because first background restart file is missing"
    set rc = 0
   endif # do GSI
 
   # Save background files at final step for next cycle
+  # keep for legacy reason, not used anymore
   # --------------------------------------------------
-  if ( $rc == 0 ) then
+  if ( -e ${GEOSDIR}/$EXPID.bkg.eta.${nymdf}_${hourf}00z.nc4 ) then
     /bin/cp ${GEOSDIR}/$EXPID.bkg.eta.${nymdf}_${hourf}00z.nc4   bkg.eta.nc4
     /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.${nymdf}_${hourf}00z.nc4   bkg.sfc.nc4
     /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.${nymdf}_${hourf}00z.nc4 cbkg.eta.nc4
-
     tar cf ${GEOSDIR}/codas_background_checkpoint \
            bkg.eta.nc4 bkg.sfc.nc4 cbkg.eta.nc4
-
-    # Move a copy of the updated ana.eta file to a specified run directory
-    set outfile = "${EXPID}.ana.eta.after_gsi.${nymdm}_${hourm}00z.nc4"
-    /bin/cp $EXPID.ana.eta.${nymdm}_${hourm}00z.nc4 ${GEOSDIR}/${outfile}
-    /bin/cp $EXPID.ana.eta.${nymdm}_${hourm}00z.nc4 ${EXPDIR}/holding/ana_no2_after_gsi/${outfile}
   endif
 
+
   # write output file, copy to GEOS run directory
-  #sleep 20
+  sleep 10
   set ofile = "gsi_done.${edate}"
   echo $nymdc $nhmsc > $ofile
   /bin/mv $ofile $GEOSDIR/ 
@@ -453,6 +391,21 @@ while ( ! -f $geos_done )
  else
   echo 'go to sleep for 30 seconds...'
   sleep 30
+ endif
+
+ # Save background files at final step for next cycle
+ # --------------------------------------------------
+ if ( -e ${GEOSDIR}/$EXPID.cbkg.eta.corrector.${nymdf}_${hourf}00z.nc4 ) then
+ if ( -e ${GEOSDIR}/$EXPID.bkg.eta.${nymdf}_${hourf}00z.nc4 ) then
+ if ( -e ${GEOSDIR}/$EXPID.bkg.sfc.${nymdf}_${hourf}00z.nc4 ) then
+   /bin/cp ${GEOSDIR}/$EXPID.cbkg.eta.corrector.${nymdf}_${hourf}00z.nc4 .
+   /bin/cp ${GEOSDIR}/$EXPID.bkg.eta.${nymdf}_${hourf}00z.nc4 .
+   /bin/cp ${GEOSDIR}/$EXPID.bkg.sfc.${nymdf}_${hourf}00z.nc4 .
+   echo "write codas_background_restart file: ${RSTDIR}/codas_background_rst.${nymdf}_${hourf}00z.tar"
+   tar cf ${RSTDIR}/codas_background_rst.${nymdf}_${hourf}00z.tar \
+          $EXPID.bkg.eta.${nymdf}_${hourf}00z.nc4 $EXPID.bkg.sfc.${nymdf}_${hourf}00z.nc4 $EXPID.cbkg.eta.corrector.${nymdf}_${hourf}00z.nc4
+ endif
+ endif
  endif
 
  # the following if else statement is not strictly necessary, add it here mostly for testing
