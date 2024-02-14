@@ -300,12 +300,10 @@ if ( $RUN_GSI == 1 ) then
    cat HISTORY_predictor.tmp | sed -e "s?EXPID:.*?EXPID: $EXPID?g" > HISTORY_predictor.rc
    /bin/rm HISTORY_predictor.tmp
 
-   # Update EXPID pattern in all AnaSettings files 
-   foreach anasettings ( `/bin/ls -1 GEOSCHEMchem_AnaSettings_*.rc` )
-      /bin/mv $anasettings gcc_anasettings.tmp
-      cat gcc_anasettings.tmp | sed -e "s?>>>EXPID<<<?$EXPID?g" > $anasettings
-      /bin/rm gcc_anasettings.tmp
-   end
+   # Update EXPID pattern in (new) analysis file 
+   /bin/mv geoschem_analysis.yml geoschem_analysis.tmp 
+   cat geoschem_analysis.tmp | sed -e "s?>>>EXPID<<<?$EXPID?g" > geoschem_analysis.yml 
+   /bin/rm geoschem_analysis.tmp
 
    # Create a fake restart entry for the background and increment files
    echo 'CODAS_BACKGROUND_RESTART_FILE:           codas_background_rst'        >> AGCM.rc
