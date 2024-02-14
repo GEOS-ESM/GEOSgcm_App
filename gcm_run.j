@@ -732,6 +732,13 @@ if( $EXTDATA2G_TRUE == 1 ) then
 
 endif
 
+# Somehow the QFED switch from 006 to 061 does not seem to work. Do it manually here:
+set QFED_transition_date = 20211101
+if ( ${QFED_transition_date} <= $nymdc ) then
+    /bin/mv GEOSCHEMchem_ExtData.yaml GEOSCHEMchem_ExtData.tmp
+    cat GEOSCHEMchem_ExtData.tmp | sed -e "s?006.%y4%m2%d2.nc4?061.%y4%m2%d2.nc4?g" > GEOSCHEMchem_ExtData.yaml
+endif
+
 # Move GOCART to use RRTMGP Bands
 # -------------------------------
 # UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
