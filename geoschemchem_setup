@@ -175,26 +175,8 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
-
-     if ( `echo $BASEDIR | grep -i mvapich`  != '') then
-   set MPI = mvapich
-else if ( `echo $BASEDIR | grep -i mpich`    != '') then
-   set MPI = mpich
-else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
-   set MPI = openmpi
-else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
-   set MPI = openmpi
-else if ( `echo $BASEDIR | grep -i impi`     != '') then
-   set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
-   set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i mpt`      != '') then
-   set MPI = mpt
-else
-   # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi
-endif
+# Get MPI stack from CMake
+set MPI_STACK = @MPI_STACK@
 
 #######################################################################
 #               Enter Experiment Specific Run Parameters
@@ -457,7 +439,7 @@ if ( $SITE == 'NCCS' ) then
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
       echo "   ${C2}sky  (Skylake)${CN}"
-      echo "   ${C2}cas  (Cascade Lake)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -2218,7 +2200,7 @@ set RESTART_BY_OSERVER = NO
 /bin/rm -f $HOMDIR/SETENV.commands
 
 
-if( $MPI == openmpi ) then
+if( $MPI_STACK == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
@@ -2251,7 +2233,7 @@ EOF
 # The below settings seem to be recommended for hybrid
 # systems using MVAPICH but could change
 
-else if( $MPI == mvapich ) then
+else if( $MPI_STACK == mvapich ) then
 
 # MVAPICH and GEOS has issues with restart writing. Having the
 # oserver write them seems to...work
@@ -2264,7 +2246,7 @@ setenv MV2_MPIRUN_TIMEOUT 100
 setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
-else if( $MPI == mpt ) then
+else if( $MPI_STACK == mpt ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 
@@ -2304,7 +2286,7 @@ if( $OGCM == TRUE ) then
    set MPT_SHEPHERD = "setenv MPI_SHEPHERD true"
 endif
 
-else if( $MPI == intelmpi ) then
+else if( $MPI_STACK == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
