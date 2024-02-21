@@ -175,26 +175,8 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
-
-     if ( `echo $BASEDIR | grep -i mvapich`  != '') then
-   set MPI = mvapich
-else if ( `echo $BASEDIR | grep -i mpich`    != '') then
-   set MPI = mpich
-else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
-   set MPI = openmpi
-else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
-   set MPI = openmpi
-else if ( `echo $BASEDIR | grep -i impi`     != '') then
-   set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
-   set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i mpt`      != '') then
-   set MPI = mpt
-else
-   # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi
-endif
+# Get MPI stack from CMake
+set MPI_STACK = @MPI_STACK@
 
 #######################################################################
 #               Enter Experiment Specific Run Parameters
