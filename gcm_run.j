@@ -319,7 +319,7 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 
 #this is hard-wired for NAS for now - should make it more general
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
-@COUPLEDsetenv BCTAG `basename $CPLDIR/${OGCM_IM}x${OGCM_JM}`
+@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
 setenv EMISSIONS @EMISSIONS
 chmod +x linkbcs
 
