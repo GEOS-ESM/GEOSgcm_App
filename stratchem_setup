@@ -1534,26 +1534,22 @@ endif
 # ----------------------
 if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
-    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"
+    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment) or ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40))"
     set   LSM_CHOICE = $<
     if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
-    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 &  $LSM_CHOICE != 3 ) then
+    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 ) then
         echo
-        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} , ${C2}2${CN} or ${C2}3${CN}!"
+        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1${CN} or ${C2}2${CN}!"
         goto LSM_CHOICE
     else
         echo
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
-    if( $LSM_CHOICE == 3 ) set HIST_CATCHCN = ""
     if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
-    if( $LSM_CHOICE == 3 ) set GCMRUN_CATCHCN = ""
     if( $LSM_CHOICE == 2 ) then
       echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM40 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
-    else if ( $LSM_CHOICE == 3 ) then
-      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM45 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
     endif
 else
     set LSM_CHOICE = 1
