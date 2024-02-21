@@ -116,7 +116,7 @@ CLOSURE_CONGESTUS: 3
 @HIST_GOCARTCA.br::CA.brphilic default
 @HIST_GOCARTCA.oc::CA.ocphilic default
 @HIST_GOCARTNI::NO3an1 "NI::NO3an2,NI::NO3an3"
-@HIST_GOCARTPCHEM::OX default 
+@HIST_GOCARTPCHEM::OX default
 @HIST_GOCART::
 @HIST_GOCART###########################################################
 
@@ -529,7 +529,6 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # Choice for Land Surface Model
 #      1 : Catchment
 #      2 : CatchmentCNCLM40
-#      3 : CatchmentCNCLM45
 # ------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
@@ -905,6 +904,10 @@ USE_SATSIM_RADAR: @RADAR_SATSIM
 USE_SATSIM_LIDAR: @LIDAR_SATSIM
 USE_SATSIM_MISR:  @MISR_SATSIM
 
+# Flags to enable wave code
+# -------------------------
+USE_WAVES: 0
+
 @COUPLED INTERPOLATE_ATMLM: 0
 @COUPLED INTERPOLATE_ATMTAU: 1
 @COUPLED INTERPOLATE_OCEAN_ICE_CURRENTS: 0
@@ -929,7 +932,7 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 @MOM5#DATA_SST_FILE: sst.data
 @MOM5#DATA_FRT_FILE: fraci.data
 
-@COUPLED 
+@COUPLED
 @COUPLED# Section for CICE
 @COUPLED# -----------------
 @CICE4USE_CICE_Thermo: 1
