@@ -90,9 +90,9 @@ setenv GEOSDIR @GEOSDIR
 setenv GEOSBIN @GEOSBIN
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
-setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+setenv RUN_CMD "@RUN_CMD"
 
 #######################################################################
 #             Experiment Specific Environment Variables
@@ -317,16 +317,16 @@ if( @EMISSIONS == AMIP_EMISSIONS ) then
     endif
 endif
 
-@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_CLIM
-@MP_NO_USE_WSUB# -------------------------------------------------
+@MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
+@MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 else
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 endif
-@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -456,6 +456,16 @@ if( $RUN_STARTSTOP == TRUE ) then
    foreach chk ( $chk_file_names )
       /bin/mv -v $chk ${chk}.${nymde1}_${nhmse1}.1
    end
+
+   # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+   # and we need to move those as well if they exist
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+   # Need also make another variable storing all the mkiau_checkpoint files
+   set complete_startstop_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+   foreach chk ( $replay_chk_file_names )
+      /bin/mv -v $chk ${chk}.${nymde1}_${nhmse1}.1
+   end
+
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.1
 
    # Move history as well
@@ -520,6 +530,16 @@ endif
 foreach chk ( $chk_file_names )
    $MOVE_OR_COPY $chk ${chk}.${nymde2}_${nhmse2}.2
 end
+
+# Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+# and we need to move those as well if they exist
+set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+# Need also make another variable storing all the replay checkpoint files
+set complete_layout_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+foreach chk ( $replay_chk_file_names )
+   $MOVE_OR_COPY $chk ${chk}.${nymde1}_${nhmse1}.2
+end
+
 @MOM6 $MOVE_OR_COPY RESTART/MOM.res.nc MOM.res.nc.2
 
 # *Copy* history as well
@@ -608,6 +628,13 @@ if ($RUN_STARTSTOP == TRUE) then
    foreach chk ( $chk_file_names )
       /bin/mv -v $chk ${chk}.${nymde3}_${nhmse3}.3
    end
+
+   # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+   # and we need to move those as well if they exist
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+   foreach chk ( $replay_chk_file_names )
+      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.3
+   end
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
 
    # Move history as well
@@ -665,6 +692,7 @@ if ( $RUN_LAYOUT == TRUE) then
    /bin/mv CAP.rc CAP.tmp
    cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
+   # Set the new NX and NY
    ./strip AGCM.rc
    set oldstring = `cat AGCM.rc | grep "^ *NX:"`
    set newstring = "NX: ${test_NX}"
@@ -674,6 +702,17 @@ if ( $RUN_LAYOUT == TRUE) then
    set newstring = "NY: ${test_NY}"
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+   # Set the new number of writers and readers
+   set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`
+   set newstring = "NUM_WRITERS: 6"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`
+   set newstring = "NUM_READERS: 6"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
    @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
    @COUPLED set newstring = "OGCM.NX: ${test_NY}"
    @COUPLED /bin/mv AGCM.rc AGCM.tmp
@@ -703,6 +742,14 @@ if ( $RUN_LAYOUT == TRUE) then
    foreach chk ( $chk_file_names )
       /bin/mv -v $chk ${chk}.${nymde4}_${nhmse4}.4
    end
+
+   # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+   # and we need to move those as well if they exist
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+   foreach chk ( $replay_chk_file_names )
+      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.4
+   end
+
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
 
    # Move history as well
@@ -714,6 +761,9 @@ if ( $RUN_LAYOUT == TRUE) then
 
 endif
 
+# Set the comparison command for netCDF-4 files
+set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
+
 #######################################################################
 #                          Compare Restarts
 #                      for start stop regression
@@ -723,8 +773,6 @@ endif
 # restarts at the end of the 6-hour + 18-hour runs (.3)
 
 if ($RUN_STARTSTOP == TRUE) then
-
-   set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
 
    if( -e startstop_regress_test ) /bin/rm startstop_regress_test
 
@@ -742,8 +790,8 @@ if ($RUN_STARTSTOP == TRUE) then
          if( $check == true ) then
             echo Comparing ${chk}
 
-   # compare binary checkpoint files
-            cmp $file1 $file2
+            # compare NetCDF-4 checkpoint files
+            ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
                echo " "
@@ -752,17 +800,6 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
-   # compare NetCDF-4 checkpoint files
-   # 	 ${NCCMP} $file1 $file2
-   # 	 if( status == 0 ) then
-   # 	     echo Start-Stop Success!
-   # 	     echo " "
-   # 	 else
-   # 	     echo Start-Stop Failed!
-   # 	     echo " "
-   # 	     set startstop_pass = false
-   # 	 endif
 
          endif
    endif
@@ -787,6 +824,32 @@ if ($RUN_STARTSTOP == TRUE) then
    @MOM6      endif
    @MOM6endif
 
+   echo "=== Comparing replay checkpoint files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
+
+   # Check history files
+   foreach chk ( $complete_startstop_replay_chk_file_names )
+   set file1 = ${chk}.${nymde1}_${nhmse1}.1
+   set file2 = ${chk}.${nymde3}_${nhmse3}.3
+   if( -e $file1 && -e $file2 ) then
+         set check = true
+         if( $check == true ) then
+            echo Comparing ${chk}
+
+            # compare checkpoint files
+            ${NCCMP} $file1 $file2
+            if( $status == 0 ) then
+               echo Start-Stop Success!
+               echo " "
+            else
+               echo Start-Stop Failed!
+               echo " "
+               set startstop_pass = false
+            endif
+
+         endif
+   endif
+   end
+
    echo "=== Comparing history files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
    # Check history files
@@ -798,7 +861,7 @@ if ($RUN_STARTSTOP == TRUE) then
          if( $check == true ) then
             echo Comparing ${hist}
 
-   # compare history files
+            # compare history files
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -836,8 +899,6 @@ endif
 
 if ($RUN_LAYOUT == TRUE) then
 
-   set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
-
    if( -e layout_regress_test ) /bin/rm layout_regress_test
 
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step2} with restarts from ${test_NX}x${test_NY} run of duration ${test_duration_step4} ==="
@@ -854,8 +915,8 @@ if ($RUN_LAYOUT == TRUE) then
          if( $check == true ) then
             echo Comparing ${chk}
 
-   # compare binary checkpoint files
-            cmp $file1 $file2
+            # compare NetCDF-4 checkpoint files
+            ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
                echo " "
@@ -864,17 +925,6 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
-   # compare NetCDF-4 checkpoint files
-   # 	 ${NCCMP} $file1 $file2
-   # 	 if( status == 0 ) then
-   # 	     echo Layout Success!
-   # 	     echo " "
-   # 	 else
-   # 	     echo Layout Failed!
-   # 	     echo " "
-   # 	     set layout_pass = false
-   # 	 endif
 
          endif
    endif
@@ -899,6 +949,32 @@ if ($RUN_LAYOUT == TRUE) then
    @MOM6      endif
    @MOM6endif
 
+   echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
+
+   # Check history files
+   foreach chk ( $complete_layout_replay_chk_file_names )
+   set file1 = ${chk}.${nymde2}_${nhmse4}.2
+   set file2 = ${chk}.${nymde2}_${nhmse4}.4
+   if( -e $file1 && -e $file2 ) then
+         set check = true
+         if( $check == true ) then
+            echo Comparing ${chk}
+
+            # compare checkpoint files
+            ${NCCMP} $file1 $file2
+            if( $status == 0 ) then
+               echo Layout Success!
+               echo " "
+            else
+               echo Layout Failed!
+               echo " "
+               set layout_pass = false
+            endif
+
+         endif
+   endif
+   end
+
    echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
 
    # Check history files
@@ -910,7 +986,7 @@ if ($RUN_LAYOUT == TRUE) then
          if( $check == true ) then
             echo Comparing ${hist}
 
-   # compare history files
+            # compare history files
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!

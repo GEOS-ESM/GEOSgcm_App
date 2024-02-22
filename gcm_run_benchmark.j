@@ -33,9 +33,9 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
 
-setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+setenv RUN_CMD "@RUN_CMD"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
@@ -310,9 +310,9 @@ setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
 @MOM5setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM5/@ATMOStag_@OCEANtag
-@MOM5setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM5/${OGCM_IM}x${OGCM_JM}
+@MOM5setenv OBCSDIR  @shared_COUPLED/ocean/MOM5/${OGCM_IM}x${OGCM_JM}
 @MOM6setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM6/@ATMOStag_@OCEANtag
-@MOM6setenv OBCSDIR  @COUPLEDIR/ocean_bcs/MOM6/${OGCM_IM}x${OGCM_JM}
+@MOM6setenv OBCSDIR  @shared_COUPLED/ocean/MOM6/${OGCM_IM}x${OGCM_JM}
 @COUPLEDsetenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
 @COUPLEDsetenv BCTAG `basename $ABCSDIR`
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
@@ -643,16 +643,16 @@ if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv       
 set   GOCART_DATA_TRUE = `grep -i '^\s*ENABLE_GOCART_DATA:\s*\.TRUE\.'   GEOS_ChemGridComp.rc | wc -l`
 if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
 
-@MP_NO_USE_WSUB# 1MOM and GFDL microphysics do not use WSUB_CLIM
-@MP_NO_USE_WSUB# -------------------------------------------------
+@MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
+@MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 else
-   @MP_NO_USE_WSUB/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_NO_USE_WSUBcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 endif
-@MP_NO_USE_WSUB/bin/rm WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -951,8 +951,8 @@ setenv GEOSBIN   $GEOSBIN
 setenv GEOSETC   $GEOSETC
 setenv GEOSUTIL  $GEOSUTIL
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
-echo $LD_LIBRARY_PATH
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+echo $@LD_LIBRARY_PATH_CMD
 cd $statsdir
 $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files -ana $ana_files -cli $clim_files -rc $GEOSUTIL/post/stats.rc \
                                  -levs $levs_clim -tag $EXPID -nfreq 060000 -fhour $fHOURS

@@ -138,6 +138,9 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #            'prog.eta+-'
 #            'traj.lcv'
 #            'ptrj.prs'
+# predictor forcing files for land da coupling 
+#            'inst1_2d_lfo_Nx+-' 
+#            'tavg1_2d_lfo_Nx+-' 
 # Forecast Files
 #            'inst3_3d_asm_Np+-'
 #            'inst3_3d_asm_Nv+-'
@@ -190,8 +193,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'Q'         , 'MOIST'      , 'QV'  ,
                                   'QLTOT'     , 'AGCM'       , 'QL'  ,
                                   'QITOT'     , 'AGCM'       , 'QI'  ,
-                                  'QRTOT'     , 'MOIST'      , 'QR'  ,
-                                  'QSTOT'     , 'MOIST'      , 'QS'  ,
+                                  'QR'        , 'MOIST'      , 'QR'  ,
+                                  'QS'        , 'MOIST'      , 'QS'  ,
                                   'RH2'       , 'MOIST'      , 'RH'  ,
                                   'ZLE'       , 'DYN'        , 'H'   ,
                                   'O3'        , 'CHEMISTRY'  ,
@@ -221,8 +224,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'Q'      , 'MOIST'      , 'QV'  ,
                                   'QLTOT'  , 'AGCM'       , 'QL'  ,
                                   'QITOT'  , 'AGCM'       , 'QI'  ,
-                                  'QRTOT'  , 'MOIST'      , 'QR'  ,
-                                  'QSTOT'  , 'MOIST'      , 'QS'  ,
+                                  'QR'     , 'MOIST'      , 'QR'  ,
+                                  'QS'     , 'MOIST'      , 'QS'  ,
                                   'RH2'    , 'MOIST'      , 'RH'  ,
                                   'ZL'     , 'DYN'        , 'H'   ,
                                   'O3'     , 'CHEMISTRY'  ,
@@ -682,7 +685,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Nv-.end_time:       >>>IOETIME<<< ,
   tavg3_3d_odt_Nv-.fields:        'PS'                 , 'DYN'         ,
                                   'DELP'               , 'DYN'         ,
-                                  'MTRI%PCHEM::OXIM'   , 'PHYSICS'     , 'DOXDTMST'  ,
+                                  'MCHEMTRI%PCHEM::OXIM'   , 'PHYSICS'     , 'DOXDTMST'  ,
                                   'TRI%PCHEM::OXIT'    , 'TURBULENCE'  , 'DOXDTTRB'  ,
                                   'OX_TEND'            , 'CHEMISTRY'   , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN          'TRADVI%PCHEM::OXID' , 'AGCM'        , 'DOXDTDYN'  ,
@@ -706,7 +709,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Cp-.vunit:         'hPa' ,
   tavg3_3d_odt_Cp-.vvars:         'log(PLE)' , 'DYN' ,
   tavg3_3d_odt_Cp-.levels:         1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1 ,
-  tavg3_3d_odt_Cp-.fields:        'MTRI%PCHEM::OXIM'   , 'PHYSICS'     , 'DOXDTMST'  ,
+  tavg3_3d_odt_Cp-.fields:        'MCHEMTRI%PCHEM::OXIM'   , 'PHYSICS'     , 'DOXDTMST'  ,
                                   'TRI%PCHEM::OXIT'    , 'TURBULENCE'  , 'DOXDTTRB'  ,
                                   'OX_TEND'            , 'CHEMISTRY'   , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN          'TRADVI%PCHEM::OXID' , 'AGCM'        , 'DOXDTDYN'  ,
@@ -1155,8 +1158,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                                   'QITOT'      , 'AGCM'       , 'qitot'      ,
                                   'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                                  'QRTOT'      , 'MOIST'      , 'qrtot'      ,
-                                  'QSTOT'      , 'MOIST'      , 'qstot'      ,
+                                  'QR'         , 'MOIST'      , 'qrtot'      ,
+                                  'QS'         , 'MOIST'      , 'qstot'      ,
                                    ::
 
   bkg.sfc.format:                 'CFIO' ,
@@ -1480,7 +1483,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'CA.bcEMBB'    , 'CA.bc'  , 'BCEMBB'          ,
                                   'CA.bcEMBF'    , 'CA.bc'  , 'BCEMBF'          ,
                                   'CA.bcEMAN'    , 'CA.bc'  , 'BCEMAN'          ,
-                                  'MTRI%CA.bc::CA.bcphilicIM' , 'PHYSICS' , 'BCSV' ,
+                                  'MCHEMTRI%CA.bc::CA.bcphilicIM' , 'PHYSICS' , 'BCSV' ,
 # Brown Carbon
                                   'CA.brEM'      , 'CA.br'  , 'BREM001;BREM002' ,
                                   'CA.brDP'      , 'CA.br'  , 'BRDP001;BRDP002' ,
@@ -1490,19 +1493,19 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'CA.brEMAN'    , 'CA.br'  , 'BREMAN'          ,
                                   'CA.brPSOA'    , 'CA.br'  , 'BRPSOA'          ,
                                   'CA.brHYPHIL'  , 'CA.br'  , 'BRHYPHIL'        ,
-                                  'MTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
+                                  'MCHEMTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
 # Dust
                                   'DUEM'         , 'DU'     , 'DUEM001;DUEM002;DUEM003;DUEM004;DUEM005',
                                   'DUSD'         , 'DU'     , 'DUSD001;DUSD002;DUSD003;DUSD004;DUSD005',
                                   'DUDP'         , 'DU'     , 'DUDP001;DUDP002;DUDP003;DUDP004;DUDP005',
                                   'DUWT'         , 'DU'     , 'DUWT001;DUWT002;DUWT003;DUWT004;DUWT005',
-                                  'MTRI%DU::DUIM'             , 'PHYSICS' , 'DUSV' ,
+                                  'MCHEMTRI%DU::DUIM'       , 'PHYSICS' , 'DUSV' ,
 # Seasalt
                                   'SSEM'         , 'SS'     , 'SSEM001;SSEM002;SSEM003;SSEM004;SSEM005',
                                   'SSSD'         , 'SS'     , 'SSSD001;SSSD002;SSSD003;SSSD004;SSSD005',
                                   'SSDP'         , 'SS'     , 'SSDP001;SSDP002;SSDP003;SSDP004;SSDP005',
                                   'SSWT'         , 'SS'     , 'SSWT001;SSWT002;SSWT003;SSWT004;SSWT005',
-                                  'MTRI%SS::SSIM'             , 'PHYSICS' , 'SSSV' ,
+                                  'MCHEMTRI%SS::SSIM'       , 'PHYSICS' , 'SSSV' ,
 # Sulfates
                                   'SUEM'         , 'SU'     , 'SUEM001;SUEM002;SUEM003;SUEM004',
                                   'SUSD'         , 'SU'     , 'SUSD001;SUSD002;SUSD003;SUSD004',
@@ -1518,7 +1521,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'SO2EMBB'      , 'SU'     ,
                                   'SO2EMVN'      , 'SU'     ,
                                   'SO2EMVE'      , 'SU'     ,
-                                  'MTRI%SU::SO4IM'            , 'PHYSICS' , 'SUSV' ,
+                                  'MCHEMTRI%SU::SO4IM'      , 'PHYSICS' , 'SUSV' ,
 # Organic Carbon
                                   'CA.ocEM'      , 'CA.oc'  , 'OCEM001;OCEM002' ,
                                   'CA.ocDP'      , 'CA.oc'  , 'OCDP001;OCDP002' ,
@@ -1529,7 +1532,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'CA.ocEMBG'    , 'CA.oc'  , 'OCEMBG'          ,
                                   'CA.ocPSOA'    , 'CA.oc'  , 'OCPSOA'          ,
                                   'CA.ocHYPHIL'  , 'CA.oc'  , 'OCHYPHIL'        ,
-                                  'MTRI%CA.oc::CA.ocphilicIM' , 'PHYSICS' , 'OCSV' ,
+                                  'MCHEMTRI%CA.oc::CA.ocphilicIM' , 'PHYSICS' , 'OCSV' ,
 # Nitrate
                                   'NIPNO3AQ'     , 'NI'     ,
                                   'NIPNH4AQ'     , 'NI'     ,
@@ -1546,7 +1549,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'NH4DP'        , 'NI'     ,
                                   'NH4WT'        , 'NI'     ,
                                   'NH4SV'        , 'NI'     ,
-                                  'MTRI%NI::NO3an1IM'         , 'PHYSICS' , 'NISV' ,
+                                  'MCHEMTRI%NI::NO3an1IM'   , 'PHYSICS' , 'NISV' ,
                                    ::
 
   tavg3_2d_chm_Nx-.format:        'CFIO' ,
@@ -1820,8 +1823,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'Q'         , 'MOIST'  , 'QV'      ,
                                   'QITOT'     , 'AGCM'   , 'QI'      ,
                                   'QLTOT'     , 'AGCM'   , 'QL'      ,
-                                  'QRTOT'     , 'MOIST'  , 'QR'      ,
-                                  'QSTOT'     , 'MOIST'  , 'QS'      ,
+                                  'QR'        , 'MOIST'  , 'QR'      ,
+                                  'QS'        , 'MOIST'  , 'QS'      ,
                                   'U;V'       , 'DYN'    ,
                                   'CLLS'      , 'MOIST'  , 'CFLS'    ,
                                   'CLCN'      , 'MOIST'  , 'CFAN'    ,
@@ -2016,6 +2019,49 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                    ::
 
 #######################################################################
+#                predictor forcing files for land da coupling 
+#######################################################################
+
+  tavg1_2d_lfo_Nx+-.format:      'CFIO' ,
+  tavg1_2d_lfo_Nx+-.descr:       '2d,1-Hourly,Time-Averaged,Single-Level,Land Surface Forcings' ,
+# tavg1_2d_lfo_Nx+-.nbits:       10 ,
+  tavg1_2d_lfo_Nx+-.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  tavg1_2d_lfo_Nx+-.mode:        'time-averaged' ,
+  tavg1_2d_lfo_Nx+-.frequency:   010000 ,
+  tavg1_2d_lfo_Nx+-.duration:    010000 ,
+  tavg1_2d_lfo_Nx+-.ref_date:    >>>IOBBKGD<<< ,
+  tavg1_2d_lfo_Nx+-.ref_time:    >>>IOBBKGT<<< ,
+  tavg1_2d_lfo_Nx+-.end_date:    >>>IOEBKGD<<< ,
+  tavg1_2d_lfo_Nx+-.end_time:    >>>IOEBKGT<<< ,
+  tavg1_2d_lfo_Nx.fields:      'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
+                               'SWLAND'  , 'SURFACE'  ,
+                               'LWS'     , 'IRRAD'    , 'LWGAB'    ,
+                               'PCU'     , 'SURFACE'  , 'PRECCU'   ,
+                               'PLS'     , 'SURFACE'  , 'PRECLS'   ,
+                               'SNO'     , 'SURFACE'  , 'PRECSNO'  ,
+                               'DFPAR'   , 'SOLAR'    , 'PARDF'    ,
+                               'DRPAR'   , 'SOLAR'    , 'PARDR'    ,
+                               ::
+
+  inst1_2d_lfo_Nx+-.format:      'CFIO' ,
+  inst1_2d_lfo_Nx+-.descr:       '2d,1-Hourly,Instantaneous,Single-Level,Land Surface Forcings' ,
+# inst1_2d_lfo_Nx+-.nbits:       10 ,
+  inst1_2d_lfo_Nx+-.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  inst1_2d_lfo_Nx+-.mode:        'instantaneous' ,
+  inst1_2d_lfo_Nx+-.frequency:   010000 ,
+  inst1_2d_lfo_Nx+-.duration:    010000 ,
+  inst1_2d_lfo_Nx+-.ref_date:    >>>IOBBKGD<<< ,
+  inst1_2d_lfo_Nx+-.ref_time:    >>>IOBBKGT<<< ,
+  inst1_2d_lfo_Nx+-.end_date:    >>>IOEBKGD<<< ,
+  inst1_2d_lfo_Nx+-.end_time:    >>>IOEBKGT<<< ,
+  inst1_2d_lfo_Nx+-.fields:      'DZ'     , 'DYN'  , 'HLML'      ,
+                                 'TA'     , 'DYN'  , 'TLML'      ,
+                                 'QA'     , 'DYN'  , 'QLML'      ,
+                                 'SPEED'  , 'DYN'  , 'SPEEDLML'  ,
+                                 'PS'     , 'DYN'  ,
+                                 ::
+
+#######################################################################
 #                         Forecast Files
 #######################################################################
 
@@ -2083,8 +2129,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'Q'         , 'MOIST'      , 'QV'  ,
                                   'QLTOT'     , 'AGCM'       , 'QL'  ,
                                   'QITOT'     , 'AGCM'       , 'QI'  ,
-                                  'QRTOT'     , 'MOIST'      , 'QR'  ,
-                                  'QSTOT'     , 'MOIST'      , 'QS'  ,
+                                  'QR'        , 'MOIST'      , 'QR'  ,
+                                  'QS'        , 'MOIST'      , 'QS'  ,
                                   'RH2'       , 'MOIST'      , 'RH'  ,
                                   'ZLE'       , 'DYN'        , 'H'   ,
                                   'O3'        , 'CHEMISTRY'  ,
@@ -2114,8 +2160,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'Q'      , 'MOIST'      , 'QV'  ,
                                   'QLTOT'  , 'AGCM'       , 'QL'  ,
                                   'QITOT'  , 'AGCM'       , 'QI'  ,
-                                  'QRTOT'  , 'MOIST'      , 'QR'  ,
-                                  'QSTOT'  , 'MOIST'      , 'QS'  ,
+                                  'QR'     , 'MOIST'      , 'QR'  ,
+                                  'QS'     , 'MOIST'      , 'QS'  ,
                                   'RH2'    , 'MOIST'      , 'RH'  ,
                                   'ZL'     , 'DYN'        , 'H'   ,
                                   'O3'     , 'CHEMISTRY'  ,
@@ -2472,8 +2518,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'Q'      , 'MOIST'      , 'QV'  ,
                                   'QLTOT'  , 'AGCM'       , 'QL'  ,
                                   'QITOT'  , 'AGCM'       , 'QI'  ,
-                                  'QRTOT'  , 'MOIST'      , 'QR'  ,
-                                  'QSTOT'  , 'MOIST'      , 'QS'  ,
+                                  'QR'     , 'MOIST'      , 'QR'  ,
+                                  'QS'     , 'MOIST'      , 'QS'  ,
                                   'RH2'    , 'MOIST'      , 'RH'  ,
                                   'ZLE'    , 'DYN'        , 'H'   ,
                                   'O3'     , 'CHEMISTRY'  ,
@@ -2675,8 +2721,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'Q'          , 'MOIST'      , 'sphu'       ,
                                   'QITOT'      , 'AGCM'       , 'qitot'      ,
                                   'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                                  'QRTOT'      , 'MOIST'      , 'qrtot'      ,
-                                  'QSTOT'      , 'MOIST'      , 'qstot'      ,
+                                  'QR'         , 'MOIST'      , 'qrtot'      ,
+                                  'QS'         , 'MOIST'      , 'qstot'      ,
                                   'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                                    ::
 
@@ -2782,8 +2828,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                                   'QITOT'      , 'AGCM'       , 'qitot'      ,
                                   'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                                  'QRTOT'      , 'MOIST'      , 'qrtot'      ,
-                                  'QSTOT'      , 'MOIST'      , 'qstot'      ,
+                                  'QR'         , 'MOIST'      , 'qrtot'      ,
+                                  'QS'         , 'MOIST'      , 'qstot'      ,
                                    ::
 
   traj.lcv.format:                'CFIO' ,
@@ -2809,16 +2855,16 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 @FVTRAJ                       'O3PPMV'   , 'CHEMISTRY'  , 'ozone'    ,
 @FVTRAJ                       'QITOT'    , 'AGCM'       , 'qitot'    ,
 @FVTRAJ                       'QLTOT'    , 'AGCM'       , 'qltot'    ,
-@FVTRAJ                       'QRTOT'    , 'MOIST'      , 'qrtot'    ,
-@FVTRAJ                       'QSTOT'    , 'MOIST'      , 'qstot'    ,
+@FVTRAJ                       'QR'       , 'MOIST'      , 'qrtot'    ,
+@FVTRAJ                       'QS'       , 'MOIST'      , 'qstot'    ,
 @FV3TRAJ  traj.lcv.fields: 'U_DGRID;V_DGRID' , 'DYN'    , 'U;V'      ,
 @FV3TRAJ                   'TH'         , 'DYN'        , 'PT'       ,
 @FV3TRAJ                   'Q'          , 'MOIST'      , 'QV'       ,
 @FV3TRAJ                   'DELP'       , 'DYN'        , 'DP'       ,
 @FV3TRAJ                   'QITOT'      , 'AGCM'       , 'QI'       ,
 @FV3TRAJ                   'QLTOT'      , 'AGCM'       , 'QL'       ,
-@FV3TRAJ                   'QRTOT'      , 'MOIST'      , 'QR'       ,
-@FV3TRAJ                   'QSTOT'      , 'MOIST'      , 'QS'       ,
+@FV3TRAJ                   'QR'         , 'MOIST'      , 'QR'       ,
+@FV3TRAJ                   'QS'         , 'MOIST'      , 'QS'       ,
 @FV3TRAJ                   'O3PPMV'     , 'CHEMISTRY'  , 'O3'       ,
 @FV3TRAJ                   'QCLSX0'     , 'MOIST'      , 'QLS'      ,
 @FV3TRAJ                   'QCCNX0'     , 'MOIST'      , 'QCN'      ,
@@ -2885,8 +2931,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                            'DELP'             , 'DYN'         , 'delp'       ,
                            'QITOT'            , 'AGCM'        , 'qi'         ,
                            'QLTOT'            , 'AGCM'        , 'ql'         ,
-                           'QSTOT'            , 'MOIST'       , 'qs'         ,
-                           'QRTOT'            , 'MOIST'       , 'qr'         ,
+                           'QS'               , 'MOIST'       , 'qs'         ,
+                           'QR'               , 'MOIST'       , 'qr'         ,
                            'O3PPMV'           , 'CHEMISTRY'   , 'o3ppmv'     ,
                            'GOCART::CO2'      , 'GOCART'      , 'co2'        ,
                            'QCLSX0'           , 'MOIST'       , 'qls'        ,
