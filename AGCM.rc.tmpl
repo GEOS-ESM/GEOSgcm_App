@@ -727,11 +727,14 @@ GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      @CHECKPOINT_TYPE
 GIGATRAJ_REGRID_TO_LATLON:              YES
 GIGATRAJ_PARCELS_FILE:                  parcels.nc4
 # time interval (minutes) for integration. Default is heart beat and it must be a multiple of heart beat. 
-# GIGATRAJ_INTEGRATE_MINUTES:
-# time interval (minutes) to rebalance the parcels, i.e, the process keeps its own parcels
-GIGATRAJ_REBALANCE_MINUTES:             15
-# time interval (minutes) to write output
-GIGATRAJ_OUTPUT_MINUTES:                15
+# format hhmmss
+# GIGATRAJ_INTEGRATE_DT:
+# time interval to rebalance the parcels, i.e, the process keeps its own parcels
+# format hhmmss
+GIGATRAJ_REBALANCE_DT:      001500
+# time interval to write output
+# format hhmmss
+GIGATRAJ_OUTPUT_DT:         001500
 
 # using ";" to separate fields
 # fields supported: CA.bcDP;CA.ocWT;CA.bcphobic;CA.ocphobic;CA.bcphilic;CA.ocphilic
