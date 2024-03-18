@@ -1390,7 +1390,7 @@ if( $AGCM_IM == "c2160" ) then
      set STRETCH_FACTOR = 2.5
 endif
 
-set IS_FCST = 0
+set OGCM_IS_FCST = 0
 set FVCUBED         = ""
 set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
 if( ${OGRIDTYP} == 'CF' ) then
@@ -2466,7 +2466,7 @@ s^@DYCORE^$DYCORE^g
 s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
 s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
 
-s?@IS_FCST?$IS_FCST?g
+s?@OGCM_IS_FCST?$OGCM_IS_FCST?g
 s^@BOOT^YES^g
 s^@BCSRES^$BCSRES^g
 s^@OCEANtag^$OCEAN_RES^g
