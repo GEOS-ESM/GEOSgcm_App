@@ -118,6 +118,11 @@ OGCM_RUN_DT: @OCEAN_DT
 
 # INTERPOLATE_SST: 0 or 1 # (Default based on comparison of GRID_ocean and GRID_atmos)
 
+# Flag to activate fire weather and fuel conditions diagnostics
+# -------------------------------------------------------------
+FIRE_DANGER: .TRUE.
+
+
 # Print Resource Parameters (0: Non-Default values, 1: ALL values)
 #-----------------------------------------------------------------
 PRINTRC: 1
@@ -724,9 +729,9 @@ SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
 # IGNI Restart Files
 # ------------------
-#IGNI_INTERNAL_RESTART_FILE:            igni_internal_rst
-#IGNI_INTERNAL_CHECKPOINT_FILE:         igni_internal_checkpoint
-#IGNI_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+IGNI_INTERNAL_RESTART_FILE:            igni_internal_rst
+IGNI_INTERNAL_CHECKPOINT_FILE:         igni_internal_checkpoint
+IGNI_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 
 # Boundary Datasets
 # -----------------
