@@ -1880,11 +1880,11 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
-              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                     # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     $HOME                                           # user work directory
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                           # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                       # Location of GWD_RIDGE files
 
 else
 # These are defaults for the desktop
@@ -1918,11 +1918,11 @@ else
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                                             # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3         # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm               # Coupled Ocean/Atmos Forcing
-              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs             # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE           # Location of GWD_RIDGE files
+              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                     # locations of Aerosol Chemistry BCs
+              setenv WRKDIR     $HOME                                           # user work directory
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/aogcm                           # Coupled Ocean/Atmos Forcing
+              setenv shared_COUPLED  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs # Coupled Ocean/Atmos Forcing
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                       # Location of GWD_RIDGE files
               set NX = 1
               set NY = 6
               # By default on desktop, just ignore IOSERVER for now
@@ -1943,7 +1943,7 @@ while( $check == FALSE )
   if( -e $HOME/.HOMDIRroot ) then
          set HOMDIRroot = `cat $HOME/.HOMDIRroot`
   else
-         set HOMDIRroot = $HOME/geos5
+         set HOMDIRroot = $WRKDIR
   endif
 
   setenv HOMDIR_def $HOMDIRroot/$EXPID
