@@ -385,7 +385,6 @@ cat << _EOF_ > $FILE
 # ----------------------------------------------------------
 @MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
-/bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
 
 @DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/visdf_@RES_DATELINE.dat visdf.dat
@@ -631,6 +630,7 @@ end
 # -----------------------
 set USE_WAVES = `grep '^\s*USE_WAVES:' AGCM.rc| cut -d: -f2`
 set wavemodel = `cat WGCM.rc | grep "wave_model:" | cut -d "#" -f1 | cut -d ":" -f 2 | sed 's/\s//g'`
+set wavewatch = `$USE_WAVES != 0 && $wavemodel == "WW3"`
 
 # Copy Restarts to Scratch Directory
 # ----------------------------------
@@ -644,7 +644,7 @@ else
     end
 
     # WW3 restart file
-    if( $wavemodel == "WW3" ) then
+    if( $wavewatch ) then
         set rst_ww3 = "restart.ww3"
         if(-e $EXPDIR/${rst_ww3} ) /bin/cp $EXPDIR/${rst_ww3} . &
     endif
@@ -679,7 +679,7 @@ if($numrs == 0) then
    wait
 @COUPLED    cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
    # WW3 restart file
-   if( $wavemodel == "WW3" ) then
+   if( $wavewatch ) then
        set rst_ww3 = "restart.ww3"
        if( -e ${rst_ww3} ) cp ${rst_ww3}  ${EXPDIR}/restarts/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
    endif
@@ -839,7 +839,7 @@ endif
 
 # Set WW3 start date and time
 # ---------------------------
-if ( $USE_WAVES != 0 && $wavemodel == "WW3" ) then
+if( $wavewatch ) then
     cp ww3_multi.nml ww3_multi.nml.orig
     awk '{$1=$1};1' < ww3_multi.nml.orig > ww3_multi.nml
 
@@ -1318,7 +1318,7 @@ end
 
 # WW3 restarts - assumes that there is at least one NEW restart file
 # ------------------------------------------------------------------
-if( $wavemodel == "WW3" ) then
+if( $wavewatch ) then
 
     set ww3checkpoint  = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1`
     set rst_ww3 = "restart.ww3"
@@ -1326,7 +1326,7 @@ if( $wavemodel == "WW3" ) then
     cp $rst_ww3 ${EXPDIR}/restarts/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.bin
 
     # remove intermediate restarts
-    set ww3checkpoint  = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1` 
+    set ww3checkpoint  = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1`
     if ( $#ww3checkpoint != 0 ) /bin/rm  ./restart[0-9][0-9][0-9].ww3
 endif
 
@@ -1437,7 +1437,7 @@ else
      wait
      cp cap_restart $EXPDIR/cap_restart
 
-     if( $wavemodel == "WW3" ) then 
+     if( $wavewatch ) then
         set rst_ww3 = "restart.ww3"
         /bin/rm -f $EXPDIR/$rst_ww3
         cp $rst_ww3 $EXPDIR/$rst_ww3 &

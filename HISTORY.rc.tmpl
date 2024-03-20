@@ -139,6 +139,9 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #            'prog.eta+-'
 #            'traj.lcv'
 #            'ptrj.prs'
+# predictor forcing files for land da coupling 
+#            'inst1_2d_lfo_Nx+-' 
+#            'tavg1_2d_lfo_Nx+-' 
 # Forecast Files
 #            'inst3_3d_asm_Np+-'
 #            'inst3_3d_asm_Nv+-'
@@ -2015,6 +2018,49 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'EPV'    , 'DYN'      ,
                                   'ZLE'    , 'DYN'      , 'hght'   ,
                                    ::
+
+#######################################################################
+#                predictor forcing files for land da coupling 
+#######################################################################
+
+  tavg1_2d_lfo_Nx+-.format:      'CFIO' ,
+  tavg1_2d_lfo_Nx+-.descr:       '2d,1-Hourly,Time-Averaged,Single-Level,Land Surface Forcings' ,
+# tavg1_2d_lfo_Nx+-.nbits:       10 ,
+  tavg1_2d_lfo_Nx+-.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  tavg1_2d_lfo_Nx+-.mode:        'time-averaged' ,
+  tavg1_2d_lfo_Nx+-.frequency:   010000 ,
+  tavg1_2d_lfo_Nx+-.duration:    010000 ,
+  tavg1_2d_lfo_Nx+-.ref_date:    >>>IOBBKGD<<< ,
+  tavg1_2d_lfo_Nx+-.ref_time:    >>>IOBBKGT<<< ,
+  tavg1_2d_lfo_Nx+-.end_date:    >>>IOEBKGD<<< ,
+  tavg1_2d_lfo_Nx+-.end_time:    >>>IOEBKGT<<< ,
+  tavg1_2d_lfo_Nx.fields:      'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
+                               'SWLAND'  , 'SURFACE'  ,
+                               'LWS'     , 'IRRAD'    , 'LWGAB'    ,
+                               'PCU'     , 'SURFACE'  , 'PRECCU'   ,
+                               'PLS'     , 'SURFACE'  , 'PRECLS'   ,
+                               'SNO'     , 'SURFACE'  , 'PRECSNO'  ,
+                               'DFPAR'   , 'SOLAR'    , 'PARDF'    ,
+                               'DRPAR'   , 'SOLAR'    , 'PARDR'    ,
+                               ::
+
+  inst1_2d_lfo_Nx+-.format:      'CFIO' ,
+  inst1_2d_lfo_Nx+-.descr:       '2d,1-Hourly,Instantaneous,Single-Level,Land Surface Forcings' ,
+# inst1_2d_lfo_Nx+-.nbits:       10 ,
+  inst1_2d_lfo_Nx+-.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  inst1_2d_lfo_Nx+-.mode:        'instantaneous' ,
+  inst1_2d_lfo_Nx+-.frequency:   010000 ,
+  inst1_2d_lfo_Nx+-.duration:    010000 ,
+  inst1_2d_lfo_Nx+-.ref_date:    >>>IOBBKGD<<< ,
+  inst1_2d_lfo_Nx+-.ref_time:    >>>IOBBKGT<<< ,
+  inst1_2d_lfo_Nx+-.end_date:    >>>IOEBKGD<<< ,
+  inst1_2d_lfo_Nx+-.end_time:    >>>IOEBKGT<<< ,
+  inst1_2d_lfo_Nx+-.fields:      'DZ'     , 'DYN'  , 'HLML'      ,
+                                 'TA'     , 'DYN'  , 'TLML'      ,
+                                 'QA'     , 'DYN'  , 'QLML'      ,
+                                 'SPEED'  , 'DYN'  , 'SPEEDLML'  ,
+                                 'PS'     , 'DYN'  ,
+                                 ::
 
 #######################################################################
 #                         Forecast Files
