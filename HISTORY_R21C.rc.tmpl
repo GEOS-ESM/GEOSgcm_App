@@ -111,6 +111,9 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 # Land-ice diagnostic
              'glc_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv'
              'glc_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
+# Fire Weather
+             'fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv'
+             'fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
 # Constant-height PBL collection
              'pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17'
              'pbl_tavg_2hr_glo_L@HIST_IMx@HIST_JM_z17'
@@ -4129,6 +4132,51 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'SHOUT'        , 'LANDICE'  , 'SHGLC'         ,
                                                             'LWNDSRF'      , 'LANDICE'  , 'LWNDGLC'       ,
                                                             'SWNDSRF'      , 'LANDICE'  , 'SWNDGLC'       ,
+                                                             ::
+
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Fire Weather and Fuel Conditions' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'BILINEAR_MONOTONIC' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:             'instantaneous' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:         010000 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:          010000 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:          >>>IOEDATE<<< ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'FFMC'           , 'SURFACE' ,
+                                                            'GFMC'           , 'SURFACE' ,
+                                                            'DMC'            , 'SURFACE' ,
+                                                            'DC'             , 'SURFACE' ,
+                                                            'ISI'            , 'SURFACE' ,
+                                                            'BUI'            , 'SURFACE' ,
+                                                            'FWI'            , 'SURFACE' ,
+                                                            'DSR'            , 'SURFACE' ,
+                                                            'VPD'            , 'SURFACE' ,
+                                                             ::
+
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Fire Weather and Fuel Conditions' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'BILINEAR_MONOTONIC' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:           'instantaneous' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:       010000 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:        010000 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:        >>>IOEDATE<<< ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'FFMC'           , 'SURFACE' ,
+                                                            'GFMC'           , 'SURFACE' ,
+                                                            'DMC'            , 'SURFACE' ,
+                                                            'DC'             , 'SURFACE' ,
+                                                            'ISI'            , 'SURFACE' ,
+                                                            'BUI'            , 'SURFACE' ,
+                                                            'FWI'            , 'SURFACE' ,
+                                                            'DSR'            , 'SURFACE' ,
+                                                            'VPD'            , 'SURFACE' ,
                                                              ::
 
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17.format:           'CFIO' ,
