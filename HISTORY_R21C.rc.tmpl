@@ -99,9 +99,9 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
              'adg_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
              'ctm_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_v72'
              'trc_tavg_2hr_glo_L@HIST_IMx@HIST_JM_p48'
-#            'chm_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_v72'
-#            'chm_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv'
-#            'chm_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
+             'chm_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_v72'
+             'chm_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv'
+             'chm_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
 #            'tag_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_v72'
 #            'tag_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv'
 #            'tag_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
@@ -111,9 +111,15 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 # Land-ice diagnostic
              'glc_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv'
              'glc_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
+# Fire Weather index
+             'fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv'
+             'fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
 # Constant-height PBL collection
              'pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17'
              'pbl_tavg_2hr_glo_L@HIST_IMx@HIST_JM_z17'
+# Daily Aggregated Statistics 
+	     'statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv'
+	     'statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
 # Internal Files
              'gaas_bkg.sfc'
 #            'abkg.eta'
@@ -1832,7 +1838,6 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
   gas_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.deflate:         2 ,
   gas_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.regrid_method:  'BILINEAR_MONOTONIC' ,
   gas_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  gas_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.nbits:           12 ,
   gas_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.ref_date:        >>>IGAASDATEBEG<<< ,
   gas_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.ref_time:        >>>IGAASTIMEBEG<<< ,
   gas_inst_3hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.end_date:        >>>IGAASDATEEND<<< ,
@@ -2272,9 +2277,6 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
   chm_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
   chm_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'FRACI'     , 'SURFACE'  , 'FRSEAICE'  ,
                                                             'TS'        , 'SURFACE'  ,
-                                                            'CO2EM001'  , 'GOCART'   , 'CO2EM'     ,
-                                                            'CO2CL001'  , 'GOCART'   , 'CO2CL'     ,
-                                                            'CO2SC001'  , 'GOCART'   , 'CO2SC'     ,
                                                             'COEM'      , 'GOCART'   ,
                                                             'COPD'      , 'GOCART'   ,
                                                             'COLS'      , 'GOCART'   ,
@@ -2296,153 +2298,11 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
   chm_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
   chm_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'FRACI'     , 'SURFACE'  , 'FRSEAICE'  ,
                                                             'TS'        , 'SURFACE'  ,
-                                                            'CO2EM001'  , 'GOCART'   , 'CO2EM'     ,
-                                                            'CO2CL001'  , 'GOCART'   , 'CO2CL'     ,
-                                                            'CO2SC001'  , 'GOCART'   , 'CO2SC'     ,
                                                             'COEM'      , 'GOCART'   ,
                                                             'COPD'      , 'GOCART'   ,
                                                             'COLS'      , 'GOCART'   ,
                                                             'COSC'      , 'GOCART'   ,
                                                             'COCL'      , 'GOCART'   ,
-                                                             ::
-
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Hyperwall' ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'CONSERVE_MONOTONIC' ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:             'instantaneous' ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:         010000 ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:          010000 ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.ref_time:          000000 ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:          >>>IOEDATE<<< ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.splitField:        1 ,
-  hwl_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'SLP'         , 'DYN'       ,
-                                                            'CO2CL001'    , 'GOCART'    , 'CO2CL'       ,
-                                                            'COCL'        , 'GOCART'    ,
-                                                            'COCLbbae'    , 'GOCART'    ,
-                                                            'COCLbbna'    , 'GOCART'    ,
-                                                            'COCLbbla'    , 'GOCART'    ,
-                                                            'COCLbbaf'    , 'GOCART'    ,
-                                                            'COCLbbgl'    , 'GOCART'    ,
-                                                            'COCLnbas'    , 'GOCART'    ,
-                                                            'COCLnbeu'    , 'GOCART'    ,
-                                                            'COCLnbna'    , 'GOCART'    ,
-                                                            'COCLnbgl'    , 'GOCART'    ,
-                                                            'CFC12SCL'    , 'GOCART'    , 'CFC12strat'  ,
-                                                            'CFC12TCL'    , 'GOCART'    , 'CFC12trop'   ,
-                                                            'TO3'         , 'PCHEM'     ,
-# Total Aerosol properties
-                                                            'TOTEXTTAU'   , 'GOCART2G'  ,
-                                                            'TOTSCATAU'   , 'GOCART2G'  ,
-                                                            'TOTANGSTR'   , 'GOCART2G'  ,
-# Surface Concentrations
-                                                            'DUSMASS'     , 'DU'        ,
-                                                            'DUSMASS25'   , 'DU'        ,
-                                                            'SSSMASS'     , 'SS'        ,
-                                                            'SSSMASS25'   , 'SS'        ,
-                                                            'CA.bcSMASS'  , 'CA.bc'     , 'BCSMASS'     ,
-                                                            'CA.ocSMASS'  , 'CA.oc'     , 'OCSMASS'     ,
-                                                            'CA.brSMASS'  , 'CA.br'     , 'BRSMASS'     ,
-                                                            'SO4SMASS'    , 'SU'        ,
-                                                            'SO2SMASS'    , 'SU'        ,
-                                                            'SO2CMASS'    , 'SU'        ,
-                                                            'NISMASS'     , 'NI'        ,
-                                                            'NISMASS25'   , 'NI'        ,
-# Fluxes
-                                                            'CA.bcFLUXU'  , 'CA.bc'     , 'BCFLUXU'     ,
-                                                            'CA.bcFLUXV'  , 'CA.bc'     , 'BCFLUXV'     ,
-                                                            'CA.brFLUXU'  , 'CA.br'     , 'BRFLUXU'     ,
-                                                            'CA.brFLUXV'  , 'CA.br'     , 'BRFLUXV'     ,
-                                                            'DUFLUXU'     , 'DU'        ,
-                                                            'DUFLUXV'     , 'DU'        ,
-                                                            'CA.ocFLUXU'  , 'CA.oc'     , 'OCFLUXU'     ,
-                                                            'CA.ocFLUXV'  , 'CA.oc'     , 'OCFLUXV'     ,
-                                                            'SSFLUXU'     , 'SS'        ,
-                                                            'SSFLUXV'     , 'SS'        ,
-                                                            'SUFLUXU'     , 'SU'        ,
-                                                            'SUFLUXV'     , 'SU'        ,
-                                                            'CA.bcCMASS'  , 'CA.bc'     , 'BCCMASS'     ,
-                                                            'CA.brCMASS'  , 'CA.br'     , 'BRCMASS'     ,
-                                                            'DUCMASS'     , 'DU'        ,
-                                                            'CA.ocCMASS'  , 'CA.oc'     , 'OCCMASS'     ,
-                                                            'SO4CMASS'    , 'SU'        ,
-# Additions requested for wxmaps
-                                                            'NIFLUXU'     , 'NI'        ,
-                                                            'NIFLUXV'     , 'NI'        ,
-                                                            'NICMASS'     , 'NI'        ,
-                                                             ::
-
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Hyperwall' ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'CONSERVE_MONOTONIC' ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:           'instantaneous' ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:       010000 ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:        010000 ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.ref_time:        000000 ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:        >>>IOEDATE<<< ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.splitField:      1 ,
-  hwl_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'SLP'         , 'DYN'       ,
-                                                            'CO2CL001'    , 'GOCART'    , 'CO2CL'       ,
-                                                            'COCL'        , 'GOCART'    ,
-                                                            'COCLbbae'    , 'GOCART'    ,
-                                                            'COCLbbna'    , 'GOCART'    ,
-                                                            'COCLbbla'    , 'GOCART'    ,
-                                                            'COCLbbaf'    , 'GOCART'    ,
-                                                            'COCLbbgl'    , 'GOCART'    ,
-                                                            'COCLnbas'    , 'GOCART'    ,
-                                                            'COCLnbeu'    , 'GOCART'    ,
-                                                            'COCLnbna'    , 'GOCART'    ,
-                                                            'COCLnbgl'    , 'GOCART'    ,
-                                                            'CFC12SCL'    , 'GOCART'    , 'CFC12strat'  ,
-                                                            'CFC12TCL'    , 'GOCART'    , 'CFC12trop'   ,
-                                                            'TO3'         , 'PCHEM'     ,
-# Total Aerosol properties
-                                                            'TOTEXTTAU'   , 'GOCART2G'  ,
-                                                            'TOTSCATAU'   , 'GOCART2G'  ,
-                                                            'TOTANGSTR'   , 'GOCART2G'  ,
-# Surface Concentrations
-                                                            'DUSMASS'     , 'DU'        ,
-                                                            'DUSMASS25'   , 'DU'        ,
-                                                            'SSSMASS'     , 'SS'        ,
-                                                            'SSSMASS25'   , 'SS'        ,
-                                                            'CA.bcSMASS'  , 'CA.bc'     , 'BCSMASS'     ,
-                                                            'CA.ocSMASS'  , 'CA.oc'     , 'OCSMASS'     ,
-                                                            'CA.brSMASS'  , 'CA.br'     , 'BRSMASS'     ,
-                                                            'SO4SMASS'    , 'SU'        ,
-                                                            'SO2SMASS'    , 'SU'        ,
-                                                            'SO2CMASS'    , 'SU'        ,
-                                                            'NISMASS'     , 'NI'        ,
-                                                            'NISMASS25'   , 'NI'        ,
-# Fluxes
-                                                            'CA.bcFLUXU'  , 'CA.bc'     , 'BCFLUXU'     ,
-                                                            'CA.bcFLUXV'  , 'CA.bc'     , 'BCFLUXV'     ,
-                                                            'CA.brFLUXU'  , 'CA.br'     , 'BRFLUXU'     ,
-                                                            'CA.brFLUXV'  , 'CA.br'     , 'BRFLUXV'     ,
-                                                            'DUFLUXU'     , 'DU'        ,
-                                                            'DUFLUXV'     , 'DU'        ,
-                                                            'CA.ocFLUXU'  , 'CA.oc'     , 'OCFLUXU'     ,
-                                                            'CA.ocFLUXV'  , 'CA.oc'     , 'OCFLUXV'     ,
-                                                            'SSFLUXU'     , 'SS'        ,
-                                                            'SSFLUXV'     , 'SS'        ,
-                                                            'SUFLUXU'     , 'SU'        ,
-                                                            'SUFLUXV'     , 'SU'        ,
-                                                            'CA.bcCMASS'  , 'CA.bc'     , 'BCCMASS'     ,
-                                                            'CA.brCMASS'  , 'CA.br'     , 'BRCMASS'     ,
-                                                            'DUCMASS'     , 'DU'        ,
-                                                            'CA.ocCMASS'  , 'CA.oc'     , 'OCCMASS'     ,
-                                                            'SO4CMASS'    , 'SU'        ,
-# Additions requested for wxmaps
-                                                            'NIFLUXU'     , 'NI'        ,
-                                                            'NIFLUXV'     , 'NI'        ,
-                                                            'NICMASS'     , 'NI'        ,
                                                              ::
 
   aer_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.format:         'CFIO' ,
@@ -2509,7 +2369,6 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'DELP'         , 'DYN'      ,
                                                             'AIRDENS'      , 'CHEMENV'  ,
                                                             'GOCART::CO'   , 'GOCART'   , 'CO'   ,
-                                                            'GOCART::CO2'  , 'GOCART'   , 'CO2'  ,
                                                              ::
 
   tag_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_v72.format:         'CFIO' ,
@@ -3337,7 +3196,6 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'TS'           , 'SURFACE'  ,
                                                             'AIRDENS'      , 'CHEMENV'  ,
                                                             'GOCART::CO'   , 'GOCART'   , 'CO'        ,
-                                                            'GOCART::CO2'  , 'GOCART'   , 'CO2'       ,
                                                              ::
 
   tavg3_3d_tag_Np+-.format:                                 'CFIO' ,
@@ -3720,7 +3578,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 #
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,2-Hourly,Time-Averaged,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+#  int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'BILINEAR_MONOTONIC' ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -3847,7 +3705,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,2-Hourly,Time-Averaged,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
+#  int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'BILINEAR_MONOTONIC' ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -3973,7 +3831,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,1-Hourly,Instantaneous,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+# int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'BILINEAR_MONOTONIC' ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -3995,7 +3853,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:          'CFIO' ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:           '2d,1-Hourly,Instantaneous,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:            10 ,
+#  int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:            10 ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:          2 ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:   'BILINEAR_MONOTONIC' ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:        '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -4131,6 +3989,51 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'SWNDSRF'      , 'LANDICE'  , 'SWNDGLC'       ,
                                                              ::
 
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Fire Weather and Fuel Conditions' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'BILINEAR_MONOTONIC' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:             'instantaneous' ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:        PC@HIST_IMx@HIST_JM-DC ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:         010000 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:          010000 ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:          >>>IOEDATE<<< ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:          >>>IOETIME<<< ,
+  fwi_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:           'FFMC'           , 'SURFACE' ,
+                                                            'GFMC'           , 'SURFACE' ,
+                                                            'DMC'            , 'SURFACE' ,
+                                                            'DC'             , 'SURFACE' ,
+                                                            'ISI'            , 'SURFACE' ,
+                                                            'BUI'            , 'SURFACE' ,
+                                                            'FWI'            , 'SURFACE' ,
+                                                            'DSR'            , 'SURFACE' ,
+                                                            'VPD'            , 'SURFACE' ,
+                                                             ::
+
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Fire Weather and Fuel Conditions' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'BILINEAR_MONOTONIC' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:           'instantaneous' ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:       010000 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:        010000 ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:        >>>IOEDATE<<< ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:        >>>IOETIME<<< ,
+  fwi_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:         'FFMC'           , 'SURFACE' ,
+                                                            'GFMC'           , 'SURFACE' ,
+                                                            'DMC'            , 'SURFACE' ,
+                                                            'DC'             , 'SURFACE' ,
+                                                            'ISI'            , 'SURFACE' ,
+                                                            'BUI'            , 'SURFACE' ,
+                                                            'FWI'            , 'SURFACE' ,
+                                                            'DSR'            , 'SURFACE' ,
+                                                            'VPD'            , 'SURFACE' ,
+                                                             ::
+
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17.format:           'CFIO' ,
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17.descr:            '3d,1-Hourly,Instantaneous,Constant-Height,PBL Diagnostics' ,
   pbl_inst_1hr_glo_L@HIST_IMx@HIST_JM_z17.nbits:             10 ,
@@ -4184,3 +4087,38 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'RADSW'     , 'RADIATION'   , 'DTDTSW'  ,
                                                              ::
 
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:      'CFIO' ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:       '2d,Daily,Aggregated Statistics,Single-Level,Assimilation,Single-Level Diagnostics' ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:       10 ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:     2 ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method: 'BILINEAR_MONOTONIC' ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:    '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<'  ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.mode:        'time-averaged' ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:  PC@HIST_IMx@HIST_JM-DC  ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:   010000 ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.duration:    010000 ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:    >>>IOEDATE<<< ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:    >>>IOETIME<<< ,
+  statD_tavg_1hr_glo_L@HIST_IMx@HIST_JM_slv.fields:      'T2M'         , 'SURFACE'  , 'T2MMEAN'   ,
+                                                         'T2M'         , 'SURFACE'  , 'T2MMAX'    , 'MAX'  ,
+                                                         'T2M'         , 'SURFACE'  , 'T2MMIN'    , 'MIN'  ,
+                                                         'TPREC'       , 'MOIST'    , 'PRECTOT'  , 
+                                                         'TPREC'       , 'MOIST'    , 'PRECTOTMAX'  , 'MAX'  ,
+                                                         ::
+
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:      'CFIO' ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:       '2d,Daily,Aggregated Statistics,Single-Level,Assimilation,Single-Level Diagnostics' ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:       10 ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:     2 ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method: 'BILINEAR_MONOTONIC' ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:    '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<'  ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:        'time-averaged' ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:   010000 ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:    010000 ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:    >>>IOEDATE<<< ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:    >>>IOETIME<<< ,
+  statD_tavg_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:      'T2M'         , 'SURFACE'  , 'T2MMEAN'   ,
+                                                           'T2M'         , 'SURFACE'  , 'T2MMAX'    , 'MAX'  ,
+                                                           'T2M'         , 'SURFACE'  , 'T2MMIN'    , 'MIN'  ,
+                                                           'TPREC'       , 'MOIST'    , 'TPRECMAX'  , 'MAX'  ,
+                                                           ::
