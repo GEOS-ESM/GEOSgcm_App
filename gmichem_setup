@@ -3035,6 +3035,10 @@ cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $f
 /bin/mv $file $HOMDIR/dummy
 cat           $HOMDIR/dummy | sed -e "/GMICHEM_DT/a $USE_AEROSOL_NN" > $file
 
+# Comment out a PCHEM reference
+/bin/mv $file $HOMDIR/dummy
+cat           $HOMDIR/dummy | sed -e "s/PCHEM::OX/#PCHEM::OX/" > $file
+
 ## Change from GF to RAS for now:
 #/bin/mv $file $HOMDIR/dummy
 #cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
