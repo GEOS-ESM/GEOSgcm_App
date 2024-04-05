@@ -115,7 +115,7 @@ CLOSURE_CONGESTUS: 3
 @HIST_GOCARTCA.br::CA.brphilic default
 @HIST_GOCARTCA.oc::CA.ocphilic default
 @HIST_GOCARTNI::NO3an1 "NI::NO3an2,NI::NO3an3"
-@HIST_GOCARTPCHEM::OX default 
+@HIST_GOCARTPCHEM::OX default
 @HIST_GOCART::
 @HIST_GOCART###########################################################
 
@@ -528,7 +528,6 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # Choice for Land Surface Model
 #      1 : Catchment
 #      2 : CatchmentCNCLM40
-#      3 : CatchmentCNCLM45
 # ------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
@@ -855,10 +854,10 @@ NUM_BANDS: 30
 
 #USE_RRTMGP_IRRAD: 1.0
 #USE_RRTMGP_SORAD: 1.0
-#RRTMGP_DATA_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/rrtmgp/data/rrtmgp-data-lw-g128-210809.nc
-#RRTMGP_DATA_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/rrtmgp/data/rrtmgp-data-sw-g112-210809.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-lw.nc
-#RRTMGP_CLOUD_OPTICS_COEFFS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.6/extensions/cloud_optics/rrtmgp-cloud-optics-coeffs-reordered-sw.nc
+#RRTMGP_GAS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-lw-g128.nc
+#RRTMGP_GAS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-sw-g112.nc
+#RRTMGP_CLOUD_OPTICS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-lw.nc
+#RRTMGP_CLOUD_OPTICS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-sw.nc
 
 DIURNAL_BIOMASS_BURNING: yes
 
@@ -867,9 +866,9 @@ DIURNAL_BIOMASS_BURNING: yes
 ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOCART
 
 
-# Flag for real-time forecasts (persisted SST) IS_FCST: 1 (AMIP-Style Default: 0)
+# Flag for real-time forecasts (persisted SST) OGCM_IS_FCST: 1 (AMIP-Style Default: 0)
 # -------------------------------------------------------------------------------
-    IS_FCST: @IS_FCST
+    OGCM_IS_FCST: @OGCM_IS_FCST
 
 
 # Time step for aerosol assimilation (GAAS)
@@ -904,6 +903,10 @@ USE_SATSIM_RADAR: @RADAR_SATSIM
 USE_SATSIM_LIDAR: @LIDAR_SATSIM
 USE_SATSIM_MISR:  @MISR_SATSIM
 
+# Flags to enable wave code
+# -------------------------
+USE_WAVES: 0
+
 @COUPLED INTERPOLATE_ATMLM: 0
 @COUPLED INTERPOLATE_ATMTAU: 1
 @COUPLED INTERPOLATE_OCEAN_ICE_CURRENTS: 0
@@ -928,7 +931,7 @@ USE_SATSIM_MISR:  @MISR_SATSIM
 @MOM5#DATA_SST_FILE: sst.data
 @MOM5#DATA_FRT_FILE: fraci.data
 
-@COUPLED 
+@COUPLED
 @COUPLED# Section for CICE
 @COUPLED# -----------------
 @CICE4USE_CICE_Thermo: 1

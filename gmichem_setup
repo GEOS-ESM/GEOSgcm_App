@@ -175,26 +175,8 @@ endif
 #                 Test for Compiler and MPI Setup
 #######################################################################
 
-setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
-
-     if ( `echo $BASEDIR | grep -i mvapich`  != '') then
-   set MPI = mvapich
-else if ( `echo $BASEDIR | grep -i mpich`    != '') then
-   set MPI = mpich
-else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
-   set MPI = openmpi
-else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
-   set MPI = openmpi
-else if ( `echo $BASEDIR | grep -i impi`     != '') then
-   set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i intelmpi` != '') then
-   set MPI = intelmpi
-else if ( `echo $BASEDIR | grep -i mpt`      != '') then
-   set MPI = mpt
-else
-   # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi
-endif
+# Get MPI stack from CMake
+set MPI_STACK = @MPI_STACK@
 
 #######################################################################
 #               Enter Experiment Specific Run Parameters
@@ -457,7 +439,7 @@ if ( $SITE == 'NCCS' ) then
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
       echo "   ${C2}sky  (Skylake)${CN}"
-      echo "   ${C2}cas  (Cascade Lake)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -1505,7 +1487,7 @@ if( $AGCM_IM == "c2160" ) then
      set STRETCH_FACTOR = 2.5
 endif
 
-set IS_FCST = 0
+set OGCM_IS_FCST = 0
 set FVCUBED         = ""
 set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
 if( ${OGRIDTYP} == 'CF' ) then
@@ -1631,26 +1613,22 @@ endif
 # ----------------------
 if( $LSM_BCS == "Icarus-NLv3" ) then
     LSM_CHOICE:
-    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40)), ${C2}3${CN} (CatchmentCN-CLM4.5 (CN_CLM45))"
+    echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment) or ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40))"
     set   LSM_CHOICE = $<
     if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
-    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2 &  $LSM_CHOICE != 3 ) then
+    if(  $LSM_CHOICE != 1   &  $LSM_CHOICE != 2) then
         echo
-        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1{CN} , ${C2}2${CN} or ${C2}3${CN}!"
+        echo "${C1} Catchment Model${CN} must be set equal to ${C2}1${CN} or ${C2}2${CN}!"
         goto LSM_CHOICE
     else
         echo
     endif
     if( $LSM_CHOICE == 1 ) set HIST_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set HIST_CATCHCN = ""
-    if( $LSM_CHOICE == 3 ) set HIST_CATCHCN = ""
     if( $LSM_CHOICE == 1 ) set GCMRUN_CATCHCN = "#DELETE"
     if( $LSM_CHOICE == 2 ) set GCMRUN_CATCHCN = ""
-    if( $LSM_CHOICE == 3 ) set GCMRUN_CATCHCN = ""
     if( $LSM_CHOICE == 2 ) then
       echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM40 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
-    else if ( $LSM_CHOICE == 3 ) then
-      echo "IMPORTANT: please set LAND_PARAMS: to CN_CLM45 in RC/GEOS_SurfaceGridComp.rc in the experiment directory."
     endif
 else
     set LSM_CHOICE = 1
@@ -2389,7 +2367,7 @@ set RESTART_BY_OSERVER = NO
 /bin/rm -f $HOMDIR/SETENV.commands
 
 
-if( $MPI == openmpi ) then
+if( $MPI_STACK == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
@@ -2422,7 +2400,7 @@ EOF
 # The below settings seem to be recommended for hybrid
 # systems using MVAPICH but could change
 
-else if( $MPI == mvapich ) then
+else if( $MPI_STACK == mvapich ) then
 
 # MVAPICH and GEOS has issues with restart writing. Having the
 # oserver write them seems to...work
@@ -2435,7 +2413,7 @@ setenv MV2_MPIRUN_TIMEOUT 100
 setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
-else if( $MPI == mpt ) then
+else if( $MPI_STACK == mpt ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 
@@ -2475,7 +2453,7 @@ if( $OGCM == TRUE ) then
    set MPT_SHEPHERD = "setenv MPI_SHEPHERD true"
 endif
 
-else if( $MPI == intelmpi ) then
+else if( $MPI_STACK == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
@@ -2678,7 +2656,7 @@ s^@DYCORE^$DYCORE^g
 s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
 s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
 
-s?@IS_FCST?$IS_FCST?g
+s?@OGCM_IS_FCST?$OGCM_IS_FCST?g
 s^@BOOT^YES^g
 s^@BCSRES^$BCSRES^g
 s^@OCEANtag^$OCEAN_RES^g
@@ -3056,6 +3034,10 @@ cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GMICHEM_DT: $GMICHEM_DT" > $f
 # Add AERO-related flag
 /bin/mv $file $HOMDIR/dummy
 cat           $HOMDIR/dummy | sed -e "/GMICHEM_DT/a $USE_AEROSOL_NN" > $file
+
+# Comment out a PCHEM reference
+/bin/mv $file $HOMDIR/dummy
+cat           $HOMDIR/dummy | sed -e "s/PCHEM::OX/#PCHEM::OX/" > $file
 
 ## Change from GF to RAS for now:
 #/bin/mv $file $HOMDIR/dummy
