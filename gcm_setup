@@ -296,10 +296,10 @@ endif
 set LATLON_AGCM = "#DELETE"
 set CUBE_AGCM = ""
 
-echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 72)"
+echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 181)"
 set   AGCM_LM = $<
 if( .$AGCM_LM == . ) then
-  set AGCM_LM = 72
+  set AGCM_LM = 181
 endif
 
 
@@ -315,7 +315,7 @@ echo "   ${C2}GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laborator
 echo "   ${C2}MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman${CN}"
 set   CLDMICRO = $<
 if( .$CLDMICRO == . ) then
-   set CLDMICRO = "BACM_1M"
+   set CLDMICRO = "GFDL_1M"
 else
    set CLDMICRO = `echo $CLDMICRO | tr "[:lower:]" "[:upper:]"`
    if( "$CLDMICRO" != "BACM_1M" & \
@@ -334,7 +334,7 @@ endif
 
 ASKHYDRO:
 
-set DEFAULT_HYDROSTATIC = TRUE
+set DEFAULT_HYDROSTATIC = FALSE
 
 echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
@@ -1411,9 +1411,9 @@ endif
 # Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
-echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Default: Icarus-NLv3), or ${C2}v11${CN}"
+echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}Default: v11${CN}"
 set   LSM_BCS  = $<
-if( .$LSM_BCS == . ) set LSM_BCS = "NL3"
+if( .$LSM_BCS == . ) set LSM_BCS = "v11"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set LSM_BCS      = "ICA"
     set LSM_PARMS    = "#DELETE"
