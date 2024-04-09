@@ -1,0 +1,32 @@
+experiment_id:
+  type:           'text'
+  prompt:         'Enter the experiment ID:'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''
+
+experiment_description:
+  type:           'text'
+  prompt:         'Enter a 1-line Experiment Description:'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''
+
+clone_experiment:
+  type:           'confirm'
+  prompt:         'Would you like to CLONE an old experiment?'
+  choices:        ''
+  default_answer: False
+  follows_up:     ''
+
+clone_experiment_path:
+  type:           'path'
+  prompt:         'Enter the location of the experiment you wish to clone (where gcm_run.j is located):'
+  choices:        ''
+  default_answer: ''
+  follows_up:     
+    - ['clone_experiment', [True]]
+
+
+
+
