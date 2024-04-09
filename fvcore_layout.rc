@@ -28,6 +28,9 @@
 
 &gfdl_cloud_microphysics_nml
   sedi_transport = .true.
+  do_evap = .false.
+  do_subl = .false.
+  do_qa = .false.
   tau_l2v  = 300.
   tau_i2v  = 300.
   tau_s2v  = 300.
@@ -38,7 +41,7 @@
   dw_ocean = 0.10
   rh_inc = 0.30
   rh_inr = 0.30
-  qi0_crt = 8.0E-5
+  qi0_crt = 5.0E-4
   qs0_crt = 1.0e-3
   c_psaci = 0.05
   c_pgacs = 0.01
