@@ -1,3 +1,5 @@
+add_subdirectory(gcmpy)
+
 ecbuild_add_executable (
   TARGET GEOSgcm.x
   SOURCES GEOSgcm.F90
