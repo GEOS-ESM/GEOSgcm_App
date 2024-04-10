@@ -1,6 +1,6 @@
 # cp (makes exe)
 add_subdirectory(scripts)
-add_subdirectory(yamls)
+add_subdirectory(yaml)
 
 set (programs)
 
