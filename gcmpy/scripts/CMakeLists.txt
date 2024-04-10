@@ -1,5 +1,13 @@
 set (programs
-  #fill
+  atmosphere.py
+  env.py
+  generate_question.py
+  gocart.py
+  land.py
+  model.py
+  ocean.py
+  process_questions.py
+  utility.py
   )
 
 install (
