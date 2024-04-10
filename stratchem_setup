@@ -2758,9 +2758,14 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE  & "$OCNMODEL" != "MIT" ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
-## Modify AGCM.rc
-## --------------
-#set file = $HOMDIR/AGCM.rc
+# Modify AGCM.rc
+# --------------
+set file = $HOMDIR/AGCM.rc
+
+# Comment out a PCHEM reference
+/bin/mv $file $HOMDIR/dummy
+cat           $HOMDIR/dummy | sed -e "s/PCHEM::OX/#PCHEM::OX/" > $file
+
 #
 ## Change from GF to RAS for now:
 #/bin/mv $file $HOMDIR/dummy
@@ -2777,7 +2782,7 @@ if( $OGCM == TRUE  & "$OCNMODEL" != "MIT" ) /bin/mv $HOMDIR/plotocn.j       $EXP
 ## For future:  sed commands to insert important GF flags:
 ##/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
 ##/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
-#/bin/rm -f    $HOMDIR/dummy
+/bin/rm -f    $HOMDIR/dummy
 
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options

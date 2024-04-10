@@ -1807,7 +1807,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                      # location of Boundary Conditions
-	      setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
+	            setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
@@ -1874,7 +1874,7 @@ while( $check == FALSE )
   if( -e $HOME/.HOMDIRroot ) then
          set HOMDIRroot = `cat $HOME/.HOMDIRroot`
   else
-         set HOMDIRroot = $HOME/geos5
+         set HOMDIRroot = $WRKDIR
   endif
 
   setenv HOMDIR_def $HOMDIRroot/$EXPID
