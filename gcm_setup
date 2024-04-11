@@ -309,7 +309,7 @@ endif
 
 ASKMP:
 
-echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: BACM_1M)"
+echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: GFDL_1M)"
 echo "   ${C2}BACM_1M  --  3-phase 1-moment Bacmeister et al${CN}"
 echo "   ${C2}GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
 echo "   ${C2}MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman${CN}"
