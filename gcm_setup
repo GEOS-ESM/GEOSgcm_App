@@ -1002,7 +1002,7 @@ if( $AGCM_IM ==  "c12" ) then
 endif
 if( $AGCM_IM ==  "c24" ) then
      set       DT = 1800
-     set  LONG_DT = 1800
+     set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -1019,8 +1019,8 @@ if( $AGCM_IM ==  "c24" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c48" ) then
-     set       DT = 1200
-     set  LONG_DT = 1200
+     set       DT = 900
+     set  LONG_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -1037,8 +1037,8 @@ if( $AGCM_IM ==  "c48" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c90" ) then
-     set       DT = 900
-     set  LONG_DT = 900
+     set       DT = 600
+     set  LONG_DT = 1200
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
@@ -1070,8 +1070,8 @@ if( $AGCM_IM ==  "c90" ) then
      set POST_NDS = 8
 endif
 if( $AGCM_IM ==  "c180" ) then
-     set       DT = 600
-     set  LONG_DT = 600
+     set       DT = 450
+     set  LONG_DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 180
@@ -1101,8 +1101,8 @@ if( $AGCM_IM ==  "c180" ) then
      set POST_NDS = 8
 endif
 if( $AGCM_IM == "c360" ) then
-     set       DT = 450
-     set  LONG_DT = 450
+     set       DT = 360
+     set  LONG_DT = 720
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -1121,7 +1121,7 @@ if( $AGCM_IM == "c360" ) then
 endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 300
-     set  LONG_DT = 300
+     set  LONG_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -1140,8 +1140,8 @@ if( $AGCM_IM == "c720" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 150
-     set  LONG_DT = 300
+     set       DT = 225
+     set  LONG_DT = 450
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
      set OCEAN_DT = 1800
@@ -1160,7 +1160,7 @@ if( $AGCM_IM == "c1440" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c2880" ) then
-     set       DT = 75
+     set       DT = 150
      set  LONG_DT = 300
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
@@ -1168,7 +1168,7 @@ if( $AGCM_IM == "c2880" ) then
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 96
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1182,11 +1182,11 @@ if( $AGCM_IM == "c2880" ) then
      set CONVPAR_OPTION = NONE
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 60
+     set       DT = 75
      set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 192
@@ -1214,8 +1214,8 @@ if( $AGCM_IM == "c270" ) then
      set OCEAN_DT = 3600
      set AGCM_IM  = 270
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 8
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 18
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1236,8 +1236,8 @@ if( $AGCM_IM == "c540" ) then
      set OCEAN_DT = 3600
      set AGCM_IM  = 540
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 14
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 36
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1258,8 +1258,8 @@ if( $AGCM_IM == "c1080" ) then
      set OCEAN_DT = 1800
      set AGCM_IM  = 1080
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 22
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 72
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1275,21 +1275,21 @@ endif
 if( $AGCM_IM == "c1536" ) then
      set       DT = 75
      set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 36
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 96
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
-     set JOB_SGMT = 00000005
+     set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF1536x6C
-     set POST_NDS = 16
+     set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
      set STRETCH_FACTOR = 3.0
@@ -1297,13 +1297,13 @@ endif
 if( $AGCM_IM == "c2160" ) then
      set       DT = 75
      set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 40
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 120
+     set       NY = 864
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1311,6 +1311,28 @@ if( $AGCM_IM == "c2160" ) then
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF2160x6C
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set CONUS = ''
+     set STRETCH_FACTOR = 2.5
+endif
+if( $AGCM_IM == "c4320" ) then
+     set       DT = 30
+     set  LONG_DT = 300
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
+     set AGCM_IM  = 4320
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 240
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF4320x6C
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1802,7 +1824,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                      # location of Boundary Conditions
-	      setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
