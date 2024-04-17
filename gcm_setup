@@ -1387,8 +1387,6 @@ if ( "$CLDMICRO" == "MGB2_2M" ) then
 endif
 
 set GFDL_HYDRO = ".TRUE."
-set GFDL_PROG_CCN = "prog_ccn = .true."
-set GFDL_USE_CCN  = "use_ccn = .true."
 
 # BACM_1M and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
@@ -2489,8 +2487,6 @@ s?@FV_TARGET_LON?$TARGET_LON?g
 s?@FV_TARGET_LAT?$TARGET_LAT?g
 s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
-s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
-s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 
 EOF
