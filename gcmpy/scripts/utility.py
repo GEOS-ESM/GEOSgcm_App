@@ -54,13 +54,12 @@ class exceptions:
 #######################################################################
 # set up envirnoment dictionary for later
 envdict = {}
-pathdict = {}  # Start empty - cannot reference self before initialization
-pathdict['cwd']         = os.getcwd()
-pathdict['bin']         = os.path.dirname(pathdict['cwd'])
-pathdict['install']     = os.path.dirname(pathdict['bin'])
-pathdict['etc']         = os.path.join(pathdict['install'], 'etc')
-pathdict['GEOSgcm']     = os.path.dirname(pathdict['install'])
-pathdict['build']       = os.path.join(pathdict['GEOSgcm'], 'build')
-#pathdict['SCRIPT']      = os.path.realpath(__file__)
-#pathdict['SCRIPTNAME']  = os.path.split(pathdict['SCRIPT'])[-1]
-#pathdict['PY_METHOD']   = os.path.join(pathdict['BIN'], 'py_method')
+pathdict = {}  # Start empty - cannot reference self before initialization (<--what are you yapping about??)
+pathdict['scripts'] = os.getcwd()
+pathdict['gcmpy']   = os.path.dirname(pathdict['scripts'])
+pathdict['yaml']    = os.path.join(pathdict['gcmpy'], 'yaml')
+pathdict['bin']     = os.path.dirname(pathdict['gcmpy'])
+pathdict['install'] = os.path.dirname(pathdict['bin'])
+pathdict['etc']     = os.path.join(pathdict['install'], 'etc')
+pathdict['GEOSgcm'] = os.path.dirname(pathdict['install'])
+pathdict['build']   = os.path.join(pathdict['GEOSgcm'], 'build')

@@ -170,12 +170,12 @@ class handle:
 def load_yamls():
 
     # list of question files (*MAKE SURE THEY ARE IN THE ORDER YOU WANT THEM TO BE ASKED*)
-    file_list = ["exp_setup.yaml",          \
-                 "atmospheric_model.yaml",  \
-                 "ocean_model.yaml",        \
-                 "land_model.yaml",         \
-                 "gocart.yaml",             \
-                 "directory_setup.yaml"]
+    file_list = ["../yaml/exp_setup.yaml",          \
+                 "../yaml/atmospheric_model.yaml",  \
+                 "../yaml/ocean_model.yaml",        \
+                 "../yaml/land_model.yaml",         \
+                 "../yaml/gocart.yaml",             \
+                 "../yaml/directory_setup.yaml"]
     all_yaml_questions = {}
 
     for filename in file_list:

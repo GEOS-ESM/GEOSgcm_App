@@ -369,7 +369,7 @@ class model:
             shutil.rmtree(RC_dir)
 
         # Copy over all files and subdirs in install/etc, keeping symlinks, and ignoring *.tmpl files
-        shutil.copytree(pathdict['etc'], RC_dir, symlinks=True, ignore=shutil.ignore_patterns('*.tmpl'))
+        shutil.copytree(pathdict['etc'], RC_dir, symlinks=True, ignore=shutil.ignore_patterns('*.tmpl', 'fvcore.layout.rc'))
 
         # Copy or symlink GEOSgcm.x (((IGNORE SINGULARITY/NATIVE BUILDS FOR NOW!!)))
         geosgcmx_path = os.path.join(pathdict['bin'], 'GEOSgcm.x')
@@ -384,7 +384,7 @@ class model:
     def mpistacksettings(self):
 
         # load mpi config from YAML
-        with open('mpi_config.yaml') as file:
+        with open('../yaml/mpi_config.yaml') as file:
             mpidict = yaml.load(file, Loader=yaml.FullLoader)
 
         # retrieve config from correlating mpi setting being used
@@ -392,8 +392,25 @@ class model:
         
         print(mpi_config)
 
-
-
+    #######################################################################
+    #            Create directories and copy files over 
+    #######################################################################
+    def copy_files_into_exp(self):
+        file_list = ['gcm_run.j',          \
+                     'gcm_post.j',         \
+                     'gcm_archive.j',      \ 
+                     'gcm_regress.j',      \
+                     'gcm_plot.tmpl',      \
+                     'gcm_quickplot.csh',  \
+                     'gcm_moveplot.j',     \
+                     'gcm_forecast.tmpl',  \
+                     'gcm_forecast.setup', \
+                     'gcm_emip.setup',     \
+                     'CAP.rc.tmpl',        \
+                     'AGCM.rc.tmpl',       \
+                     'HISTORY.rc.tmpl',    \
+                     'logging.yaml',       \
+                     'fvcore_layout.rc']
 
 
 mymodel = model()   
