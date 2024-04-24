@@ -6,6 +6,7 @@ from env import answerdict, linkx
 from utility import envdict, pathdict
 import math, os, shutil, tempfile, yaml
 from pathlib import Path
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 
 # combines all models (atmos, ocean, land, gocart) into one big one
@@ -395,23 +396,12 @@ class model:
     #######################################################################
     #            Create directories and copy files over 
     #######################################################################
-    def copy_files_into_exp(self):
-        file_list = ['gcm_run.j',          \
-                     'gcm_post.j',         \
-                     'gcm_archive.j',      \ 
-                     'gcm_regress.j',      \
-                     'gcm_plot.tmpl',      \
-                     'gcm_quickplot.csh',  \
-                     'gcm_moveplot.j',     \
-                     'gcm_forecast.tmpl',  \
-                     'gcm_forecast.setup', \
-                     'gcm_emip.setup',     \
-                     'CAP.rc.tmpl',        \
-                     'AGCM.rc.tmpl',       \
-                     'HISTORY.rc.tmpl',    \
-                     'logging.yaml',       \
-                     'fvcore_layout.rc']
-
+    def copy_files_into_exp(self, file_list[]):
+        for file in file_list:
+            if file[-5:] == '.tmpl':
+                shutil.copy(f"{pathdict['GEOSgcm_App']}/{file}", f"{self.exp_dir}/{file[:-5]}")
+            else:
+                shutil.copy(f"{pathdict['GEOSgcm_App']}/{file}", f"{self.exp_dir}/{file}")    
 
 mymodel = model()   
 mymodel.config_models()
@@ -423,3 +413,22 @@ mymodel.create_dotfile(f"{os.environ.get('HOME')}/.EXPDIRroot", answerdict['exp_
 mymodel.create_dotfile(f"{os.environ.get('HOME')}/.GROUProot", answerdict['group_root'].q_answer)
 mymodel.RC_setup()
 mymodel.mpistacksettings()
+file_list['gcm_run.j',          \
+                                      'gcm_post.j',         \
+                                      'gcm_archive.j',      \ 
+                                      'gcm_regress.j',      \
+                                      'gcm_plot.tmpl',      \
+                                      'gcm_quickplot.csh',  \
+                                      'gcm_moveplot.j',     \
+                                      'gcm_forecast.tmpl',  \
+                                      'gcm_forecast.setup', \
+                                      'gcm_emip.setup',     \
+                                      'CAP.rc.tmpl',        \
+                                      'AGCM.rc.tmpl',       \
+                                      'HISTORY.rc.tmpl',    \
+                                      'logging.yaml',       \
+                                      'fvcore_layout.rc']
+
+mymodel.copy_files_into_exp(file_list)
+
+
