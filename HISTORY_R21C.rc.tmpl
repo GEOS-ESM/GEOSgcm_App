@@ -3720,7 +3720,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 #
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,2-Hourly,Time-Averaged,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+  int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             12 ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'BILINEAR_MONOTONIC' ,
   int_tavg_2hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -3847,7 +3847,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:         'CFIO' ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:          '2d,2-Hourly,Time-Averaged,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           10 ,
+  int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:           12 ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:         2 ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:  'BILINEAR_MONOTONIC' ,
   int_tavg_2hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:       '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -3973,7 +3973,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.format:           'CFIO' ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.descr:            '2d,1-Hourly,Instantaneous,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             10 ,
+  int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.nbits:             14 ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:           2 ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:    'BILINEAR_MONOTONIC' ,
   int_inst_1hr_glo_L@HIST_IMx@HIST_JM_slv.template:         '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -3995,7 +3995,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:          'CFIO' ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:           '2d,1-Hourly,Instantaneous,Single-Level,Assimilation,Vertically Integrated Diagnostics' ,
-  int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:            10 ,
+  int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.nbits:            14 ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:          2 ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method:   'BILINEAR_MONOTONIC' ,
   int_inst_1hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:        '%y4-%m2-%d2T%h2%n2Z.>>>NCSUFFIX<<<' ,
@@ -4153,7 +4153,7 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'FCLD'           , 'MOIST'       , 'CLOUD',
                                                             'PL'             , 'DYN'         ,
                                                             'T'              , 'MOIST'       ,
-                                                            'OMEGA'          , 'DYN'         ,
+                                                            'W_DIAG'         , 'MOIST'       , 'W'   ,
                                                             'SL'             , 'MOIST'       ,
                                                             'QT'             , 'MOIST'       ,
                                                             'KH'             , 'TURBULENCE'  ,
