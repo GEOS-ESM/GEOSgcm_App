@@ -181,13 +181,14 @@ endif
 #            Copy and Modify RC Files from Home Directory
 #######################################################################
 
-                             cp -f  $EXPDIR/RC/* .
-                             cp -f  $HOMDIR/*.rc .
-                             cp -f  $HOMDIR/*.nml .
-                             cp -f  $HOMDIR/*.yaml .
-                             cp     $GEOSBIN/bundleParser.py .
+cp -f  $EXPDIR/RC/* .
+cp     $EXPDIR/linkbcs .
+cp -f  $HOMDIR/*.rc .
+cp -f  $HOMDIR/*.nml .
+cp -f  $HOMDIR/*.yaml .
+cp     $GEOSBIN/bundleParser.py .
 
-                             cat fvcore_layout.rc >> input.nml
+cat fvcore_layout.rc >> input.nml
 
 echo $nymd0 $nhms0 > cap_restart
 
