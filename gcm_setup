@@ -652,9 +652,9 @@ if( $OGCM == TRUE ) then
     if( "$OCNMODEL" == "MIT" ) then
         if ( $AGCM_IM != "c90" ) then
             echo "You MUST select c90 atmospheric resolution for MIT ocean!"
-	          exit 1
+            exit 1
         endif
-	      set OGRIDTYP = "MITLLC"
+        set OGRIDTYP = "MITLLC"
         set OGCM_JM = 15
         set OGCM_IM = `expr $OGCM_JM \* 360`
 
@@ -1446,7 +1446,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
 else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v11" ) then
     set LSM_BCS      = "v11"
     set LSM_PARMS    = ""
-    set EMIP_BCS_IN  = "v11"
+    set EMIP_BCS_IN  = "NL3"
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
@@ -1746,7 +1746,7 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
-	      setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
 
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
