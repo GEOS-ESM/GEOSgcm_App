@@ -471,6 +471,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}sky (Skylake)${CN} (default)"
    echo "   ${C2}cas (Cascade Lake)${CN}"
    echo "   ${C2}rom (AMD Rome)${CN}"
+   echo "   ${C2}mil (AMD Milan)${CN}"
    echo " "
    echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
    echo "      and Ivy Bridge are not supported by current GEOS"
@@ -485,7 +486,8 @@ else if ( $SITE == 'NAS' ) then
        $MODEL != 'bro' & \
        $MODEL != 'sky' & \
        $MODEL != 'cas' & \
-       $MODEL != 'rom' ) goto ASKPROC
+       $MODEL != 'rom' & \
+       $MODEL != 'mil' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
@@ -496,13 +498,11 @@ else if ( $SITE == 'NAS' ) then
       set MODEL = 'cas_ait'
    else if ($MODEL == rom) then
       set MODEL = 'rom_ait'
+   else if ($MODEL == mil) then
+      set MODEL = 'mil_ait'
    endif
 
-   if (     $MODEL == 'san') then
-      set NCPUS_PER_NODE = 16
-   else if ($MODEL == 'ivy') then
-      set NCPUS_PER_NODE = 20
-   else if ($MODEL == 'has') then
+   if ($MODEL == 'has') then
       set NCPUS_PER_NODE = 24
    else if ($MODEL == 'bro') then
       set NCPUS_PER_NODE = 28
@@ -511,6 +511,8 @@ else if ( $SITE == 'NAS' ) then
    else if ($MODEL == 'cas_ait') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
+      set NCPUS_PER_NODE = 128
+   else if ($MODEL == 'mil_ait') then
       set NCPUS_PER_NODE = 128
    endif
 
@@ -652,9 +654,9 @@ if( $OGCM == TRUE ) then
     if( "$OCNMODEL" == "MIT" ) then
         if ( $AGCM_IM != "c90" ) then
             echo "You MUST select c90 atmospheric resolution for MIT ocean!"
-	          exit 1
+            exit 1
         endif
-	      set OGRIDTYP = "MITLLC"
+        set OGRIDTYP = "MITLLC"
         set OGCM_JM = 15
         set OGCM_IM = `expr $OGCM_JM \* 360`
 
