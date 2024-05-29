@@ -1224,7 +1224,7 @@ if( $AGCM_IM == "c270" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF0270x6C
+     set ATMOS_RES = CF0270x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1246,7 +1246,7 @@ if( $AGCM_IM == "c540" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF0540x6C
+     set ATMOS_RES = CF0540x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1268,7 +1268,7 @@ if( $AGCM_IM == "c1080" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF1080x6C
+     set ATMOS_RES = CF1080x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1290,7 +1290,7 @@ if( $AGCM_IM == "c1536" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000005
      set NUM_SGMT = 1
-     set ATMOS_RES = CF1536x6C
+     set ATMOS_RES = CF1536x6C-SG002
      set POST_NDS = 16
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1312,7 +1312,7 @@ if( $AGCM_IM == "c2160" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF2160x6C
+     set ATMOS_RES = CF2160x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
