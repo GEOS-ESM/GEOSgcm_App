@@ -471,6 +471,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}sky (Skylake)${CN} (default)"
    echo "   ${C2}cas (Cascade Lake)${CN}"
    echo "   ${C2}rom (AMD Rome)${CN}"
+   echo "   ${C2}mil (AMD Milan)${CN}"
    echo " "
    echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
    echo "      and Ivy Bridge are not supported by current GEOS"
@@ -485,7 +486,8 @@ else if ( $SITE == 'NAS' ) then
        $MODEL != 'bro' & \
        $MODEL != 'sky' & \
        $MODEL != 'cas' & \
-       $MODEL != 'rom' ) goto ASKPROC
+       $MODEL != 'rom' & \
+       $MODEL != 'mil' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
@@ -496,13 +498,11 @@ else if ( $SITE == 'NAS' ) then
       set MODEL = 'cas_ait'
    else if ($MODEL == rom) then
       set MODEL = 'rom_ait'
+   else if ($MODEL == mil) then
+      set MODEL = 'mil_ait'
    endif
 
-   if (     $MODEL == 'san') then
-      set NCPUS_PER_NODE = 16
-   else if ($MODEL == 'ivy') then
-      set NCPUS_PER_NODE = 20
-   else if ($MODEL == 'has') then
+   if ($MODEL == 'has') then
       set NCPUS_PER_NODE = 24
    else if ($MODEL == 'bro') then
       set NCPUS_PER_NODE = 28
@@ -511,6 +511,8 @@ else if ( $SITE == 'NAS' ) then
    else if ($MODEL == 'cas_ait') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
+      set NCPUS_PER_NODE = 128
+   else if ($MODEL == 'mil_ait') then
       set NCPUS_PER_NODE = 128
    endif
 
@@ -1222,7 +1224,7 @@ if( $AGCM_IM == "c270" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF0270x6C
+     set ATMOS_RES = CF0270x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1244,7 +1246,7 @@ if( $AGCM_IM == "c540" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF0540x6C
+     set ATMOS_RES = CF0540x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1266,7 +1268,7 @@ if( $AGCM_IM == "c1080" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF1080x6C
+     set ATMOS_RES = CF1080x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1288,7 +1290,7 @@ if( $AGCM_IM == "c1536" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF1536x6C
+     set ATMOS_RES = CF1536x6C-SG002
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1310,7 +1312,7 @@ if( $AGCM_IM == "c2160" ) then
      set NUM_READERS = 6
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
-     set ATMOS_RES = CF2160x6C
+     set ATMOS_RES = CF2160x6C-SG001
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
