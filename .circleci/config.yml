@@ -1,11 +1,11 @@
 version: 2.1
 
 # Anchors in case we need to override the defaults from the orb
-#baselibs_version: &baselibs_version v7.17.0
-#bcs_version: &bcs_version v11.3.0
+#baselibs_version: &baselibs_version v7.24.0
+#bcs_version: &bcs_version v11.5.0
 
 orbs:
-  ci: geos-esm/circleci-tools@dev:39ea685db247f9fd0722e1bbaa50430dee83858d
+  ci: geos-esm/circleci-tools@2
 
 workflows:
   build-test:
