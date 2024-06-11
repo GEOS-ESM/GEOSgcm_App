@@ -1428,7 +1428,7 @@ endif
 # Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
-echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}Default: v11${CN}"
+echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Default: Icarus-NLv3), or ${C2}v12${CN}"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = "v11"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
@@ -1445,8 +1445,8 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
-else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v11" ) then
-    set LSM_BCS      = "v11"
+else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
+    set LSM_BCS      = "v12"
     set LSM_PARMS    = ""
     set EMIP_BCS_IN  = "NL3"
     set EMIP_OLDLAND = "#DELETE"
@@ -1454,7 +1454,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v11" ) then
     set EMIP_MERRA2  = "MERRA2_NewLand"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v11${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v12${CN}!"
     goto LSM_BCS
 endif
 
