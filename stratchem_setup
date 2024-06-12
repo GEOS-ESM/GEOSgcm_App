@@ -245,6 +245,7 @@ echo "   ${C2}c90  -- 1    deg (${C1}100.0    km${C2}) ${CN}"
 echo "   ${C2}c180 -- 1/2  deg (${C1} 50.0    km${C2}) ${CN}"
 echo "   ${C2}c360 -- 1/4  deg (${C1} 25.0    km${C2}) ${CN} "
 echo "   ${C2}c720 -- 1/8  deg (${C1} 12.5    km${C2}) ${CN}"
+echo "   ${C2}c1120 - 1/12 deg (${C1}  8.0    km${C2}) ${CN}"
 echo "   ${C2}c1440 - 1/16 deg (${C1}  6.25   km${C2}) ${CN}"
 echo "   ${C2}c2880 - 1/32 deg (${C1}  3.125  km${C2}) ${CN}"
 echo "   ${C2}c5760 - 1/64 deg (${C1}  1.5625 km${C2}) ${CN}"
@@ -265,6 +266,7 @@ if( $HRCODE != 'c12'   & \
     $HRCODE != 'c180'  & \
     $HRCODE != 'c360'  & \
     $HRCODE != 'c720'  & \
+    $HRCODE != 'c1120' & \
     $HRCODE != 'c1440' & \
     $HRCODE != 'c2880' & \
     $HRCODE != 'c5760' & \
@@ -296,10 +298,10 @@ endif
 set LATLON_AGCM = "#DELETE"
 set CUBE_AGCM = ""
 
-echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 72)"
+echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 181)"
 set   AGCM_LM = $<
 if( .$AGCM_LM == . ) then
-  set AGCM_LM = 72
+  set AGCM_LM = 181
 endif
 
 
@@ -309,13 +311,13 @@ endif
 
 ASKMP:
 
-echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: BACM_1M)"
+echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: GFDL_1M)"
 echo "   ${C2}BACM_1M  --  3-phase 1-moment Bacmeister et al${CN}"
 echo "   ${C2}GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
 echo "   ${C2}MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman${CN}"
 set   CLDMICRO = $<
 if( .$CLDMICRO == . ) then
-   set CLDMICRO = "BACM_1M"
+   set CLDMICRO = "GFDL_1M"
 else
    set CLDMICRO = `echo $CLDMICRO | tr "[:lower:]" "[:upper:]"`
    if( "$CLDMICRO" != "BACM_1M" & \
@@ -334,7 +336,7 @@ endif
 
 ASKHYDRO:
 
-set DEFAULT_HYDROSTATIC = TRUE
+set DEFAULT_HYDROSTATIC = FALSE
 
 echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
 set   USE_HYDROSTATIC = $<
@@ -369,6 +371,7 @@ ASKIOS:
 if( $HRCODE == 'c180'  | \
     $HRCODE == 'c360'  | \
     $HRCODE == 'c720'  | \
+    $HRCODE == 'c1120' | \
     $HRCODE == 'c1440' | \
     $HRCODE == 'c270'  | \
     $HRCODE == 'c540'  | \
@@ -980,11 +983,11 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 1800
+     set       DT = 3600
+     set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
      set SC_SPLIT = 1
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1004,11 +1007,11 @@ if( $AGCM_IM ==  "c12" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 1800
+     set       DT = 3600
+     set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
      set SC_SPLIT = 1
      set AGCM_IM  = 24
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1024,10 +1027,10 @@ if( $AGCM_IM ==  "c24" ) then
 endif
 if( $AGCM_IM ==  "c48" ) then
      set       DT = 1800
+     set  LONG_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
      set SC_SPLIT = 1
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1043,6 +1046,7 @@ if( $AGCM_IM ==  "c48" ) then
 endif
 if( $AGCM_IM ==  "c90" ) then
      set       DT = 900
+     set  LONG_DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
@@ -1063,9 +1067,8 @@ if( $AGCM_IM ==  "c90" ) then
      else
         set  NX = 3
         set  NY = `expr $NX \* 6`
-        set OCEAN_DT = $IRRAD_DT
+        set OCEAN_DT = 3600
      endif
-     set  LONG_DT = $DT
      set SC_SPLIT = 1
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1077,9 +1080,9 @@ if( $AGCM_IM ==  "c90" ) then
 endif
 if( $AGCM_IM ==  "c180" ) then
      set       DT = 600
+     set  LONG_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set  LONG_DT = $DT
      set SC_SPLIT = 1
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1096,7 +1099,7 @@ if( $AGCM_IM ==  "c180" ) then
      else
         set  NX = 6
         set  NY = `expr $NX \* 6`
-        set OCEAN_DT = $IRRAD_DT
+        set OCEAN_DT = 3600
      endif
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1109,10 +1112,10 @@ if( $AGCM_IM ==  "c180" ) then
 endif
 if( $AGCM_IM == "c360" ) then
      set       DT = 450
+     set  LONG_DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
      set SC_SPLIT = 1
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1128,11 +1131,11 @@ if( $AGCM_IM == "c360" ) then
      set POST_NDS = 12
 endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 300
+     set       DT = 360
+     set  LONG_DT = 360
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set OCEAN_DT = 3600
      set SC_SPLIT = 1
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1148,12 +1151,33 @@ if( $AGCM_IM == "c720" ) then
      set POST_NDS = 16
      set USE_SHMEM = 1
 endif
+if( $AGCM_IM == "c1120" ) then
+     set       DT = 300
+     set  LONG_DT = 300
+     set SOLAR_DT = 3600
+     set IRRAD_DT = 3600
+     set OCEAN_DT = 3600
+     set SC_SPLIT = 1
+     set AGCM_IM  = 1120
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 80
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000005
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF1120x6C
+     set POST_NDS = 16
+     set USE_SHMEM = 1
+endif
 if( $AGCM_IM == "c1440" ) then
      set       DT = 150
+     set  LONG_DT = 300
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 300
+     set OCEAN_DT = 1800
      set SC_SPLIT = 1
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1171,15 +1195,15 @@ if( $AGCM_IM == "c1440" ) then
 endif
 if( $AGCM_IM == "c2880" ) then
      set       DT = 75
+     set  LONG_DT = 300
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 300
+     set OCEAN_DT = 3600
      set SC_SPLIT = 1
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 96
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1193,11 +1217,11 @@ if( $AGCM_IM == "c2880" ) then
      set CONVPAR_OPTION = NONE
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 45
+     set       DT = 60
+     set  LONG_DT = 300
      set SOLAR_DT = 900
      set IRRAD_DT = 900
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 300
+     set OCEAN_DT = 900
      set SC_SPLIT = 1
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
@@ -1220,15 +1244,15 @@ set CONUS = '#'
 set STRETCH_FACTOR = ""
 if( $AGCM_IM == "c270" ) then
      set       DT = 600
+     set  LONG_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set OCEAN_DT = 3600
      set SC_SPLIT = 1
      set AGCM_IM  = 270
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 8
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 18
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1243,15 +1267,15 @@ if( $AGCM_IM == "c270" ) then
 endif
 if( $AGCM_IM == "c540" ) then
      set       DT = 300
+     set  LONG_DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set OCEAN_DT = 3600
      set SC_SPLIT = 1
      set AGCM_IM  = 540
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 14
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 36
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1266,15 +1290,15 @@ if( $AGCM_IM == "c540" ) then
 endif
 if( $AGCM_IM == "c1080" ) then
      set       DT = 150
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
+     set  LONG_DT = 300
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set SC_SPLIT = 1
      set AGCM_IM  = 1080
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 22
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 72
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1289,38 +1313,38 @@ if( $AGCM_IM == "c1080" ) then
 endif
 if( $AGCM_IM == "c1536" ) then
      set       DT = 75
+     set  LONG_DT = 300
      set SOLAR_DT = 900
      set IRRAD_DT = 900
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 300
+     set OCEAN_DT = 900
      set SC_SPLIT = 1
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 36
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 96
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
-     set JOB_SGMT = 00000005
+     set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF1536x6C-SG002
-     set POST_NDS = 16
+     set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
      set STRETCH_FACTOR = 3.0
 endif
 if( $AGCM_IM == "c2160" ) then
-     set       DT = 60
+     set       DT = 75
+     set  LONG_DT = 300
      set SOLAR_DT = 900
      set IRRAD_DT = 900
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 300
+     set OCEAN_DT = 900
      set SC_SPLIT = 1
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 40
-     set       NY = `expr $NX \* 6 \* 2`
+     set       NX = 120
+     set       NY = 864
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1328,6 +1352,29 @@ if( $AGCM_IM == "c2160" ) then
      set JOB_SGMT = 00000001
      set NUM_SGMT = 1
      set ATMOS_RES = CF2160x6C-SG001
+     set POST_NDS = 32
+     set USE_SHMEM = 1
+     set CONUS = ''
+     set STRETCH_FACTOR = 2.5
+endif
+if( $AGCM_IM == "c4320" ) then
+     set       DT = 30
+     set  LONG_DT = 300
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
+     set SC_SPLIT = 1
+     set AGCM_IM  = 4320
+     set AGCM_JM  = `expr $AGCM_IM \* 6`
+     set       NX = 240
+     set       NY = `expr $NX \* 6`
+     set HYDROSTATIC = $USE_HYDROSTATIC
+     set HIST_IM  = `expr $AGCM_IM \* 4`
+     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+     set NUM_READERS = 6
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 1
+     set ATMOS_RES = CF4320x6C
      set POST_NDS = 32
      set USE_SHMEM = 1
      set CONUS = ''
@@ -1382,8 +1429,6 @@ if ( "$CLDMICRO" == "MGB2_2M" ) then
 endif
 
 set GFDL_HYDRO = ".TRUE."
-set GFDL_PROG_CCN = "prog_ccn = .true."
-set GFDL_USE_CCN  = "use_ccn = .true."
 
 # BACM_1M and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
@@ -1396,15 +1441,12 @@ endif
 if ( "$USE_HYDROSTATIC" == "TRUE" ) then
    set FV_MAKENH     = "Make_NH     = .F."
    set FV_HYDRO      = "hydrostatic = .T."
-   set FV_HWT        = '#'
 else
    set FV_MAKENH     = "Make_NH     = .T."
    set FV_HYDRO      = "hydrostatic = .F."
    if ( "$CLDMICRO" == "GFDL_1M" ) then
       set GFDL_HYDRO = ".FALSE."
    endif
-   # Enable FV3_CONFIG: HWT when running non-hydrostatic
-   set FV_HWT        = ''
 endif
 
 if ($CONUS == '#') then
@@ -1417,8 +1459,6 @@ else
   set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
   set TARGET_LON  = "target_lon  = -98.35"
   set TARGET_LAT  = "target_lat  = 39.5"
-  # Always enable FV3_CONFIG: HWT for CONUS
-  set FV_HWT        = ''
 endif
 
 #######################################################################
@@ -1428,9 +1468,9 @@ endif
 # Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
-echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Default: Icarus-NLv3), or ${C2}v12${CN}"
+echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v12${CN} (Default)"
 set   LSM_BCS  = $<
-if( .$LSM_BCS == . ) set LSM_BCS = "NL3"
+if( .$LSM_BCS == . ) set LSM_BCS = "v12"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set LSM_BCS      = "ICA"
     set LSM_PARMS    = "#DELETE"
@@ -1748,7 +1788,7 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
-	      setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
 
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
@@ -1824,13 +1864,13 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                      # location of Boundary Conditions
-	            setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                          # user work directory
+              setenv WRKDIR     $HOME                                                   # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean        # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                               # Location of GWD_RIDGE files
 
@@ -1868,7 +1908,7 @@ else
 
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
+              setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
               set NX = 1
@@ -2447,7 +2487,6 @@ s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
 s/@CONUS/${CONUS}/g
-s/@FV_HWT/${FV_HWT}/g
 s/@CONVPAR_OPTION/${CONVPAR_OPTION}/g
 s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 
@@ -2491,8 +2530,6 @@ s?@FV_TARGET_LON?$TARGET_LON?g
 s?@FV_TARGET_LAT?$TARGET_LAT?g
 s?@FV_MAKENH?$FV_MAKENH?g
 s?@FV_HYDRO?$FV_HYDRO?g
-s?@GFDL_PROG_CCN?$GFDL_PROG_CCN?g
-s?@GFDL_USE_CCN?$GFDL_USE_CCN?g
 s?@GFDL_HYDRO?$GFDL_HYDRO?g
 
 EOF
