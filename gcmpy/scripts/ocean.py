@@ -6,6 +6,7 @@ class ocean:
     def __init__(self):
         self.name = answerdict["OM_name"].q_answer
         self.coupled = answerdict["OM_coupled"].q_answer
+        self.seaice_model = answerdict["OM_seaice_model"].q_answer
         self.gridtype = ""
         self.gridtype_abrv = ""
         self.gridname = ""

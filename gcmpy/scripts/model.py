@@ -3,7 +3,7 @@ from atmosphere import atmosphere as atmos
 from land import land
 from gocart import gocart
 from env import answerdict, linkx
-from utility import envdict, pathdict
+from utility import envdict, pathdict, color
 import math, os, shutil, tempfile, yaml
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
@@ -391,44 +391,106 @@ class model:
         # retrieve config from correlating mpi setting being used
         mpi_config = mpidict.get(envdict['mpi'])
         
-        print(mpi_config)
-
     #######################################################################
     #            Create directories and copy files over 
     #######################################################################
-    def copy_files_into_exp(self, file_list[]):
+    # A little helper function for copying files and displaying the info to the user
+    def copy_helper(self, src, destination, filename):
+        shutil.copy(src, destination)
+        print(f"Creating {color.RED}{filename}{color.RESET} for Experiment: {answerdict['experiment_id'].q_answer}")
+
+    def copy_files_into_exp(self, file_list):
+        print("\n\n\n")
+
         for file in file_list:
             if file[-5:] == '.tmpl':
-                shutil.copy(f"{pathdict['GEOSgcm_App']}/{file}", f"{self.exp_dir}/{file[:-5]}")
+                self.copy_helper(f"{pathdict['GEOSgcm_App']}/{file}", f"{self.exp_dir}/{file[:-5]}", file)
             else:
-                shutil.copy(f"{pathdict['GEOSgcm_App']}/{file}", f"{self.exp_dir}/{file}")    
+                self.copy_helper(f"{pathdict['GEOSgcm_App']}/{file}", f"{self.exp_dir}/{file}", file)
+        
+        # These files will be added if user chose to run coupled, regardless of ocean model selected.
+        if self.ocean.coupled == True:
+            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/plotcon.j", f"{self.exp_dir}/plotcon.j", "plotcon.j")
+            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/confon.py", f"{self.exp_dir}/__init__.py", "confon.py")
+
+        if self.ocean.name == 'MOM5':
+            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
+            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/diag_table", f"{self.exp_dir}/diag_table.nml", "diag_table")
+            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/field_table", f"{self.exp_dir}/field_table.nml", "field_table")
+        elif self.ocean.name == 'MOM6':
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/diag_table", f"{self.exp_dir}/diag_table", "diag_table")
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/field_table", f"{self.exp_dir}/field_table", "field_table")
+
+        if self.ocean.seaice_model == 'CICE6':
+            self.copy_helper(f"{pathdict['ect']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in")
+        
+        print(f"{color.GREEN}Done!{color.RESET}\n")
+
+
+    #######################################################################
+    #                 Produce Final script and .rc files
+    #######################################################################
+
+    # THIS WHOLE SECTION IS WILDLY OUT OF DATE, HOWEVER I KEPT IT AS IT WAS 
+    # IN THE ORIGINAL SCRIPT FOR NOW
+    def restarts(self):
+        # comment or un-comment restarts based on exp configuration
+        # ---------------------------------------------------------
+        rsnames = {'H2O': False, 
+                   'MAM': False,
+                   'CARMA': False,
+                   'GMICHEM': False,
+                   'STRATCHEM': False}
+        rstypes = ['INTERNAL','IMPORT']
+        
+        # Load Jinja2 template
+        with open(f"{answerdict['exp_dir'].q_answer}/AGCM.rc", "r") as file:
+            file_content = file.read()
+        #file = Template(file_content)
+
+        # Template in a "#" if restart is set to false
+        for rst in rsnames:
+            for typ in rstypes:
+                rst_string = f"{rst}_{typ}"
+                comment = "#" if not rsnames[rst] else ""
+                file_content = file_content.replace(rst_string, f"{comment}{rst_string}")
+
+        with open(f"{answerdict['exp_dir'].q_answer}/AGCM.rc", "w") as file:
+            file.write(file_content)
+
+
+
 
 mymodel = model()   
 mymodel.config_models()
 #mymodel.print_all_vars()
 mymodel.set_nodes()
 mymodel.set_stuff()
-mymodel.create_dotfile(f"{os.environ.get('HOME')}/.HOMDIRroot", answerdict['home_dir'].q_answer)
 mymodel.create_dotfile(f"{os.environ.get('HOME')}/.EXPDIRroot", answerdict['exp_dir'].q_answer)
 mymodel.create_dotfile(f"{os.environ.get('HOME')}/.GROUProot", answerdict['group_root'].q_answer)
 mymodel.RC_setup()
 mymodel.mpistacksettings()
-file_list['gcm_run.j',          \
-                                      'gcm_post.j',         \
-                                      'gcm_archive.j',      \ 
-                                      'gcm_regress.j',      \
-                                      'gcm_plot.tmpl',      \
-                                      'gcm_quickplot.csh',  \
-                                      'gcm_moveplot.j',     \
-                                      'gcm_forecast.tmpl',  \
-                                      'gcm_forecast.setup', \
-                                      'gcm_emip.setup',     \
-                                      'CAP.rc.tmpl',        \
-                                      'AGCM.rc.tmpl',       \
-                                      'HISTORY.rc.tmpl',    \
-                                      'logging.yaml',       \
-                                      'fvcore_layout.rc']
+file_list = ['gcm_run.j',
+             'gcm_post.j',        
+             'gcm_archive.j',     
+             'gcm_regress.j',     
+             'gcm_plot.tmpl',     
+             'gcm_quickplot.csh', 
+             'gcm_moveplot.j',    
+             'gcm_forecast.tmpl', 
+             'gcm_forecast.setup',
+             'gcm_emip.setup',    
+             'CAP.rc.tmpl',       
+             'AGCM.rc.tmpl',      
+             'HISTORY.rc.tmpl',   
+             'logging.yaml',      
+             'fvcore_layout.rc']
 
 mymodel.copy_files_into_exp(file_list)
+mymodel.restarts()
+
 
 

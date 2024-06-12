@@ -63,4 +63,12 @@ OM_vertical_res:
   follows_up:    
     - ['OM_MOM_horizontal_res', ['any']]
     - ['OM_MIT_horizontal_res', ['any']]
+
+OM_seaice_model:
+  type:           'select'
+  prompt:         'Choose a seaice model:'
+  choices:        ['CICE4', 'CICE6']
+  default_answer: ''
+  follows_up:
+    - ['OM_coupled', ['True']]
 # ----------------------------------------------------------------------------------------------
