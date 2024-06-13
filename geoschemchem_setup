@@ -436,8 +436,8 @@ if ( $SITE == 'NCCS' ) then
       if( $MODEL != 'mil' ) goto ASKPROC
 
       if ($MODEL == 'mil') then
-         # We save a couple processes for the kernel
-         set NCPUS_PER_NODE = 126
+         # For even division, we use 120 cores per node
+         set NCPUS_PER_NODE = 120
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
@@ -456,13 +456,8 @@ if ( $SITE == 'NCCS' ) then
       if ($MODEL == 'sky') then
          set NCPUS_PER_NODE = 40
       else if ($MODEL == 'cas') then
-         # NCCS currently recommends that users do not run with
-         # 48 cores per node on SCU16 due to OS issues and
-         # recommends that CPU-intensive works run with 46 or less
-         # cores. As 45 is a multiple of 3, it's the best value
-         # that doesn't waste too much
-         #set NCPUS_PER_NODE = 48
-         set NCPUS_PER_NODE = 45
+         # We use 40 of 46 cores per node for even division
+         set NCPUS_PER_NODE = 40
       endif
    endif
 
@@ -508,15 +503,18 @@ else if ( $SITE == 'NAS' ) then
    if ($MODEL == 'has') then
       set NCPUS_PER_NODE = 24
    else if ($MODEL == 'bro') then
-      set NCPUS_PER_NODE = 28
+      # we use 24 of 28 cores per node for even division
+      set NCPUS_PER_NODE = 24
    else if ($MODEL == 'sky_ele') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas_ait') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
-      set NCPUS_PER_NODE = 128
+      # we use 120 of 128 cores per node for even division
+      set NCPUS_PER_NODE = 120
    else if ($MODEL == 'mil_ait') then
-      set NCPUS_PER_NODE = 128
+      # we use 120 of 128 cores per node for even division
+      set NCPUS_PER_NODE = 120
    endif
 
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
@@ -1007,7 +1005,7 @@ if( $AGCM_IM ==  "c12" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 3600
+     set       DT = 1800
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -1026,15 +1024,15 @@ if( $AGCM_IM ==  "c24" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c48" ) then
-     set       DT = 1800
-     set  LONG_DT = 1800
+     set       DT = 1200
+     set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 4
+     set       NX = 6
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = 180
@@ -1046,7 +1044,7 @@ if( $AGCM_IM ==  "c48" ) then
 endif
 if( $AGCM_IM ==  "c90" ) then
      set       DT = 900
-     set  LONG_DT = 900
+     set  LONG_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
@@ -1065,7 +1063,7 @@ if( $AGCM_IM ==  "c90" ) then
         endif
         set OCEAN_DT = $DT
      else
-        set  NX = 3
+        set  NX = 10
         set  NY = `expr $NX \* 6`
         set OCEAN_DT = 3600
      endif
@@ -1080,7 +1078,7 @@ if( $AGCM_IM ==  "c90" ) then
 endif
 if( $AGCM_IM ==  "c180" ) then
      set       DT = 600
-     set  LONG_DT = 600
+     set  LONG_DT = 1200
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
@@ -1097,7 +1095,7 @@ if( $AGCM_IM ==  "c180" ) then
         endif
         set OCEAN_DT = $DT
      else
-        set  NX = 6
+        set  NX = 20
         set  NY = `expr $NX \* 6`
         set OCEAN_DT = 3600
      endif
@@ -1112,14 +1110,14 @@ if( $AGCM_IM ==  "c180" ) then
 endif
 if( $AGCM_IM == "c360" ) then
      set       DT = 450
-     set  LONG_DT = 450
+     set  LONG_DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 12
+     set       NX = 30
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1132,14 +1130,14 @@ if( $AGCM_IM == "c360" ) then
 endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 360
-     set  LONG_DT = 360
+     set  LONG_DT = 720
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 24
+     set       NX = 40
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1153,7 +1151,7 @@ if( $AGCM_IM == "c720" ) then
 endif
 if( $AGCM_IM == "c1120" ) then
      set       DT = 300
-     set  LONG_DT = 300
+     set  LONG_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -1173,15 +1171,15 @@ if( $AGCM_IM == "c1120" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 150
-     set  LONG_DT = 300
+     set       DT = 225
+     set  LONG_DT = 450
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
      set OCEAN_DT = 1800
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 48
+     set       NX = 60
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1194,7 +1192,7 @@ if( $AGCM_IM == "c1440" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c2880" ) then
-     set       DT = 75
+     set       DT = 150
      set  LONG_DT = 300
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
@@ -1202,7 +1200,7 @@ if( $AGCM_IM == "c2880" ) then
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 96
+     set       NX = 80
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1217,15 +1215,15 @@ if( $AGCM_IM == "c2880" ) then
      set CONVPAR_OPTION = NONE
 endif
 if( $AGCM_IM == "c5760" ) then
-     set       DT = 60
+     set       DT = 75
      set  LONG_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 192
+     set       NX = 80
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1244,14 +1242,14 @@ set CONUS = '#'
 set STRETCH_FACTOR = ""
 if( $AGCM_IM == "c270" ) then
      set       DT = 600
-     set  LONG_DT = 600
+     set  LONG_DT = 1200
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 270
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 18
+     set       NX = 20
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1267,14 +1265,14 @@ if( $AGCM_IM == "c270" ) then
 endif
 if( $AGCM_IM == "c540" ) then
      set       DT = 300
-     set  LONG_DT = 300
+     set  LONG_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 540
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 36
+     set       NX = 30
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1297,7 +1295,7 @@ if( $AGCM_IM == "c1080" ) then
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1080
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 72
+     set       NX = 40
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1320,7 +1318,7 @@ if( $AGCM_IM == "c1536" ) then
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 96
+     set       NX = 60
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -1343,8 +1341,8 @@ if( $AGCM_IM == "c2160" ) then
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 120
-     set       NY = 864
+     set       NX = 80
+     set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -1366,7 +1364,7 @@ if( $AGCM_IM == "c4320" ) then
      set GEOSCHEMCHEM_DT = `expr $DT \* 2`
      set AGCM_IM  = 4320
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 240
+     set       NX = 80
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
