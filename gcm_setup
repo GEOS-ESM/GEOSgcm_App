@@ -2,7 +2,7 @@
 
 #######################################################################
 #                            Define Colors
-#         Note:  For No Colors, set C1 and C2 to NONE 
+#         Note:  For No Colors, set C1 and C2 to NONE
 #######################################################################
 
 set BLACK   = `tput setaf 0`
@@ -118,7 +118,7 @@ else if ( `echo $BASEDIR | grep -i mpt`      != '') then
    set MPI = mpt
 else
    # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi 
+   set MPI = intelmpi
 endif
 
 #######################################################################
@@ -173,7 +173,7 @@ else
 endif
 
 #######################################################################
-#          Continue to enter in experiment parameters 
+#          Continue to enter in experiment parameters
 #######################################################################
 
 HRCODE:
@@ -349,33 +349,50 @@ endif
 ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}hasw (Haswell)${CN}"
-   echo "   ${C2}sky  (Skylake)${CN} (default)"
-   echo "   ${C2}cas  (Cascade Lake)${CN}"
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      set MODEL = 'sky'
-   endif
 
-   if( $MODEL != 'hasw' & \
-       $MODEL != 'sky'  & \
-       $MODEL != 'cas' ) goto ASKPROC
+   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
 
-   if (     $MODEL == 'hasw') then
-      set NCPUS_PER_NODE = 28
-   else if ($MODEL == 'sky') then
-      set NCPUS_PER_NODE = 40
-   else if ($MODEL == 'cas') then
-      # NCCS currently recommends that users do not run with
-      # 48 cores per node on SCU16 due to OS issues and 
-      # recommends that CPU-intensive works run with 46 or less
-      # cores. As 45 is a multiple of 3, it's the best value
-      # that doesn't waste too much
-      #set NCPUS_PER_NODE = 48
-      set NCPUS_PER_NODE = 45
+   if ("$BUILT_ON_SLES15" == "TRUE") then
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'mil'
+      endif
+
+      if( $MODEL != 'mil' ) goto ASKPROC
+
+      if ($MODEL == 'mil') then
+         # We save a couple processes for the kernel
+         set NCPUS_PER_NODE = 126
+      endif
+   else
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}sky  (Skylake)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'sky'
+      endif
+
+      if( $MODEL != 'sky'  & \
+          $MODEL != 'cas' ) goto ASKPROC
+
+      if ($MODEL == 'sky') then
+         set NCPUS_PER_NODE = 40
+      else if ($MODEL == 'cas') then
+         # NCCS currently recommends that users do not run with
+         # 48 cores per node on SCU16 due to OS issues and
+         # recommends that CPU-intensive works run with 46 or less
+         # cores. As 45 is a multiple of 3, it's the best value
+         # that doesn't waste too much
+         #set NCPUS_PER_NODE = 48
+         set NCPUS_PER_NODE = 45
+      endif
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -1326,13 +1343,7 @@ if( $SITE == 'NAS' ) then
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
-              if( $GPU == "TRUE" ) then
-                 set NCPUS_PER_NODE = 16              # CPUS per node
-                 set MODEL = "san_gpu"                # Model of CPU
-                 set QTYPE = "gpu_k40"                # Queue to use
-              else
-                 set QTYPE = "normal"                 # Queue to use
-              endif
+              set QTYPE = "normal"                    # Queue to use
 
               #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
               @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
@@ -1364,8 +1375,8 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     /nobackup/gmao_SIteam/ModelData/fvInput_nc3            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  /nobackup/gmao_SIteam/ModelData/coupled/Forcings       # Coupled Ocean/Atmos Forcing
-              setenv CPEXEC    'mcp -a'                                                # Copy utility for large copies
-              setenv TAREXEC    mtar                                                   # Tar utility for large archives
+              setenv CPEXEC    'cp -a'                                                # Copy utility for large copies
+              setenv TAREXEC    tar                                                   # Tar utility for large archives
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
@@ -1378,10 +1389,6 @@ else if( $SITE == 'NCCS' ) then
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
-              if( $GPU == "TRUE" ) then
-                 set NCPUS_PER_NODE = 16                                         # CPUS per node
-                 set MODEL = "k40"                                               # Model of CPU
-              endif
 
               #@ NODES  = `echo "($MODEL_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
               @ NODES  = `echo "( ($MODEL_NPES + $NCPUS_PER_NODE) + ($IOS_NDS * $NCPUS_PER_NODE) - 1)/$NCPUS_PER_NODE" | bc`
@@ -1598,7 +1605,7 @@ while( $check == FALSE )
   else
        setenv HOMDIR  $HOMDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $HOMDIR` ) then
        echo "\!\! The ${C1}HOME${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1631,7 +1638,7 @@ while( $check == FALSE )
   else
        setenv EXPDIR  $EXPDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $EXPDIR` ) then
        echo "\!\! The ${C1}EXPERIMENT${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1686,7 +1693,7 @@ echo $EXPDIRroot > $HOME/.EXPDIRroot
 setenv CNVDIR $EXPDIR/convert
 
 #######################################################################
-#                       Locate Build Directory  
+#                       Locate Build Directory
 #######################################################################
 
 # GEOSagcm Build Directory
@@ -1797,79 +1804,89 @@ set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
+
 if( $MPI == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
+
 set RESTART_BY_OSERVER = YES
 
-# This turns off an annoying warning when running
-# Open MPI on a system where TMPDIRs are on a networked
-# file system
+# Testing by Bill Putman determined some useful
+# Open MPI parameters. Testing shows these work
+# on both OSs at NCCS and on macOS
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# Turn off warning about TMPDIR on NFS
+setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# pre-connect MPI procs on mpi_init
+setenv OMPI_MCA_mpi_preconnect_all 1
+setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
+setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
+setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 3
+setenv OMPI_MCA_coll_tuned_allreduce_algorithm 3
+setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
+setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
+setenv OMPI_MCA_coll_tuned_gather_algorithm 1
+setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+# required for a tuned flag to be effective
+setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+# disable file locks
+setenv OMPI_MCA_sharedfp "^lockedfile,individual"
 EOF
 
 # The below settings seem to be recommended for hybrid
-# systems using MVAPICH2 but could change
+# systems using MVAPICH but could change
 
-else if( $MPI == mvapich2 ) then
+else if( $MPI == mvapich ) then
 
-if( $GPU == "TRUE" ) then
-cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY     0
-   setenv MV2_RNDV_PROTOCOL       RPUT
-   setenv MV2_USE_RDMA_ONE_SIDED  1
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
-EOF
-
-else
+# MVAPICH and GEOS has issues with restart writing. Having the
+# oserver write them seems to...work
+set RESTART_BY_OSERVER = YES
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY     0
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
+setenv MV2_ENABLE_AFFINITY 0
+setenv SLURM_DISTRIBUTION block
+setenv MV2_MPIRUN_TIMEOUT 100
+setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
-
-endif # if GPU and mvapich2
 
 else if( $MPI == mpt ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 
-   setenv MPI_COLL_REPRODUCIBLE
-   setenv SLURM_DISTRIBUTION block
+setenv MPI_COLL_REPRODUCIBLE
+setenv SLURM_DISTRIBUTION block
 
-   #setenv MPI_DISPLAY_SETTINGS 1
-   #setenv MPI_VERBOSE 1
-   
-   unsetenv MPI_MEMMAP_OFF
-   unsetenv MPI_NUM_MEMORY_REGIONS
-   setenv MPI_XPMEM_ENABLED yes
-   unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+#setenv MPI_DISPLAY_SETTINGS 1
+#setenv MPI_VERBOSE 1
 
-   setenv MPI_LAUNCH_TIMEOUT 40
+setenv MPI_MEMMAP_OFF
+unsetenv MPI_NUM_MEMORY_REGIONS
+setenv MPI_XPMEM_ENABLED yes
+unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 
-   # For some reason, PMI_RANK is randomly set and interferes
-   # with binarytile.x and other executables.
-   unsetenv PMI_RANK
+setenv MPI_LAUNCH_TIMEOUT 40
 
-   # Often when debugging on MPT, the traceback from Intel Fortran
-   # is "absorbed" and only MPT's errors are displayed. To allow the
-   # compiler's traceback to be displayed, uncomment this environment
-   # variable
-   #setenv FOR_IGNORE_EXCEPTIONS false
+setenv MPI_COMM_MAX  1024
+setenv MPI_GROUP_MAX 1024
+setenv MPI_BUFS_PER_PROC 256
+
+# For some reason, PMI_RANK is randomly set and interferes
+# with binarytile.x and other executables.
+unsetenv PMI_RANK
+
+# Often when debugging on MPT, the traceback from Intel Fortran
+# is "absorbed" and only MPT's errors are displayed. To allow the
+# compiler's traceback to be displayed, uncomment this environment
+# variable
+#setenv FOR_IGNORE_EXCEPTIONS false
 
 EOF
 
 else if( $MPI == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_DAPL_UD enable
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
 
@@ -1887,8 +1904,37 @@ setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
 setenv I_MPI_EXTRA_FILESYSTEM 1
 setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-setenv ROMIO_FSTYPE_FORCE "gpfs:"
 EOF
+
+# Testing by Bill Putman found these to be
+# useful flags with Intel MPI on SLES15 on the
+# Milan nodes.
+# Note 1: Testing by NCCS shows the PSM3 provider
+# runs on the Infiniband fabric. Tests show it runs
+# up to C720.
+# Note 2: When the Cascade Lakes are moved to
+# SLES15, these will need to be Milan-only flags
+# as Intel MPI will probably work just fine with
+# Intel chips.
+if ("$BUILT_ON_SLES15" == "TRUE") then
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_FALLBACK 0
+setenv I_MPI_FABRICS ofi
+setenv I_MPI_OFI_PROVIDER psm3
+setenv I_MPI_ADJUST_SCATTER 2
+setenv I_MPI_ADJUST_SCATTERV 2
+setenv I_MPI_ADJUST_GATHER 2
+setenv I_MPI_ADJUST_GATHERV 3
+setenv I_MPI_ADJUST_ALLGATHER 3
+setenv I_MPI_ADJUST_ALLGATHERV 3
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_REDUCE 10
+setenv I_MPI_ADJUST_BCAST 11
+setenv I_MPI_ADJUST_REDUCE_SCATTER 4
+setenv I_MPI_ADJUST_BARRIER 9
+EOF
+
+endif # if SLES15
 
 endif # if NCCS
 
@@ -1913,8 +1959,8 @@ if ( $SITE == 'NCCS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`scontrol show hostnames\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID 
+setenv GPU_NODELIST \`scontrol show hostnames\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID
 
 _EOF1_
 
@@ -1922,31 +1968,31 @@ else if ( $SITE == 'NAS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID 
+setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID
 
 _EOF1_
 
 endif # if site
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF2_
-setenv CUDA_VISIBLE_DEVICES 0 
-setenv CUDA_MPS_CLIENT 1 
-setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0 
-setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0 
- 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
- 
-sleep 3 
- 
-foreach node (\$GPU_NODELIST) 
-   echo "Running MPS Server on \$node" 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash" 
-end 
- 
-sleep 3 
+setenv CUDA_VISIBLE_DEVICES 0
+setenv CUDA_MPS_CLIENT 1
+setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0
+setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0
+
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
+
+sleep 3
+
+foreach node (\$GPU_NODELIST)
+   echo "Running MPS Server on \$node"
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash"
+end
+
+sleep 3
 
 _EOF2_
 
@@ -1954,9 +2000,9 @@ cat > $HOMDIR/GPUEND.commands << _EOF3_
 # Remove the MPS Server on Each GPU Node
 # --------------------------------------
 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
 
 _EOF3_
 
@@ -2141,7 +2187,7 @@ s/@OGCM_LM/$OGCM_LM/g
 s/@OGCM_NF/$OGCM_NF/g
 s/@OGCM_GRID_TYPE/$OGCM_GRID_TYPE/g
 s/@BEG_DATE/${BEG_DATE}/g
-s/@END_DATE/${END_DATE}/g 
+s/@END_DATE/${END_DATE}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
@@ -2727,7 +2773,7 @@ EOF
 
 # ------------------------------------------------
 # Create two sets of files so we can copy from one
-# directory to another. 
+# directory to another.
 # ------------------------------------------------
 
 # Then alter them
@@ -2862,7 +2908,7 @@ echo ""
 # Cloned Experiment Source
 # ------------------------
 
-# NOTE: This variable is set at CMake time depending on 
+# NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
 set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
 set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
@@ -2905,9 +2951,9 @@ CONTACTMATT:
 cat <<EOF
 
 It appears your environment is not set correctly to
-run with the GPUs. If you wish to build and run the 
+run with the GPUs. If you wish to build and run the
 model using GPUs, please contact Matt Thompson at:
-    
+
             matthew.thompson@nasa.gov
 
 EOF
