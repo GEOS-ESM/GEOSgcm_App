@@ -1,11 +1,11 @@
 &fv_core_nml
- @FV_HYDRO
+ {{ FV_HYDRO }}
  range_warn = .T.
  fv_debug = .F.
- @FV_SCHMIDT
- @FV_STRETCH_FAC
- @FV_TARGET_LON
- @FV_TARGET_LAT
+ {{ FV_SCHMIDT }}
+ {{ FV_STRETCH_FAC }}
+ {{ FV_TARGET_LON }}
+ {{ FV_TARGET_LAT }}
  compute_coords_locally = .false.
 /
 
@@ -47,8 +47,8 @@
   c_pgacs = 0.01
   c_paut = 1.0
   c_cracw = 1.0
-  @GFDL_PROG_CCN
-  @GFDL_USE_CCN
+  {{ GFDL_PROG_CCN }}
+  {{ GFDL_USE_CCN }}
   ccn_l = 300.
   ccn_o = 100.
   z_slope_liq  = .true.
