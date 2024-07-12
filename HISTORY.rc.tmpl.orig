@@ -268,11 +268,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'T2M'            , 'SURFACE'  , 'T2MMIN'   , 'MIN'  ,
                                'HOURNORAIN'     , 'MOIST'    ,
                                'TPREC'          , 'MOIST'    , 'TPRECMAX' , 'MAX'  ,
-#Additional variables
-                               'TCZPBL'     ,   'TURBULENCE' , 'pblri'     ,
-                               'ZPBLRFRCT'  ,   'TURBULENCE' , 'pblrf'  ,
-                               'ZPBL10p'    ,   'TURBULENCE' , 'pblkh'     ,
-                               'CLDBASEHGT' ,   'MOIST'      , 'cldbh'      ,
                                ::
 
   tavg3_3d_cld_Nv-.format:     'CFIO' ,
@@ -796,11 +791,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                'TOX'            , 'AGCM'     ,
                                'TO3'            , 'PCHEM'    ,  
                                'PPBL'           , 'TURBULENCE', 'PBLTOP',
-#Additional variables
-                               'TCZPBL'     ,   'TURBULENCE' , 'pblri'     ,
-                               'ZPBLRFRCT'  ,   'TURBULENCE' , 'pblrf'  ,
-                               'ZPBL10p'    ,   'TURBULENCE' , 'pblkh'     ,
-                               'CLDBASEHGT' ,   'MOIST'      , 'cldbh'      ,
                                ::
 
   tavg1_2d_flx_Nx-.format:     'CFIO' ,
@@ -1148,10 +1138,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   bkg.eta.fields:      'PHIS'       , 'AGCM'       , 'phis'       ,
                        'SGH'        , 'AGCM'       , 'hs_stdv'    ,
                        'TS'         , 'SURFACE'    , 'ts'         ,
-                       'TCZPBL'     , 'TURBULENCE' , 'pblri'     ,
-                       'ZPBLRFRCT'  , 'TURBULENCE' , 'pblrf'  ,
-                       'ZPBL10p'    , 'TURBULENCE' , 'pblkh'     ,
-                       'CLDBASEHGT' , 'MOIST'      , 'cldbh'      ,
                        'FRLAND'     , 'SURFACE'    , 'frland'     ,
                        'FRLANDICE'  , 'SURFACE'    , 'frlandice'  ,
                        'FRLAKE'     , 'SURFACE'    , 'frlake'     ,
@@ -1167,7 +1153,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                        'QLTOT'      , 'AGCM'       , 'qltot'      ,
                        'QRTOT'      , 'MOIST'      , 'qrtot'      ,
                        'QSTOT'      , 'MOIST'      , 'qstot'      ,
-#                      'ZPBL'       , 'TURBULENCE' , 'PBLH'       ,
                        ::
 
   bkg.sfc.format:      'CFIO' ,
@@ -2217,11 +2202,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                 'TQI'            , 'AGCM'     ,
                                 'TQL'            , 'AGCM'     ,
                                 'TOX'            , 'AGCM'     ,
-#Additional variables
-                               'TCZPBL'     ,   'TURBULENCE' , 'pblri'     ,
-                               'ZPBLRFRCT'  ,   'TURBULENCE' , 'pblrf'  ,
-                               'ZPBL10p'    ,   'TURBULENCE' , 'pblkh'     ,
-                               'CLDBASEHGT' ,   'MOIST'      , 'cldbh'      ,
                                 ::
 
   tavg1_2d_flx_Nx+-.format:     'CFIO' ,

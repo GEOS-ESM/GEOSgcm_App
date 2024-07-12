@@ -258,10 +258,6 @@ COLLECTIONS: 'prog.eta'
                                'T2M'            , 'SURFACE'  , 'T2MMIN'    , 'MIN'  ,
                                'HOURNORAIN'     , 'MOIST'    ,
                                'TPREC'          , 'MOIST'    , 'TPRECMAX'  , 'MAX'  ,
-                               'TCZPBL'     ,   'TURBULENCE' , 'pblri'     ,
-                               'ZPBLRFRCT'  ,   'TURBULENCE' , 'pblrf'  ,
-                               'ZPBL10p'    ,   'TURBULENCE' , 'pblkh'     ,
-                               'CLDBASEHGT' ,   'MOIST'      , 'cldbh'      ,
                                ::
 
   inst3_3d_asm_Np.format:     'CFIO' ,
@@ -372,10 +368,6 @@ COLLECTIONS: 'prog.eta'
                                 'TQI'            , 'AGCM'     ,
                                 'TQL'            , 'AGCM'     ,
                                 'TOX'            , 'AGCM'     ,
-                                'TCZPBL'     ,   'TURBULENCE' , 'pblri'     ,
-                                'ZPBLRFRCT'  ,   'TURBULENCE' , 'pblrf'  ,
-                                'ZPBL10p'    ,   'TURBULENCE' , 'pblkh'     ,
-                                'CLDBASEHGT' ,   'MOIST'      , 'cldbh'      ,
                                 ::
 
   tavg1_2d_flx_Nx.format:     'CFIO' ,
