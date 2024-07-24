@@ -2205,7 +2205,7 @@ if ( $SITE == 'NCCS' ) then
 
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_FABRICS ofi
+setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
 EOF
 
