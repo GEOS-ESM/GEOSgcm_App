@@ -2265,7 +2265,24 @@ EOF
 # specific compared to the above adjustments
 if ( $SITE == 'NCCS' ) then
 
+# Some flags we know work on SLES15 and Milan (see below)
+# For safety, we keep the old SLES12 flags for that system
+#
+# NOTE: When Cascade Lake is on SLES15, the following flags
+# might need to be Milan only
+
+if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_FABRICS ofi
+setenv I_MPI_OFI_PROVIDER psm3
+EOF
+
+else
+
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
+
 setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
 EOF
@@ -2280,40 +2297,6 @@ setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
 EOF
 
 endif # if NOT Singularity
-
-# Testing by Bill Putman found these to be
-# useful flags with Intel MPI on SLES15 on the
-# Milan nodes.
-# Note 1: Testing by NCCS shows the PSM3 provider
-# runs on the Infiniband fabric. Tests show it runs
-# up to C720.
-# Note 2: When the Cascade Lakes are moved to
-# SLES15, these will need to be Milan-only flags
-# as Intel MPI will probably work just fine with
-# Intel chips.
-if ("$BUILT_ON_SLES15" == "TRUE") then
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_FABRICS ofi
-setenv I_MPI_OFI_PROVIDER psm3
-setenv I_MPI_ADJUST_SCATTER 2
-setenv I_MPI_ADJUST_SCATTERV 2
-setenv I_MPI_ADJUST_GATHER 2
-setenv I_MPI_ADJUST_GATHERV 3
-setenv I_MPI_ADJUST_ALLGATHER 3
-setenv I_MPI_ADJUST_ALLGATHERV 3
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_REDUCE 10
-setenv I_MPI_ADJUST_BCAST 11
-setenv I_MPI_ADJUST_REDUCE_SCATTER 4
-setenv I_MPI_ADJUST_BARRIER 9
-EOF
-
-else
-
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_GATHERV 3
-setenv I_MPI_ADJUST_ALLREDUCE 12
-EOF
 
 endif # if SLES15
 
