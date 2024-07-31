@@ -3327,8 +3327,11 @@ echo ""
 /bin/rm $NEWEXPFILES
 /bin/rm $COPYSCRIPT
 /bin/rm $SEDFILE
-/bin/rm $TMPHIST
-/bin/rm -rf $TMPOCEANDIR
+# TMPHIST and TMPOCEANDIR are not defined if cloning
+if ( $KLONE == "FALSE" ) then
+   /bin/rm -f $TMPHIST
+   /bin/rm -rf $TMPOCEANDIR
+endif
 
 # ------------------------
 # Cloned Experiment Source
