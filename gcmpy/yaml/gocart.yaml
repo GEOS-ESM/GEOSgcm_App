@@ -1,0 +1,13 @@
+gocart_aerosols:
+  type:           'select'
+  prompt:         'Do you wish to run GOCART with Actual or Climatological Aersols?'
+  choices:        ['Actual', 'Climatological']
+  default_answer: ''
+  follows_up:     ''
+
+gocart_emission:
+  type:           'select'
+  prompt:         'Select the GOCART Emission Files to use:'  
+  choices:        ['AMIP', 'OPS']
+  default_answer: ''
+  follows_up:     ''
