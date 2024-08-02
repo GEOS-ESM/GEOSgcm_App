@@ -7,12 +7,8 @@ ecbuild_add_executable (
 # Using JeMalloc will be optional, default OFF
 option (USE_JEMALLOC "Use JeMalloc" OFF)
 if (USE_JEMALLOC)
-  find_package (JeMalloc)
-  if (JeMalloc_FOUND)
-    target_link_libraries (GEOSgcm.x JeMalloc::JeMalloc)
-  else ()
-    message (FATAL_ERROR "USE_JEMALLOC is ON but JeMalloc is not found")
-  endif ()
+  find_package (JeMalloc REQUIRED)
+  target_link_libraries (GEOSgcm.x JeMalloc::JeMalloc)
 endif ()
 
 ecbuild_add_executable (
