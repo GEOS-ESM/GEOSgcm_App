@@ -157,9 +157,11 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
 #            'inst3_2d_met_Nx+-'
 # IAU increment for forecast
 #             'aiau_tavg_1hr_glo_L@HIST_IMx@HIST_JM_p48'
-# Constant file
+# Constant files
              'asm_const_0hr_glo_L@HIST_IMx@HIST_JM_slv'
              'asm_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
+             'lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv'
+             'lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv'
              ::
 
 # asm collections
@@ -3405,6 +3407,65 @@ COLLECTIONS: 'asm_inst_1hr_glo_L@HIST_IMx@HIST_JM_p48'
                                                             'FRLANDICE'  , 'SURFACE'  ,
                                                             'FROCEAN'    , 'SURFACE'  ,
                                                             'AREA'       , 'DYN'      ,
+                                                             ::
+
+
+
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.format:          'CFIO' ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.descr:           '2d,Constant,Time-invariant,Single-Level,Assimilation,Land Surface Model Parameters' ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.deflate:          2 ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.regrid_method:   'BILINEAR_MONOTONIC' ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.template:        '%y4-%m2-%d2T%h2%n2z.>>>NCSUFFIX<<<' ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.mode:            'instantaneous' ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.grid_label:       PC@HIST_IMx@HIST_JM-DC ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.frequency:        240000 ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.duration:         240000 ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.ref_time:         >>>IOBBKGT<<< ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.end_date:         >>>IOEDATE<<< ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.end_time:         >>>IOETIME<<< ,
+  lnd_const_0hr_glo_L@HIST_IMx@HIST_JM_slv.fields:          'DZGT1'      , 'SURFACE'  ,
+                                                            'DZGT2'      , 'SURFACE'  ,
+                                                            'DZGT3'      , 'SURFACE'  ,
+                                                            'DZGT4'      , 'SURFACE'  ,
+                                                            'DZGT5'      , 'SURFACE'  ,
+                                                            'DZGT6'      , 'SURFACE'  ,
+                                                            'DZPR'       , 'SURFACE'  ,
+                                                            'DZRZ'       , 'SURFACE'  ,
+                                                            'DZSF'       , 'SURFACE'  ,
+                                                            'DZTS'       , 'SURFACE'  ,
+                                                            'WPWET'      , 'SURFACE'  ,
+                                                            'WPEMW'      , 'SURFACE'  ,
+                                                            'WPMC'       , 'SURFACE'  ,
+                                                            'CDCR2'      , 'SURFACE'  ,
+                                                            'POROS'      , 'SURFACE'  ,
+                                                             ::
+
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.format:        'CFIO' ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.descr:         '2d,Constant,Time-invariant,Single-Level,Assimilation,Land Surface Model Parameters' ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.deflate:        2 ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.regrid_method: 'BILINEAR_MONOTONIC' ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.template:      '%y4-%m2-%d2T%h2%n2z.>>>NCSUFFIX<<<' ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.mode:          'instantaneous' ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.frequency:      240000 ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.duration:       240000 ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.ref_time:       >>>IOBBKGT<<< ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_date:       >>>IOEDATE<<< ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.end_time:       >>>IOETIME<<< ,
+  lnd_const_0hr_glo_C@AGCM_IMx@AGCM_IMx6_slv.fields:        'DZGT1'      , 'SURFACE'  ,
+                                                            'DZGT2'      , 'SURFACE'  ,
+                                                            'DZGT3'      , 'SURFACE'  ,
+                                                            'DZGT4'      , 'SURFACE'  ,
+                                                            'DZGT5'      , 'SURFACE'  ,
+                                                            'DZGT6'      , 'SURFACE'  ,
+                                                            'DZPR'       , 'SURFACE'  ,
+                                                            'DZRZ'       , 'SURFACE'  ,
+                                                            'DZSF'       , 'SURFACE'  ,
+                                                            'DZTS'       , 'SURFACE'  ,
+                                                            'WPWET'      , 'SURFACE'  ,
+                                                            'WPEMW'      , 'SURFACE'  ,
+                                                            'WPMC'       , 'SURFACE'  ,
+                                                            'CDCR2'      , 'SURFACE'  ,
+                                                            'POROS'      , 'SURFACE'  ,
                                                              ::
 
 #######################################################################
