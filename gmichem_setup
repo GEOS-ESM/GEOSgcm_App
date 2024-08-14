@@ -1898,6 +1898,12 @@ else
    set NUM_BACKEND_PES   = 0
 endif
 
+# For OpenMP regression testing, we need a variable that is half
+# the number of CPUs per node and also two times the number of nodes
+set NODES_TWICE = `expr $NODES \* 2`
+set NCPUS_PER_NODE_HALF = `expr $NCPUS_PER_NODE / 2`
+
+
 # Here we need to convert POST_NDS to total tasks. Using 16 cores
 # per task as a good default
 @ POST_NPES = $POST_NDS * 16
@@ -1934,6 +1940,7 @@ if( $SITE == 'NAS' ) then
               setenv     RUN_Q  "PBS -q ${QTYPE}"                                                                          # batch queue name for gcm_run.j
               setenv     RUN_P  "PBS -l select=${NODES}:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}" # PE Configuration for gcm_run.j
               setenv    RUN_FP  "PBS -l select=24:ncpus=${NCPUS_PER_NODE}:mpiprocs=${NCPUS_PER_NODE}:model=${MODEL}"       # PE Configuration for gcm_forecast.j
+              setenv REGRESS_P  "PBS -l select=${NODES_TWICE}:ncpus=${NCPUS_PER_NODE_HALF}:mpiprocs=${NCPUS_PER_NODE_HALF}:model=${MODEL}" # PE Configuration for gcm_regress.j
               setenv    POST_Q  "PBS -q normal"                                                                            # batch queue name for gcm_post.j
               setenv    PLOT_Q  "PBS -q normal"                                                                            # batch queue name for gcm_plot.j
               setenv    MOVE_Q  "PBS -q normal"                                                                            # batch queue name for gcm_moveplot.j
@@ -1981,6 +1988,7 @@ else if( $SITE == 'NCCS' ) then
               setenv    RUN_Q   "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_run.j
               setenv    RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
               setenv    RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
+              setenv    REGRESS_P   "SBATCH --nodes=${NODES_TWICE} --ntasks-per-node=${NCPUS_PER_NODE_HALF}" # PE Configuration for gcm_regress.j
               setenv    POST_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_post.j
               setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
               setenv    MOVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_moveplot.j
@@ -2025,6 +2033,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv RUN_Q     "SBATCH --constraint=${MODEL}"                              # batch queue name for gcm_run.j
               setenv RUN_P   "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_run.j
               setenv RUN_FP  "SBATCH --nodes=${NODES} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_forecast.j
+              setenv REGRESS_P   "SBATCH --nodes=${NODES_TWICE} --ntasks-per-node=${NCPUS_PER_NODE_HALF}" # PE Configuration for gcm_regress.j
               setenv POST_Q  NULL                                                          # batch queue name for gcm_post.j
               setenv PLOT_Q  NULL                                                          # batch queue name for gcm_plot.j
               setenv MOVE_Q  NULL                                                          # batch queue name for gcm_moveplot.j
@@ -2063,6 +2072,7 @@ else
               setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
               setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
               setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
+              setenv  REGRESS_P NULL                                                   # PE Configuration for gcm_regress.j
               setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
               setenv    PLOT_Q  NULL                                                   # batch queue name for gcm_plot.j
               setenv    MOVE_Q  NULL                                                   # batch queue name for gcm_moveplot.j
@@ -2510,6 +2520,7 @@ s?@RUN_T?$RUN_T?g
 s?@RUN_P?$RUN_P?g
 s?@RUN_FP?$RUN_FP?g
 s?@RUN_Q?$RUN_Q?g
+s?@REGRESS_P?$REGRESS_P?g
 s?@POST_N?$POST_N?g
 s?@POST_T?$POST_T?g
 s?@POST_P?$POST_P?g
