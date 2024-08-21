@@ -1041,6 +1041,13 @@ endif
 # Set OMP_NUM_THREADS
 # -------------------
 setenv OMP_NUM_THREADS 1
+if ($OMP_NUM_THREADS > 1) then
+  setenv OMP_STACKSIZE 16M
+  setenv KMP_AFFINITY compact
+  echo OMP_STACKSIZE    $OMP_STACKSIZE
+  echo KMP_AFFINITY     $KMP_AFFINITY
+endif
+echo OMP_NUM_THREADS $OMP_NUM_THREADS
 
 # Run GEOSgcm.x
 # -------------
