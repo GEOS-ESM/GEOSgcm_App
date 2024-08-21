@@ -5,7 +5,7 @@
 #######################################################################
 
 #@BATCH_TIME@RUN_T
-#@RUN_P
+#@REGRESS_P
 #@BATCH_JOBNAME@REGRESS_N
 #@RUN_Q
 #@BATCH_GROUP
@@ -33,41 +33,50 @@ setenv OMP_NUM_THREADS 1
 # Set the defaults for our arguments
 # ----------------------------------
 
-# We use positive logic here. So if we want to run
-# both tests, we set both to TRUE. If we want to
-# run only one, we set the other to FALSE
-
-set RUN_STARTSTOP = TRUE
-set RUN_LAYOUT    = TRUE
+if ($#argv > 0) then
+  set RUN_STARTSTOP = FALSE
+  set RUN_LAYOUT    = FALSE
+  set RUN_OPENMP    = FALSE
+else
+  set RUN_STARTSTOP = TRUE
+  set RUN_LAYOUT    = TRUE
+  set RUN_OPENMP    = TRUE
+endif
 
 while ($#argv > 0)
   switch ($1)
     case --startstop:
-      set RUN_LAYOUT = FALSE
+      set RUN_STARTSTOP = TRUE
       shift
       breaksw
     case --layout:
-      set RUN_STARTSTOP = FALSE
+      set RUN_LAYOUT = TRUE
+      shift
+      breaksw
+    case --openmp:
+      set RUN_OPENMP = TRUE
       shift
       breaksw
     case -[Hh]:
     case --[Hh]elp:
-      echo "Usage: $0 [--startstop] [--layout]"
+      echo "Usage: $0 [--startstop] [--layout] [--openmp]"
       echo ""
       echo "By default, both the start/stop and layout tests are run."
       echo "You can specify one or the other with the following options:"
       echo "  --startstop: Only run the start/stop test"
       echo "  --layout:    Only run the layout test"
+      echo "  --openmp:    Only run the OpenMP test"
       echo "  -h, --help:      Print this help message"
       exit 0
     default:
       echo "Unknown argument: $1"
-      echo "Usage: $0 [--startstop] [--layout]"
+      echo "Usage: $0 [--startstop] [--layout] [--openmp]"
       echo ""
       echo "By default, both the start/stop and layout tests are run."
       echo "You can specify one or the other with the following options:"
       echo "  --startstop: Only run the start/stop test"
       echo "  --layout:    Only run the layout test"
+      echo "  --openmp:    Only run the OpenMP test"
       echo "  -h, --help:      Print this help message"
       exit 1
   endsw
@@ -397,6 +406,9 @@ cp HISTORY.rc0 HISTORY.rc
 set NX0 = `grep "^ *NX:" AGCM.rc.orig | cut -d':' -f2`
 set NY0 = `grep "^ *NY:" AGCM.rc.orig | cut -d':' -f2`
 
+set OGCM_NX0 = `grep "^ *OGCM.NX:" AGCM.rc.orig | cut -d':' -f2`
+set OGCM_NY0 = `grep "^ *OGCM.NY:" AGCM.rc.orig | cut -d':' -f2`
+
 # Set the test_durations for the various tests in HHMMSS format
 #
 # We can generically set the lengths of startstop and layout tests
@@ -427,6 +439,9 @@ set test_duration_step2 = $length_of_layout_test
 
 # The step4 duration is identical to step2
 set test_duration_step4 = $test_duration_step2
+
+# The step5 duration is identical to step2
+set test_duration_step5 = $test_duration_step2
 
 ##################################################################
 ######
@@ -765,6 +780,136 @@ if ( $RUN_LAYOUT == TRUE) then
 
 endif
 
+##################################################################
+######
+######               Perform Regression Test # 5
+######               (6-Hour OpenMP:2)
+######
+##################################################################
+
+# This case runs only for OpenMP
+
+if ( $RUN_OPENMP == TRUE) then
+
+   # Establish safe default number of OpenMP threads
+   # -----------------------------------------------
+   setenv OMP_NUM_THREADS 2
+   if ($OMP_NUM_THREADS > 1) then
+     setenv OMP_STACKSIZE 16M
+     setenv KMP_AFFINITY compact
+     echo OMP_STACKSIZE    $OMP_STACKSIZE
+     echo KMP_AFFINITY     $KMP_AFFINITY
+     echo OMP_NUM_THREADS $OMP_NUM_THREADS
+     ./strip GWD_GridComp.rc
+     sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
+   endif
+
+   # Copy Original Restarts to Regress directory
+   # -------------------------------------------
+   foreach rst ( $rst_file_names )
+      /bin/rm -f $rst
+      cp $EXPDIR/$rst $EXPDIR/regress
+   end
+
+   # Get proper ridge scheme GWD internal restart
+   # --------------------------------------------
+   /bin/rm gwd_internal_rst
+   /bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
+
+   @COUPLED /bin/rm -rf INPUT
+   @COUPLED /bin/mkdir INPUT
+   @COUPLED cp $EXPDIR/RESTART/* INPUT
+
+   @COUPLED # restore original input.nml
+   @COUPLED /bin/mv input.nml.orig input.nml
+
+   /bin/rm              cap_restart
+   echo $nymd0 $nhms0 > cap_restart
+
+   cp CAP.rc.orig  CAP.rc
+   cp AGCM.rc.orig AGCM.rc
+   cp HISTORY.rc0  HISTORY.rc
+
+   ./strip CAP.rc
+   set oldstring = `cat CAP.rc | grep JOB_SGMT:`
+   set newstring = "JOB_SGMT: 00000000 ${test_duration_step5}"
+   /bin/mv CAP.rc CAP.tmp
+   cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+
+   # Set the new NX and NY
+   ./strip AGCM.rc
+   set oldstring = `cat AGCM.rc | grep "^ *NX:"`
+   set newstring = "NX: ${NX0}"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   set oldstring = `cat AGCM.rc | grep "^ *NY:"`
+   set newstring = "NY: ${NY0}"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+   # Set the new number of writers and readers
+   set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`
+   set newstring = "NUM_WRITERS: 6"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`
+   set newstring = "NUM_READERS: 6"
+   /bin/mv AGCM.rc AGCM.tmp
+   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+   @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
+   @COUPLED set newstring = "OGCM.NX: ${OGCM_NX0}"
+   @COUPLED /bin/mv AGCM.rc AGCM.tmp
+   @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
+   @COUPLED set newstring = "OGCM.NY: ${OGCM_NY0}"
+   @COUPLED /bin/mv AGCM.rc AGCM.tmp
+   @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+   @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${OGCM_NX0},${OGCM_NY0}#" input.nml
+   @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
+
+   setenv YEAR `cat cap_restart | cut -c1-4`
+   ./linkbcs
+   set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
+   set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
+   @ NPES = $NX * $NY
+
+   echo "=== Running OpenMP test of duration ${test_duration_step5} with NX = $NX0 and NY = $NY0 starting at $nymd0 $nhms0 ==="
+
+   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+   set date = `cat cap_restart`
+   set nymde4 = $date[1]
+   set nhmse4 = $date[2]
+
+   foreach chk ( $chk_file_names )
+      /bin/mv -v $chk ${chk}.${nymde4}_${nhmse4}.5
+   end
+
+   # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
+   # and we need to move those as well if they exist
+   set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
+   foreach chk ( $replay_chk_file_names )
+      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.5
+   end
+
+   @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.5
+
+   # Move history as well
+   set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
+
+   foreach hist ( $hist_file_names )
+      /bin/mv -v $hist ${hist}.${nymde4}_${nhmse4}.5
+   end
+
+   # Reset OpenMP Threads to 1
+   setenv OMP_NUM_THREADS 1
+   ./strip GWD_GridComp.rc
+   sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
+
+endif
+
 # Set the comparison command for netCDF-4 files
 set NCCMP = `echo ${BASEDIR}/${ARCH}/bin/nccmp -dmfgBq `
 
@@ -823,7 +968,7 @@ if ($RUN_STARTSTOP == TRUE) then
    @MOM6         else
    @MOM6             echo Start-Stop Failed!
    @MOM6             echo " "
-   @MOM6             set pass = false
+   @MOM6             set startstop_pass = false
    @MOM6         endif
    @MOM6      endif
    @MOM6endif
@@ -948,7 +1093,7 @@ if ($RUN_LAYOUT == TRUE) then
    @MOM6         else
    @MOM6             echo Layout Failed!
    @MOM6             echo " "
-   @MOM6             set pass = false
+   @MOM6             set layout_pass = false
    @MOM6         endif
    @MOM6      endif
    @MOM6endif
@@ -1013,12 +1158,144 @@ if ($RUN_LAYOUT == TRUE) then
 
 else
 
-   # We need to set something here for the "overal" regress_test file
+   # We need to set something here for the "overall" regress_test file
    set layout_pass = true
 
 endif
 
 if( $startstop_pass == true && $layout_pass == true ) then
+   echo "<font color=green> PASS </font>"                > regress_test
+else
+   echo "<font color=red> <blink> FAIL </blink> </font>" > regress_test
+endif
+
+
+#######################################################################
+#                          Compare Restarts
+#                        for OpenMP regression
+#######################################################################
+
+# This part compares the restarts from the 6-hour NXxNY run (.2) with the
+# restarts from the 6-hour NXxNY OpenMP run (.5)
+
+if ($RUN_OPENMP == TRUE) then
+
+   if( -e openmp_regress_test ) /bin/rm openmp_regress_test
+
+   echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step2} with restarts from OpenMP:2 ${NX0}x${NY0} run of duration ${test_duration_step5} ==="
+
+   set openmp_pass = true
+   foreach chk ( $chk_file_names )
+   set file1 = ${chk}.${nymde2}_${nhmse2}.2
+   set file2 = ${chk}.${nymde4}_${nhmse4}.5
+   if( -e $file1 && -e $file2 ) then
+         set check = true
+         foreach exempt (${EXEMPT_chk})
+            if( $chk == $exempt ) set check = false
+         end
+         if( $check == true ) then
+            echo Comparing ${chk}
+
+            # compare NetCDF-4 checkpoint files
+            ${NCCMP} $file1 $file2
+            if( $status == 0 ) then
+               echo OpenMP Success!
+               echo " "
+            else
+               echo OpenMP Failed!
+               echo " "
+               set openmp_pass = false
+            endif
+
+         endif
+   endif
+   end
+
+   @MOM6# check MOM.res.nc (MOM6 restart)
+   @MOM6set file1 = MOM.res.nc.2
+   @MOM6set file2 = MOM.res.nc.5
+   @MOM6if( -e $file1 && -e $file2 ) then
+   @MOM6      set check = true
+   @MOM6      if( $check == true ) then
+   @MOM6         echo Comparing "MOM6 restarts"
+   @MOM6         cmp $file1 $file2
+   @MOM6         if( $status == 0 ) then
+   @MOM6             echo OpenMP Success!
+   @MOM6             echo " "
+   @MOM6         else
+   @MOM6             echo OpenMP Failed!
+   @MOM6             echo " "
+   @MOM6             set openmp_pass = false
+   @MOM6         endif
+   @MOM6      endif
+   @MOM6endif
+
+   echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
+
+   # Check history files
+   foreach chk ( $complete_layout_replay_chk_file_names )
+   set file1 = ${chk}.${nymde2}_${nhmse4}.2
+   set file2 = ${chk}.${nymde2}_${nhmse4}.5
+   if( -e $file1 && -e $file2 ) then
+         set check = true
+         if( $check == true ) then
+            echo Comparing ${chk}
+
+            # compare checkpoint files
+            ${NCCMP} $file1 $file2
+            if( $status == 0 ) then
+               echo OpenMP Success!
+               echo " "
+            else
+               echo OpenMP Failed!
+               echo " "
+               set openmp_pass = false
+            endif
+
+         endif
+   endif
+   end
+
+   echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
+
+   # Check history files
+   foreach hist ( $complete_layout_hist_file_names )
+   set file1 = ${hist}.${nymde2}_${nhmse4}.2
+   set file2 = ${hist}.${nymde2}_${nhmse4}.5
+   if( -e $file1 && -e $file2 ) then
+         set check = true
+         if( $check == true ) then
+            echo Comparing ${hist}
+
+            # compare history files
+            ${NCCMP} $file1 $file2
+            if( $status == 0 ) then
+               echo OpenMP Success!
+               echo " "
+            else
+               echo OpenMP Failed!
+               echo " "
+               set openmp_pass = false
+            endif
+
+         endif
+   endif
+   end
+
+   if( $openmp_pass == true ) then
+      echo "<font color=green> PASS </font>"                > openmp_regress_test
+   else
+      echo "<font color=red> <blink> FAIL </blink> </font>" > openmp_regress_test
+   endif
+
+else
+
+   # We need to set something here for the "overall" regress_test file
+   set openmp_pass = true
+
+endif
+
+if( $startstop_pass == true && $layout_pass == true && $openmp_pass == true ) then
    echo "<font color=green> PASS </font>"                > regress_test
 else
    echo "<font color=red> <blink> FAIL </blink> </font>" > regress_test
