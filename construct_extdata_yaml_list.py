@@ -37,6 +37,8 @@ if __name__ == '__main__':
    - StratChem_ExtData.yaml
    GMICHEM:
    - GMI_ExtData.yaml
+   GEOSCHEM:
+   - GEOSCHEMchem_ExtData.yaml
    CARMA:
    - CARMAchem_GridComp_ExtData.yaml
    MAM:
@@ -53,6 +55,8 @@ if __name__ == '__main__':
    Extras:
    - ChemEnv_ExtData.yaml
    - WSUB_ExtData.yaml
+   - DataSea_ExtData.yaml
+   - UMWM_ExtData.yaml
    """)
    components = {}
    for line in temp_text:

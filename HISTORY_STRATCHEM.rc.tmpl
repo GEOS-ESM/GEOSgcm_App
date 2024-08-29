@@ -3,6 +3,8 @@ EXPID:  @EXPID
 EXPDSC: @EXPDSC
 EXPSRC: @EXPSRC
 
+CONTACT: 'http://gmao.gsfc.nasa.gov'
+
 COLLECTIONS: 'geosgcm_eta'
              'stratchem_eta'
              ::
@@ -14,15 +16,14 @@ COLLECTIONS: 'geosgcm_eta'
   geosgcm_eta.frequency:  060000,
   geosgcm_eta.ref_time:   000000,
   geosgcm_eta.resolution: @HIST_IM @HIST_JM,
-  geosgcm_eta.fields:   'U'	   , 'DYN' ,
-                        'V'	   , 'DYN' ,
-                        'T'	   , 'DYN' ,
-                        'Q'	   , 'MOIST' ,
+  geosgcm_eta.fields:   'U;V'      , 'DYN' ,
+                        'T'        , 'DYN' ,
+                        'Q'        , 'MOIST' ,
                         'QCTOT'    , 'MOIST' ,
                         'DELP'     , 'DYN' ,
-                        'PS'	   , 'DYN' ,
+                        'PS'       , 'DYN' ,
                    'TROPP_BLENDED' , 'AGCM' , 'TROPP' ,
-                        'TS'	   , 'SURFACE' ,
+                        'TS'       , 'SURFACE' ,
                         'RADSW'    , 'RADIATION' ,
                         'RADLW'    , 'RADIATION' ,
                         'AIRDENS'  , 'CHEMENV' ,

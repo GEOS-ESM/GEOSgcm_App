@@ -7,6 +7,7 @@ EXPID:  f5294_fp
 EXPDSC: f5294_fp__GEOSadas-5_29_4__agrid_C720__ogrid_C
 EXPSRC: GEOSadas-5_29_4
 BlockSize: 10
+Allow_Overwrite: .true.
 
 GRID_LABELS: PC1152x721-DC
              PC576x361-DC
@@ -58,6 +59,8 @@ PC540x361-DC.POLE: PC
 PC540x361-DC.DATELINE: DC
 PC540x361-DC.LM: 72
 
+CONTACT: 'http://gmao.gsfc.nasa.gov'
+
 COLLECTIONS: 'inst3_3d_asm_Np-'
              'inst3_3d_asm_Nv-'
              'inst3_2d_asm_Nx-'
@@ -100,8 +103,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
              'inst3_3d_aer_Nv-'
              'inst3_3d_chm_Nv-'
              'inst3_3d_tag_Nv-'
-             'tavg3_2d_aer_Nx-'
-             'tavg3_2d_adg_Nx-'
+             'inst1_2d_aer_Nx-'
+             'tavg1_2d_adg_Nx-'
              'tavg3_2d_chm_Nx-'
              'tavg3_2d_tag_Nx-'
              'tavg3_3d_nav_Nv-'
@@ -145,8 +148,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
              'inst3_3d_chm_Np+-'
              'inst3_3d_tag_Np+-'
              'inst3_3d_aer_Nv+-'
-             'tavg3_2d_aer_Nx+-'
-             'tavg3_2d_adg_Nx+-'
+             'inst1_2d_aer_Nx+-'
+             'tavg1_2d_adg_Nx+-'
 # WxMaps and Meteograms
              'inst3_3d_wxmc_Cp+-'
              'inst3_3d_wxmd_Cp+-'
@@ -307,6 +310,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_cld_Nv-.end_time:              >>>IOETIME<<< ,
   tavg3_3d_cld_Nv-.fields:               'PS'        , 'DYN'    ,
                                          'DELP'      , 'DYN'    ,
+                                         'CNV_FRC'   , 'MOIST'  ,
                                          'CNV_MFD'   , 'MOIST'  , 'DTRAIN'  ,
                                          'RH2'       , 'MOIST'  , 'RH'      ,
                                          'QLLS'      , 'MOIST'  ,
@@ -435,6 +439,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'QILS'      , 'MOIST'  ,
                                          'QLCN'      , 'MOIST'  , 'QLAN'  ,
                                          'QICN'      , 'MOIST'  , 'QIAN'  ,
+                                         'CNV_FRC'   , 'MOIST'  ,
                                          'CNV_QC'    , 'MOIST'  , 'QCCU'  ,
                                          'CLLS'      , 'MOIST'  , 'CFLS'  ,
                                          'CLCN'      , 'MOIST'  , 'CFAN'  ,
@@ -452,6 +457,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_mst_Ne-.end_date:              >>>IOEDATE<<< ,
   tavg3_3d_mst_Ne-.end_time:              >>>IOETIME<<< ,
   tavg3_3d_mst_Ne-.fields:               'PLE'       , 'DYN'    ,
+                                         'CNV_FRC'   , 'MOIST'  ,
                                          'CNV_MFC'   , 'MOIST'  , 'CMFMC'    ,
                                          'PFL_CN'    , 'MOIST'  , 'PFLCU'    ,
                                          'PFI_CN'    , 'MOIST'  , 'PFICU'    ,
@@ -492,6 +498,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_mst_Cp-.vvars:                'log(PLE)' , 'DYN' ,
   tavg3_3d_mst_Cp-.levels:                1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1 ,
   tavg3_3d_mst_Cp-.fields:               'CNV_MFC'     , 'MOIST'  , 'CMFMC'       ,
+                                         'CNV_FRC'     , 'MOIST'  ,
                                          'DQRC'        , 'MOIST'  , 'DQRCU'       ,
                                          'DQRL'        , 'MOIST'  , 'DQRLSAN'     ,
                                          'PFL_CN'      , 'MOIST'  , 'PFLCU'       ,
@@ -701,6 +708,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DQLDT'      , 'MOIST'      , 'DQLDTMST'  ,
                                          'QLLSIT'     , 'PHYSICS'    , 'DQLDTTRB'  ,
                                          'DQLDTDYN'   , 'DYN'        ,
+                                         'DQVDTSCL'   , 'PHYSICS'    ,
                                           ::
 
   tavg3_3d_qdt_Cp-.format:               'CFIO' ,
@@ -728,6 +736,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DQLDT'      , 'MOIST'      , 'DQLDTMST'  ,
                                          'QLLSIT'     , 'PHYSICS'    , 'DQLDTTRB'  ,
                                          'DQLDTDYN'   , 'DYN'        ,
+                                         'DQVDTSCL'   , 'PHYSICS'    ,
                                           ::
 
   tavg3_3d_odt_Nv-.format:               'CFIO' ,
@@ -742,7 +751,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Nv-.end_time:              >>>IOETIME<<< ,
   tavg3_3d_odt_Nv-.fields:               'PS'                , 'DYN'         ,
                                          'DELP'              , 'DYN'         ,
-                                         'MTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
+                                         'MCHEMTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
                                          'TRI%PCHEM::OXIT'   , 'TURBULENCE'  , 'DOXDTTRB'  ,
                                          'OX_TEND'           , 'CHEMISTRY'   , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN                 'TRADVI%PCHEM::OXID', 'AGCM'        , 'DOXDTDYN'  ,
@@ -764,7 +773,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Cp-.vunit:                'hPa' ,
   tavg3_3d_odt_Cp-.vvars:                'log(PLE)' , 'DYN' ,
   tavg3_3d_odt_Cp-.levels:                1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1 ,
-  tavg3_3d_odt_Cp-.fields:               'MTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
+  tavg3_3d_odt_Cp-.fields:               'MCHEMTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
                                          'TRI%PCHEM::OXIT'   , 'TURBULENCE'  , 'DOXDTTRB'  ,
                                          'OX_TEND'           , 'CHEMISTRY'   , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN                 'TRADVI%PCHEM::OXID', 'AGCM'        , 'DOXDTDYN'  ,
@@ -916,6 +925,10 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CN_ARF'         , 'MOIST'       , 'FRCCN'     ,
                                          'DFNIR'          , 'SOLAR'       , 'NIRDF'     ,
                                          'DRNIR'          , 'SOLAR'       , 'NIRDR'     ,
+                                         'ICE'            , 'MOIST'       ,
+                                         'FRZR'           , 'MOIST'       ,
+                                         'RAIN'           , 'MOIST'       ,
+                                         'PTYPE'          , 'MOIST'       ,
                                           ::
 
   tavg1_2d_rad_Nx-.format:               'CFIO' ,
@@ -1380,19 +1393,19 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'NIINC'    , 'GAAS'     ,
                                           ::
 
-  tavg3_2d_aer_Nx-.format:               'CFIO' ,
-  tavg3_2d_aer_Nx-.descr:                '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics' ,
-  tavg3_2d_aer_Nx-.template:             '%y4%m2%d2_%h2%n2z.nc4' ,
-  tavg3_2d_aer_Nx-.mode:                 'time-averaged' ,
-  tavg3_2d_aer_Nx-.grid_label:            PC1152x721-DC ,
-  tavg3_2d_aer_Nx-.splitField:            1 ,
-  tavg3_2d_aer_Nx-.conservative:          1 ,
-  tavg3_2d_aer_Nx-.frequency:             030000 ,
-  tavg3_2d_aer_Nx-.duration:              030000 ,
-  tavg3_2d_aer_Nx-.end_date:              >>>IOEDATE<<< ,
-  tavg3_2d_aer_Nx-.end_time:              >>>IOETIME<<< ,
-  tavg3_2d_aer_Nx-.nbits:                 10 ,
-  tavg3_2d_aer_Nx-.fields:               'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
+  inst1_2d_aer_Nx-.format:               'CFIO' ,
+  inst1_2d_aer_Nx-.descr:                '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Aerosol Diagnostics' ,
+  inst1_2d_aer_Nx-.template:             '%y4%m2%d2_%h2%n2z.nc4' ,
+  inst1_2d_aer_Nx-.mode:                 'instantaneous' ,
+  inst1_2d_aer_Nx-.grid_label:            PC1152x721-DC ,
+  inst1_2d_aer_Nx-.splitField:            1 ,
+  inst1_2d_aer_Nx-.conservative:          1 ,
+  inst1_2d_aer_Nx-.frequency:             010000 ,
+  inst1_2d_aer_Nx-.duration:              010000 ,
+  inst1_2d_aer_Nx-.end_date:              >>>IOEDATE<<< ,
+  inst1_2d_aer_Nx-.end_time:              >>>IOETIME<<< ,
+  inst1_2d_aer_Nx-.nbits:                 10 ,
+  inst1_2d_aer_Nx-.fields:               'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
 # Black Carbon
                                          'CA.bcCMASS'     , 'CA.bc'     , 'BCCMASS'     ,
                                          'CA.bcEXTTAU'    , 'CA.bc'     , 'BCEXTTAU'    ,
@@ -1403,10 +1416,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.bcFLUXU'     , 'CA.bc'     , 'BCFLUXU'     ,
                                          'CA.bcFLUXV'     , 'CA.bc'     , 'BCFLUXV'     ,
 # Brown Carbon
-                                         'CA.brEM'        , 'CA.br'     , 'BREM001;BREM002' ,
-                                         'CA.brDP'        , 'CA.br'     , 'BRDP001;BRDP002' ,
-                                         'CA.brSV'        , 'CA.br'     , 'BRSV001;BRSV002' ,
-                                         'CA.brWT'        , 'CA.br'     , 'BRWT001;BRWT002' ,
                                          'CA.brSMASS'     , 'CA.br'     , 'BRSMASS'     ,
                                          'CA.brCMASS'     , 'CA.br'     , 'BRCMASS'     ,
                                          'CA.brEXTTAU'    , 'CA.br'     , 'BREXTTAU'    ,
@@ -1414,10 +1423,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.brSTEXTTAU'  , 'CA.br'     , 'BRSTEXTTAU'  ,
                                          'CA.brSTSCATAU'  , 'CA.br'     , 'BRSTSCATAU'  ,
                                          'CA.brANGSTR'    , 'CA.br'     , 'BRANGSTR'    ,
-                                         'CA.brHYPHIL'    , 'CA.br'     , 'BRHYPHIL'    ,
-                                         'CA.brEMBB'      , 'CA.br'     , 'BREMBB'      ,
-                                         'CA.brEMBF'      , 'CA.br'     , 'BREMBF'      ,
-                                         'CA.brEMAN'      , 'CA.br'     , 'BREMAN'      ,
                                          'CA.brFLUXU'     , 'CA.br'     , 'BRFLUXU'     ,
                                          'CA.brFLUXV'     , 'CA.br'     , 'BRFLUXV'     ,
 # Dust
@@ -1496,39 +1501,41 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'TOTANGSTR'      , 'GOCART2G'  ,
                                          'TOTSTEXTTAU'    , 'GOCART2G'  ,
                                          'TOTSTSCATAU'    , 'GOCART2G'  ,
+                                         'PM25'           , 'GOCART2G'  ,
+                                         'PM'             , 'GOCART2G'  ,
                                           ::
 
-  tavg3_2d_adg_Nx-.format:               'CFIO' ,
-  tavg3_2d_adg_Nx-.descr:                '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
-  tavg3_2d_adg_Nx-.template:             '%y4%m2%d2_%h2%n2z.nc4' ,
-  tavg3_2d_adg_Nx-.mode:                 'time-averaged' ,
-  tavg3_2d_adg_Nx-.grid_label:            PC1152x721-DC ,
-  tavg3_2d_adg_Nx-.frequency:             030000 ,
-  tavg3_2d_adg_Nx-.duration:              030000 ,
-  tavg3_2d_adg_Nx-.end_date:              >>>IOEDATE<<< ,
-  tavg3_2d_adg_Nx-.end_time:              >>>IOETIME<<< ,
-  tavg3_2d_adg_Nx-.nbits:                 10 ,
-  tavg3_2d_adg_Nx-.splitField:            1 ,
-  tavg3_2d_adg_Nx-.conservative:          1 ,
-  tavg3_2d_adg_Nx-.fields:               'CA.bcEM'      , 'CA.bc'  , 'BCEM001;BCEM002' ,
+  tavg1_2d_adg_Nx-.format:               'CFIO' ,
+  tavg1_2d_adg_Nx-.descr:                '2d,1-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
+  tavg1_2d_adg_Nx-.template:             '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg1_2d_adg_Nx-.mode:                 'time-averaged' ,
+  tavg1_2d_adg_Nx-.grid_label:            PC1152x721-DC ,
+  tavg1_2d_adg_Nx-.frequency:             010000 ,
+  tavg1_2d_adg_Nx-.duration:              010000 ,
+  tavg1_2d_adg_Nx-.end_date:              >>>IOEDATE<<< ,
+  tavg1_2d_adg_Nx-.end_time:              >>>IOETIME<<< ,
+  tavg1_2d_adg_Nx-.nbits:                 10 ,
+  tavg1_2d_adg_Nx-.splitField:            1 ,
+  tavg1_2d_adg_Nx-.conservative:          1 ,
+  tavg1_2d_adg_Nx-.fields:               'CA.bcEM'      , 'CA.bc'  , 'BCPHOBICEM;BCPHILICEM' ,
 # Black Carbon
-                                         'CA.bcDP'      , 'CA.bc'  , 'BCDP001;BCDP002' ,
-                                         'CA.bcWT'      , 'CA.bc'  , 'BCWT001;BCWT002' ,
-                                         'CA.bcHYPHIL'  , 'CA.bc'  , 'BCHYPHIL'  ,
+                                         'CA.bcDP'      , 'CA.bc'  , 'BCPHOBICDP;BCPHILICDP' ,
+                                         'CA.bcWT'      , 'CA.bc'  , 'BCPHOBICWT;BCPHILICWT' ,
+                                         'CA.bcHYPHIL'  , 'CA.bc'  , 'BCPHOB2PHIL'  ,
                                          'CA.bcEMBB'    , 'CA.bc'  , 'BCEMBB'    ,
                                          'CA.bcEMBF'    , 'CA.bc'  , 'BCEMBF'    ,
                                          'CA.bcEMAN'    , 'CA.bc'  , 'BCEMAN'    ,
-                                         'DBC2gDT'      , 'MOIST'  , 'BCSV'      ,
+                                         'MCHEMTRI%CA.bc::CA.bcphilicIM' , 'PHYSICS' , 'BCSV' ,
 # Brown Carbon
-                                         'CA.brEM'      , 'CA.br'  , 'BREM001;BREM002' ,
-                                         'CA.brDP'      , 'CA.br'  , 'BRDP001;BRDP002' ,
-                                         'CA.brWT'      , 'CA.br'  , 'BRWT001;BRWT002' ,
-                                         'CA.brHYPHIL'  , 'CA.br'  , 'BRHYPHIL'  ,
+                                         'CA.brEM'      , 'CA.br'  , 'BRPHOBICEM;BRPHILICEM'  ,
+                                         'CA.brDP'      , 'CA.br'  , 'BRPHOBICDP;BRPHILICDP'  ,
+                                         'CA.brWT'      , 'CA.br'  , 'BRPHOBICWT;BRPHILICWT'  ,
+                                         'CA.brHYPHIL'  , 'CA.br'  , 'BRPHOB2PHIL'  ,
                                          'CA.brEMBB'    , 'CA.br'  , 'BREMBB'    ,
                                          'CA.brEMBF'    , 'CA.br'  , 'BREMBF'    ,
                                          'CA.brEMAN'    , 'CA.br'  , 'BREMAN'    ,
-                                         'DBRC2gDT'     , 'MOIST'  , 'BRSV'      ,
                                          'CA.brPSOA'    , 'CA.br'  , 'BRPSOA'    ,
+                                         'MCHEMTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
 # Dust
                                          'DUEM'         , 'DU'     , 'DUEM001;DUEM002;DUEM003;DUEM004;DUEM005' ,
                                          'DUSD'         , 'DU'     , 'DUSD001;DUSD002;DUSD003;DUSD004;DUSD005' ,
@@ -1536,8 +1543,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DUWT'         , 'DU'     , 'DUWT001;DUWT002;DUWT003;DUWT004;DUWT005' ,
                                          'DUEXTTFM'     , 'DU'     ,
                                          'DUSCATFM'     , 'DU'     ,
-                                         'DUAERIDX'     , 'DU'     ,
-                                         'DDU2gDT'      , 'MOIST'  , 'DUSV'      ,
+                                         'MCHEMTRI%DU::DUIM'             , 'PHYSICS' , 'DUSV' ,
 # Seasalt
                                          'SSEM'         , 'SS'     , 'SSEM001;SSEM002;SSEM003;SSEM004;SSEM005' ,
                                          'SSSD'         , 'SS'     , 'SSSD001;SSSD002;SSSD003;SSSD004;SSSD005' ,
@@ -1545,13 +1551,12 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SSWT'         , 'SS'     , 'SSWT001;SSWT002;SSWT003;SSWT004;SSWT005' ,
                                          'SSEXTTFM'     , 'SS'     ,
                                          'SSSCATFM'     , 'SS'     ,
-                                         'SSAERIDX'     , 'SS'     ,
-                                         'DSS2gDT'      , 'MOIST'  , 'SSSV'      ,
+                                         'MCHEMTRI%SS::SSIM'             , 'PHYSICS' , 'SSSV' ,
 # Sulfates
-                                         'SUEM'         , 'SU'     ,
-                                         'SUSD'         , 'SU'     ,
-                                         'SUDP'         , 'SU'     ,
-                                         'SUWT'         , 'SU'     ,
+                                         'SUEM'         , 'SU'     , 'DMSEM;SO2EM;SO4EM;MSAEM'                  ,
+                                         'SUSD'         , 'SU'     , 'DMSSD;SO2SD;SO4SD;MSASD'                  ,
+                                         'SUDP'         , 'SU'     , 'DMSDP;SO2DP;SO4DP;MSAPD'                  ,
+                                         'SUWT'         , 'SU'     , 'DMSWT;SO2WT;SO4WT;MSAWT'                  ,
                                          'SUPSO2'       , 'SU'     ,
                                          'SUPSO4G'      , 'SU'     ,
                                          'SUPSO4AQ'     , 'SU'     ,
@@ -1562,26 +1567,26 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SO2EMBB'      , 'SU'     ,
                                          'SO2EMVN'      , 'SU'     ,
                                          'SO2EMVE'      , 'SU'     ,
-                                         'DSU2gDT'      , 'MOIST'  , 'SUSV'      ,
+                                         'MCHEMTRI%SU::SO4IM'            , 'PHYSICS' , 'SUSV' ,
 # Organic Carbon
-                                         'CA.ocEM'      , 'CA.oc'  , 'OCEM001;OCEM002' ,
-                                         'CA.ocDP'      , 'CA.oc'  , 'OCDP001;OCDP002' ,
-                                         'CA.ocWT'      , 'CA.oc'  , 'OCWT001;OCWT002' ,
+                                         'CA.ocEM'      , 'CA.oc'  , 'OCPHOBICEM;OCPHILICEM'  ,
+                                         'CA.ocDP'      , 'CA.oc'  , 'OCPHOBICDP;OCPHILICDP'  ,
+                                         'CA.ocWT'      , 'CA.oc'  , 'OCPHOBICWT;OCPHILICWT'  ,
                                          'CA.ocEMBB'    , 'CA.oc'  , 'OCEMBB'    ,
                                          'CA.ocEMBF'    , 'CA.oc'  , 'OCEMBF'    ,
                                          'CA.ocEMAN'    , 'CA.oc'  , 'OCEMAN'    ,
                                          'CA.ocEMBG'    , 'CA.oc'  , 'OCEMBG'    ,
                                          'CA.ocPSOA'    , 'CA.oc'  , 'OCPSOA'    ,
-                                         'CA.ocHYPHIL'  , 'CA.oc'  , 'OCHYPHIL'  ,
-                                         'DOC2gDT'      , 'MOIST'  , 'OCSV'      ,
+                                         'CA.ocHYPHIL'  , 'CA.oc'  , 'OCPHOB2PHIL'  ,
+                                         'MCHEMTRI%CA.oc::CA.ocphilicIM' , 'PHYSICS' , 'OCSV' ,
 # Nitrate
                                          'NIPNO3AQ'     , 'NI'     ,
                                          'NIPNH4AQ'     , 'NI'     ,
                                          'NIPNH3AQ'     , 'NI'     ,
-                                         'NIHT'         , 'NI'     ,
-                                         'NISD'         , 'NI'     ,
-                                         'NIDP'         , 'NI'     ,
-                                         'NIWT'         , 'NI'     ,
+                                         'NIHT'         , 'NI'     , 'NIHT001;NIHT002;NIHT003' ,
+                                         'NISD'         , 'NI'     , 'NISD001;NISD002;NISD003',
+                                         'NIDP'         , 'NI'     , 'NIDP001;NIDP002;NIDP003',
+                                         'NIWT'         , 'NI'     , 'NIWT001;NIWT002;NIWT003',
                                          'NI2gSV'       , 'NI'     ,
                                          'NH3EM'        , 'NI'     ,
                                          'NH3DP'        , 'NI'     ,
@@ -1591,7 +1596,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'NH4DP'        , 'NI'     ,
                                          'NH4WT'        , 'NI'     ,
                                          'NH4SV'        , 'NI'     ,
-                                         'DNI2gDT'      , 'MOIST'  , 'NISV'      ,
+                                         'MCHEMTRI%NI::NO3an1IM'         , 'PHYSICS' , 'NISV' ,
                                           ::
 
   tavg3_2d_chm_Nx-.format:               'CFIO' ,
@@ -1628,14 +1633,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   inst1_2d_hwl_Nx-.end_date:              >>>IOEDATE<<< ,
   inst1_2d_hwl_Nx-.end_time:              >>>IOETIME<<< ,
   inst1_2d_hwl_Nx-.nbits:                 10 ,
-  inst1_2d_hwl_Nx-.fields:               'SLP'          , 'DYN'       ,
-                                         'DUEXTTAU'     , 'DU'        ,
-                                         'SSEXTTAU'     , 'SS'        ,
-                                         'SUEXTTAU'     , 'SU'        ,
-                                         'CA.bcEXTTAU'  , 'CA.bc'     , 'BCEXTTAU'    ,
-                                         'CA.brEXTTAU'  , 'CA.br'     , 'BREXTTAU'    ,
-                                         'CA.ocEXTTAU'  , 'CA.oc'     , 'OCEXTTAU'    ,
-                                         'NIEXTTAU'     , 'NI'        ,
+  inst1_2d_hwl_Nx-.fields:               'SLP'          , 'DYN'       ,     ,
                                          'CO2CL001'     , 'GOCART'    , 'CO2CL'       ,
                                          'COCL'         , 'GOCART'    ,
                                          'COCLbbae'     , 'GOCART'    ,
@@ -1650,47 +1648,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CFC12SCL'     , 'GOCART'    , 'CFC12strat'  ,
                                          'CFC12TCL'     , 'GOCART'    , 'CFC12trop'   ,
                                          'TO3'          , 'PCHEM'     ,
-# Total Aerosol properties
-                                         'TOTEXTTAU'    , 'GOCART2G'  ,
-                                         'TOTSCATAU'    , 'GOCART2G'  ,
-                                         'TOTANGSTR'    , 'GOCART2G'  ,
-# Surface Concentrations
                                          'COSC'         , 'GOCART'    ,
-                                         'DUSMASS'      , 'DU'        ,
-                                         'DUSMASS25'    , 'DU'        ,
-                                         'SSSMASS'      , 'SS'        ,
-                                         'SSSMASS25'    , 'SS'        ,
-                                         'CA.bcSMASS'   , 'CA.bc'     , 'BCSMASS'     ,
-                                         'CA.brSMASS'   , 'CA.br'     , 'BRSMASS'     ,
-                                         'CA.ocSMASS'   , 'CA.oc'     , 'OCSMASS'     ,
-                                         'SO4SMASS'     , 'SU'        ,
-                                         'SO2SMASS'     , 'SU'        ,
-                                         'SO2CMASS'     , 'SU'        ,
-                                         'NISMASS'      , 'NI'        ,
-                                         'NISMASS25'    , 'NI'        ,
-# Fluxes
-                                         'CA.bcFLUXU'   , 'CA.bc'     , 'BCFLUXU'     ,
-                                         'CA.bcFLUXV'   , 'CA.bc'     , 'BCFLUXV'     ,
-                                         'CA.brFLUXU'   , 'CA.br'     , 'BRFLUXU'     ,
-                                         'CA.brFLUXV'   , 'CA.br'     , 'BRFLUXV'     ,
-                                         'DUFLUXU'      , 'DU'        ,
-                                         'DUFLUXV'      , 'DU'        ,
-                                         'CA.ocFLUXU'   , 'CA.oc'     , 'OCFLUXU'     ,
-                                         'CA.ocFLUXV'   , 'CA.oc'     , 'OCFLUXV'     ,
-                                         'SSFLUXU'      , 'SS'        ,
-                                         'SSFLUXV'      , 'SS'        ,
-                                         'SUFLUXU'      , 'SU'        ,
-                                         'SUFLUXV'      , 'SU'        ,
-                                         'CA.bcCMASS'   , 'CA.bc'     , 'BCCMASS'     ,
-                                         'CA.brCMASS'   , 'CA.br'     , 'BRCMASS'     ,
-                                         'DUCMASS'      , 'DU'        ,
-                                         'CA.ocCMASS'   , 'CA.oc'     , 'OCCMASS'     ,
-                                         'SO4CMASS'     , 'SU'        ,
-                                         'SSCMASS'      , 'SS'        ,
-# Additions requested for wxmaps
-                                         'NIFLUXU'      , 'NI'        ,
-                                         'NIFLUXV'      , 'NI'        ,
-                                         'NICMASS'      , 'NI'        ,
                                           ::
 
   inst3_3d_aer_Nv-.format:               'CFIO' ,
@@ -1711,6 +1669,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'LWI'          , 'SURFACE'  ,
                                          'RH2'          , 'MOIST'    , 'RH'        ,
                                          'AIRDENS'      , 'CHEMENV'  ,
+                                         'ZL'           , 'DYN'      , 'H'      ,
 # Dust
                                          'DU'           , 'DU'       ,
 # Sea-salt
@@ -1730,9 +1689,9 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 # Nitrate
                                          'NH3'          , 'NI'       ,
                                          'NH4a'         , 'NI'       , 'NH4A'      ,
-                                         'NO3an1'       , 'NI'       , 'NO3AN1'    ,
-                                         'NO3an2'       , 'NI'       , 'NO3AN2'    ,
-                                         'NO3an3'       , 'NI'       , 'NO3AN3'    ,
+                                         'NO3an1'       , 'NI'       , 'NI001'    ,
+                                         'NO3an2'       , 'NI'       , 'NI002'    ,
+                                         'NO3an3'       , 'NI'       , 'NI003'    ,
                                           ::
 
   inst3_3d_aer_Nv+-.format:              'CFIO' ,
@@ -1753,6 +1712,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'LWI'          , 'SURFACE'  ,
                                          'RH2'          , 'MOIST'    , 'RH'        ,
                                          'AIRDENS'      , 'CHEMENV'  ,
+                                         'ZL'           , 'DYN'      , 'H'      ,
 # Dust
                                          'DU'           , 'DU'       ,
 # Sea-salt
@@ -1772,9 +1732,9 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 # Nitrate
                                          'NH3'          , 'NI'       ,
                                          'NH4a'         , 'NI'       , 'NH4A'      ,
-                                         'NO3an1'       , 'NI'       , 'NO3AN1'    ,
-                                         'NO3an2'       , 'NI'       , 'NO3AN2'    ,
-                                         'NO3an3'       , 'NI'       , 'NO3AN3'    ,
+                                         'NO3an1'       , 'NI'       , 'NI001'    ,
+                                         'NO3an2'       , 'NI'       , 'NI002'    ,
+                                         'NO3an3'       , 'NI'       , 'NI003'    ,
                                           ::
 
   inst3_3d_chm_Nv-.format:               'CFIO' ,
@@ -2023,6 +1983,11 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #                                        'UBKG;VBKG'            , 'AIAU'  ,
 #                                        'TBKG'                 , 'AIAU'  ,
 #                                        'QVBKG'                , 'AIAU'  ,
+                                         'QVBKG'                , 'AGCM'  ,
+                                         'QVANA'                , 'AGCM'  ,
+                                         'QVCON'                , 'AGCM'  ,
+                                         'DPBKG'                , 'AGCM'  ,
+                                         'DPANA'                , 'AGCM'  ,
                                           ::
 
   inst3_3d_asm_Np+-.format:              'CFIO' ,
@@ -2207,11 +2172,10 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'TPREC'          , 'MOIST'       , 'PRECTOT'   ,
                                          'PGENTOT'        , 'MOIST'       ,
                                          'PREVTOT'        , 'MOIST'       ,
-                                         'LS_ARF'         , 'MOIST'       , 'FRCLS'     ,
-                                         'AN_ARF'         , 'MOIST'       , 'FRCAN'     ,
-                                         'CN_ARF'         , 'MOIST'       , 'FRCCN'     ,
-                                         'DFNIR'          , 'SOLAR'       , 'NIRDF'     ,
-                                         'DRNIR'          , 'SOLAR'       , 'NIRDR'     ,
+                                         'ICE'            , 'MOIST'       ,
+                                         'FRZR'           , 'MOIST'       ,
+                                         'RAIN'           , 'MOIST'       ,
+                                         'PTYPE'          , 'MOIST'       ,
                                           ::
 
   tavg1_2d_lnd_Nx+-.format:              'CFIO' ,
@@ -2429,34 +2393,34 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'WET1'  , 'SURFACE'  , 'GWETTOP'  ,
                                           ::
 
-  tavg3_2d_adg_Nx+-.format:              'CFIO' ,
-  tavg3_2d_adg_Nx+-.descr:               '2d,3-Hourly,Time-Averaged,Single-Level,Forecast,Aerosol Diagnostics (extended)' ,
-  tavg3_2d_adg_Nx+-.template:            '%y4%m2%d2_%h2%n2z.nc4' ,
-  tavg3_2d_adg_Nx+-.mode:                'time-averaged' ,
-  tavg3_2d_adg_Nx+-.grid_label:           PC1152x721-DC ,
-  tavg3_2d_adg_Nx+-.frequency:            030000 ,
-  tavg3_2d_adg_Nx+-.duration:             030000 ,
-  tavg3_2d_adg_Nx+-.ref_date:             >>>IOBBKGD<<< ,
-  tavg3_2d_adg_Nx+-.ref_time:             000000 ,
-  tavg3_2d_adg_Nx+-.nbits:                10 ,
-  tavg3_2d_adg_Nx+-.fields:              'CA.bcEM'      , 'CA.bc'  , 'BCEM001;BCEM002' ,
+  tavg1_2d_adg_Nx+-.format:              'CFIO' ,
+  tavg1_2d_adg_Nx+-.descr:               '2d,1-Hourly,Time-Averaged,Single-Level,Forecast,Aerosol Diagnostics (extended)' ,
+  tavg1_2d_adg_Nx+-.template:            '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg1_2d_adg_Nx+-.mode:                'time-averaged' ,
+  tavg1_2d_adg_Nx+-.grid_label:           PC1152x721-DC ,
+  tavg1_2d_adg_Nx+-.frequency:            010000 ,
+  tavg1_2d_adg_Nx+-.duration:             010000 ,
+  tavg1_2d_adg_Nx+-.ref_date:             >>>IOBBKGD<<< ,
+  tavg1_2d_adg_Nx+-.ref_time:             000000 ,
+  tavg1_2d_adg_Nx+-.nbits:                10 ,
+  tavg1_2d_adg_Nx+-.fields:              'CA.bcEM'      , 'CA.bc'  , 'BCPHOBICEM;BCPHILICEM' ,
 # Black Carbon
-                                         'CA.bcDP'      , 'CA.bc'  , 'BCDP001;BCDP002' ,
-                                         'CA.bcWT'      , 'CA.bc'  , 'BCWT001;BCWT002' ,
-                                         'CA.bcHYPHIL'  , 'CA.bc'  , 'BCHYPHIL'  ,
+                                         'CA.bcDP'      , 'CA.bc'  , 'BCPHOBICDP;BCPHILICDP' ,
+                                         'CA.bcWT'      , 'CA.bc'  , 'BCPHOBICWT;BCPHILICWT' ,
+                                         'CA.bcHYPHIL'  , 'CA.bc'  , 'BCPHOB2PHIL',
                                          'CA.bcEMBB'    , 'CA.bc'  , 'BCEMBB'    ,
                                          'CA.bcEMBF'    , 'CA.bc'  , 'BCEMBF'    ,
                                          'CA.bcEMAN'    , 'CA.bc'  , 'BCEMAN'    ,
-                                         'DBC2gDT'      , 'MOIST'  , 'BCSV'      ,
+                                         'MCHEMTRI%CA.bc::CA.bcphilicIM' , 'PHYSICS' , 'BCSV' ,
 # Brown Carbon
-                                         'CA.brEM'      , 'CA.br'  , 'BREM001;BREM002' ,
-                                         'CA.brDP'      , 'CA.br'  , 'BRDP001;BRDP002' ,
-                                         'CA.brWT'      , 'CA.br'  , 'BRWT001;BRWT002' ,
-                                         'CA.brHYPHIL'  , 'CA.br'  , 'BRHYPHIL'  ,
+                                         'CA.brEM'      , 'CA.br'  , 'BRPHOBICEM;BRPHILICEM' ,
+                                         'CA.brDP'      , 'CA.br'  , 'BRPHOBICDP;BRPHILICDP' ,
+                                         'CA.brWT'      , 'CA.br'  , 'BRPHOBICWT;BRPHILICWT' ,
+                                         'CA.brHYPHIL'  , 'CA.br'  , 'BRPHOB2PHIL'  ,
                                          'CA.brEMBB'    , 'CA.br'  , 'BREMBB'    ,
                                          'CA.brEMBF'    , 'CA.br'  , 'BREMBF'    ,
                                          'CA.brEMAN'    , 'CA.br'  , 'BREMAN'    ,
-                                         'DBRC2gDT'     , 'MOIST'  , 'BRSV'      ,
+                                         'MCHEMTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
 # Dust
                                          'DUEM'         , 'DU'     ,
                                          'DUSD'         , 'DU'     ,
@@ -2464,8 +2428,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DUWT'         , 'DU'     ,
                                          'DUEXTTFM'     , 'DU'     ,
                                          'DUSCATFM'     , 'DU'     ,
-                                         'DUAERIDX'     , 'DU'     ,
-                                         'DDU2gDT'      , 'MOIST'  , 'DUSV'      ,
+                                         'MCHEMTRI%DU::DUIM'             , 'PHYSICS' , 'DUSV' ,
 # Seasalt
                                          'SSEM'         , 'SS'     ,
                                          'SSSD'         , 'SS'     ,
@@ -2473,12 +2436,12 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SSWT'         , 'SS'     ,
                                          'SSEXTTFM'     , 'SS'     ,
                                          'SSSCATFM'     , 'SS'     ,
-                                         'SSAERIDX'     , 'SS'     ,
-                                         'DSS2gDT'      , 'MOIST'  , 'SSSV'      ,
+                                         'MCHEMTRI%SS::SSIM'             , 'PHYSICS' , 'SSSV' ,
 # Sulfates
-                                         'SUEM'         , 'SU'     ,
-                                         'SUDP'         , 'SU'     ,
-                                         'SUWT'         , 'SU'     ,
+                                         'SUEM'         , 'SU'     , 'DMSEM;SO2EM;SO4EM;MSAEM',
+                                         'SUSD'         , 'SU'     , 'DMSSD;SO2SD;SO4SD;MSASD',
+                                         'SUDP'         , 'SU'     , 'DMSDP;SO2DP;SO4DP;MSAPD',
+                                         'SUWT'         , 'SU'     , 'DMSWT;SO2WT;SO4WT;MSAWT',
                                          'SUPSO2'       , 'SU'     ,
                                          'SUPSO4G'      , 'SU'     ,
                                          'SUPSO4AQ'     , 'SU'     ,
@@ -2489,25 +2452,25 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SO2EMBB'      , 'SU'     ,
                                          'SO2EMVN'      , 'SU'     ,
                                          'SO2EMVE'      , 'SU'     ,
-                                         'DSU2gDT'      , 'MOIST'  , 'SUSV'      ,
+                                         'MCHEMTRI%SU::SO4IM'            , 'PHYSICS' , 'SUSV' ,
 # Organic Carbon
-                                         'CA.ocEM'      , 'CA.oc'  , 'OCEM001;OCEM002',
-                                         'CA.ocDP'      , 'CA.oc'  , 'OCDP001;OCDP002',
-                                         'CA.ocWT'      , 'CA.oc'  , 'OCWT001;OCWT002',
+                                         'CA.ocEM'      , 'CA.oc'  , 'OCPHOBICEM;OCPHILICEM',
+                                         'CA.ocDP'      , 'CA.oc'  , 'OCPHOBICDP;OCPHILICDP',
+                                         'CA.ocWT'      , 'CA.oc'  , 'OCPHOBICWT;OCPHILICWT',
                                          'CA.ocEMBB'    , 'CA.oc'  , 'OCEMBB'    ,
                                          'CA.ocEMBF'    , 'CA.oc'  , 'OCEMBF'    ,
                                          'CA.ocEMAN'    , 'CA.oc'  , 'OCEMAN'    ,
                                          'CA.ocEMBG'    , 'CA.oc'  , 'OCEMBG'    ,
-                                         'CA.ocHYPHIL'  , 'CA.oc'  , 'OCHYPHIL'  ,
-                                         'DOC2gDT'      , 'MOIST'  , 'OCSV'      ,
+                                         'CA.ocHYPHIL'  , 'CA.oc'  , 'OCPHOB2PHIL'  ,
+                                         'MCHEMTRI%CA.oc::CA.ocphilicIM' , 'PHYSICS' , 'OCSV' ,
 # Nitrate
                                          'NIPNO3AQ'     , 'NI'     ,
                                          'NIPNH4AQ'     , 'NI'     ,
                                          'NIPNH3AQ'     , 'NI'     ,
-                                         'NIHT'         , 'NI'     ,
-                                         'NISD'         , 'NI'     ,
-                                         'NIDP'         , 'NI'     ,
-                                         'NIWT'         , 'NI'     ,
+                                         'NIHT'         , 'NI'     , 'NIHT001;NIHT002;NIHT003' ,
+                                         'NISD'         , 'NI'     , 'NISD001;NISD002;NISD003',
+                                         'NIDP'         , 'NI'     , 'NIDP001;NIDP002;NIDP003',
+                                         'NIWT'         , 'NI'     , 'NIWT001;NIWT002;NIWT003',
                                          'NI2gSV'       , 'NI'     ,
                                          'NH3EM'        , 'NI'     ,
                                          'NH3DP'        , 'NI'     ,
@@ -2517,7 +2480,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'NH4DP'        , 'NI'     ,
                                          'NH4WT'        , 'NI'     ,
                                          'NH4SV'        , 'NI'     ,
-                                         'DNI2gDT'      , 'MOIST'  , 'NISV'      ,
+                                         'MCHEMTRI%NI::NO3an1IM'         , 'PHYSICS' , 'NISV' ,
                                           ::
 
 #######################################################################
@@ -2766,17 +2729,17 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'GOCART::CFC12T'  , 'GOCART'   , 'CFC12trop'   ,
                                           ::
 
-  tavg3_2d_aer_Nx+-.format:              'CFIO' ,
-  tavg3_2d_aer_Nx+-.descr:               '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics' ,
-  tavg3_2d_aer_Nx+-.template:            '%y4%m2%d2_%h2%n2z.nc4' ,
-  tavg3_2d_aer_Nx+-.mode:                'time-averaged' ,
-  tavg3_2d_aer_Nx+-.grid_label:           PC1152x721-DC ,
-  tavg3_2d_aer_Nx+-.splitField:           1 ,
-  tavg3_2d_aer_Nx+-.conservative:         1 ,
-  tavg3_2d_aer_Nx+-.frequency:            030000 ,
-  tavg3_2d_aer_Nx+-.duration:             030000 ,
-  tavg3_2d_aer_Nx+-.nbits:                10 ,
-  tavg3_2d_aer_Nx+-.fields:              'CA.bcSMASS'   , 'CA.bc'     , 'BCSMASS'   ,
+  inst1_2d_aer_Nx+-.format:              'CFIO' ,
+  inst1_2d_aer_Nx+-.descr:               '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Aerosol Diagnostics' ,
+  inst1_2d_aer_Nx+-.template:            '%y4%m2%d2_%h2%n2z.nc4' ,
+  inst1_2d_aer_Nx+-.mode:                'instantaneous' ,
+  inst1_2d_aer_Nx+-.grid_label:           PC1152x721-DC ,
+  inst1_2d_aer_Nx+-.splitField:           1 ,
+  inst1_2d_aer_Nx+-.conservative:         1 ,
+  inst1_2d_aer_Nx+-.frequency:            010000 ,
+  inst1_2d_aer_Nx+-.duration:             010000 ,
+  inst1_2d_aer_Nx+-.nbits:                10 ,
+  inst1_2d_aer_Nx+-.fields:              'CA.bcSMASS'   , 'CA.bc'     , 'BCSMASS'   ,
 # Black Carbon
                                          'CA.bcCMASS'   , 'CA.bc'     , 'BCCMASS'   ,
                                          'CA.bcEXTTAU'  , 'CA.bc'     , 'BCEXTTAU'  ,
@@ -2785,21 +2748,14 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.bcFLUXU'   , 'CA.bc'     , 'BCFLUXU'   ,
                                          'CA.bcFLUXV'   , 'CA.bc'     , 'BCFLUXV'   ,
 # Brown Carbon
-                                         'CA.brEM'      , 'CA.br'     , 'BREM001;BREM002' ,
-                                         'CA.brDP'      , 'CA.br'     , 'BRDP001;BRDP002' ,
-                                         'CA.brWT'      , 'CA.br'     , 'BRWT001;BRWT002' ,
                                          'CA.brSMASS'   , 'CA.br'     , 'BRSMASS'   ,
                                          'CA.brCMASS'   , 'CA.br'     , 'BRCMASS'   ,
                                          'CA.brEXTTAU'  , 'CA.br'     , 'BREXTTAU'  ,
                                          'CA.brSCATAU'  , 'CA.br'     , 'BRSCATAU'  ,
                                          'CA.brANGSTR'  , 'CA.br'     , 'BRANGSTR'  ,
-                                         'CA.brHYPHIL'  , 'CA.br'     , 'BRHYPHIL'  ,
-                                         'CA.brEMBB'    , 'CA.br'     , 'BREMBB'    ,
-                                         'CA.brEMBF'    , 'CA.br'     , 'BREMBF'    ,
-                                         'CA.brEMAN'    , 'CA.br'     , 'BREMAN'    ,
                                          'CA.brFLUXU'   , 'CA.br'     , 'BRFLUXU'   ,
                                          'CA.brFLUXV'   , 'CA.br'     , 'BRFLUXV'   ,
-                                         'DBRC2gDT'     , 'MOIST'     , 'BRSV'      ,
+                                         'MCHEMTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
 # Dust
                                          'DUSMASS'      , 'DU'        ,
                                          'DUCMASS'      , 'DU'        ,
@@ -2863,9 +2819,13 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'NIFLUXU'      , 'NI'        ,
                                          'NIFLUXV'      , 'NI'        ,
 # Combined Aerosols
-                                         'TOTEXTTAU'    , 'GOCART2G'  ,
-                                         'TOTSCATAU'    , 'GOCART2G'  ,
-                                         'TOTANGSTR'    , 'GOCART2G'  ,
+                                         'TOTEXTTAU'      , 'GOCART2G'  ,
+                                         'TOTSCATAU'      , 'GOCART2G'  ,
+                                         'TOTANGSTR'      , 'GOCART2G'  ,
+                                         'TOTSTEXTTAU'    , 'GOCART2G'  ,
+                                         'TOTSTSCATAU'    , 'GOCART2G'  ,
+                                         'PM25'           , 'GOCART2G'  ,
+                                         'PM'             , 'GOCART2G'  ,
                                           ::
 
   inst1_2d_wwi_Nx+-.format:              'CFIO' ,
@@ -2895,12 +2855,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 # inst1_2d_hwl_Nx+-.ref_date:             >>>IOBBKGD<<< ,
   inst1_2d_hwl_Nx+-.ref_time:             000000 ,
   inst1_2d_hwl_Nx+-.fields:              'SLP'          , 'DYN'       ,
-                                         'DUEXTTAU'     , 'DU'        ,
-                                         'SSEXTTAU'     , 'SS'        ,
-                                         'SUEXTTAU'     , 'SU'        ,
-                                         'CA.bcEXTTAU'  , 'CA.bc'     , 'BCEXTTAU'  ,
-                                         'CA.brEXTTAU'  , 'CA.br'     , 'BREXTTAU'  ,
-                                         'CA.ocEXTTAU'  , 'CA.oc'     , 'OCEXTTAU'  ,
                                          'CO2CL001'     , 'GOCART'    , 'CO2CL'     ,
                                          'COCL'         , 'GOCART'    ,
                                          'COCLbbae'     , 'GOCART'    ,
@@ -2915,48 +2869,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CFC12SCL'     , 'GOCART'    , 'CFC12strat' ,
                                          'CFC12TCL'     , 'GOCART'    , 'CFC12trop'  ,
                                          'TO3'          , 'PCHEM'     ,
-# Total Aerosol properties
-                                         'TOTEXTTAU'    , 'GOCART2G'  ,
-                                         'TOTSCATAU'    , 'GOCART2G'  ,
-                                         'TOTANGSTR'    , 'GOCART2G'  ,
-# Surface Concentrations
                                          'COSC'         , 'GOCART'    ,
-                                         'DUSMASS'      , 'DU'        ,
-                                         'DUSMASS25'    , 'DU'        ,
-                                         'SSSMASS'      , 'SS'        ,
-                                         'SSSMASS25'    , 'SS'        ,
-                                         'CA.bcSMASS'   , 'CA.bc'     , 'BCSMASS'   ,
-                                         'CA.brSMASS'   , 'CA.br'     , 'BRSMASS'   ,
-                                         'CA.ocSMASS'   , 'CA.oc'     , 'OCSMASS'   ,
-                                         'SO4SMASS'     , 'SU'        ,
-                                         'SO2SMASS'     , 'SU'        ,
-                                         'SO2CMASS'     , 'SU'        ,
-                                         'NISMASS'      , 'NI'        ,
-                                         'NISMASS25'    , 'NI'        ,
-# Fluxes
-                                         'CA.bcFLUXU'   , 'CA.bc'     , 'BCFLUXU'   ,
-                                         'CA.bcFLUXV'   , 'CA.bc'     , 'BCFLUXV'   ,
-                                         'CA.brFLUXU'   , 'CA.br'     , 'BRFLUXU'   ,
-                                         'CA.brFLUXV'   , 'CA.br'     , 'BRFLUXV'   ,
-                                         'DUFLUXU'      , 'DU'        ,
-                                         'DUFLUXV'      , 'DU'        ,
-                                         'CA.ocFLUXU'   , 'CA.oc'     , 'OCFLUXU'   ,
-                                         'CA.ocFLUXV'   , 'CA.oc'     , 'OCFLUXV'   ,
-                                         'SSFLUXU'      , 'SS'        ,
-                                         'SSFLUXV'      , 'SS'        ,
-                                         'SUFLUXU'      , 'SU'        ,
-                                         'SUFLUXV'      , 'SU'        ,
-                                         'CA.bcCMASS'   , 'CA.bc'     , 'BCCMASS'   ,
-                                         'CA.brCMASS'   , 'CA.br'     , 'BRCMASS'   ,
-                                         'DUCMASS'      , 'DU'        ,
-                                         'CA.ocCMASS'   , 'CA.oc'     , 'OCCMASS'   ,
-                                         'SO4CMASS'     , 'SU'        ,
-                                         'SSCMASS'      , 'SS'        ,
-# Additions requested for wxmaps
-                                         'NIEXTTAU'     , 'NI'        ,
-                                         'NIFLUXU'      , 'NI'        ,
-                                         'NIFLUXV'      , 'NI'        ,
-                                         'NICMASS'      , 'NI'        ,
                                           ::
 
   inst_30mn_met_c0720sfc+-.format:       'CFIO' ,

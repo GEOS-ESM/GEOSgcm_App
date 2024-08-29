@@ -21,6 +21,8 @@ limit stacksize unlimited
 
 @SETENVS
 
+@MPT_SHEPHERD
+
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################
@@ -32,7 +34,10 @@ setenv GEOSBIN          @GEOSBIN
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}
+if ( $?BASEDIR ) then
+    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+endif
 
 #######################################################################
 #             Experiment Specific Environment Variables

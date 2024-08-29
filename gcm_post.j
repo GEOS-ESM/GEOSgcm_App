@@ -22,6 +22,8 @@ limit stacksize unlimited
 
 @SETENVS
 
+@MPT_SHEPHERD
+
 #######################################################################
 #           Architecture Specific Environment Variables
 #######################################################################
@@ -34,13 +36,16 @@ setenv GEOSUTIL         @GEOSSRC
 setenv BATCHNAME       "@POST_N"
 
 source $GEOSBIN/g5_modules
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}
+if ( $?BASEDIR ) then
+    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+endif
 
 if( $?SLURM_NTASKS ) then
-      setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+      setenv RUN_CMD "@RUN_CMD"
       set NCPUS = $SLURM_NTASKS
 else if( $?PBS_NODEFILE ) then
-      setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+      setenv RUN_CMD "@RUN_CMD"
       set NCPUS = `cat $PBS_NODEFILE | wc -l`
 else
       set NCPUS = NULL
