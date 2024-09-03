@@ -756,6 +756,18 @@ if( $AGCM_LM  != 72 ) then
       cp $file dummy
       cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
     end
+
+    # We have to do something special for L186. By default all of the GOCART emissions have:
+    #   pressure_lid_in_hPa: 0.01
+    # which is the pressure lid in hPa for all other GEOS vertical levels. But L186 has a lid
+    # at 0.00025 Pa. So we need to change this value in the GOCART emissions files for L186.
+    if ( $AGCM_LM == 186 ) then
+       set files = `/bin/ls  *.rc`
+       foreach file ($files)
+          cp $file dummy
+          cat dummy | sed -e '/pressure_lid_in_hPa:/c\pressure_lid_in_hPa: 2.5e-6' > $file
+       end
+    endif
 endif
 
 # Rename big ExtData files that are not needed
@@ -1259,7 +1271,7 @@ end
 @MOM5     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
 @MOM5     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
 @MOM5  endif
-@MOM5  end 
+@MOM5  end
 @MOM6  foreach dset ( $dsets )
 @MOM6  set num = `/bin/ls -1 $dset.nc | wc -l`
 @MOM6  if($num != 0) then
