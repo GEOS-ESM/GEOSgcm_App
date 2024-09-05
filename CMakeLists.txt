@@ -3,6 +3,8 @@ ecbuild_add_executable (
   SOURCES GEOSgcm.F90
   LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
   )
+find_package(JeMalloc REQUIRED)
+target_link_libraries(GEOSgcm.x JeMalloc::JeMalloc)
 
 ecbuild_add_executable (
   TARGET idfupd.x
