@@ -163,8 +163,9 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #            'inst3_2d_met_Nx+-'
 # IAU increment for forecast
 #            'tavg2_3d_aiau_Np+-'
-# Constant file
+# Constant files
 #            'const_2d_asm_Nx'
+#            'const_2d_lnd_Nx'
              ::
 
   inst3_3d_asm_Np-.format:        'CFIO' ,
@@ -2731,6 +2732,35 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'FROCEAN'    , 'SURFACE'  ,
                                   'AREA'       , 'DYN'      ,
                                    ::
+
+  const_2d_lnd_Nx.format:         'CFIO' ,
+  const_2d_lnd_Nx.descr:          '2d,Constant,Time-invariant,Single-Level,Assimilation,Land Surface Model Parameters',
+  const_2d_lnd_Nx.template:       '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  const_2d_lnd_Nx.mode:           'instantaneous' ,
+  const_2d_lnd_Nx.grid_label:      PC@HIST_IMx@HIST_JM-DC ,
+  const_2d_lnd_Nx.frequency:       240000 ,
+  const_2d_lnd_Nx.duration:        240000 ,
+  const_2d_lnd_Nx.ref_time:        >>>IOBBKGT<<< ,
+  const_2d_lnd_Nx.end_date:        >>>IOEDATE<<< ,
+  const_2d_lnd_Nx.end_time:        >>>IOETIME<<< ,
+  const_2d_lnd_Nx.fields:         'DZGT1'      , 'SURFACE'  ,
+                                  'DZGT2'      , 'SURFACE'  ,
+                                  'DZGT3'      , 'SURFACE'  ,
+                                  'DZGT4'      , 'SURFACE'  ,
+                                  'DZGT5'      , 'SURFACE'  ,
+                                  'DZGT6'      , 'SURFACE'  ,
+                                  'DZPR'       , 'SURFACE'  ,
+                                  'DZRZ'       , 'SURFACE'  ,
+                                  'DZSF'       , 'SURFACE'  ,
+                                  'DZTS'       , 'SURFACE'  ,
+                                  'WPWET'      , 'SURFACE'  ,
+                                  'WPEMW'      , 'SURFACE'  ,
+                                  'WPMC'       , 'SURFACE'  ,
+                                  'CDCR2'      , 'SURFACE'  ,
+                                  'POROS'      , 'SURFACE'  ,
+                                   ::
+
+
 
 #######################################################################
 # Trajectory Files
