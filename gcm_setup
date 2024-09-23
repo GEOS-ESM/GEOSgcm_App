@@ -2599,20 +2599,11 @@ foreach rsname ($RSNAMES)
    set  test = `eval echo \$$rsname`
    if( $test == FALSE ) then
        foreach type ($RSTYPES)
-          #set  TMPCMD = `mktemp`
           set  string = ${name}_${type}
-          /bin/rm -f $LOCDIR/$FILE.tmp
-          /bin/mv -f $LOCDIR/$FILE $LOCDIR/$FILE.tmp
-          echo `cat $LOCDIR/$FILE.tmp | awk '{if ( $1 ~ "${string}" )  {sub ( /${string}/ ,"#${string}"  );print} else print}' > $LOCDIR/$FILE`
-          #echo cat   $LOCDIR/$FILE.tmp \| awk \'\{if \( \$1 \~ \"${string}\" \) \
-          #     \{sub \( \/${string}\/ ,\"\#${string}\"  \)\;print\} else print\}\' \> $LOCDIR/$FILE > $TMPCMD
-          #chmod +x   $TMPCMD
-          #           $TMPCMD
-          #/bin/rm -f $TMPCMD
+          sed -i -e "s/${string}/#${string}/g" $LOCDIR/$FILE
        end
    endif
 end
-/bin/rm -f $LOCDIR/$FILE.tmp
 
 
 # Delete or Enable EXP Configuration Variables
