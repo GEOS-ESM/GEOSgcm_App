@@ -827,6 +827,9 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
 
      # Modify GAAS_GridComp.rc and Link REPLAY files
      # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp_ExtData.yaml GAAS_GridComp_ExtData.yaml.tmpl
+     cat GAAS_GridComp_ExtData.yaml.tmpl | sed -e "s?das.aod_?chem/Y%y4/M%m2/${ANA_EXPID}.aod_?g" > GAAS_GridComp_ExtData.yaml
+
      /bin/mv -f GAAS_GridComp.rc GAAS_GridComp.tmp
      cat GAAS_GridComp.tmp | sed -e "s?aod/Y%y4/M%m2/${ANA_EXPID}.?aod/Y%y4/M%m2/${ANA_EXPID}.?g" > GAAS_GridComp.rc
 
@@ -835,6 +838,24 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
 
 endif
+
+# Update GAAS_GridComp_ExtData.yaml with CHEMISTRY_DT
+# ---------------------------------------------------
+
+# We need to make sure GAAS has an offset that matches CHEMISTRY_DT from CAP.rc
+# We also need to take that CHEMISTRY_DT and convert it to ISO duration format in seconds
+# So, if CHEMISTRY_DT is 1800, we need to convert it to PT1800S
+# Then in GAAS_GridComp_ExtData.yaml, we need to find:
+#     update_offset: PT450S
+# and replace it with:
+#     update_offset: PT1800S
+# NOTE: Since it is YAML, we need to make sure the indentation is correct
+# 1. First we grab the CHEMISTRY_DT from CAP.rc
+CAPRC_CHEMISTRY_DT=`grep '^\s*CHEMISTRY_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
+# 2. Then we convert it to ISO duration format
+CHEMDT_ISO_DURATION=`echo "PT${CAPRC_CHEMISTRY_DT}S"`
+# 3. Then we replace the update_offset in GAAS_GridComp_ExtData.yaml
+sed -i "s/update_offset: .*/update_offset: ${CHEMDT_ISO_DURATION}/" GAAS_GridComp_ExtData.yaml
 
 # Establish safe default number of OpenMP threads
 # -----------------------------------------------
