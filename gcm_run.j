@@ -978,9 +978,9 @@ endif
 #     update_offset: PT1800S
 # NOTE: Since it is YAML, we need to make sure the indentation is correct
 # 1. First we grab the CHEMISTRY_DT from CAP.rc
-CAPRC_CHEMISTRY_DT=`grep '^\s*CHEMISTRY_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
+set CAPRC_CHEMISTRY_DT = `grep '^\s*CHEMISTRY_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
 # 2. Then we convert it to ISO duration format
-CHEMDT_ISO_DURATION=`echo "PT${CAPRC_CHEMISTRY_DT}S"`
+set CHEMDT_ISO_DURATION = `echo "PT${CAPRC_CHEMISTRY_DT}S"`
 # 3. Then we replace the update_offset in GAAS_GridComp_ExtData.yaml
 sed -i "s/update_offset: .*/update_offset: ${CHEMDT_ISO_DURATION}/" GAAS_GridComp_ExtData.yaml
 
