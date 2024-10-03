@@ -180,8 +180,27 @@ cp $EXPDIR/cap_restart $EXPDIR/regress
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
-/bin/rm gwd_internal_rst
-/bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
+# We want to look for the existence of a gwd_internal_rst file
+# as not all resolutions have them (yet). If it exists, we copy
+# it to the scratch directory. If it doesn't exist, we need to
+# add "NCAR_NRDG: 0" to the AGCM.rc file to prevent the model from
+# trying to use it.
+
+if (-e @GWDRSDIR/gwd_internal_c${IM}) then
+  echo "Found gwd_internal_c${IM}. Copying to scratch directory"
+  /bin/rm gwd_internal_rst
+  /bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
+else
+  echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+  # Now, if the user has already set an NCAR_NRDG value, we need to
+  # change it to 0. If they haven't set it, we need to add it to the
+  # AGCM.rc file.
+  if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+    echo "NCAR_NRDG: 0" >> AGCM.rc
+  else
+    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+  endif
+endif
 
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
@@ -708,8 +727,27 @@ if ( $RUN_LAYOUT == TRUE) then
 
    # Get proper ridge scheme GWD internal restart
    # --------------------------------------------
-   /bin/rm gwd_internal_rst
-   /bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
+   # We want to look for the existence of a gwd_internal_rst file
+   # as not all resolutions have them (yet). If it exists, we copy
+   # it to the scratch directory. If it doesn't exist, we need to
+   # add "NCAR_NRDG: 0" to the AGCM.rc file to prevent the model from
+   # trying to use it.
+
+   if (-e @GWDRSDIR/gwd_internal_c${IM}) then
+     echo "Found gwd_internal_c${IM}. Copying to scratch directory"
+     /bin/rm gwd_internal_rst
+     /bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
+   else
+     echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+     # Now, if the user has already set an NCAR_NRDG value, we need to
+     # change it to 0. If they haven't set it, we need to add it to the
+     # AGCM.rc file.
+     if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+       echo "NCAR_NRDG: 0" >> AGCM.rc
+     else
+       sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+     endif
+   endif
 
    @COUPLED /bin/rm -rf INPUT
    @COUPLED /bin/mkdir INPUT
@@ -833,8 +871,27 @@ if ( $RUN_OPENMP == TRUE) then
 
    # Get proper ridge scheme GWD internal restart
    # --------------------------------------------
-   /bin/rm gwd_internal_rst
-   /bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
+   # We want to look for the existence of a gwd_internal_rst file
+   # as not all resolutions have them (yet). If it exists, we copy
+   # it to the scratch directory. If it doesn't exist, we need to
+   # add "NCAR_NRDG: 0" to the AGCM.rc file to prevent the model from
+   # trying to use it.
+
+   if (-e @GWDRSDIR/gwd_internal_c${IM}) then
+     echo "Found gwd_internal_c${IM}. Copying to scratch directory"
+     /bin/rm gwd_internal_rst
+     /bin/cp @GWDRSDIR/gwd_internal_c${IM} gwd_internal_rst
+   else
+     echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+     # Now, if the user has already set an NCAR_NRDG value, we need to
+     # change it to 0. If they haven't set it, we need to add it to the
+     # AGCM.rc file.
+     if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+       echo "NCAR_NRDG: 0" >> AGCM.rc
+     else
+       sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+     endif
+   endif
 
    @COUPLED /bin/rm -rf INPUT
    @COUPLED /bin/mkdir INPUT
