@@ -1,7 +1,7 @@
 LS_boundary_conditions:
   type:           'select'
   prompt:         'Select the Land Surface Boundary Conditions:'
-  choices:        ['Icarus', 'Icarus-NLv3']
+  choices:        ['Icarus-NLv3', 'Icarus', 'v12']
   default_answer: ''
   follows_up:     ''
 
@@ -10,5 +10,4 @@ LS_model:
   prompt:         'Select the Land Surface Model:'
   choices:        ['Catchment', 'CatchmentCN-CLM4.0 (CN_CLM40)', 'CatchmentCN-CLM4.5 (CN_CLM45)']
   default_answer: ''
-  follows_up:
-    - ['LS_boundary_conditions', 'Icarus-NLv3']
+  follows_up:     ''

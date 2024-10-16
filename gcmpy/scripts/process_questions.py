@@ -133,15 +133,14 @@ class handle:
 
     @staticmethod
     def exp_dir_default(answerdict, i):
-        if i == "home_dir" or i == "exp_dir":
-            root = f"{os.environ.get('HOME')}/.{i[:3].upper()}DIRroot"
+        if i == "exp_dir":
+            root = f"{os.environ.get('HOME')}/.EXPDIRroot"
             if os.path.exists(root):
                 try:
-                    print("here")
                     with open(root, "r") as file:
-                        answerdict[i].q_default = f"{file.read()}/{answerdict['experiment_id'].q_answer}"
+                        answerdict[i].q_default = f"{file.read().strip()}/{answerdict['experiment_id'].q_answer}"
                 except Exception as e:
-                    print(f"An error occurred while reading {color.BLUE}.HOMDIRroot{color.RESET}: {str(e)}")
+                    print(f"An error occurred while reading {color.BLUE}.EXPDIRroot{color.RESET}: {str(e)}")
             elif envdict['site'] in ['NAS','NCCS']:
                 answerdict[i].q_default = f"/{'discover/' if envdict['site'] == 'NCCS' else ''}nobackup/{os.environ.get('LOGNAME')}/{answerdict['experiment_id'].q_answer}"
             else:

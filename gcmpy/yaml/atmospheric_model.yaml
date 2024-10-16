@@ -37,7 +37,7 @@ io_server:
   type:           'confirm'
   prompt:         'Would you like to IOSERVER?'
   choices:        ''
-  default_answer: 'True'
+  default_answer: True
   follows_up:     ''
 
 

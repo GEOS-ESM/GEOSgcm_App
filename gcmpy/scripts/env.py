@@ -73,11 +73,10 @@ answerdict = pq.process()
 #######################################################################
 #                    Set Number of CPUs per Node
 #######################################################################
-# ----------------------------> PUT IN HANDLE CLASS FROM process_questions.py (MAYBE) <------------------------
 if envdict['site'] == 'NCCS':
-    if answerdict['processor'].q_answer == 'Haswell':
-        envdict['n_CPUs'] = 28
-    elif answerdict['processor'].q_answer == 'Skylake':
+    # NOTE: in the current version of gcm_setup, we never build on 
+    # SLES15, so milan nodes are not an option for NCCS.
+    if answerdict['processor'].q_answer == 'Skylake':
         envdict['n_CPUs'] = 40
     elif answerdict['processor'].q_answer == 'Cascade':
         '''
@@ -131,4 +130,19 @@ else:
     else:
         print(f"ERROR: Unknown architecture", envdict['arch'])
         sys.exit(1)
+
+#######################################################################
+#                     Build Directory Locations
+#######################################################################
+if envdict['arch'] == 'Darwin':
+    envdict['preload_command'] = 'DYLD_INSERT_LIBRARIES'
+    envdict['ld_library_path_command'] = 'DYLD_LIBRARY_PATH'
+    # On macOS we seem to need to call mpirun directly and not use esma_mpirun
+    # For some reason SIP does not let the libraries be preloaded
+    envdict['run_command'] = 'mpirun -np '
+else:
+    envdict['preload_command'] = 'LD_PRELOAD'
+    envdict['ld_library_path_command'] = 'LD_LIBRARY_PATH'
+    envdict['run_command'] = '$GEOSBIN/esma_mpirun -np '
+ 
 

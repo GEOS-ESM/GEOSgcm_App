@@ -51,7 +51,8 @@ if __name__ == "__main__":
         'AGCM.rc.tmpl',
         'HISTORY.rc.tmpl',
         'logging.yaml',
-        'fvcore_layout.rc'
+        'fvcore_layout.rc',
+        'linkbcs.tmpl'
     ]
 
     # Dictionary with keys to find and values to replace

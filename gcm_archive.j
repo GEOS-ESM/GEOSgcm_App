@@ -35,7 +35,7 @@ setenv GEOSBIN          {{ GEOSBIN }}
 source $GEOSBIN/g5_modules
 setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}
 if ( $?BASEDIR ) then
-    setenv {{ LD_LIBRARY_PATH_CMD }} ${{{ LD_LIBRARY_PATH_CMD }}}:${BASEDIR}/${ARCH}/lib
+    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 
 #######################################################################

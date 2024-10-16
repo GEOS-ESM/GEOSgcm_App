@@ -361,21 +361,21 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
-#>>>4DIAUDAS<<<    AINC_FILE: {{ EXPID }}.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#>>>4DIAUDAS<<<    NUDGE_STATE: YES
-##>>>4DIAUDAS<<<    TAUANL: 3600
-#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHHMN<<<z.nc4
-#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_TYPE:  binary
+#>>>_4DIAUDAS<<<    AINC_FILE: {{ EXPID }}.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#>>>_4DIAUDAS<<<    NUDGE_STATE: YES
+##>>>_4DIAUDAS<<<    TAUANL: 3600
+#>>>_4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHHMN<<<z.nc4
+#>>>_4DIAUDAS<<<    AGCM_IMPORT_RESTART_TYPE:  binary
 
 #   Exact REPLAY Mode for 4D-IAU
 #   ----------------------------
->>>4DIAUDAS<<<    REPLAY_MODE: Exact
->>>4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2%n2z.nc4
->>>4DIAUDAS<<<    REPLAY_FILE_FREQUENCY: 7200
->>>4DIAUDAS<<<    REPLAY_SHUTOFF: 21600.0 #  ShutOff Replay after 6-hours for G5NCEP and G5ECMWF Forecasts
+>>>_4DIAUDAS<<<    REPLAY_MODE: Exact
+>>>_4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2%n2z.nc4
+>>>_4DIAUDAS<<<    REPLAY_FILE_FREQUENCY: 7200
+>>>_4DIAUDAS<<<    REPLAY_SHUTOFF: 21600.0 #  ShutOff Replay after 6-hours for G5NCEP and G5ECMWF Forecasts
 
-#>>>4DIAUDAS<<<    REPLAY_INTERVAL: 3600.0
-#>>>4DIAUDAS<<<    PREDICTOR_OFFSET: 3600.0
+#>>>_4DIAUDAS<<<    REPLAY_INTERVAL: 3600.0
+#>>>_4DIAUDAS<<<    PREDICTOR_OFFSET: 3600.0
 
 ####################################################################################################
 ####                    Miscellaneous Exact/Regular REPLAY Parameters                           ####
