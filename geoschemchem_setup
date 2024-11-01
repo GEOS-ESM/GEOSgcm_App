@@ -58,6 +58,8 @@ endif
 
 # Set default behavior of switches
 set LINKX = FALSE
+set EXE_VERB = "copied"
+set USING_SINGULARITY = FALSE
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -71,6 +73,12 @@ while ( $#argv > 0 )
       # Symlink GEOSgcm.x
       case --link:
          set LINKX = TRUE
+         set EXE_VERB = "linked"
+         breaksw
+
+      # Using Singularity
+      case --singularity:
+         set USING_SINGULARITY = TRUE
          breaksw
 
       # Here any string not above will trigger USAGE
@@ -349,8 +357,27 @@ endif
 ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
+
+   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
+
+   if ("$BUILT_ON_SLES15" == "TRUE") then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}hasw (Haswell)${CN}"
+      echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'mil'
+      endif
+
+      if( $MODEL != 'mil' ) goto ASKPROC
+
+      if ($MODEL == 'mil') then
+         # We save a couple processes for the kernel
+         set NCPUS_PER_NODE = 126
+      endif
+   else
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}sky  (Skylake)${CN} (default)"
    echo "   ${C2}cas  (Cascade Lake)${CN}"
    echo " "
@@ -360,13 +387,10 @@ if ( $SITE == 'NCCS' ) then
       set MODEL = 'sky'
    endif
 
-   if( $MODEL != 'hasw' & \
-       $MODEL != 'sky'  & \
+      if( $MODEL != 'sky'  & \
        $MODEL != 'cas' ) goto ASKPROC
 
-   if (     $MODEL == 'hasw') then
-      set NCPUS_PER_NODE = 28
-   else if ($MODEL == 'sky') then
+      if ($MODEL == 'sky') then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'cas') then
       # NCCS currently recommends that users do not run with
@@ -376,6 +400,7 @@ if ( $SITE == 'NCCS' ) then
       # that doesn't waste too much
       #set NCPUS_PER_NODE = 48
       set NCPUS_PER_NODE = 45
+      endif
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -388,7 +413,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}rom (AMD Rome)${CN}"
    echo " "
    echo " NOTE 1: Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "       and Ivy Bridge are not supported by current GEOS"
+   echo "         and Ivy Bridge are not supported by current GEOS"
    echo " "
    echo " NOTE 2: GEOS is non-zero-diff when running on AMD Rome"
    echo "         compared to the other Intel nodes."
@@ -765,15 +790,12 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 900
+     set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
-     set AGCM_IM  = 12
+          set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
      if ( $OCEAN_NAME == "MOM6") then
@@ -794,14 +816,11 @@ if( $AGCM_IM ==  "c12" ) then
      set   CNV_NY = 6
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 900
+     set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 24
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
@@ -818,14 +837,11 @@ if( $AGCM_IM ==  "c24" ) then
      set   CNV_NY = 6
 endif
 if( $AGCM_IM ==  "c48" ) then
-     set       DT = 450
+     set       DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 48
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
@@ -840,10 +856,9 @@ if( $AGCM_IM ==  "c48" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c90" ) then
-     set       DT = 450
+     set       DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -856,8 +871,6 @@ if( $AGCM_IM ==  "c90" ) then
      set OCEAN_DT = $IRRAD_DT
      endif
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
@@ -871,10 +884,7 @@ if( $AGCM_IM ==  "c180" ) then
      set       DT = 450
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $OGCM == TRUE ) then
@@ -897,14 +907,11 @@ if( $AGCM_IM ==  "c180" ) then
      set POST_NDS = 8
 endif
 if( $AGCM_IM == "c360" ) then
-     set       DT = 450
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12
@@ -921,14 +928,11 @@ if( $AGCM_IM == "c360" ) then
      set POST_NDS = 12
 endif
 if( $AGCM_IM == "c500" ) then
-     set       DT = 450
+     set       DT = 300
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 500
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 12
@@ -946,14 +950,11 @@ if( $AGCM_IM == "c500" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c720" ) then
-     set       DT = 450
+     set       DT = 150
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 720
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 16
@@ -971,14 +972,11 @@ if( $AGCM_IM == "c720" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 450
+     set       DT = 75
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = $DT
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = `expr $DT \* 2`
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30
@@ -1000,11 +998,8 @@ if( $AGCM_IM == "c768" ) then
      set       DT = 180
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = $CHEM_DT
      set AGCM_IM  = 768
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 32
@@ -1025,11 +1020,8 @@ if( $AGCM_IM == "c1536" ) then
      set       DT = 90
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = $CHEM_DT
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
@@ -1050,11 +1042,8 @@ if( $AGCM_IM == "c3072" ) then
      set       DT = 45
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
-     set SATSIM_DT = 3600
      set OCEAN_DT = $IRRAD_DT
      set  CHEM_DT = 900
-     set GEOSCHEMCHEM_DT = `expr $DT \* 2`
-#    set  GOCART_DT = $CHEM_DT
      set AGCM_IM  = 3072
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 64
@@ -1334,6 +1323,35 @@ RATSPRO:
      endif
 
 #######################################################################
+#                         Check for CDAS
+#######################################################################
+
+CDAS:
+echo "Do you wish to run GSI ${C1}consituent DA${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+set   RUN_GSI  = $<
+if( .$RUN_GSI == . ) then
+set   RUN_GSI  = 0
+else
+set   RUN_GSI  = `echo   $RUN_GSI | tr "[:lower:]" "[:upper:]"`
+if(  $RUN_GSI == "Y"     | \
+     $RUN_GSI == "YES"   | \
+     $RUN_GSI == "T"     | \
+     $RUN_GSI == "TRUE"  ) set RUN_GSI = 1
+if(  $RUN_GSI == "N"     | \
+     $RUN_GSI == "NO"    | \
+     $RUN_GSI == "F"     | \
+     $RUN_GSI == "FALSE" ) set RUN_GSI = 0
+
+if( $RUN_GSI != 0 & $RUN_GSI != 1 ) then
+echo
+echo "${C1}GSI DA${CN} must be set equal to TRUE or FALSE!"
+goto  CDAS
+else
+echo
+endif
+endif
+
+#######################################################################
 #                    Create Desired HISTORY template
 #######################################################################
 
@@ -1418,6 +1436,15 @@ if ( $DO_IOS == TRUE ) then
 
    # multigroup requires at least two backend pes
    if ($NUM_BACKEND_PES < 2) set NUM_BACKEND_PES = 2
+
+   # Next calculate the number of frontend PEs
+   @ NUM_FRONTEND_PES=$NCPUS_PER_NODE - $NUM_BACKEND_PES
+
+   # If models pes is less than frontend, then we need to reduce frontend by increasing backend
+   if ($MODEL_NPES < $NUM_FRONTEND_PES) then
+      @ NUM_FRONTEND_PES=$MODEL_NPES - 2
+      @ NUM_BACKEND_PES=$NCPUS_PER_NODE - $NUM_FRONTEND_PES
+   endif
 
    # Calculate the total number of nodes to request from batch
    @ NODES=$NUM_MODEL_NODES + $NUM_OSERVER_NODES
@@ -1823,7 +1850,7 @@ echo $GROUP > $HOME/.GROUProot
 #      Copy Model Executable and RC Files to Experiment Directory
 #######################################################################
 
-  mkdir -p                                                $EXPDIR/RC
+mkdir -p  $EXPDIR/RC
 
   # Copy over all files and subdirs in install/etc, keeping symlinks
   cp -RP $GEOSDIR/etc/* $EXPDIR/RC
@@ -1832,10 +1859,21 @@ echo $GROUP > $HOME/.GROUProot
   rm -f $EXPDIR/RC/*.tmpl
   rm -f $EXPDIR/RC/fvcore_layout.rc
 
+# Copy or link GEOSgcm.x if USING_SINGULARITY is FALSE
+if ( $USING_SINGULARITY == FALSE ) then
 if ( $LINKX == "TRUE" ) then
   if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
 else
   if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
+   endif
+
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = "#DELETE"
+   set NATIVE_BUILD = ""
+else
+   # Set a couple variables for sed'ing out bits of the run script
+   set SINGULARITY_BUILD = ""
+   set NATIVE_BUILD = "#DELETE"
 endif
 
 #######################################################################
@@ -1846,6 +1884,44 @@ endif
 set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
+
+# If we are using singularity, we can advise on MPI stack settings
+
+if( $USING_SINGULARITY == TRUE ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+# These are recommended settings for MPI stacks
+
+# Intel MPI
+# ---------
+#setenv I_MPI_ADJUST_ALLREDUCE 12
+#setenv I_MPI_ADJUST_GATHERV 3
+# This flag prints out the Intel MPI state. Uncomment if needed
+#setenv I_MPI_DEBUG 9
+
+# OpenMPI
+# -------
+# Open MPI and GEOS has had issues with restart writing. Having the
+# oserver write them can be orders of magnitude faster. To enable this
+# set WRITE_RESTART_BY_OSERVER to YES in AGCM.rc
+
+# This turns off an annoying warning when running
+# Open MPI on a system where TMPDIRs are on a networked
+# file system
+#setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+
+# HPE MPT
+# -------
+#setenv MPI_COLL_REPRODUCIBLE
+#setenv SLURM_DISTRIBUTION block
+#unsetenv MPI_MEMMAP_OFF
+#unsetenv MPI_NUM_MEMORY_REGIONS
+#setenv MPI_XPMEM_ENABLED yes
+#unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+#setenv MPI_LAUNCH_TIMEOUT 40
+EOF
+
+else
 
 if( $MPI == openmpi ) then
 
@@ -1904,29 +1980,48 @@ EOF
 
 else if( $MPI == intelmpi ) then
 
-cat > $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
+# cat > $HOMDIR/SETENV.commands << EOF
 
-# This flag prints out the Intel MPI state. Uncomment if needed
-#setenv I_MPI_DEBUG 9
-EOF
+# setenv I_MPI_ADJUST_ALLREDUCE 12
+# setenv I_MPI_ADJUST_GATHERV 3
+
+# # This flag prints out the Intel MPI state. Uncomment if needed
+# #setenv I_MPI_DEBUG 9
+# EOF
 
 # These are options determined to be useful at NCCS
 # Not setting generally as they are more fabric/cluster
 # specific compared to the above adjustments
 if ( $SITE == 'NCCS' ) then
 
+# cat >> $HOMDIR/SETENV.commands << EOF
+# setenv I_MPI_SHM_HEAP_VSIZE 512
+# setenv PSM2_MEMORY large
+# setenv I_MPI_EXTRA_FILESYSTEM 1
+# setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
+# EOF
+
+# Testing on SLES15 showed that the mlx provider did not seem
+# to work at scale. So we move to use the verbs provider. Note:
+# still seems to have issues at c720
+if ("$BUILT_ON_SLES15" == "TRUE") then
+# cat >> $HOMDIR/SETENV.commands << EOF
+# setenv I_MPI_OFI_PROVIDER verbs
+# setenv I_MPI_COLL_EXTERNAL 0
+# EOF
+
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_SHM_HEAP_VSIZE 512
-setenv PSM2_MEMORY large
-setenv I_MPI_EXTRA_FILESYSTEM 1
-setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
+
+setenv I_MPI_FABRICS shm:ofi
+setenv I_MPI_OFI_PROVIDER psm3
 EOF
+endif # built on SLES15
 
 endif # if NCCS
 
 endif # if mpi
+
+endif # if singularity
 
 #######################################################################
 #               Create Local Scripts and Resource Files
@@ -2000,6 +2095,8 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
+s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
+s?@NATIVE_BUILD?$NATIVE_BUILD?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -2057,8 +2154,6 @@ s^@DYCORE^$DYCORE^g
 s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
 s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
 
-s/@GOCART_DT/$DT/g
-
 s?@IS_FCST?$IS_FCST?g
 s^@BOOT^YES^g
 s^@BCSRES^$BCSRES^g
@@ -2070,7 +2165,6 @@ s^@TILEBIN^$TILEBIN^g
 s/@DT/$DT/g
 s/@SOLAR_DT/$SOLAR_DT/g
 s/@IRRAD_DT/$IRRAD_DT/g
-s/@SATSIM_DT/$SATSIM_DT/g
 s/@OCEAN_DT/$OCEAN_DT/g
 s/@CHEM_DT/$CHEM_DT/g
 s/@NX/$NX/g
@@ -2101,8 +2195,6 @@ s/@BEG_DATE/${BEG_DATE}/g
 s/@END_DATE/${END_DATE}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
-
-/SATSIM_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
@@ -2219,69 +2311,114 @@ end
 
 /bin/rm -f $TMPHIST
 
-# Add 5 snippets to the run script, specialized for GEOS-Chem
+# Add snippets to the run script, specialized for GEOS-Chem
 # -----------------------------------------------------------
 
-/bin/rm -f $HOMDIR/chemchem_rename.txt
-cat >      $HOMDIR/chemchem_rename.txt << EOF
+# Add GSI stuff:
+# ---------------
+/bin/rm -f $HOMDIR/gsi_cdas_1.txt
+cat >      $HOMDIR/gsi_cdas_1.txt << EOF
 
-#######################################################################
-#                 Special Handling for GEOS-Chem RC files
-#######################################################################
-
-set GEOSCHEM_RCS = ( brc.dat dust.dat FJX_j2j.dat FJX_spec.dat h2so4.dat jv_spec_mie.dat org.dat so4.dat soot.dat ssa.dat ssc.dat input.geos )
-foreach FILE ( \${GEOSCHEM_RCS} )
-  /bin/mv \${FILE}.rc \${FILE}
-end
+# GSI CDAS coupling. Set to 1 to run with GSI in parallel
+set RUN_GSI = ${RUN_GSI}
 EOF
 
-/bin/rm -f $HOMDIR/chemchem_rename2.txt
-cat >      $HOMDIR/chemchem_rename2.txt << EOF
+/bin/rm -f $HOMDIR/gsi_cdas_2.txt
+cat >      $HOMDIR/gsi_cdas_2.txt << EOF
 
-# Rename ExtData file that conflicts w/ GEOS-Chem
-# -----------------------------------------------
-/bin/mv  HEMCOgocart_ExtData.rc  HEMCOgocart_ExtData.rc.NOT_USED
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_ben.txt
-cat >      $HOMDIR/chemchem_ben.txt << EOF
-
-#link to Ben's special tile files:
-/bin/ln -sf /discover/nobackup/bmauer/tile_files/*/* .
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_fastJX.txt
-cat >      $HOMDIR/chemchem_fastJX.txt << EOF
-
-# need FJX_j2j.dat file in scratch
-/bin/cp /discover/nobackup/cakelle2/data/CHEM_INPUTS/FAST_JX/v2018-09/FJX_j2j.dat .
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_noNRT.txt
-cat >      $HOMDIR/chemchem_noNRT.txt << EOF
-
-# don't read NRT QFED data
-sed -i 's/QFED\/NRT/QFED/' ExtData.rc
-sed -i 's/v2.5r1_0.1_deg/v2.5r1\/0.1/' ExtData.rc
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_exit.txt
-cat >      $HOMDIR/chemchem_exit.txt << EOF
-
-if ( \$rc == -1 ) then
-   echo 'GEOS-Chem error: exit'
-   exit
+# submit GSI standalone run, will run in parallel
+if ( \$RUN_GSI == 1 ) then
+   # make sure EXPID is correct
+   /bin/mv gsi_cdas.j gsi_cdas.tmp
+   cat gsi_cdas.tmp | sed -e "s?setenv EXPID.*?setenv EXPID \$EXPID?g" > gsi_cdas.j
+   /bin/rm gsi_cdas.tmp
+   # remove checkpoint file if it already exists
+   set geos_done = "geos_run.done"
+   if ( -e \$SCRDIR/\$geos_done ) then
+      /bin/rm \$SCRDIR/\$geos_done
+   endif
+   echo "submitting gsi job to run in parallel..."
+   sbatch gsi_cdas.j
 endif
+
+EOF
+
+/bin/rm -f $HOMDIR/gsi_cdas_3.txt
+cat >      $HOMDIR/gsi_cdas_3.txt << EOF
+
+#######################################################################
+#                  Setup the Analysis
+#######################################################################
+if ( \$RUN_GSI == 1 ) then
+   # Specify second HISTORY instance to output background files and turn on GSI coupling
+   echo 'REPLAY_HISTORY_RC: HISTORY_predictor.rc' >> AGCM.rc
+   echo ' ' >> AGCM.rc
+   echo 'GSI_COUPLING: 1' >> AGCM.rc
+   echo 'GSI_INTERVAL_SEC: 30' >> AGCM.rc
+   echo 'GSI_MAXCHECKS: 120' >> AGCM.rc
+
+   # Update experiment ID in HISTORY_predictor.rc
+   /bin/mv HISTORY_predictor.rc HISTORY_predictor.tmp
+   cat HISTORY_predictor.tmp | sed -e "s?EXPID:.*?EXPID: \$EXPID?g" > HISTORY_predictor.rc
+   /bin/rm HISTORY_predictor.tmp
+
+   # Update EXPID pattern in all AnaSettings files
+   /bin/mv geoschem_analysis.yml geoschem_analysis.tmp
+   cat geoschem_analysis.tmp | sed -e "s?>>>EXPID<<<?\$EXPID?g" > geoschem_analysis.yml
+   /bin/rm geoschem_analysis.tmp
+   end
+
+   # Create a fake restart entry for the background and increment files
+   echo 'CODAS_BACKGROUND_RESTART_FILE:           codas_background_rst'        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_RESTART_TYPE:           ptar'                        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_FILE:        codas_background_checkpoint' >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_TYPE:        ptar'                        >> AGCM.rc
+
+   echo 'CODAS_INCREMENT_RESTART_FILE:            codas_increment_rst'         >> AGCM.rc
+   echo 'CODAS_INCREMENT_RESTART_TYPE:            pnc4'                        >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_FILE:         codas_increment_checkpoint'  >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_TYPE:         pnc4'                        >> AGCM.rc
+
+endif
+
+EOF
+
+/bin/rm -f $HOMDIR/gsi_cdas_4.txt
+cat >      $HOMDIR/gsi_cdas_4.txt << EOF
+
+# write geos complete file (this tells the GSI run to stop)
+if ( \$RUN_GSI == 1 ) then
+   touch \${geos_done}
+   echo "written geos checkpoint file: \${geos_done}"
+endif
+
+EOF
+
+/bin/rm -f $HOMDIR/qfednrt.txt
+cat >      $HOMDIR/qfednrt.txt << EOF
+
+# Somehow the QFED switch from 006 to 061 does not seem to work. Do it manually here:
+set QFED_transition_date = 20211101
+if ( \${QFED_transition_date} <= \$nymdc ) then
+    /bin/mv GEOSCHEMchem_ExtData.yaml GEOSCHEMchem_ExtData.tmp
+    cat GEOSCHEMchem_ExtData.tmp | sed -e "s?006.%y4%m2%d2.nc4?061.%y4%m2%d2.nc4?g" > GEOSCHEMchem_ExtData.yaml
+endif
+
 EOF
 
 /bin/rm -f $HOMDIR/sedfile
 cat >      $HOMDIR/sedfile << EOF
-/set USE_SHMEM/                    r $HOMDIR/chemchem_rename.txt
-/GOCARTdata_ExtData.rc.NOT_USED/   r $HOMDIR/chemchem_rename2.txt
-/\*c2l\*/                          r $HOMDIR/chemchem_ben.txt
-/cp  linkbcs/                      r $HOMDIR/chemchem_fastJX.txt
-/cat \$extdata_files/              r $HOMDIR/chemchem_noNRT.txt
-/echo GEOSgcm Run Status/          r $HOMDIR/chemchem_exit.txt
+/echo   VERSION:/                  r $HOMDIR/gsi_cdas_1.txt
+/rm CAP.tmp/                      { N
+                                    N
+                                    r $HOMDIR/gsi_cdas_2.txt
+                                  }
+/set USE_SHMEM/                    r $HOMDIR/gsi_cdas_3.txt
+/exit -1/                          r $HOMDIR/gsi_cdas_4.txt
+/touch ExtData.rc/                { N
+                                    N
+                                    r $HOMDIR/qfednrt.txt
+                                  }
 EOF
 
 /bin/rm -f $HOMDIR/tmpfile
@@ -2289,12 +2426,32 @@ EOF
 
 sed -f $HOMDIR/sedfile   $HOMDIR/tmpfile > $HOMDIR/gcm_run.j
 
+# Add snippets to the AGCM.rc for replay to GEOS-IT
+# -----------------------------------------------------------
+/bin/rm -f $HOMDIR/geosit_tmp.txt
+cat >      $HOMDIR/geosit_tmp.txt << EOF
 
-if(     -e $BINDIR/HISTORY.rc.hold ) then
-/bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
-else
-/bin/rm -f $BINDIR/HISTORY.rc.tmpl
-endif
+REPLAY_ANA_EXPID:   d5294_geosit_jan18 
+REPLAY_ANA_LOCATION: /home/dao_ops/d5294_geosit_jan18/run/.../archive
+REPLAY_MODE: Regular
+REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit_jan18.ana.eta.%y4%m2%d2_%h200z.nc4
+REPLAY_FILE09: ana/Y%y4/M%m2/d5294_geosit_jan18.ana.eta.%y4%m2%d2_%h200z.nc4
+PREDICTOR_DURATION: 21600
+
+EOF
+
+/bin/rm -f $HOMDIR/sedfile
+cat >      $HOMDIR/sedfile << EOF
+/M2 REPLAY_FILE/                  { N
+                                    N
+                                    r $HOMDIR/geosit_tmp.txt
+                                  }
+EOF
+
+/bin/rm -f $HOMDIR/tmpfile
+/bin/mv -f $HOMDIR/AGCM.rc $HOMDIR/tmpfile
+
+sed -f $HOMDIR/sedfile   $HOMDIR/tmpfile > $HOMDIR/AGCM.rc
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
 echo " "
@@ -2316,7 +2473,7 @@ endif
 set LSTRATCHEM    = FALSE
 set LGMICHEM      = FALSE
 set LGEOSCHEMCHEM = TRUE
-set LHEMCO     = FALSE
+set LHEMCO     = TRUE
 set LGOCART    = $GOKART
 if( $GOKART == TRUE )  then
  set LGOCART_DATA = FALSE
@@ -2417,30 +2574,9 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
-## Modify AGCM.rc
-## --------------
-#set file = $HOMDIR/AGCM.rc
-#
-## Add GEOS-Chem timestep:
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT" > $file
-#
-## Change from GF to RAS for now:
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
-#
-## (uncomment == turn on the option)
-### Assumes that these lines are in AGCM.rc:
-# UNCOMMENT to guard against negative tracer values in RAS (default: .FALSE.)
-#RAS_NO_NEG: .TRUE.
-###
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "s/#RAS_NO_NEG/RAS_NO_NEG/" > $file
-#
-## For future:  sed commands to insert important GF flags:
-##/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
-##/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
-#/bin/rm -f    $HOMDIR/dummy
+if( $RUN_GSI == 1 ) then
+   /bin/mv $HOMDIR/HISTORY_GEOSCHEMCHEM_predictor.rc  $HOMDIR/HISTORY_predictor.rc
+endif
 
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options
@@ -2470,29 +2606,28 @@ endif
 # -----------------------------------
 sed -i 's/BEG_DATE.*/BEG_DATE:     19500101 000000/' $HOMDIR/CAP.rc
 
-# GEOS-Chem needs resolution-dependent settings
-# ---------------------------------------------
+# # GEOS-Chem needs resolution-dependent settings
+# # ---------------------------------------------
 
-setenv RES $AGCM_IM
+# setenv RES $AGCM_IM
 
-set RES_LINE = "`grep -i '${RES}.*OTD-LIS scaling' $EXPDIR/RC/HEMCO_Config.rc`"
-if ( $#RES_LINE == 1 ) then
-   set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-   sed -i "s/@OTD_LIS_SCALING/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-else
-   echo Expecting exactly 1 line for ${RES} OTD-LIS scaling.
-   echo Please set @OTD_LIS_SCALING in $EXPDIR/RC/HEMCO_Config.rc
-endif
+# set RES_LINE = "`grep -i '${RES}.*OTD-LIS scaling' $EXPDIR/RC/HEMCO_Config.rc`"
+# if ( $#RES_LINE == 1 ) then
+#    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
+#    sed -i "s/@OTD_LIS_SCALING/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
+# else
+#    echo Expecting exactly 1 line for ${RES} OTD-LIS scaling.
+#    echo Please set @OTD_LIS_SCALING in $EXPDIR/RC/HEMCO_Config.rc
+# endif
 
-set RES_LINE = "`grep -i '${RES}.*Mass tuning factor' $EXPDIR/RC/HEMCO_Config.rc`"
-if ( $#RES_LINE == 1 ) then
-   set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-   sed -i "s/@MASS_TUNING_FACTOR/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-else
-   echo Expecting exactly 1 line for ${RES} Mass tuning factor.
-   echo Please set @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
-endif
-
+# set RES_LINE = "`grep -i '${RES}.*Mass tuning factor' $EXPDIR/RC/HEMCO_Config.rc`"
+# if ( $#RES_LINE == 1 ) then
+#    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
+#    sed -i "s/@MASS_TUNING_FACTOR/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
+# else
+#    echo Expecting exactly 1 line for ${RES} Mass tuning factor.
+#    echo Please set @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
+# endif
 
 # Turn on PCHEM
 # -------------
@@ -2585,15 +2720,12 @@ echo " "
 echo "Build Directory: ${C2}${GEOSDIR}${CN}"
 echo "----------------"
 echo " "
-if ( ! -e $GEOSBIN/GEOSgcm.x ) then
-     echo " "
-     echo "Note:  Build directory does not contain ${C1}GEOSgcm.x${CN} !"
-     echo "       You will need to put a copy of ${C1}GEOSgcm.x${CN} in your Experiment directory"
-     echo "----------------------------------------------------------------------------"
-     echo " "
+if ( $USING_SINGULARITY == TRUE ) then
+   echo "Note: As --singularity was passed in, we will run "
+   echo "      GEOSgcm.x from the installation bin directory."
 else
      echo " "
-     echo "The following executable has been placed in your Experiment Directory:"
+   echo "The following executable has been ${EXE_VERB} to your Experiment Directory:"
      echo "----------------------------------------------------------------------"
      echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
      echo " "
@@ -2622,12 +2754,12 @@ echo ""
 
 if( -e $HOMDIR/tmpfile )              /bin/rm $HOMDIR/tmpfile
 if( -e $HOMDIR/sedfile )              /bin/rm $HOMDIR/sedfile
-if( -e $HOMDIR/chemchem_rename.txt )  /bin/rm $HOMDIR/chemchem_rename.txt
-if( -e $HOMDIR/chemchem_rename2.txt ) /bin/rm $HOMDIR/chemchem_rename2.txt
-if( -e $HOMDIR/chemchem_ben.txt )     /bin/rm $HOMDIR/chemchem_ben.txt
-if( -e $HOMDIR/chemchem_fastJX.txt )  /bin/rm $HOMDIR/chemchem_fastJX.txt
-if( -e $HOMDIR/chemchem_noNRT.txt )   /bin/rm $HOMDIR/chemchem_noNRT.txt
-if( -e $HOMDIR/chemchem_exit.txt )    /bin/rm $HOMDIR/chemchem_exit.txt
+if( -e $HOMDIR/gsi_cdas_1.txt )  /bin/rm $HOMDIR/gsi_cdas_1.txt
+if( -e $HOMDIR/gsi_cdas_2.txt )  /bin/rm $HOMDIR/gsi_cdas_2.txt
+if( -e $HOMDIR/gsi_cdas_3.txt )  /bin/rm $HOMDIR/gsi_cdas_3.txt
+if( -e $HOMDIR/gsi_cdas_4.txt )  /bin/rm $HOMDIR/gsi_cdas_4.txt
+if( -e $HOMDIR/qfednrt.txt )     /bin/rm $HOMDIR/qfednrt.txt
+if( -e $HOMDIR/geosit_tmp.txt )  /bin/rm $HOMDIR/geosit_tmp.txt
 
 #######################################################################
 #                     Copy over Source Tarfile
@@ -2770,10 +2902,22 @@ endif
 # Find out if we are running the cube and/or OGCM
 # -----------------------------------------------
 
-if ( -e $CLONEDIR/field_table ) then
+# First we need to find out if we are running in coupled mode
+# To do this, we look for "OCEAN_NAME" in AGCM.rc:
+
+set OGCM = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | wc -l`
+
+if ( $OGCM == 1 ) then
    set OGCM = TRUE
-else
+   # Now we need to find out if we are running MOM or MOM6 by looking
+   # at OCEAN_NAME: val and checking if it is MOM or MOM6
+   set OCEAN_MODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+else if ( $OGCM == 0 ) then
    set OGCM = FALSE
+else
+   echo "Found more than one OCEAN_NAME in ${OLDHOMDIR}/AGCM.rc"
+   echo "This is not allowed. Please fix this and try again."
+   exit 1
 endif
 
 # ------------------------------------------------
@@ -2835,13 +2979,31 @@ HOMDIR/logging.yaml
 EOF
 
 if( $OGCM == TRUE ) then
+
+# Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/input.nml
 HOMDIR/diag_table
-HOMDIR/field_table
 HOMDIR/__init__.py
 EXPDIR/plot/plotocn.j
 EOF
+
+# Some files are specific to MOM
+if ( $OCEAN_MODEL == "MOM" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/field_table
+EOF
+endif
+
+# Some files are specific to MOM6
+if ( $OCEAN_MODEL == "MOM6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/MOM_override
+HOMDIR/MOM_input
+HOMDIR/data_table
+EOF
+endif
+
 endif
 
 cat >> $FILES_TO_PROCESS << EOF
@@ -2901,6 +3063,9 @@ cat > $SEDFILE << EOF
 /^setenv \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
 /^setenv \+CNVDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
 /^setenv \+EXPID/  s#$OLDEXPID#$NEWEXPID#
+/^set \+EXPDIR/ s#$OLDEXPDIR#$NEWEXPDIR#
+/^set \+HOMDIR/ s#$OLDHOMDIR#$NEWHOMDIR#
+/^set \+EXPID/  s#$OLDEXPID#$NEWEXPID#
 /^EXPID:/  s#$OLDEXPID#$NEWEXPID#
 /GEOSUTIL\/post\/gcmpost.script/ s#$OLDEXPDIR#$NEWEXPDIR#
 /group_list/ s#\(group_list=\)\(.*\)#\1$GROUProot#
@@ -2920,6 +3085,12 @@ end
 #sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${NEWEXPID}_clonedfrom_${OLDEXPID}_by_${OLDUSER}#" $NEWHOMDIR/HISTORY.rc
  sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${EXPDSC}#" $NEWHOMDIR/HISTORY.rc
  sed -i -e "/^EXPID:/ s#\(EXPID: \)\(.*\)#\1${NEWEXPID}#" $NEWHOMDIR/HISTORY.rc
+
+# Change OLDEXPID to NEWEXPID in __init__.py if it exists
+# -------------------------------------------------------
+if ( -e $NEWHOMDIR/__init__.py ) then
+   sed -i -e "/$OLDEXPID/ s#$OLDEXPID#$NEWEXPID#" $NEWHOMDIR/__init__.py
+endif
 
 # -------------------------
 # Construct the new job ids
@@ -3066,8 +3237,10 @@ geoschemchem_setup, a setup script for the GEOS-5 GCM
 
    Usage: $0:t [optional flag]
 
-   -c --color      Set the colors for $0:t
-   -h --help       Show usage
+   -c --color        Set the colors for $0:t
+      --link         Link GEOSgcm.x into experiment directory
+      --singularity  Setup Singularity experiment
+   -h --help         Show usage
 
    If invoked alone, the script runs as normal.
 
