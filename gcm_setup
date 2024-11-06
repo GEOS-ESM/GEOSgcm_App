@@ -2200,6 +2200,13 @@ if ( $SITE == 'NCCS' ) then
 # NOTE: When Cascade Lake is on SLES15, the following flags
 # might need to be Milan only
 
+cat >> $HOMDIR/SETENV.commands << EOF
+# This flag is seems to be required in some cases
+# during checkpointing with Intel MPI and no 
+# external oserver.
+setenv I_MPI_ADJUST_GATHERV 3
+EOF
+
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_FABRICS shm:ofi
@@ -2210,7 +2217,6 @@ else
 
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
 
 setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
