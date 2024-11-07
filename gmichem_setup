@@ -839,14 +839,14 @@ else
     echo "------------------------------------------------"
     echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code:"
     echo "------------------------------------------------"
-    echo "    ${C2}o1${CN} 1  -deg,  360x 180 Reynolds (1971-2022)$O1_DEFAULT"
+    echo "    ${C2}o1${CN} 1  -deg,  360x 180 Reynolds (1971-2022)${O1_DEFAULT}"
     echo "    ${C2}o2${CN} 1/4-deg, 1440x 720 MERRA-2"
     echo "    ${C2}o3${CN} 1/8-deg, 2880x1440 OSTIA"
     echo "    ${C2}o4${CN} 1  -deg,  360x 180 Hadley (1949-2006)"
     echo "    ${C2}o5${CN} 1  -deg,  360x 180 CCSM_4.0 (1850-2005)"
     echo "    ${C2}o6${CN} 1  -deg,  360x 180 CCSM_4.0 (2006-2100)"
     echo "    ${C2}o7${CN} 1  -deg,  360x 180 HadISST (1870-2020)"
-    echo "    ${C2}CS${CN}                    Cubed-Sphere OSTIA$CS_DEFAULT"
+    echo "    ${C2}CS${CN}                    Cubed-Sphere OSTIA${CS_DEFAULT}"
     echo "------------------------------------------------"
     set   HRCODE = `echo $<`
     if( .$HRCODE == . ) set HRCODE = $DEFAULT_HRCODE
