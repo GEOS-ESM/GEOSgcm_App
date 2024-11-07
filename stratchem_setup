@@ -31,8 +31,8 @@ endif
 #                     Build Directory Locations
 #######################################################################
 
-# Set Current Working Path to gcm_setup
-# -------------------------------------
+# Set Current Working Path to stratchem_setup
+# -------------------------------------------
 setenv ARCH `uname -s`
 setenv NODE `uname -n`
 
@@ -819,12 +819,31 @@ else
     # OGCM = FALSE (Data Ocean Resolution)
     # ------------------------------------
     DORSLV:
-    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds) Default"
+
+    # We have two different default ocean resolutions based on the atmospheric resolution
+    # if LOW_ATM_RES is TRUE, we use o1 (Reynolds) as the default
+    # if LOW_ATM_RES is FALSE, we use CS (Cubed-Sphere OSTIA) as the default
+
+    if( $LOW_ATM_RES == 'TRUE') then
+      set DEFAULT_HRCODE = 'o1'
+      set O1_DEFAULT = ' (Default)'
+      set CS_DEFAULT = ''
+    else
+      set DEFAULT_HRCODE = 'CS'
+      set O1_DEFAULT = ''
+      set CS_DEFAULT = ' (Default)'
+      set DEFAULT_HRCODE = 'CS'
+    endif
+    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds)${O1_DEFAULT}"
     echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)"
     echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
-    echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)"
+    echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)${CS_DEFAULT}"
+    # We also note that the Reynolds ocean does not exist past 2022
+    echo ""
+    echo "NOTE: The Reynolds ocean resolution is only available up to 2022"
+
     set   HRCODE = `echo $<`
-    if( .$HRCODE == . ) set HRCODE = o1
+    if( .$HRCODE == . ) set HRCODE = $DEFAULT_HRCODE
     set   HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
 
     if( $HRCODE != 'o1' & \
@@ -886,30 +905,29 @@ else
         set DATAOCEAN = ""
     endif
     if( $HRCODE == 'cs' ) then
-        if( $LOW_ATM_RES == 'FALSE') then
-             set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
-             set OGCM_JM  = `expr $OGCM_IM \* 6`
-             set Resolution = `echo $OGCM_IM $OGCM_JM`
-             set OGCM_IM  = $Resolution[1]
-             set OGCM_JM  = $Resolution[2]
-             set OGCM_GRID_TYPE = Cubed-Sphere
-             set OGCM_NF = 6
-             set LATLON_OGCM = "#DELETE"
-             set CUBE_OGCM = ""
-             set DATAOCEAN = "#DELETE"
-
-             set OCEAN_TAG = Ostia
-             set SSTNAME  = OSTIA_REYNOLDS
-             set OCEANOUT = "CS"
-             set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-             set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-             set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
-             set OGRIDTYP = "CF"
-             set OSTIA    = ""
-        else
+        if( $LOW_ATM_RES == 'TRUE') then
              echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
              exit 7
         endif
+        set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
+        set OGCM_JM  = `expr $OGCM_IM \* 6`
+        set Resolution = `echo $OGCM_IM $OGCM_JM`
+        set OGCM_IM  = $Resolution[1]
+        set OGCM_JM  = $Resolution[2]
+        set OGCM_GRID_TYPE = Cubed-Sphere
+        set OGCM_NF = 6
+        set LATLON_OGCM = "#DELETE"
+        set CUBE_OGCM = ""
+        set DATAOCEAN = "#DELETE"
+
+        set OCEAN_TAG = Ostia
+        set SSTNAME  = OSTIA_REYNOLDS
+        set OCEANOUT = "CS"
+        set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+        set OGRIDTYP = "CF"
+        set OSTIA    = ""
     endif
 
     set IMO = ${OGCM_IM}

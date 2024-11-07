@@ -978,30 +978,29 @@ else
         set DATAOCEAN = ""
     endif
     if( $HRCODE == 'cs' ) then
-        if( $LOW_ATM_RES == 'FALSE') then
-             set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
-             set OGCM_JM  = `expr $OGCM_IM \* 6`
-             set Resolution = `echo $OGCM_IM $OGCM_JM`
-             set OGCM_IM  = $Resolution[1]
-             set OGCM_JM  = $Resolution[2]
-             set OGCM_GRID_TYPE = Cubed-Sphere
-             set OGCM_NF = 6
-             set LATLON_OGCM = "#DELETE"
-             set CUBE_OGCM = ""
-             set DATAOCEAN = "#DELETE"
-
-             set OCEAN_TAG = Ostia
-             set SSTNAME  = OSTIA_REYNOLDS
-             set OCEANOUT = "CS"
-             set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-             set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-             set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
-             set OGRIDTYP = "CF"
-             set OSTIA    = ""
-        else
+        if( $LOW_ATM_RES == 'TRUE') then
              echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
              exit 7
         endif
+        set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
+        set OGCM_JM  = `expr $OGCM_IM \* 6`
+        set Resolution = `echo $OGCM_IM $OGCM_JM`
+        set OGCM_IM  = $Resolution[1]
+        set OGCM_JM  = $Resolution[2]
+        set OGCM_GRID_TYPE = Cubed-Sphere
+        set OGCM_NF = 6
+        set LATLON_OGCM = "#DELETE"
+        set CUBE_OGCM = ""
+        set DATAOCEAN = "#DELETE"
+
+        set OCEAN_TAG = Ostia
+        set SSTNAME  = OSTIA_REYNOLDS
+        set OCEANOUT = "CS"
+        set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+        set OGRIDTYP = "CF"
+        set OSTIA    = ""
     endif
 
     set IMO = ${OGCM_IM}
