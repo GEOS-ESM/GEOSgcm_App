@@ -823,7 +823,7 @@ else
     echo "------------------------------------------------"
     echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code:"
     echo "------------------------------------------------"
-    echo "    ${C2}o1${CN} 1  -deg,  360x 180 Reynolds (Default)"
+    echo "    ${C2}o1${CN} 1  -deg,  360x 180 Reynolds (1971-2022) (Default)"
     echo "    ${C2}o2${CN} 1/4-deg, 1440x 720 MERRA-2"
     echo "    ${C2}o3${CN} 1/8-deg, 2880x1440 OSTIA"
     echo "    ${C2}o4${CN} 1  -deg,  360x 180 Hadley (1949-2006)"
