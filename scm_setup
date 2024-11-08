@@ -376,17 +376,17 @@ BCSTAG="Icarus_Reynolds"
 
 case $SITE in
    NCCS)
-   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v11.1/"
+   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v12.0/"
    BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput_nc3"
    ;;
    NAS)
-   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
+   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
    BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
-   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
+   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
    BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
