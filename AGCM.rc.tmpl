@@ -1,6 +1,15 @@
 
 # Atmospheric Model Configuration Parameters
 # ------------------------------------------
+
+# Some rules of thumb when changing processor counts:
+# 
+# 1) Start from the NX/NY that come from gcm_setup.
+# 2) if you want more cores, double NY (for 2x), then double NX(for 4x) and so on...
+# 3) if you want fewer cores, half NX (for 0.5), then half NY for (0.25) and so on...
+# 4) when you hit an odd number we need to get more creative
+# 5) if you have questions send Bill Putman a Teams message
+
 NX: @NX
 NY: @NY
 
@@ -25,6 +34,8 @@ AGCM.IM_WORLD: @AGCM_IM
 
 ###########################################################
 # long physics DT options
+# use extreme caution when adjusing these
+# the defaults are most ideal
 # ----------------------------------------
 ADJUST_DT: .FALSE.
 GOCART_DT: @LONG_DT
@@ -99,7 +110,7 @@ CLOSURE_CONGESTUS: 3
 ###########################################################
 
 @HIST_GOCART###########################################################
-@HIST_GOCART# Enable wet scavenging
+@HIST_GOCART# Enable wet scavenging diagnostics
 @HIST_GOCART# NOTE: this section should be commented out when running gocart.data
 @HIST_GOCARTMCHEMTRI_increments::
 @HIST_GOCARTDU::DU default
