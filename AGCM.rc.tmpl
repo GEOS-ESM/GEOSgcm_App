@@ -4,11 +4,12 @@
 
 # Some rules of thumb when changing processor counts:
 # 
-# 1) Start from the NX/NY that come from gcm_setup.
-# 2) if you want more cores, double NY (for 2x), then double NX(for 4x) and so on...
-# 3) if you want fewer cores, half NX (for 0.5), then half NY for (0.25) and so on...
-# 4) when you hit an odd number we need to get more creative
-# 5) if you have questions send Bill Putman a Teams message
+# 1) Start from the NX/NY that come from gcm_setup
+# 2) The gcm will not run with AGCM_IM/NX or AGCM_JM/NY/6 less than or equal to 3
+# 3) if you want more cores, double NY (for 2x), then double NX(for 4x) and so on...
+# 4) if you want fewer cores, half NX (for 0.5), then half NY for (0.25) and so on...
+# 5) when you hit an odd number we need to get more creative
+# 6) if you have questions send Bill Putman a Teams message
 
 NX: @NX
 NY: @NY
