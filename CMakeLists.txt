@@ -1,15 +1,13 @@
 ecbuild_add_executable (
   TARGET GEOSgcm.x
   SOURCES GEOSgcm.F90
-  LIBS GEOSgcm_GridComp esmf OpenMP::OpenMP_Fortran
-  LINKER_LANGUAGE Fortran
+  LIBS GEOSgcm_GridComp ESMF::ESMF OpenMP::OpenMP_Fortran
   )
 
 ecbuild_add_executable (
   TARGET idfupd.x
   SOURCES idfupd.F90
-  LIBS GEOSgcm_GridComp esmf
-  LINKER_LANGUAGE Fortran
+  LIBS GEOSgcm_GridComp ESMF::ESMF
   )
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
