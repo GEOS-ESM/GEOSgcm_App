@@ -241,16 +241,20 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 endif
 
+set GIGATRAJ  = `grep '^\s*GIGATRAJ_PARCELS_FILE:'     AGCM.rc | cut -d: -f2`
+
 #######################################################################
 #   Move to Scratch Directory and Copy RC Files from Home Directory
 #######################################################################
 
 cd $SCRDIR
 /bin/rm -rf *
-
 cp -f  $EXPDIR/RC/* .
 cp     $EXPDIR/cap_restart .
 cp     $EXPDIR/linkbcs .
+if ($GIGATRAJ != "") then
+   cp   $EXPDIR/$GIGATRAJ .
+endif
 cp -f  $HOMDIR/*.rc .
 cp -f  $HOMDIR/*.nml .
 cp -f  $HOMDIR/*.yaml .
