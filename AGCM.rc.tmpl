@@ -1,6 +1,16 @@
 
 # Atmospheric Model Configuration Parameters
 # ------------------------------------------
+
+# Some rules of thumb when changing processor counts:
+# 
+# 1) Start from the NX/NY that come from gcm_setup
+# 2) The gcm will not run with AGCM_IM/NX or AGCM_JM/NY/6 less than or equal to 3
+# 3) if you want more cores, double NY (for 2x), then double NX(for 4x) and so on...
+# 4) if you want fewer cores, half NX (for 0.5), then half NY for (0.25) and so on...
+# 5) when you hit an odd number we need to get more creative
+# 6) if you have questions send Bill Putman a Teams message
+
 NX: @NX
 NY: @NY
 
@@ -25,6 +35,8 @@ AGCM.IM_WORLD: @AGCM_IM
 
 ###########################################################
 # long physics DT options
+# use extreme caution when adjusing these
+# the defaults are most ideal
 # ----------------------------------------
 ADJUST_DT: .FALSE.
 GOCART_DT: @LONG_DT
@@ -61,7 +73,8 @@ ORBIT_ANAL2B: .TRUE.
 # GFDL_1M microphysics options
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
-@GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
+@GFDL_1M_HYDROSTATIC: .TRUE.
+@GFDL_1M_USE_BERGERON: .FALSE.
 ###########################################################
 
 ###########################################################
@@ -96,10 +109,11 @@ CLOSURE_CONGESTUS: 3
 ###########################################################
 # TRB/GWD Parameterization
 # ------------------------
+NCAR_NRDG: 16
 ###########################################################
 
 @HIST_GOCART###########################################################
-@HIST_GOCART# Enable wet scavenging
+@HIST_GOCART# Enable wet scavenging diagnostics
 @HIST_GOCART# NOTE: this section should be commented out when running gocart.data
 @HIST_GOCARTMCHEMTRI_increments::
 @HIST_GOCARTDU::DU default
@@ -839,6 +853,7 @@ HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
 # -------------------------------
 USE_RRTMG_IRRAD: 1.0
 USE_RRTMG_SORAD: 1.0
+SOLAR_LB_MAX_PASSES: 10
 ISOLVAR: 2
 USE_NRLSSI2: .TRUE.
 SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.txt
