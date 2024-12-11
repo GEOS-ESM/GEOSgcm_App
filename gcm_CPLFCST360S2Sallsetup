@@ -2,7 +2,7 @@
 
 #######################################################################
 #                            Define Colors
-#         Note:  For No Colors, set C1 and C2 to NONE 
+#         Note:  For No Colors, set C1 and C2 to NONE
 #######################################################################
 
 set BLACK   = "\033[30m"
@@ -28,7 +28,7 @@ endif
      set CN = $RESET
 
 #######################################################################
-#        Set Directory Locations specific to coupled forecast 
+#        Set Directory Locations specific to coupled forecast
 #######################################################################
 set FCSTBLD = '/discover/nobackup/projects/gmao/m2oasf/build/geos-s2s/GEOSodas/src'
 set SUBSEASONAL = @FCSTSUBX
@@ -177,7 +177,7 @@ if ( $SITE == 'NCCS' ) then
    if ( ($NODE =~ borg*) || ($NODE =~ warp*) ) then
       goto ONCOMPUTE
    endif
-   
+
 else if ( $SITE == 'NAS' ) then
    if ( ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || ($NODE =~ maia*) ) then
       goto ONCOMPUTE
@@ -198,7 +198,7 @@ else if ( `echo $BASEDIR | grep -i pgfortran` != '') then
    set COMPILER = pgfortran
 else
    # Assume default is ifort in case of older baselibs
-   set COMPILER = ifort 
+   set COMPILER = ifort
 endif
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
@@ -213,7 +213,7 @@ else if ( `echo $BASEDIR | grep -i mpt`      != '') then
    set MPI = mpt
 else
    # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi 
+   set MPI = intelmpi
 endif
 
 #######################################################################
@@ -224,9 +224,9 @@ if ( $MPI == mvapich2 ) then
    setenv RUN_CMD 'mpirun_rsh -export -hostfile $PBS_NODEFILE -np ' # mpi run for MVAPICH2
 else if ( $MPI == openmpi ) then
    if ( $SITE == 'NCCS' && $COMPILER == 'pgfortran') then
-      setenv RUN_CMD 'mpirun -bind-to core --mca btl ^openib --mca btl_tcp_if_include ib0 -np '   # mpi run for OpenMPI 
+      setenv RUN_CMD 'mpirun -bind-to core --mca btl ^openib --mca btl_tcp_if_include ib0 -np '   # mpi run for OpenMPI
    else
-      setenv RUN_CMD 'mpirun -bind-to core -np '   # mpi run for OpenMPI 
+      setenv RUN_CMD 'mpirun -bind-to core -np '   # mpi run for OpenMPI
    endif
 else if ( $MPI == intelmpi ) then
    setenv RUN_CMD 'mpirun -np '                 # mpi run for Intel MPI
@@ -262,7 +262,7 @@ echo
 echo "SETTING END DATES"
 echo "FOR 45-DAY SUB-SEASONAL: max months= 3"
 echo "FOR  9- MONTHS-SEASONAL: max months= 9"
-@ ENDM2 = $EXPMO + $maxmonths 
+@ ENDM2 = $EXPMO + $maxmonths
 @ ENDY2 = $EXPYR
 if ($ENDM2 > 12) then
   @ ENDM2 = $ENDM2 - 12
@@ -325,7 +325,7 @@ endif
 echo "ENTERED $KLONE"
 
 #######################################################################
-#          Continue to enter in experiment parameters 
+#          Continue to enter in experiment parameters
 #######################################################################
 
 HRCODE:
@@ -461,7 +461,7 @@ if( $OGCM == TRUE ) then
         if( $num == 0 ) then
              set OGCM_IM = 360
              set OGCM_JM = 200
-        else 
+        else
              goto CORSLV
         endif
     endif
@@ -790,7 +790,7 @@ if( $AGCM_IM == "c360" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 12 
+     set       NX = 12
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = TRUE
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -852,7 +852,7 @@ if( $AGCM_IM == "c1440" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30 
+     set       NX = 30
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = FALSE
      set HIST_IM  = `expr $AGCM_IM \* 4`
@@ -903,7 +903,7 @@ endif
 set BEG_DATE =  '18910301 000000'
 set END_DATE =  "${END_DATE2}"
 set JOB_SGMT = "$JOB_SGMT 000000"
- 
+
 #######################################################################
 #           Check for land surface and runoff routing  models         #
 #######################################################################
@@ -1287,7 +1287,7 @@ while( $check == FALSE )
   else
        setenv HOMDIR  $HOMDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $NUHOMDIR` ) then
        echo "\!\! The ${C1}HOME${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1321,7 +1321,7 @@ while( $check == FALSE )
   else
        setenv EXPDIR  $EXPDIR_def
   endif
-  
+
   if( "$EXPID" != `basename $NUEXPDIR` ) then
        echo "\!\! The ${C1}EXPERIMENT${CN} Directory MUST point to the ${C1}EXPID${CN}: ${C2}${EXPID}${CN}"
        echo " "
@@ -1372,7 +1372,7 @@ if( -e $HOME/.EXPDIRroot ) /bin/rm $HOME/.EXPDIRroot
 echo $EXPDIRroot > $HOME/.EXPDIRroot
 
 #######################################################################
-#                       Locate Build Directory  
+#                       Locate Build Directory
 #######################################################################
 
 # GEOSagcm Build Directory
@@ -1387,7 +1387,7 @@ echo $EXPDIRroot > $HOME/.EXPDIRroot
   if( .$NUGEOSDIR != . ) then
        set GEOSDIR = $NUGEOSDIR
   endif
-  
+
     set check =  FALSE
 GEOSDIR:
 while( $check == FALSE )
@@ -1554,8 +1554,8 @@ if ( $SITE == 'NCCS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`scontrol show hostnames\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID 
+setenv GPU_NODELIST \`scontrol show hostnames\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$SLURM_JOBID
 
 _EOF1_
 
@@ -1563,31 +1563,31 @@ else if ( $SITE == 'NAS' ) then
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF1_
 
-setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\` 
-setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID 
+setenv GPU_NODELIST \`cat \$PBS_NODEFILE | uniq\`
+setenv CUDA_TMPDIR /tmp/nvidia-hyperq-\$PBS_JOBID
 
 _EOF1_
 
 endif # if site
 
 cat >> $HOMDIR/GPUSTART.commands << _EOF2_
-setenv CUDA_VISIBLE_DEVICES 0 
-setenv CUDA_MPS_CLIENT 1 
-setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0 
-setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0 
- 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
- 
-sleep 3 
- 
-foreach node (\$GPU_NODELIST) 
-   echo "Running MPS Server on \$node" 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash" 
-end 
- 
-sleep 3 
+setenv CUDA_VISIBLE_DEVICES 0
+setenv CUDA_MPS_CLIENT 1
+setenv CUDA_MPS_PIPE_DIRECTORY \$CUDA_TMPDIR/mps_0
+setenv CUDA_MPS_LOG_DIRECTORY  \$CUDA_TMPDIR/mps_log_0
+
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
+
+sleep 3
+
+foreach node (\$GPU_NODELIST)
+   echo "Running MPS Server on \$node"
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/run_mps_server.bash"
+end
+
+sleep 3
 
 _EOF2_
 
@@ -1595,9 +1595,9 @@ cat > $HOMDIR/GPUEND.commands << _EOF3_
 # Remove the MPS Server on Each GPU Node
 # --------------------------------------
 
-foreach node (\$GPU_NODELIST) 
-   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash" 
-end 
+foreach node (\$GPU_NODELIST)
+   ssh -f \$node "env CUDA_TMPDIR=\$CUDA_TMPDIR $HOME/bin/kill_mps_server.bash"
+end
 
 _EOF3_
 
@@ -1743,25 +1743,23 @@ s?RECORD_?#RECORD_?g
 
 s?@DASTUNING?#?g
 
-s?>>>FORCEDAS<<<?$FORCEDAS?g
-s?>>>FORCEGCM<<<?$FORCEGCM?g
+s?@FORCEDAS?$FORCEDAS?g
+s?@FORCEGCM?$FORCEGCM?g
 s?@COUPLED?$COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
 s?>>>FORCAST<<<?$FORCAST?g
 s?>>>VEGCPLD<<<?$VEGCPLD?g
 s?>>>VEGMERR<<<?$VEGMERR?g
 s?@DATAOCEAN?$DATAOCEAN?g
-s?>>>GOCART<<<?$GOCART?g
-s?>>>FVCUBED<<<?$FVCUBED?g
+s?@FVCUBED?$FVCUBED?g
 s?>>>FVLATLON<<<?$FVLATLON?g
 s?@HIST_GOCART?$HIST_GOCART?g
-s?>>>OSTIA<<<?$OSTIA?g
 
-s?>>>4DIAUDAS<<<?#DELETE?g
-s?>>>REGULAR_REPLAY<<<?#?g
-s?>>>REGULAR_REPLAY_GMAO<<<?#?g
-s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
-s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
+s?@4DIAUDAS?#DELETE?g
+s?@REGULAR_REPLAY?#?g
+s?@REGULAR_REPLAY_GMAO?#?g
+s?@REGULAR_REPLAY_NCEP?#DELETE?g
+s?@REGULAR_REPLAY_ECMWF?#DELETE?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@OX_RELAXTIME?259200.?g
@@ -1799,7 +1797,7 @@ s/@OGCM_IM/$OGCM_IM/g
 s/@OGCM_JM/$OGCM_JM/g
 s/@OGCM_LM/$OGCM_LM/g
 s/@BEG_DATE/${BEG_DATE}/g
-s/@END_DATE/${END_DATE2}/g 
+s/@END_DATE/${END_DATE2}/g
 s/@JOB_SGMT/${JOB_SGMT}/g
 s/@NUM_SGMT/${NUM_SGMT}/g
 
@@ -1845,7 +1843,7 @@ echo ' '
 echo "Rename coupled forecast specific files *CPLFCST* "
 echo "Note:  run.j archive.j and HISTORY.rc different for seasonal and subseasonal"
 /bin/mv $HOMDIR/gcm_run_CPLFCST360S2Sall.j $HOMDIR/gcm_run.j
-/bin/mv $HOMDIR/averageMOM_CPLFCST.j $HOMDIR/averageMOM.j 
+/bin/mv $HOMDIR/averageMOM_CPLFCST.j $HOMDIR/averageMOM.j
 /bin/mv $HOMDIR/gcm_post_part_CPLFCST.j $HOMDIR/gcm_post_part.j
 /bin/mv $HOMDIR/gcm_post_full_CPLFCST.j $HOMDIR/gcm_post_full.j
 #/bin/mv $HOMDIR/AGCM_CPLFCST.rc.tmpl $HOMDIR/AGCM.rc.tmpl
@@ -1970,7 +1968,7 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/HISTORY.rc.tmpl     $HOMDIR/HISTORY.rc
 
 #######################################################################
-#       Modify RC Directory for LM and GOCART.data/GOCART Options     
+#       Modify RC Directory for LM and GOCART.data/GOCART Options
 #######################################################################
 
 # Modify RC Files for LM
@@ -2244,7 +2242,7 @@ else if ( ! -d $CLONEDIR ) then
 endif
 
 # ------------------------------------------------------
-# To setup the clone, we need to look in a couple files, 
+# To setup the clone, we need to look in a couple files,
 # so make sure they are readable
 # ------------------------------------------------------
 
@@ -2398,7 +2396,7 @@ endif
 
 # ------------------------------------------------
 # Create two sets of files so we can copy from one
-# directory to another. 
+# directory to another.
 # ------------------------------------------------
 
 # Then alter them
@@ -2678,8 +2676,8 @@ cat << EOF
 
 gcm_setup requires access to internet resources, namely
 the CVS repository. You are attempting to run gcm_setup
-on compute node ${NODE} at ${SITE}. Please re-run on a head 
-node. 
+on compute node ${NODE} at ${SITE}. Please re-run on a head
+node.
 
 For more information, contact Matt Thompson or
 Larry Takacs at GMAO.
@@ -2692,9 +2690,9 @@ CONTACTMATT:
 cat <<EOF
 
 It appears your environment is not set correctly to
-run with the GPUs. If you wish to build and run the 
+run with the GPUs. If you wish to build and run the
 model using GPUs, please contact Matt Thompson at:
-    
+
             matthew.thompson@nasa.gov
 
 EOF
