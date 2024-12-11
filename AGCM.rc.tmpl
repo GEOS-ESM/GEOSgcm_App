@@ -10,7 +10,6 @@
 # 4) if you want fewer cores, half NX (for 0.5), then half NY for (0.25) and so on...
 # 5) when you hit an odd number we need to get more creative
 # 6) if you have questions send Bill Putman a Teams message
-
 NX: @NX
 NY: @NY
 
@@ -39,8 +38,10 @@ AGCM.IM_WORLD: @AGCM_IM
 # the defaults are most ideal
 # ----------------------------------------
 ADJUST_DT: .FALSE.
+GOCART2G_DT: @LONG_DT
 GOCART_DT: @LONG_DT
 HEMCO_DT: @LONG_DT
+ACHEM_DT: @LONG_DT
 GF_DT: @LONG_DT
 UW_DT: @LONG_DT
 ###########################################################
@@ -73,8 +74,8 @@ ORBIT_ANAL2B: .TRUE.
 # GFDL_1M microphysics options
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
-@GFDL_1M_HYDROSTATIC: .TRUE.
-@GFDL_1M_USE_BERGERON: .FALSE.
+@GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
+GFDL_1M_USE_BERGERON: .FALSE.
 ###########################################################
 
 ###########################################################
