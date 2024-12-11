@@ -625,7 +625,7 @@ if( $OGCM == TRUE ) then
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
 
-       set mom5_warning=">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+       set mom5_warning="######################################################\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n######################################################"
        echo "\033[31;5m"${mom5_warning}"\033[0m"
        set MIT  = "#DELETE"
     else if ( "$OCNMODEL" == "MOM6" ) then
@@ -2368,8 +2368,8 @@ s?^[ \t]*RECORD_?#RECORD_?g
 
 s?@DASTUNING?#?g
 
-s?>>>FORCEDAS<<<?$FORCEDAS?g
-s?>>>FORCEGCM<<<?$FORCEGCM?g
+s?@FORCEDAS?$FORCEDAS?g
+s?@FORCEGCM?$FORCEGCM?g
 s?@COUPLED?$COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
 s?@MOM5?$MOM5?g
@@ -2377,29 +2377,27 @@ s?@MOM6?$MOM6?g
 s?@OCNMODEL?$OCNMODEL?g
 s?@CICE4?$CICE4?g
 s?@CICE6?$CICE6?g
-s?>>>HIST_CICE4<<<?$HIST_CICE4?g
+s?@HIST_CICE4?$HIST_CICE4?g
 s?@MIT?$MIT?g
 s?@DATAOCEAN?$DATAOCEAN?g
-s?>>>GOCART<<<?$GOCART?g
 s?@OPS_SPECIES?$OPS_SPECIES?g
 s?@CMIP_SPECIES?$CMIP_SPECIES?g
 s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
-s?>>>FVCUBED<<<?$FVCUBED?g
+s?@FVCUBED?$FVCUBED?g
 s?@HIST_GOCART?$HIST_GOCART?g
-s?>>>OSTIA<<<?$OSTIA?g
-s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
-s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
-s?>>>EMIP_OLDLAND<<<?$EMIP_OLDLAND?g
-s?>>>EMIP_NEWLAND<<<?$EMIP_NEWLAND?g
+s?@HIST_CATCHCN?$HIST_CATCHCN?g
+s?@GCMRUN_CATCHCN?$GCMRUN_CATCHCN?g
+s?@EMIP_OLDLAND?$EMIP_OLDLAND?g
+s?@EMIP_NEWLAND?$EMIP_NEWLAND?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
-s?>>>4DIAUDAS<<<?#DELETE?g
-s?>>>REGULAR_REPLAY<<<?#?g
-s?>>>REGULAR_REPLAY_GMAO<<<?#?g
-s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
-s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
+s?@4DIAUDAS?#DELETE?g
+s?@REGULAR_REPLAY?#?g
+s?@REGULAR_REPLAY_GMAO?#?g
+s?@REGULAR_REPLAY_NCEP?#DELETE?g
+s?@REGULAR_REPLAY_ECMWF?#DELETE?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
