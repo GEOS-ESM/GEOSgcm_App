@@ -173,7 +173,7 @@ endif
 #######################################################################
 
 # Get MPI stack from CMake
-set MPI_STACK = @MPI_STACK@
+set MPI_STACK = intelmpi
 
 #######################################################################
 #               Enter Experiment Specific Run Parameters
@@ -415,7 +415,7 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
 
-   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
+   set BUILT_ON_SLES15 = FALSE
 
    if ("$BUILT_ON_SLES15" == "TRUE") then
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
@@ -619,7 +619,7 @@ if( $OGCM == TRUE ) then
     if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
        set OGRIDTYP  = "M5TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom.so'
        set MOM5=""
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
@@ -630,7 +630,7 @@ if( $OGCM == TRUE ) then
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OGRIDTYP  = "M6TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6.so'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -766,13 +766,13 @@ if( $OGCM == TRUE ) then
     # suffix is different on Linux and macOS. This is set by configure_file()
     if ( $SEAICEMODEL == "CICE4" ) then
        set SEAICE_NAME="CICE4"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set SEAICE_PRELOAD = '$GEOSDIR/lib/libCICE4.so'
        set CICE4=""
        set CICE6 = "#DELETE"
        set HIST_CICE4 = ""
     else if ( $SEAICEMODEL == "CICE6" ) then
        set SEAICE_NAME="CICE6"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set SEAICE_PRELOAD = '$GEOSDIR/lib/libcice6.so'
        set CICE6=""
        set CICE4 = "#DELETE"
        set HIST_CICE4 = "#DELETE"
@@ -953,6 +953,44 @@ else
     set OGCM_NX       = ""
     set OGCM_NY       = ""
     set OGCM_NPROCS   = ""
+endif
+
+# Check for Data Atmosphere
+#--------------------------
+set DATA_ATMOS = FALSE
+set ACTUAL_ATM4OCN = ""
+set USE_DATA_ATM4OCN = .FALSE.
+
+if( $OGCM == "TRUE" ) then
+
+DATATMOS:
+   echo "Do you wish to run ${C1}Data Atmosphere${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+   set DATA_ATMOS = $<
+   if (.$DATA_ATMOS == .) then
+      set DATA_ATMOS = FALSE
+   else
+      set DATA_ATMOS = `echo $DATA_ATMOS | tr "[:lower:]" "[:upper:]"`
+      if ($DATA_ATMOS == "Y"    | \
+          $DATA_ATMOS == "YES"  | \
+          $DATA_ATMOS == "T"    | \
+          $DATA_ATMOS == "TRUE" ) set DATA_ATMOS = TRUE
+      if ($DATA_ATMOS == "N"    | \
+          $DATA_ATMOS == "NO"   | \
+          $DATA_ATMOS == "F"    | \
+          $DATA_ATMOS == "FALSE") set DATA_ATMOS = FALSE
+      if ($DATA_ATMOS != TRUE & $DATA_ATMOS != FALSE) then
+         echo
+         echo "Please answer ${C2}YES${CN} or ${C2}NO${CN}!"
+         goto DATATMOS
+      endif
+   endif
+
+   if ($DATA_ATMOS == TRUE) then
+      set ACTUAL_ATM4OCN = "#"
+      set USE_DATA_ATM4OCN = .TRUE.
+
+      set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
+   endif
 endif
 
 # Set DEFAULT SHMEM Parameter
@@ -2444,6 +2482,9 @@ s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
 
+s?@ACTUAL_ATM4OCN?$ACTUAL_ATM4OCN?g
+s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
+
 EOF
 
 # Added FV3/GFDL-MP Specific Parameters
@@ -2798,8 +2839,8 @@ if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
 
 # NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
-set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
-set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
+set INSTALL_TARFILE = TRUE
+set TARFILE_NAME = "GEOSgcm.tar.gz"
 
 if ( $INSTALL_TARFILE == "TRUE" ) then
 
@@ -3192,8 +3233,8 @@ endif
 
 # NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
-set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
-set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
+set INSTALL_TARFILE = TRUE
+set TARFILE_NAME = "GEOSgcm.tar.gz"
 
 if ( $INSTALL_TARFILE == "TRUE" ) then
 
