@@ -520,7 +520,8 @@ end
 # -----------------------
 set USE_WAVES = `grep '^\s*USE_WAVES:' AGCM.rc| cut -d: -f2`
 set wavemodel = `cat WGCM.rc | grep "wave_model:" | cut -d "#" -f1 | cut -d ":" -f 2 | sed 's/\s//g'`
-set wavewatch = `$USE_WAVES != 0 && $wavemodel == "WW3"`
+set wavewatch = 0
+if (($USE_WAVES != 0) && ($wavemodel == "WW3") ) set wavewatch = 1
 
 # Copy Restarts to Scratch Directory
 # ----------------------------------

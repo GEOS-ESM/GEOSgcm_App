@@ -2268,6 +2268,10 @@ endif # if NCCS
 
 endif # if mpi
 
+# Check for gwd_internal for Ridge Scheme
+                                             set NCAR_NRDG = 0
+if ( -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 16
+echo "Using NCAR_NRDG: $NCAR_NRDG"
 
 #######################################################################
 #               Create Local Scripts and Resource Files
@@ -2321,6 +2325,7 @@ s?@KPARFILE?$KPARFILE?g
 s?@CHMDIR?$CHMDIR?g
 s?@COUPLEDIR?$COUPLEDIR?g
 s?@GWDRSDIR?$GWDRSDIR?g
+s?@NCAR_NRDG?$NCAR_NRDG?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
