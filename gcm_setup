@@ -370,6 +370,8 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c720'  | \
     $HRCODE == 'c1120' | \
     $HRCODE == 'c1440' | \
+    $HRCODE == 'c2880' | \
+    $HRCODE == 'c5760' | \
     $HRCODE == 'c270'  | \
     $HRCODE == 'c540'  | \
     $HRCODE == 'c1080' | \
@@ -434,6 +436,7 @@ if ( $SITE == 'NCCS' ) then
 
       if ($MODEL == 'mil') then
          # For even division, we use 120 cores per node
+         # We save a couple processes for the kernel
          set NCPUS_PER_NODE = 120
       endif
    else
@@ -2297,6 +2300,10 @@ endif # if NCCS
 
 endif # if mpi
 
+# Check for gwd_internal for Ridge Scheme
+                                             set NCAR_NRDG = 0
+if ( -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 16
+echo "Using NCAR_NRDG: $NCAR_NRDG"
 
 #######################################################################
 #               Create Local Scripts and Resource Files
@@ -2351,6 +2358,7 @@ s?@KPARFILE?$KPARFILE?g
 s?@CHMDIR?$CHMDIR?g
 s?@COUPLEDIR?$COUPLEDIR?g
 s?@GWDRSDIR?$GWDRSDIR?g
+s?@NCAR_NRDG?$NCAR_NRDG?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
