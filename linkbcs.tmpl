@@ -13,7 +13,7 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
-@COUPLED/bin/ln -sf /discover/nobackup/projects/gmao/bcs_shared/make_bcs_inputs/oceanice/* ExtData
+@COUPLED/bin/ln -sf /discover/nobackup/projects/gmao/bcs_shared/make_bcs_inputs/ocean/dataatm/* ExtData
 @COUPLED/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/SEAWIFS_KPAR_mon_clim.@OGCM_IMx@OGCM_JM SEAWIFS_KPAR_mon_clim.data
 @COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
 @COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
