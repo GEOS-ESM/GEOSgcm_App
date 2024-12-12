@@ -80,7 +80,8 @@ set fdate = ${date0}_${hour}z
 
 setenv   FCSTDIR  $EXPDIR/forecasts/${FCST_LABL}_$fdate
 setenv    SCRDIR  $FCSTDIR/scratch
-if (! -e $SCRDIR ) mkdir -p $SCRDIR
+mkdir -p $TSE_TMPDIR/scratch
+ln -s $TSE_TMPDIR/scratch $SCRDIR
 cd       $SCRDIR
 
 /bin/rm -rf *
@@ -402,7 +403,10 @@ end
      set month = `echo $nymd0 | cut -c5-6`
 
      if( $CYCLED == .TRUE. ) then
-          /bin/ln -s $EXPDIR/restarts/*${nymd0}_${hour}*z.*  .
+          foreach rst ( $rst_files )
+            /bin/cp $EXPDIR/restarts/*${nymd0}_${hour}*z.*  . &
+          end
+          wait
           $GEOSBIN/stripname ${EXPID}.
           $GEOSBIN/stripname _checkpoint.${nymd0}_${hour}\* _rst  # Format if written from RECORD_FREQUENCY
           $GEOSBIN/stripname .e${nymd0}_${hour}\*                 # Format if decorated by gcm_run.j
