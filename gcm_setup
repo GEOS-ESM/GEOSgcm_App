@@ -173,7 +173,7 @@ endif
 #######################################################################
 
 # Get MPI stack from CMake
-set MPI_STACK = intelmpi
+set MPI_STACK = @MPI_STACK@
 
 #######################################################################
 #               Enter Experiment Specific Run Parameters
@@ -415,7 +415,7 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
 
-   set BUILT_ON_SLES15 = FALSE
+   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
 
    if ("$BUILT_ON_SLES15" == "TRUE") then
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
@@ -619,7 +619,7 @@ if( $OGCM == TRUE ) then
     if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
        set OGRIDTYP  = "M5TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom.so'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
@@ -630,7 +630,7 @@ if( $OGCM == TRUE ) then
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OGRIDTYP  = "M6TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6.so'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -766,13 +766,13 @@ if( $OGCM == TRUE ) then
     # suffix is different on Linux and macOS. This is set by configure_file()
     if ( $SEAICEMODEL == "CICE4" ) then
        set SEAICE_NAME="CICE4"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libCICE4.so'
+       set SEAICE_PRELOAD = '$GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE4=""
        set CICE6 = "#DELETE"
        set HIST_CICE4 = ""
     else if ( $SEAICEMODEL == "CICE6" ) then
        set SEAICE_NAME="CICE6"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libcice6.so'
+       set SEAICE_PRELOAD = '$GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE6=""
        set CICE4 = "#DELETE"
        set HIST_CICE4 = "#DELETE"
@@ -2839,8 +2839,8 @@ if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
 
 # NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
-set INSTALL_TARFILE = TRUE
-set TARFILE_NAME = "GEOSgcm.tar.gz"
+set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
+set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
 
 if ( $INSTALL_TARFILE == "TRUE" ) then
 
@@ -3233,8 +3233,8 @@ endif
 
 # NOTE: This variable is set at CMake time depending on
 #       how the build was configured.
-set INSTALL_TARFILE = TRUE
-set TARFILE_NAME = "GEOSgcm.tar.gz"
+set INSTALL_TARFILE = @CFG_INSTALL_SOURCE_TARFILE@
+set TARFILE_NAME = "@CMAKE_PROJECT_NAME@.tar.gz"
 
 if ( $INSTALL_TARFILE == "TRUE" ) then
 
