@@ -72,8 +72,10 @@ if( $GCMEMIP == TRUE ) then
 else
     setenv  SCRDIR  $EXPDIR/scratch
 endif
-
-if (! -e $SCRDIR ) mkdir -p $SCRDIR
+if (-e $SCRDIR ) /bin/rm $SCRDIR
+mkdir -p $TSE_TMPDIR/scratch
+ln -s $TSE_TMPDIR/scratch $SCRDIR
+cd $SCRDIR
 
 #######################################################################
 #                   Set Experiment Run Parameters
@@ -1190,8 +1192,9 @@ set restarts = `/bin/ls -1 *_rst`
 # ----------------------------------------------------
     set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
 foreach  restart ($restarts)
-cp $restart ${EXPDIR}/restarts
+cp $restart ${EXPDIR}/restarts &
 end
+wait
 
 # Remove EXPID from RESTART name
 # ------------------------------

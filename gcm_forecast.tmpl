@@ -80,6 +80,7 @@ set fdate = ${date0}_${hour}z
 
 setenv   FCSTDIR  $EXPDIR/forecasts/${FCST_LABL}_$fdate
 setenv    SCRDIR  $FCSTDIR/scratch
+if (-e $SCRDIR ) /bin/rm $SCRDIR
 mkdir -p $TSE_TMPDIR/scratch
 ln -s $TSE_TMPDIR/scratch $SCRDIR
 cd       $SCRDIR
