@@ -72,8 +72,10 @@ if( $GCMEMIP == TRUE ) then
 else
     setenv  SCRDIR  $EXPDIR/scratch
 endif
-
-if (! -e $SCRDIR ) mkdir -p $SCRDIR
+if (-e $SCRDIR ) /bin/rm $SCRDIR
+mkdir -p $TSE_TMPDIR/scratch
+ln -s $TSE_TMPDIR/scratch $SCRDIR
+cd $SCRDIR
 
 #######################################################################
 #                   Set Experiment Run Parameters
@@ -520,7 +522,8 @@ end
 # -----------------------
 set USE_WAVES = `grep '^\s*USE_WAVES:' AGCM.rc| cut -d: -f2`
 set wavemodel = `cat WGCM.rc | grep "wave_model:" | cut -d "#" -f1 | cut -d ":" -f 2 | sed 's/\s//g'`
-set wavewatch = `$USE_WAVES != 0 && $wavemodel == "WW3"`
+set wavewatch = 0
+if (($USE_WAVES != 0) && ($wavemodel == "WW3") ) set wavewatch = 1
 
 # Copy Restarts to Scratch Directory
 # ----------------------------------
@@ -1228,8 +1231,9 @@ set restarts = `/bin/ls -1 *_rst`
 # ----------------------------------------------------
     set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
 foreach  restart ($restarts)
-cp $restart ${EXPDIR}/restarts
+cp $restart ${EXPDIR}/restarts &
 end
+wait
 
 # Remove EXPID from RESTART name
 # ------------------------------
