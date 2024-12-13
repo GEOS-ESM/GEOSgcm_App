@@ -103,8 +103,8 @@ set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
 @COUPLED set HIST_IM_Tag = `echo $HIST_IM | awk '{printf "%4.4i", $1}'`
 @COUPLED set HIST_JM_Tag = `echo $HIST_JM | awk '{printf "%4.4i", $1}'`
 
->>>FVLATLON<<<set ATMOStag = DC${AGCM_IM_Tag}xPC${AGCM_JM_Tag}
->>>FVCUBED<<<set ATMOStag = CF${AGCM_IM_Tag}x6C
+@FVLATLONset ATMOStag = DC${AGCM_IM_Tag}xPC${AGCM_JM_Tag}
+@FVCUBEDset ATMOStag = CF${AGCM_IM_Tag}x6C
 @DATAOCEAN set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
 @COUPLED set OCEANtag = TM${OGCM_IM_Tag}xTM${OGCM_JM_Tag}
 @COUPLED set HISTtag = DC${HIST_IM_Tag}xPC${HIST_JM_Tag}
@@ -222,9 +222,9 @@ cat << _EOF_ > $FILE
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/$BCRSLV/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
 
->>>FVCUBED<<<if(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
->>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
->>>FVCUBED<<<endif
+@FVCUBEDif(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
+@FVCUBED/bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
+@FVCUBEDendif
 
 @COUPLED /bin/cp $HOMDIR/input.nml .
 @COUPLED /bin/cp $HOMDIR/*_table .
