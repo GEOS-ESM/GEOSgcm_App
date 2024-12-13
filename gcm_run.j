@@ -178,24 +178,17 @@ awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
 set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
->>>EMIP_OLDLAND<<<# Copy MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# ---------------------
->>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ----------------------------------------------
-cp /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
-tar xf  restarts.${year}${month}.tar
-/bin/rm restarts.${year}${month}.tar
->>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
+# Copy Restarts from v11.5.2 REPLAY to MERRA-2
+# ----------------------------------------------
+cp /discover/nobackup/projects/gmao/geos_itv/sdrabenh/REMIP_Experiments/v11.5.2_L072_C180_M2_REMIP/restarts/restarts.e${year}${month}10_21z.tar .
+tar -xvf restarts.e${year}${month}10_21z.tar --wildcards "*_internal_rst*"
+#/bin/rm restarts.e${year}${month}10_21z.tar
 
-
->>>EMIP_OLDLAND<<<# Regrid MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# -----------------------
->>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ------------------------------------------------
-set RSTID = `/bin/ls *catch* | cut -d. -f1`
-set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
-$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin @EMIP_BCS_IN -oceanin 1440x720 -nobkg -lbl -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -in_bc_base @BC_BASE -out_bc_base @BC_BASE
->>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
+# Regrid v11.5.2 Restarts
+# ------------------------------------------------
+set RSTID = `/bin/ls *catch* | /bin/grep -Po '^.*(?=\.\w+_rst\.)'`
+set day   = `/bin/ls *catch* | /bin/grep -Po '(?<=\d{6})\d{2}(?=_21z)'`
+$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nonhydrostatic -nobkg -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -out_bc_base @BC_BASE
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -206,15 +199,12 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
-set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}[cef]_${RSTID}.*catch*`
+set  chk_type = `ls -1 regrid.catch*_internal_rst.${year}${month}${day}_21z.nc4 | xargs /usr/bin/file -Lb --mime-type `
 if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
 if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
-$GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
-$GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS.@ATMOStag_@OCEANtag
->>>EMIP_OLDLAND<<</bin/mv gocart_internal_rst gocart_internal_rst.merra2
->>>EMIP_OLDLAND<<<$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
-
+$GEOSBIN/stripname regrid.
+$GEOSBIN/stripname .${year}${month}${day}_21z.$ext
 
 # Create CAP.rc and cap_restart
 # -----------------------------
