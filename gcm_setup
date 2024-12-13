@@ -912,25 +912,25 @@ else
              echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
              exit 7
         endif
-        set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
-        set OGCM_JM  = `expr $OGCM_IM \* 6`
-        set Resolution = `echo $OGCM_IM $OGCM_JM`
-        set OGCM_IM  = $Resolution[1]
-        set OGCM_JM  = $Resolution[2]
-        set OGCM_GRID_TYPE = Cubed-Sphere
-        set OGCM_NF = 6
-        set LATLON_OGCM = "#DELETE"
-        set CUBE_OGCM = ""
-        set DATAOCEAN = "#DELETE"
+             set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
+             set OGCM_JM  = `expr $OGCM_IM \* 6`
+             set Resolution = `echo $OGCM_IM $OGCM_JM`
+             set OGCM_IM  = $Resolution[1]
+             set OGCM_JM  = $Resolution[2]
+             set OGCM_GRID_TYPE = Cubed-Sphere
+             set OGCM_NF = 6
+             set LATLON_OGCM = "#DELETE"
+             set CUBE_OGCM = ""
+             set DATAOCEAN = "#DELETE"
 
-        set OCEAN_TAG = Ostia
-        set SSTNAME  = OSTIA_REYNOLDS
-        set OCEANOUT = "CS"
-        set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-        set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
-        set OGRIDTYP = "CF"
-        set OSTIA    = ""
+             set OCEAN_TAG = Ostia
+             set SSTNAME  = OSTIA_REYNOLDS
+             set OCEANOUT = "CS"
+             set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+             set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+             set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+             set OGRIDTYP = "CF"
+             set OSTIA    = ""
     endif
 
     set IMO = ${OGCM_IM}
@@ -1510,10 +1510,10 @@ if(  $LSM_CHOICE != 1 & $LSM_CHOICE != 2 ) then
 else
     echo
 endif
-if( $LSM_CHOICE == 1 ) then
+if( $LSM_CHOICE == 1 ) then 
     set HIST_CATCHCN   = "#DELETE"
     set GCMRUN_CATCHCN = "#DELETE"
-else if( $LSM_CHOICE == 2 ) then
+else if( $LSM_CHOICE == 2 ) then 
     set HIST_CATCHCN   = ""
     set GCMRUN_CATCHCN = ""
 endif
@@ -2276,9 +2276,6 @@ EOF
 else
 
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
-
 setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
 EOF
@@ -3253,7 +3250,7 @@ echo ""
 # TMPHIST and TMPOCEANDIR are not defined if cloning
 if ( $KLONE == "FALSE" ) then
    /bin/rm -f $TMPHIST
-   /bin/rm -rf $TMPOCEANDIR
+/bin/rm -rf $TMPOCEANDIR
 endif
 
 # ------------------------
