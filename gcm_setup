@@ -986,7 +986,7 @@ DATATMOS:
    endif
 
    if ($DATA_ATMOS == TRUE) then
-      set ACTUAL_ATM4OCN = "#"
+      set ACTUAL_ATM4OCN = "#DELETE"
       set USE_DATA_ATM4OCN = .TRUE.
 
       set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
@@ -1508,10 +1508,10 @@ if(  $LSM_CHOICE != 1 & $LSM_CHOICE != 2 ) then
 else
     echo
 endif
-if( $LSM_CHOICE == 1 ) then 
+if( $LSM_CHOICE == 1 ) then
     set HIST_CATCHCN   = "#DELETE"
     set GCMRUN_CATCHCN = "#DELETE"
-else if( $LSM_CHOICE == 2 ) then 
+else if( $LSM_CHOICE == 2 ) then
     set HIST_CATCHCN   = ""
     set GCMRUN_CATCHCN = ""
 endif
