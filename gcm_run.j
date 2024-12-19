@@ -98,7 +98,9 @@ if ( $?TSE_TMPDIR ) then
       # $SLURM_ARRAY_TASK_ID to create a unique scratch directory
 
       set TSE_TMPDIR_NAME = $SLURM_JOB_ID
-      if ( $?SLURM_ARRAY_TASK_ID ) set TSE_TMPDIR_NAME = ${TSE_TMPDIR_NAME}_${SLURM_ARRAY_TASK_ID}
+      if ( $?SLURM_ARRAY_TASK_ID ) then
+         set TSE_TMPDIR_NAME = ${TSE_TMPDIR_NAME}_${SLURM_ARRAY_TASK_ID}
+      endif
 
       setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/$SCRDIR_NAME
 

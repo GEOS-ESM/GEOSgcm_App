@@ -2303,7 +2303,6 @@ endif # if mpi
 # Check for gwd_internal for Ridge Scheme
                                              set NCAR_NRDG = 0
 if ( -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 16
-echo "Using NCAR_NRDG: $NCAR_NRDG"
 
 #######################################################################
 #               Create Local Scripts and Resource Files

@@ -106,7 +106,6 @@ if ( $?TSE_TMPDIR ) then
       # $SLURM_ARRAY_TASK_ID to create a unique scratch directory
 
       set TSE_TMPDIR_NAME = $SLURM_JOB_ID
-      if ( $?SLURM_ARRAY_TASK_ID ) set TSE_TMPDIR_NAME = ${TSE_TMPDIR_NAME}_${SLURM_ARRAY_TASK_ID}
 
       setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/scratch
 
@@ -137,11 +136,6 @@ else
    mkdir -p $SCRDIR
 
 endif # is TSE_TMPDIR defined
-
-
-
-
-
 
 cd       $SCRDIR
 
@@ -938,3 +932,5 @@ $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
  @ NFCST  = $NFCST + 1
 set date  = `$GEOSUTIL/post/tick $date0 $time0 86400`
 end
+
+# vi: ft=tcsh
