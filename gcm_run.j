@@ -68,13 +68,69 @@ if (! -e $EXPDIR/plot       ) mkdir -p $EXPDIR/plot
 
 if( $GCMEMIP == TRUE ) then
     if (! -e $EXPDIR/restarts/$RSTDATE ) mkdir -p $EXPDIR/restarts/$RSTDATE
-    setenv  SCRDIR  $EXPDIR/scratch.$RSTDATE
+    set SCRDIR_NAME = scratch.$RSTDATE
 else
-    setenv  SCRDIR  $EXPDIR/scratch
+    set SCRDIR_NAME = scratch
 endif
-if (-e $SCRDIR ) /bin/rm $SCRDIR
-mkdir -p $TSE_TMPDIR/scratch
-ln -s $TSE_TMPDIR/scratch $SCRDIR
+
+# Handling of TSE_TMPDIR
+# ----------------------
+#
+# TSE_TMPDIR only exists at NCCS so first we check if it is defined
+
+if ( $?TSE_TMPDIR ) then
+
+   # Next, we might not want to always use TSE_TMPDIR as the scratch
+   # if we need a permanent scratch directory for debugging or other
+   # purposes. So we can set a flag USE_TSE_TMPDIR to TRUE if we want
+   # and we default to TRUE
+
+   set USE_TSE_TMPDIR = TRUE
+
+   # If we want to use TSE_TMPDIR as the scratch, we create a scratch
+   # directory under TSE_TMPDIR and link it to SCRDIR
+
+   if ( $USE_TSE_TMPDIR == TRUE ) then
+
+      # Finally, we should be careful as there is a possibility we
+      # could collide if two runs use the same TSE_TMPDIR (for example
+      # a packable job). So we use $SLURM_JOB_ID and, if defined,
+      # $SLURM_ARRAY_TASK_ID to create a unique scratch directory
+
+      set TSE_TMPDIR_NAME = $SLURM_JOB_ID
+      if ( $?SLURM_ARRAY_TASK_ID ) then
+         set TSE_TMPDIR_NAME = ${TSE_TMPDIR_NAME}_${SLURM_ARRAY_TASK_ID}
+      endif
+
+      setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/$SCRDIR_NAME
+
+      if (-e $EXPDIR/$SCRDIR_NAME ) /bin/rm -rf $EXPDIR/$SCRDIR_NAME
+      if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+      mkdir -p $SCRDIR
+      ln -s $SCRDIR $EXPDIR/$SCRDIR_NAME
+
+   else
+
+      # If USE_TSE_TMPDIR is FALSE, we create a scratch directory
+      # as we did before under the experiment directory
+
+      setenv SCRDIR $EXPDIR/$SCRDIR_NAME
+      if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+      mkdir -p $SCRDIR
+   endif # USE_TSE_TMPDIR
+
+else
+
+   # If TSE_TMPDIR is not defined, we are not at NCCS and we have to
+   # act as we did before and create a scratch directory under the
+   # experiment directory
+
+   setenv SCRDIR $EXPDIR/$SCRDIR_NAME
+   if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+   mkdir -p $SCRDIR
+
+endif # is TSE_TMPDIR defined
+
 cd $SCRDIR
 
 #######################################################################
