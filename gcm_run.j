@@ -176,24 +176,24 @@ awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
 set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
->>>EMIP_OLDLAND<<<# Copy MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# ---------------------
->>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ----------------------------------------------
+@EMIP_OLDLAND# Copy MERRA-2 Restarts
+@EMIP_OLDLAND# ---------------------
+@EMIP_NEWLAND# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+@EMIP_NEWLAND# ----------------------------------------------
 cp /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
 tar xf  restarts.${year}${month}.tar
 /bin/rm restarts.${year}${month}.tar
->>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
+@EMIP_OLDLAND/bin/rm MERRA2*bin
 
 
->>>EMIP_OLDLAND<<<# Regrid MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# -----------------------
->>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ------------------------------------------------
+@EMIP_OLDLAND# Regrid MERRA-2 Restarts
+@EMIP_OLDLAND# -----------------------
+@EMIP_NEWLAND# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+@EMIP_NEWLAND# ------------------------------------------------
 set RSTID = `/bin/ls *catch* | cut -d. -f1`
 set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
 $GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin @EMIP_BCS_IN -oceanin 1440x720 -nobkg -lbl -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -in_bc_base @BC_BASE -out_bc_base @BC_BASE
->>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
+@EMIP_OLDLAND/bin/rm $RSTID.*.bin
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -210,8 +210,8 @@ if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
 $GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
 $GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS.@ATMOStag_@OCEANtag
->>>EMIP_OLDLAND<<</bin/mv gocart_internal_rst gocart_internal_rst.merra2
->>>EMIP_OLDLAND<<<$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
+@EMIP_OLDLAND/bin/mv gocart_internal_rst gocart_internal_rst.merra2
+@EMIP_OLDLAND$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
 
 
 # Create CAP.rc and cap_restart
@@ -241,16 +241,20 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 endif
 
+set GIGATRAJ  = `grep '^\s*GIGATRAJ_PARCELS_FILE:'     AGCM.rc | cut -d: -f2`
+
 #######################################################################
 #   Move to Scratch Directory and Copy RC Files from Home Directory
 #######################################################################
 
 cd $SCRDIR
 /bin/rm -rf *
-
 cp -f  $EXPDIR/RC/* .
 cp     $EXPDIR/cap_restart .
 cp     $EXPDIR/linkbcs .
+if ($GIGATRAJ != "") then
+   cp   $EXPDIR/$GIGATRAJ .
+endif
 cp -f  $HOMDIR/*.rc .
 cp -f  $HOMDIR/*.nml .
 cp -f  $HOMDIR/*.yaml .
@@ -327,10 +331,10 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 setenv EMISSIONS @EMISSIONS
 chmod +x linkbcs
 
->>>GCMRUN_CATCHCN<<<set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
->>>GCMRUN_CATCHCN<<<if ($LSM_CHOICE == 2) then
->>>GCMRUN_CATCHCN<<<  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
->>>GCMRUN_CATCHCN<<<endif
+@GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
+@GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
+@GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+@GCMRUN_CATCHCNendif
 #######################################################################
 #                  Setup executable
 #######################################################################
