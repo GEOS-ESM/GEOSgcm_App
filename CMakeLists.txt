@@ -19,24 +19,21 @@ set_target_properties (idfupd.x PROPERTIES LINKER_LANGUAGE Fortran)
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
+
 # Now that we will use configure_file on AGCM.rc.tmpl, we
-# need to remove it from the list of templates.
+# need to remove it from the list of templates, since
+# we'll need to install the configured file instead.
 list (REMOVE_ITEM templates AGCM.rc.tmpl)
 
 # Next, we want to define a variable based on whether or not
 # BUILD_WITH_GIGATRAJ is set to ON. If it is on, we want
 # the variable to be empty, otherwise we want it to be #
 # so that the line in AGCM.rc.tmpl is commented out.
-
-#if (BUILD_WITH_GIGATRAJ)
-  #set (GIGATRAJ_ENABLED "")
-#else ()
-  #set (GIGATRAJ_ENABLED "#")
-#endif ()
-
-# or as a generator expression
-set(GIGATRAJ_ENABLED $<IF:$<BOOL:${BUILD_WITH_GIGATRAJ}>,"","#">)
-
+if (BUILD_WITH_GIGATRAJ)
+  set (GIGATRAJ_ENABLED "")
+else ()
+  set (GIGATRAJ_ENABLED "#")
+endif ()
 configure_file(AGCM.rc.tmpl AGCM.rc.tmpl @ONLY)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/AGCM.rc.tmpl DESTINATION etc)
 
