@@ -23,7 +23,7 @@ file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 # Now that we will use configure_file on AGCM.rc.tmpl, we
 # need to remove it from the list of templates, since
 # we'll need to install the configured file instead.
-list (REMOVE_ITEM templates AGCM.rc.tmpl)
+list (FILTER templates EXCLUDE REGEX ".*/AGCM.rc.tmpl$")
 
 # Next, we want to define a variable based on whether or not
 # BUILD_WITH_GIGATRAJ is set to ON. If it is on, we want
