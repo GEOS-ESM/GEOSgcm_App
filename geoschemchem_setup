@@ -866,7 +866,7 @@ if( $AGCM_IM ==  "c90" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 4
+          set  NX = 15
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -875,7 +875,7 @@ if( $AGCM_IM ==  "c90" ) then
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
-     set JOB_SGMT = 00000032
+     set JOB_SGMT = 00000005
      set NUM_SGMT = 4
      set ATMOS_RES = CF0090x6C
      set POST_NDS = 8
@@ -892,7 +892,7 @@ if( $AGCM_IM ==  "c180" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 6
+          set  NX = 20
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -901,8 +901,8 @@ if( $AGCM_IM ==  "c180" ) then
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
      set NUM_READERS = 2
-     set JOB_SGMT = 00000016
-     set NUM_SGMT = 1
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 4
      set ATMOS_RES = CF0180x6C
      set POST_NDS = 8
 endif
@@ -914,15 +914,15 @@ if( $AGCM_IM == "c360" ) then
      set  CHEM_DT = $DT
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 12
+     set       NX = 30
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set GRID_FILE = "Gnomonic_c${AGCM_IM}.dat"
      set NUM_READERS = 4
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
+     set JOB_SGMT = 00000001
+     set NUM_SGMT = 4
      set ATMOS_RES = CF0360x6C
      set   CNV_NX = 4
      set POST_NDS = 12
@@ -1266,8 +1266,8 @@ EMISSIONS:
         set OPS_SPECIES = ''
         set PCHEM_CLIM_YEARS = 1
      else
-        set MERRA2OX_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 39
+        set CMIP_SPECIES = ''
+        set PCHEM_CLIM_YEARS = 228
      endif
 
 # AERO Provider
@@ -1298,8 +1298,8 @@ set  GOCART          = "#"
 set  HIST_GOCART     = "#DELETE"
 
 # GOCART.data uses MERRA2OX currently
-set MERRA2OX_SPECIES = ""
-set PCHEM_CLIM_YEARS = 39
+set CMIP_SPECIES = ""
+set PCHEM_CLIM_YEARS = 228
 
 endif
 
@@ -2449,9 +2449,9 @@ cat >      $HOMDIR/sedfile << EOF
 EOF
 
 /bin/rm -f $HOMDIR/tmpfile
-/bin/mv -f $HOMDIR/AGCM.rc $HOMDIR/tmpfile
+/bin/mv -f $HOMDIR/AGCM.rc.tmpl $HOMDIR/tmpfile
 
-sed -f $HOMDIR/sedfile   $HOMDIR/tmpfile > $HOMDIR/AGCM.rc
+sed -f $HOMDIR/sedfile   $HOMDIR/tmpfile > $HOMDIR/AGCM.rc.tmpl
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
 echo " "
@@ -2601,33 +2601,15 @@ endif
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GEOSCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
 # GEOS-Chem needs a recent BEGIN Date
 # -----------------------------------
 sed -i 's/BEG_DATE.*/BEG_DATE:     19500101 000000/' $HOMDIR/CAP.rc
 
-# # GEOS-Chem needs resolution-dependent settings
-# # ---------------------------------------------
-
-# setenv RES $AGCM_IM
-
-# set RES_LINE = "`grep -i '${RES}.*OTD-LIS scaling' $EXPDIR/RC/HEMCO_Config.rc`"
-# if ( $#RES_LINE == 1 ) then
-#    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-#    sed -i "s/@OTD_LIS_SCALING/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-# else
-#    echo Expecting exactly 1 line for ${RES} OTD-LIS scaling.
-#    echo Please set @OTD_LIS_SCALING in $EXPDIR/RC/HEMCO_Config.rc
-# endif
-
-# set RES_LINE = "`grep -i '${RES}.*Mass tuning factor' $EXPDIR/RC/HEMCO_Config.rc`"
-# if ( $#RES_LINE == 1 ) then
-#    set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-#    sed -i "s/@MASS_TUNING_FACTOR/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-# else
-#    echo Expecting exactly 1 line for ${RES} Mass tuning factor.
-#    echo Please set @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
-# endif
+if( $RUN_GSI == 1 ) then
+   sed -i 's/SkipReplayGCC: 1/SkipReplayGCC: 0/' $EXPDIR/RC/GEOSCHEMchem_GridComp.rc
+endif
 
 # Turn on PCHEM
 # -------------
@@ -2635,6 +2617,7 @@ if( $RATS_PROVIDER == PCHEM ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_PCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 endif
 
 # Turn on GOCART.data
@@ -2643,6 +2626,7 @@ if( $AERO_PROVIDER == GOCART.data ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 endif
 
 # Turn on TR GridComp
@@ -2650,6 +2634,7 @@ endif
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
 # Update LAND_PARAMS Choices
 # ------------------------------------------------------------------
@@ -2675,18 +2660,22 @@ if( $GOKART == TRUE ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
+    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
 endif
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
@@ -2701,6 +2690,7 @@ if( $RATS_PROVIDER == PCHEM ) then
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{if ( $1 ~ "doing") { if ( $1 ~ "PC") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
+    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
 endif
 
 # Turn on TR GridComp
@@ -2708,6 +2698,7 @@ endif
     /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
     cat $EXPDIR/RC/Chem_Registry.tmp | \
     awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
+    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
 
 
 #######################################################################
