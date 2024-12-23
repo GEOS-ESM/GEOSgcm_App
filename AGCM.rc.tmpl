@@ -851,8 +851,13 @@ HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
 
 # Set RADIATION Parameterizations
 # -------------------------------
-USE_RRTMG_IRRAD: 1.0
-USE_RRTMG_SORAD: 1.0
+USE_RRTMGP_IRRAD: 1.0
+USE_RRTMGP_SORAD: 1.0
+RRTMGP_GAS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-lw-g128.nc
+RRTMGP_GAS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-sw-g112.nc
+RRTMGP_CLOUD_OPTICS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-lw.nc
+RRTMGP_CLOUD_OPTICS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-sw.nc
+
 SOLAR_LB_MAX_PASSES: 10
 ISOLVAR: 2
 USE_NRLSSI2: .TRUE.
@@ -864,13 +869,6 @@ SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.txt
 #       file, e.g., NRLSSI2.v2022.txt
 
 NUM_BANDS: 30
-
-#USE_RRTMGP_IRRAD: 1.0
-#USE_RRTMGP_SORAD: 1.0
-#RRTMGP_GAS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-lw-g128.nc
-#RRTMGP_GAS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-sw-g112.nc
-#RRTMGP_CLOUD_OPTICS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-lw.nc
-#RRTMGP_CLOUD_OPTICS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-sw.nc
 
 DIURNAL_BIOMASS_BURNING: yes
 
