@@ -330,6 +330,7 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
   geosgcm_fcst.levels:         1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1,
   geosgcm_fcst.fields:        'PHIS'   , 'AGCM'       ,
                               'SLP'    , 'DYN'        ,
+                              'W'      , 'DYN'        ,
                               'U;V'    , 'DYN'        ,
                               'T'      , 'DYN'        ,
                               'PS'     , 'DYN'        ,
@@ -338,6 +339,9 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
                               'Q'      , 'MOIST'      , 'QV'  ,
                               'QITOT'  , 'AGCM'       , 'QI'  ,
                               'QLTOT'  , 'AGCM'       , 'QL'  ,
+                              'QRTOT'  , 'AGCM'       , 'QR'  ,
+                              'QSTOT'  , 'AGCM'       , 'QS'  ,
+                              'QGTOT'  , 'AGCM'       , 'QG'  ,
                               'RH2'    , 'MOIST'      , 'RH'  ,
                               'O3'     , 'CHEMISTRY'  ,
                                ::
@@ -362,14 +366,18 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
                           'FRACI'      , 'SURFACE'    , 'frseaice'   ,
                           'PS'         , 'DYN'        , 'ps'         ,
                           'DELP'       , 'DYN'        , 'delp'       ,
+                          'DELZ'       , 'DYN'        , 'delz'       ,
+                          'W'          , 'DYN'        , 'w'          ,
                           'U;V'        , 'DYN'        , 'u;v'        ,
                           'TV'         , 'DYN'        , 'tv'         ,
+                          'T'          , 'DYN'        , 't'          ,
                           'Q'          , 'MOIST'      , 'sphu'       ,
                           'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                           'QITOT'      , 'AGCM'       , 'qitot'      ,
                           'QLTOT'      , 'AGCM'       , 'qltot'      ,
                           'QRTOT'      , 'MOIST'      , 'qrtot'      ,
                           'QSTOT'      , 'MOIST'      , 'qstot'      ,
+                          'QGTOT'      , 'MOIST'      , 'qgtot'      ,
                            ::
 
 _EOF_
@@ -680,12 +688,12 @@ endif
 # -------------------------------
 # UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
 #
-#set instance_files = `/bin/ls -1 *_instance*.rc`
-#foreach instance ($instance_files)
-#   /bin/mv $instance $instance.tmp
-#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
-#   /bin/rm $instance.tmp
-#end
+set instance_files = `/bin/ls -1 *_instance*.rc`
+foreach instance ($instance_files)
+   /bin/mv $instance $instance.tmp
+   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+   /bin/rm $instance.tmp
+end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------

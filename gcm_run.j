@@ -880,12 +880,12 @@ endif
 # -------------------------------
 # UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
 #
-#set instance_files = `/bin/ls -1 *_instance*.rc`
-#foreach instance ($instance_files)
-#   /bin/mv $instance $instance.tmp
-#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
-#   /bin/rm $instance.tmp
-#end
+set instance_files = `/bin/ls -1 *_instance*.rc`
+foreach instance ($instance_files)
+   /bin/mv $instance $instance.tmp
+   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+   /bin/rm $instance.tmp
+end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -1354,6 +1354,8 @@ end
 #                 Run Post-Processing and Forecasts
 #######################################################################
 
+if ($rc == 0) then
+
 $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
 
 if( $FSEGMENT != 00000000 ) then
@@ -1372,6 +1374,8 @@ if( $FSEGMENT != 00000000 ) then
      endif
 endif
 
+endif
+
 #######################################################################
 #                         Update Iteration Counter
 #######################################################################
@@ -1383,6 +1387,10 @@ if ( $capdate < $enddate ) then
 @ counter = $counter    + 1
 else
 @ counter = ${NUM_SGMT} + 1
+endif
+
+if ($rc != 0) then
+  @ counter = ${NUM_SGMT} + 1
 endif
 
 end   # end of segment loop; remain in $SCRDIR
