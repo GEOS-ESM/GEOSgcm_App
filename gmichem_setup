@@ -1056,7 +1056,7 @@ endif
 #--------------------------
 set DATA_ATMOS = FALSE
 set MODELATM = ""
-set DATAATM = .FALSE.
+set USE_DATA_ATM4OCN = .FALSE.
 
 if( $OGCM == "TRUE" ) then
 
@@ -1084,7 +1084,7 @@ DATATMOS:
 
    if ($DATA_ATMOS == TRUE) then
       set MODELATM = "#DELETE"
-      set DATAATM = .TRUE.
+      set USE_DATA_ATM4OCN = .TRUE.
 
       set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
    endif
@@ -2723,7 +2723,7 @@ s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
 
 s?@MODELATM?$MODELATM?g
-s?@DATAATM?$DATAATM?g
+s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 EOF
 
