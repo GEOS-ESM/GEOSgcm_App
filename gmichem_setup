@@ -1055,8 +1055,8 @@ endif
 # Check for Data Atmosphere
 #--------------------------
 set DATA_ATMOS = FALSE
-set ACTUAL_ATM4OCN = ""
-set USE_DATA_ATM4OCN = .FALSE.
+set MODELATM = ""
+set DATAATM = .FALSE.
 
 if( $OGCM == "TRUE" ) then
 
@@ -1083,8 +1083,8 @@ DATATMOS:
    endif
 
    if ($DATA_ATMOS == TRUE) then
-      set ACTUAL_ATM4OCN = "#DELETE"
-      set USE_DATA_ATM4OCN = .TRUE.
+      set MODELATM = "#DELETE"
+      set DATAATM = .TRUE.
 
       set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
    endif
@@ -2722,8 +2722,8 @@ s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
 
-s?@ACTUAL_ATM4OCN?$ACTUAL_ATM4OCN?g
-s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
+s?@MODELATM?$MODELATM?g
+s?@DATAATM?$DATAATM?g
 
 EOF
 
