@@ -361,21 +361,21 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
-#>>>4DIAUDAS<<<    AINC_FILE: @EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#>>>4DIAUDAS<<<    NUDGE_STATE: YES
-##>>>4DIAUDAS<<<    TAUANL: 3600
-#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHHMN<<<z.nc4
-#>>>4DIAUDAS<<<    AGCM_IMPORT_RESTART_TYPE:  binary
+#@4DIAUDAS    AINC_FILE: @EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#@4DIAUDAS    NUDGE_STATE: YES
+##@4DIAUDAS    TAUANL: 3600
+#@4DIAUDAS    AGCM_IMPORT_RESTART_FILE:  agcm_import_rst.>>>ANA0YYYYMMDDHHMN<<<z.nc4
+#@4DIAUDAS    AGCM_IMPORT_RESTART_TYPE:  binary
 
 #   Exact REPLAY Mode for 4D-IAU
 #   ----------------------------
->>>4DIAUDAS<<<    REPLAY_MODE: Exact
->>>4DIAUDAS<<<    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2%n2z.nc4
->>>4DIAUDAS<<<    REPLAY_FILE_FREQUENCY: 7200
->>>4DIAUDAS<<<    REPLAY_SHUTOFF: 21600.0 #  ShutOff Replay after 6-hours for G5NCEP and G5ECMWF Forecasts
+@4DIAUDAS    REPLAY_MODE: Exact
+@4DIAUDAS    REPLAY_FILE: agcm_import_rst.%y4%m2%d2_%h2%n2z.nc4
+@4DIAUDAS    REPLAY_FILE_FREQUENCY: 7200
+@4DIAUDAS    REPLAY_SHUTOFF: 21600.0 #  ShutOff Replay after 6-hours for G5NCEP and G5ECMWF Forecasts
 
-#>>>4DIAUDAS<<<    REPLAY_INTERVAL: 3600.0
-#>>>4DIAUDAS<<<    PREDICTOR_OFFSET: 3600.0
+#@4DIAUDAS    REPLAY_INTERVAL: 3600.0
+#@4DIAUDAS    PREDICTOR_OFFSET: 3600.0
 
 ####################################################################################################
 ####                    Miscellaneous Exact/Regular REPLAY Parameters                           ####
@@ -408,22 +408,22 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   REPLAY_V:  YES or NO    #  (Default: YES)
 #   REPLAY_T:  YES or NO    #  (Default: YES)
 #   REPLAY_QV: YES or NO    #  (Default: YES)
->>>REGULAR_REPLAY_GMAO<<<   REPLAY_O3: YES or NO    #  (Default: YES)
->>>REGULAR_REPLAY_NCEP<<<   REPLAY_O3: YES or NO    #  (Default: YES)
->>>REGULAR_REPLAY_ECMWF<<<  REPLAY_O3: YES or NO    #  (Default: YES)
+@REGULAR_REPLAY_GMAO   REPLAY_O3: YES or NO    #  (Default: YES)
+@REGULAR_REPLAY_NCEP   REPLAY_O3: YES or NO    #  (Default: YES)
+@REGULAR_REPLAY_ECMWF  REPLAY_O3: YES or NO    #  (Default: YES)
 #   REPLAY_TS: YES or NO    #  (Default:  NO)
 #
 #   Regular REPLAY Remapping and Blending Variables
 #   -----------------------------------------------
 #   REPLAY_REMAP:    YES    #  Default = YES,  Remap ANA Data to BKG Topography
->>>REGULAR_REPLAY_ECMWF<<<  REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_ECMWF<<<  REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_GMAO<<<   REPLAY_DAMPBEG:  100.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_GMAO<<<   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_NCEP<<<   REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_NCEP<<<   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY<<<   REPLAY_SHUTOFF: 21600   #  ShutOff Replay after 6-hours of Integration
->>>REGULAR_REPLAY<<<   REPLAY_WINDFIX: YES     #  Apply windfix to force vertically-integrated analysis divergence increment to zero
+@REGULAR_REPLAY_ECMWF  REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+@REGULAR_REPLAY_ECMWF  REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+@REGULAR_REPLAY_GMAO   REPLAY_DAMPBEG:  100.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+@REGULAR_REPLAY_GMAO   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+@REGULAR_REPLAY_NCEP   REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+@REGULAR_REPLAY_NCEP   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+@REGULAR_REPLAY   REPLAY_SHUTOFF: 21600   #  ShutOff Replay after 6-hours of Integration
+@REGULAR_REPLAY   REPLAY_WINDFIX: YES     #  Apply windfix to force vertically-integrated analysis divergence increment to zero
 #
 #   REPLAY_BLEND_QV_AT_TP: .FALSE. #  Default = FALSE,  Blend QV to BKG upwards from tropopause
 #
@@ -566,14 +566,14 @@ LSM_CHOICE: @LSM_CHOICE
 # AGCM_INTERNAL = BIAS Correction Increment: BIAS(n+1) = ALPHA*IAU(n) + BETA*BIAS(n)
 # ----------------------------------------------------------------------------------
 
->>>FORCEDAS<<<AGCM_IMPORT_RESTART_FILE:               agcm_import_rst
+@FORCEDASAGCM_IMPORT_RESTART_FILE:               agcm_import_rst
 
->>>FORCEGCM<<<AGCM_INTERNAL_RESTART_FILE:             agcm_internal_rst
->>>FORCEGCM<<<AGCM_INTERNAL_CHECKPOINT_FILE:          agcm_internal_checkpoint
->>>FORCEGCM<<<AGCM_INTERNAL_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+@FORCEGCMAGCM_INTERNAL_RESTART_FILE:             agcm_internal_rst
+@FORCEGCMAGCM_INTERNAL_CHECKPOINT_FILE:          agcm_internal_checkpoint
+@FORCEGCMAGCM_INTERNAL_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
 
->>>FORCEGCM<<<AGCM_ALPHA: 0.000
->>>FORCEGCM<<<AGCM_BETA:  1.000
+@FORCEGCMAGCM_ALPHA: 0.000
+@FORCEGCMAGCM_BETA:  1.000
 
 MAPL_ENABLE_BOOTSTRAP: @BOOT
 
@@ -785,6 +785,32 @@ SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 @COUPLEDOCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
 @COUPLEDOCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
 @COUPLEDOCEAN_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+
+# GIGATRAJ RUN CONFIG
+# -------------------------
+#GIGATRAJ_INTERNAL_RESTART_FILE:         gigatraj_internal_rst
+#GIGATRAJ_INTERNAL_CHECKPOINT_FILE:      gigatraj_internal_checkpoint
+#GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      @CHECKPOINT_TYPE
+GIGATRAJ_REGRID_TO_LATLON:              NO
+#GIGATRAJ_PARCELS_FILE:                  parcels.nc4
+# time interval (minutes) for integration. Default is heart beat and it must be a multiple of heart beat.
+# format hhmmss
+# GIGATRAJ_INTEGRATE_DT:
+# time interval to rebalance the parcels, i.e, the process keeps its own parcels
+# format hhmmss
+GIGATRAJ_REBALANCE_DT:      001500
+# time interval to write output
+# format hhmmss
+GIGATRAJ_OUTPUT_DT:         003000
+# format :: comp[%%bundle]%field[|alias], [] is optional
+GIGATRAJ_VERTICAL_COORD: DYN%PL|P
+#GIGATRAJ_VERTICAL_COORD: DYN%TH|Theta
+#GIGATRAJ_VERTICAL_COORD: DYN%ZL|PAlt
+# using ";" to separate fields. NO blank space between chars
+# format :: comp[%%bundle]%field[|alias], [] is optional
+GIGATRAJ_EXTRA_FIELDS:       DYN%TH|Theta;DYN%ZL|PAlt
+#GIGATRAJ_EXTRA_FIELDS:       DYN%PL|P;DYN%ZL|PAlt
+#GIGATRAJ_EXTRA_FIELDS:       DYN%PL|P;DYN%TH|Theta
 
 # IGNI Restart Files
 # ------------------
