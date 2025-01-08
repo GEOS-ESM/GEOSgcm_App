@@ -43,7 +43,6 @@ class setup:
                                    'gcm_emip.setup',    
                                    'CAP.rc.tmpl',       
                                    'AGCM.rc.tmpl',      
-                                   'HISTORY.rc.tmpl',   
                                    'logging.yaml',      
                                    'fvcore_layout.rc',
                                    'linkbcs.tmpl']
@@ -53,11 +52,12 @@ class setup:
         self.atmos.config(self.ocean.nx, self.ocean.ny)
         self.land.config()
         self.gocart.config()
+        self.file_list.append(self.ocean.history_template)
 
 
     # setup some variables idk
     def set_some_stuff(self):
-        if self.atmos.im_hist >= self.ocean.im:
+        if self.atmos.hist_im >= self.ocean.im:
             self.interpolate_sst = True
         else:
             self.interpolate_sst = False
@@ -82,7 +82,7 @@ class setup:
 
             # Now we roughly figure out the number of collections in the HISTORY.rc 
             n_hist_collections = 0
-            with open(answerdict['history_template'].q_answer, 'r') as file:
+            with open(f"{pathdict['etc']}/{answerdict['history_template'].q_answer}", 'r') as file:
                 in_collections = False 
                 for line in file:
                     if line.split(' ', 1)[0] == "COLLECTIONS:":
@@ -182,15 +182,15 @@ class setup:
             self.plot_t           = "8:00:00"                            
             self.archive_t        = "8:00:00"                                                      
             self.run_q            = f"PBS -q normal"                    
-            self.run_p            = f"PBS -l select={self.nodes}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor']}" 
-            self.run_fp           = f"PBS -l select=24:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor']}"           
+            self.run_p            = f"PBS -l select={self.nodes}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}" 
+            self.run_fp           = f"PBS -l select=24:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"           
             self.post_q           = "PBS -q normal"                      
             self.plot_q           = "PBS -q normal"                     
             self.move_q           = "PBS -q normal"
             self.archive_q        = "PBS -q normal"
-            self.post_p           = f"PBS -l select={NPCUS}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor']}"
-            self.plot_p           = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs=1:model={answerdict['processor']}"
-            self.archive_p        = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor']}"
+            self.post_p           = f"PBS -l select={NPCUS}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
+            self.plot_p           = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs=1:model={answerdict['processor'].q_answer}"
+            self.archive_p        = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
             self.move_p           = "PBS -l select=1:ncpus=1"   
             self.boundary_path    = "/nobackup/gmao_SIteam/ModelData"
             self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs}/{self.land.bcs}_{self.ocean.tag}"
@@ -203,7 +203,7 @@ class setup:
             if oceanres == "1440x720":
                 self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/SST/{oceanres}"
             else:
-                self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
+                self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/realtime/@SSTNAME/{oceanres}"
             if self.ocean.gridtype_abrv == "LL":
                 self.sst_dir = "/nobackupp2/estrobac/geos5/SSTDIR"
 
@@ -230,11 +230,11 @@ class setup:
             self.post_t           = "8:00:00" 
             self.plot_t           = "12:00:00" 
             self.archive_t        = "2:00:00"
-            self.run_q            = f"SBATCH --constraint={answerdict['processor']}"
+            self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
-            self.post_q           = f"SBATCH --constraint={answerdict['processor']}"
-            self.plot_q           = f"SBATCH --constraint={answerdict['processor']}"
+            self.post_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
+            self.plot_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.move_q           = "SBATCH --partition=datamove"
             self.archive_q        = "SBATCH --partition=datamove"
             self.post_p           = f"SBATCH --nodes={NPCUS} --ntasks-per-node={envdict['n_CPUs']}"
@@ -242,7 +242,7 @@ class setup:
             self.archive_p        = "SBATCH --ntasks=1"
             self.move_p           = "SBATCH --ntasks=1"
             self.boundary_path    = "/discover/nobackup/projects/gmao"
-            self.bcs_dir          = f"{self.boundary_path}bcs_shared/fvInput/ExtData/esm/tiles/{self.land.bcs}"
+            self.bcs_dir          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles/{self.land.bcs}"
             self.replay_ana_expID       = "x0039"
             self.replay_ana_location    = f"{self.boundary_path}/g6dev/ltakacs/x0039"
             self.M2_replay_ana_location = f"{self.boundary_path}/merra2/data"
@@ -253,7 +253,7 @@ class setup:
             if oceanres == "1440x720":
                 self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/SST/{oceanres}"
             else:
-                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
+                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/{oceanres}"
             if self.ocean.gridtype_abrv == "LL":
                 self.sst_dir = "/discover/nobackup/estrobac/geos5/SSTDIR"
 
@@ -280,7 +280,7 @@ class setup:
             self.post_t           = "8:00:00"
             self.plot_t           = "12:00:00"
             self.archive_t        = "1:00:00"
-            self.run_q            = f"SBATCH --constraint={answerdict['processor']}"
+            self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}" 
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
             self.post_q           = "NULL"
@@ -296,7 +296,7 @@ class setup:
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/{self.ocean.sst_name}/{self.ocean.im}x{self.ocean.jm}"
+            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.im}x{self.ocean.jm}"
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME')
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
@@ -331,7 +331,7 @@ class setup:
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/{self.ocean.sst_name}/{self.ocean.im}x{self.ocean.jm}"
+            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.im}x{self.ocean.jm}"
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME') 
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
@@ -340,21 +340,12 @@ class setup:
             # By default on desktop, just ignore IOSERVER for now
             self.atmos.NX = 1
             self.atmos.NY = 6
-            answerdict["io_server"] = False
+            answerdict["io_server"].q_answer = False
             self.n_oserver_nodes = 0
             self.n_backend_pes = 0
 
-    '''
-    def set_hist_temp(self):
-        tmphist_d, tmphist_path = tempfile.mkstemp()
-        print(self.ocean.history_template)
-        shutil.copy(self.ocean.history_template, tmphist_path)
-        return tmphist_d, tmphist_path 
-    '''
 
-    '''
-    mainly used to create .{*}root files and/or populate them
-    '''
+    # mainly used to create .{*}root files and/or populate them
     def create_dotfile(self, path, content):
         try:
             path = Path(path)
@@ -399,12 +390,24 @@ class setup:
         with open('../yaml/mpi_config.yaml') as file:
             mpidict = yaml.load(file, Loader=yaml.FullLoader)
 
-        # retrieve config from correlating mpi setting being used
-        mpi_config = mpidict.get(envdict['mpi'])
-
         # restart by oserver if using openmpi or mvapich
         if envdict['mpi'] == 'openmpi' or envdict['mpi'] == 'mvapich':
             self.restart_by_oserver = 'YES'
+
+        # retrieve config from correlating mpi setting being used
+        self.mpi_config = mpidict.get(envdict['mpi'])
+
+        # These are options determined to be useful at NCCS
+        # Not setting generally as they are more fabric/cluster
+        # specific compared to the above adjustments
+        if envdict['site'] == 'NCCS':
+            self.mpi_config += "\nsetenv I_MPI_SHM_HEAP_VSIZE 512 \
+                                \nsetenv PSM2_MEMORY large"
+        
+        # as of right now, sigularity is not an option so this will always be added
+        self.mpi_config += "\nsetenv I_MPI_EXTRA_FILESYSTEM 1 \
+                            \nsetenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs"
+
 
 
 
@@ -586,28 +589,13 @@ class setup:
             with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'r') as file:
                 file.write(file_content)
 
-    '''
-    This is a helper function that extends jinja's Undefined class to ignore 
-    template variables that aren't detemplated by this script 
-    '''
-    def get_undefined_handler(variable_start_string, variable_end_string, self):
-        class PreserveUndefined(Undefined):
-            __slots__ = ()
 
-            def __init__(self, *args, **kwargs):
-                super(PreserveUndefined, self).__init__(**kwargs)
-
-            def __str__(self):
-                return f"{variable_start_string}{self._undefined_name}{variable_end_string}"
-        return PreserveUndefined
-
-
-    # another templating helper function that removes lines from a file that begin with #DELETE
+    # Templating helper function -- Removes lines marked with "#DELETE"
     def cleanup(self, file_path):
         with open(file_path, 'r') as file:
             content = file.read()
 
-        content = re.sub(r'^\s*#DELETE.*\n', r'', content, flags=re.MULTILINE)
+        content = re.sub(r'.*#DELETE.*\n?', r'', content)
 
         with open(file_path, 'w') as file:
             file.write(content)
@@ -617,6 +605,7 @@ class setup:
     def template(self):  
         # this dictionary holds template values for the default jinja2 delimiter "{{ val }}"
         jinja_dict = {
+            'SETENVS': self.mpi_config,
             'GCMVER': self.gcm_version,
             'EXPSRC': self.gcm_version,
             'EXPID': answerdict['experiment_id'].q_answer,
@@ -701,7 +690,7 @@ class setup:
             'LSM_PARMS': self.land.parameters,
             'OCEAN_NAME': self.ocean.model,
             'OCEAN_PRELOAD': self.ocean.preload,
-            #'ana4replay.eta.%y4%m2%d2_%h2z.nc4': '/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g',
+            'ana4replay.eta.%y4%m2%d2_%h2z.nc4': '/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g',
             'REPLAY_ANA_EXPID': self.replay_ana_expID,
             'REPLAY_ANA_LOCATION': self.replay_ana_location,
             'M2_REPLAY_ANA_LOCATION': self.M2_replay_ana_location,
@@ -760,8 +749,8 @@ class setup:
             'CONVPAR_OPTION': self.atmos.convpar_option,
             'STRETCH_FACTOR': self.atmos.stretch_factor,
             'INTERPOLATE_SST': self.interpolate_sst, 
-            'HIST_IM': self.atmos.im_hist,
-            'HIST_JM': self.atmos.jm_hist,
+            'HIST_IM': self.atmos.hist_im,
+            'HIST_JM': self.atmos.hist_jm,
             'ISCCP_SATSIM': 1,
             'MODIS_SATSIM': 0,
             'RADAR_SATSIM': 0,
@@ -780,24 +769,18 @@ class setup:
             'RUN_CMD': envdict['run_command'],
             'HYDROSTATIC': self.atmos.use_hydrostatic,
             'FV_SCHMIDT': self.atmos.schmidt,
-            'FV_STRETCH_FAC': self.atmos.stretch_factor,
+            'FV_STRETCH_FAC': self.atmos.FV_stretch_fac,
             'FV_TARGET_LON': self.atmos.target_lon,
             'FV_TARGET_LAT': self.atmos.target_lat,
             'FV_MAKENH': self.atmos.FV_make_NH,
             'FV_HYDRO': self.atmos.FV_hydro,
             'GFDL_PROG_CCN': self.atmos.GFDL_prog_ccn,
             'GFDL_USE_CCN': self.atmos.GFDL_use_ccn,
-            'GFDL_HYDRO': self.atmos.GFDL_hydro
-        }
-
-        # this dictionary holds values that use the ">>>val<<<" delimiter
-        jinja_dict_special_delimiter = {
+            'GFDL_HYDRO': self.atmos.GFDL_hydro,
             'FORCEDAS': self.atmos.force_das,
             'FORCEGCM': self.atmos.force_gcm, 
             'HIST_CICE4': '#DELETE',
-            'GOCART': self.gocart.gocart,
             'FVCUBED': '',
-            'OSTIA': self.ocean.ostia,
             'HIST_CATCHCN': self.land.HIST_catchment,
             'GCMRUN_CATCHCN': self.land.GCMRUN_catchment,
             'EMIP_OLDLAND': self.land.emip_oldland,
@@ -812,13 +795,12 @@ class setup:
 
         exp_dir = answerdict['exp_dir'].q_answer
 
-        # this is an edge-case that can't be handled with jinja2
-        # original csh line: s?^[ \t]*RECORD_?#RECORD_?g
+        # this is an edge-case that can't be handled with jinja2  
         for file in self.file_list:
             with open(f"{exp_dir}/{file}", 'r') as tmpl:
                 file_content = tmpl.read()
 
-            file_content = re.sub(r'^[ \t]*(RECORD_.*)', r'#\1', file_content)
+            file_content = re.sub(r'[ \t]*RECORD_', r'#RECORD_', file_content)
 
             with open(f"{exp_dir}/{file}", 'w') as tmpl:
                 tmpl.write(file_content) 
@@ -833,20 +815,6 @@ class setup:
             with open(f"{exp_dir}/{file}", 'w') as tmpl:
                 tmpl.write(content)
 
-        # this block handles the special case for jinja templating
-        PreserveUndefined = self.get_undefined_handler('>>>', '<<<')
-        special_env = Environment(
-            loader=FileSystemLoader(exp_dir),
-            undefined=PreserveUndefined,
-            variable_start_string=">>>",
-            variable_end_string="<<<"
-        )    
-        for file in self.file_list:
-            template = special_env.get_template(file)
-            content = template.render(jinja_dict_special_delimiter)
-            with open(f"{exp_dir}/{file}", 'w') as tmpl:
-                tmpl.write(content)
-    
         # remove #DELETE lines
         for file in self.file_list:
             file_path = f"{exp_dir}/{file}"
@@ -885,7 +853,7 @@ class setup:
         # rename tmpl files
         os.rename(f"{exp_dir}/CAP.rc.tmpl", f"{exp_dir}/CAP.rc")
         os.rename(f"{exp_dir}/AGCM.rc.tmpl", f"{exp_dir}/AGCM.rc")
-        os.rename(f"{exp_dir}/HISTORY.rc.tmpl", f"{exp_dir}/HISTORY.rc")
+        os.rename(f"{exp_dir}/{self.ocean.history_template}", f"{exp_dir}/HISTORY.rc")
         os.rename(f"{exp_dir}/linkbcs.tmpl", f"{exp_dir}/linkbcs")
 
         # update file permissions

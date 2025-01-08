@@ -5,13 +5,13 @@ class land:
     def __init__(self):
         self.model              = answerdict["LS_model"].q_answer
         self.bcs                = answerdict["LS_boundary_conditions"].q_answer
-        self.parameters         = None
-        self.emip_bcs_in        = None
-        self.emip_oldland       = None
-        self.emip_newland       = None
-        self.emip_MERRA2        = None  
-        self.HIST_catchment     = None
-        self.GCMRUN_catchment   = None
+        self.parameters         = '' 
+        self.emip_bcs_in        = ''
+        self.emip_oldland       = ''
+        self.emip_newland       = ''
+        self.emip_MERRA2        = ''  
+        self.HIST_catchment     = ''
+        self.GCMRUN_catchment   = ''
 
     # for debugging purposes
     def print_vars(self):
@@ -42,7 +42,7 @@ class land:
 
     def set_catchment(self):
         if self.model == "Catchment":
-            self.land_choice        = 1
+            self.model              = 1
             self.HIST_catchment     = "#DELETE"
             self.GCMRUN_catchment   = "#DELETE"
         elif self.model == "CatchmentCN-CLM4.0":

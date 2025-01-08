@@ -28,7 +28,8 @@ def replace_strings_in_file(file_path, replacements):
 
 def main(file_list, replacements):
     for file_path in file_list:
-        file_path = f"{os.path.dirname(os.getcwd())}/{file_path}"
+        #file_path = f"{os.path.dirname(os.getcwd())}/{file_path}"
+        file_path = f"/discover/nobackup/sshakoor/GEOSgcm/install/bin/{file_path}"
         if os.path.isfile(file_path):
             replace_strings_in_file(file_path, replacements)
         else:
@@ -50,6 +51,10 @@ if __name__ == "__main__":
         'CAP.rc.tmpl',
         'AGCM.rc.tmpl',
         'HISTORY.rc.tmpl',
+        'HISTORY.AOGCM-MOM5.rc.tmpl',
+        'HISTORY.AOGCM.rc.tmpl',
+        'HISTORY.AOGCM_MITgcm.rc.tmpl',
+        'HISTORY.AGCM.rc.tmpl',
         'logging.yaml',
         'fvcore_layout.rc',
         'linkbcs.tmpl'
@@ -57,6 +62,7 @@ if __name__ == "__main__":
 
     # Dictionary with keys to find and values to replace
     replacements = {
+                     '@SETENVS': '{{ SETENVS }}',
                       '@GCMVER': '{{ GCMVER }}',
                       '@EXPSRC': '{{ EXPSRC }}',
                        '@EXPID': '{{ EXPID }}',
@@ -126,8 +132,8 @@ if __name__ == "__main__":
                  '@OGCM_NPROCS': '{{ OGCM_NPROCS }}',
                 '@OBSERVER_FRQ': '{{ OBSERVER_FRQ }}',
                    '@DASTUNING': '{{ DASTUNING }}',
-               '>>>FORCEDAS<<<': '>>>FORCEDAS<<<',
-               '>>>FORCEGCM<<<': '>>>FORCEGCM<<<',
+               '>>>FORCEDAS<<<': '{{ FORCEDAS }}',
+               '>>>FORCEGCM<<<': '{{ FORCEGCM }}',
                      '@COUPLED': '{{ COUPLED }}',
                     '@CLDMICRO': '{{ CLDMICRO }}',
                         '@MOM5': '{{ MOM5 }}',
@@ -135,28 +141,28 @@ if __name__ == "__main__":
                     '@OCNMODEL': '{{ OCNMODEL }}',
                        '@CICE4': '{{ CICE4 }}',
                        '@CICE6': '{{ CICE6 }}',
-             '>>>HIST_CICE4<<<': '{{ >>>HIST_CICE4<<< }}',
+             '>>>HIST_CICE4<<<': '{{ HIST_CICE4 }}',
                          '@MIT': '{{ MIT }}',
                    '@DATAOCEAN': '{{ DATAOCEAN }}',
                  '>>>GOCART<<<': '>>>GOCART<<<',
                  '@OPS_SPECIES': '{{ OPS_SPECIES }}',
                 '@CMIP_SPECIES': '{{ CMIP_SPECIES }}',
             '@MERRA2OX_SPECIES': '{{ MERRA2OX_SPECIES }}',
-                '>>>FVCUBED<<<': '>>>FVCUBED<<<',
+                '>>>FVCUBED<<<': '{{ FVCUBED }}',
                  '@HIST_GOCART': ' {{ HIST_GOCART }}',
                   '>>>OSTIA<<<': '>>>OSTIA<<<',
-           '>>>HIST_CATCHCN<<<': '>>>HIST_CATCHCN<<<',
-         '>>>GCMRUN_CATCHCN<<<': '>>>GCMRUN_CATCHCN<<<',
-           '>>>EMIP_OLDLAND<<<': '>>>EMIP_OLDLAND<<<',
-           '>>>EMIP_NEWLAND<<<': '>>>EMIP_NEWLAND<<<',
+           '>>>HIST_CATCHCN<<<': '{{ HIST_CATCHCN }}',
+         '>>>GCMRUN_CATCHCN<<<': '{{ GCMRUN_CATCHCN }}',
+           '>>>EMIP_OLDLAND<<<': '{{ EMIP_OLDLAND }}',
+           '>>>EMIP_NEWLAND<<<': '{{ EMIP_NEWLAND }}',
                    '@LSM_PARMS': '{{ LSM_PARMS }}',
                   '@OCEAN_NAME': '{{ OCEAN_NAME }}',
                '@OCEAN_PRELOAD': '{{ OCEAN_PRELOAD }}',
-               '>>>4DIAUDAS<<<': '>>>4DIAUDAS<<<',
-         '>>>REGULAR_REPLAY<<<': '>>>REGULAR_REPLAY<<<',
-    '>>>REGULAR_REPLAY_GMAO<<<': '>>>REGULAR_REPLAY_GMAO<<<',
-    '>>>REGULAR_REPLAY_NCEP<<<': '>>>REGULAR_REPLAY_NCEP<<<',
-   '>>>REGULAR_REPLAY_ECMWF<<<': '>>>REGULAR_REPLAY_ECMWF<<<',
+               '{{ 4DIAUDAS }}': '{{ _4DIAUDAS }}',
+         '>>>REGULAR_REPLAY<<<': '{{ REGULAR_REPLAY }}',
+    '>>>REGULAR_REPLAY_GMAO<<<': '{{ REGULAR_REPLAY_GMAO }}',
+    '>>>REGULAR_REPLAY_NCEP<<<': '{{ REGULAR_REPLAY_NCEP }}',
+   '>>>REGULAR_REPLAY_ECMWF<<<': '{{ REGULAR_REPLAY_ECMWF }}',
 'ana4replay.eta.%y4%m2%d2_%h2z.nc4': '{{ ana4replay.eta.%y4%m2%d2_%h2z.nc4 }}',
             '@REPLAY_ANA_EXPID': '{{ REPLAY_ANA_EXPID }}',
          '@REPLAY_ANA_LOCATION': '{{ REPLAY_ANA_LOCATION }}',

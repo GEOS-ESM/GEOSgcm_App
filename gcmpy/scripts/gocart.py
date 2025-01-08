@@ -33,12 +33,12 @@ class gocart:
             self.gocart_hist    = '#DELETE'
 
     def set_emissions(self):
-        if self.emissions.split('_')[0] == 'AMIP':
-            self.MERRA2OX_species = ''
+        if self.emissions.split('_')[0] == 'OPS':
+            self.ops_species      = '' 
             self.pchem_clim_years = 1
             self.ox_relaxtime = '0.00'
-        elif self.emissions.split('_')[0] == 'OPS':
-            self.ops_species      = ''
+        elif self.emissions.split('_')[0] == 'AMIP':
+            self.MERRA2OX_species = ''
             self.pchem_clim_years = 39
             self.ox_relaxtime = '259200.'
 

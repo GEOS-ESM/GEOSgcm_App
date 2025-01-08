@@ -76,9 +76,9 @@ answerdict = pq.process()
 if envdict['site'] == 'NCCS':
     # NOTE: in the current version of gcm_setup, we never build on 
     # SLES15, so milan nodes are not an option for NCCS.
-    if answerdict['processor'].q_answer == 'Skylake':
+    if answerdict['processor'].q_answer == 'sky':
         envdict['n_CPUs'] = 40
-    elif answerdict['processor'].q_answer == 'Cascade':
+    elif answerdict['processor'].q_answer == 'cas':
         '''
         NCCS currently recommends that users do not run with
         48 cores per n_CPUs on SCU16 due to OS issues and
@@ -89,15 +89,15 @@ if envdict['site'] == 'NCCS':
         envdict['n_CPUs'] = 45
 
 elif envdict['site'] == 'NAS':
-    if answerdict['processor'].q_answer == 'Haswell':
+    if answerdict['processor'].q_answer == 'has':
         envdict['n_CPUs'] = 24
-    elif answerdict['processor'].q_answer == 'Broadwell':
+    elif answerdict['processor'].q_answer == 'bro':
         envdict['n_CPUs'] = 28
-    elif answerdict['processor'].q_answer == 'Skylake':
+    elif answerdict['processor'].q_answer == 'sky':
         envdict['n_CPUs'] = 40
-    elif answerdict['processor'].q_answer == 'Cascade':
+    elif answerdict['processor'].q_answer == 'cas':
         envdict['n_CPUs'] = 40
-    elif answerdict['processor'].q_answer == 'AMD':
+    else:
         envdict['n_CPUs'] = 128
 
 elif envdict['site'] == 'AWS' or envdict['site'] == 'AZURE':

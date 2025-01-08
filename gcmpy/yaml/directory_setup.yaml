@@ -1,5 +1,5 @@
 history_template:
-  type:           'path'
+  type:           'text'
   prompt:         'Enter the location of HISTORY template to use (press ENTER for recommended template):'
   choices:        ''
   default_answer: ''

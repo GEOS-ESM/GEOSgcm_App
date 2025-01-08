@@ -46,10 +46,10 @@ class ocean:
 
 
     def set_IMO(self):
-        self.imo = f"{str(self.im):04}"
+        self.imo = "%04d" % self.im
 
     def set_JMO(self):
-        self.jmo = f"{str(self.jm):04}"
+        self.jmo = "%04d" % self.jm
 
     def set_res(self):
         hres = answerdict["OM_horizontal_res"].q_answer
@@ -161,7 +161,7 @@ class ocean:
                 self.nf = 1
                 self.tag = "Reynolds"
                 self.sst_name = "SST"
-                self.out = "c"
+                self.out = "360x180"
                 self.sst_file = f"dataoceanfile_MERRA_sst_1971-current.{self.im}x{self.jm}.LE"
                 self.ice_file = f"dataoceanfile_MERRA_fraci_1971-current.{self.im}x{self.jm}.LE"
                 self.set_kpar_file()
@@ -177,7 +177,7 @@ class ocean:
                 self.nf = 1
                 self.tag = "MERRA-2"
                 self.sst_name  = "MERRA2"
-                self.out = "e"
+                self.out = "1440x720"
                 self.sst_file = f"dataoceanfile_MERRA2_SST.{self.im}x{self.jm}.{todays_date.year}.data"
                 self.ice_file  = f"dataoceanfile_MERRA2_ICE.{self.im}x{self.jm}.{todays_date.year}.data"
                 self.set_kpar_file()
@@ -193,7 +193,7 @@ class ocean:
                 self.nf = 1
                 self.tag = "Ostia"
                 self.sst_name  = "OSTIA_REYNOLDS"
-                self.out = "f"
+                self.out = "2880x1440"
                 self.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{OGCM_IM}x{OGCM_JM}.{todays_date.year}.data"
                 self.ice_file  = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{OGCM_IM}x{OGCM_JM}.{todays_date.year}.data"
                 self.set_kpar_file()
@@ -210,7 +210,7 @@ class ocean:
                     self.nf = 6
                     self.tag = "Ostia"
                     self.sst_name = "OSTIA_REYNOLDS"
-                    self.out = "f"
+                    self.out = "CS"
                     self.sst_file  = f"dataoceanfile_OSTIA_REYNOLDS_SST.{self.im}x{self.jm}.{todays_date.year}.data"
                     self.ice_file  = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{self.im}x{self.jm}.{todays_date.year}.data"
                     self.set_kpar_file()
@@ -239,12 +239,13 @@ class ocean:
 
     # ocean model driver 
     def config(self):
-        match answerdict["OM_coupled"].q_answer:
-            case True:
-                self.coupled_hres()
-                self.coupled_vres()
-            case False:
-                self.uncoupled_hres()
+        if answerdict["OM_coupled"].q_answer == True:
+            self.coupled_hres()
+            self.coupled_vres()
+        else:
+            self.uncoupled_hres()
+
+        self.set_gridname()
 
 
 

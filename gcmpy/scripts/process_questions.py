@@ -26,9 +26,9 @@ class handle:
     def processor_choices(answerdict, i):
         if i == "processor":
             if envdict["site"] == "NCCS":
-                answerdict[i].q_choices = ["Skylake", "Cascade Lake"]
+                answerdict[i].q_choices = ["cas", "sky"]
             elif envdict["site"] == "NAS":
-                answerdict[i].q_choices = ["Skylake", "Haswell", "Broadwell", "Cascade Lake", "AMD Rome"]
+                answerdict[i].q_choices = ["sky", "has", "bro", "cas", "rom", "mil"]
             else:
                 exit(1)
 
@@ -114,22 +114,22 @@ class handle:
 
             match answerdict["OM_name"]:
                 case "MOM5":
-                    answerdict[i].q_default = f"{pathdict['etc']}/HISTORY.AOGCM-MOM5.rc.tmpl"
+                    answerdict[i].q_default = "HISTORY.AOGCM-MOM5.rc.tmpl"
                 case "MOM6":
-                    answerdict[i].q_default = f"{pathdict['etc']}/HISTORY.AOGCM.rc.tmpl"
+                    answerdict[i].q_default = "HISTORY.AOGCM.rc.tmpl"
                 case "MIT":
-                    answerdict[i].q_default = f"{pathdict['etc']}/HISTORY.AOGCM_MITgcm.rc.tmpl"
+                    answerdict[i].q_default = "HISTORY.AOGCM_MITgcm.rc.tmpl"
                 case _:            
-                    answerdict[i].q_default = f"{pathdict['etc']}/HISTORY.AGCM.rc.tmpl"
+                    answerdict[i].q_default = "HISTORY.AGCM.rc.tmpl"
 
-    
+    ''' 
     @staticmethod
     def history_template_valid(answerdict, i):
         if i == "history_template":
             while not os.path.exists(answerdict[i].q_answer):
                 print(f"Error: Could not find {color.RED}{answerdict[i]}{color.RESET}")
                 answerdict[i].load_question(answerdict)
-    
+    '''
 
     @staticmethod
     def exp_dir_default(answerdict, i):
@@ -221,7 +221,7 @@ def process():
         handle.experiment_desc(answerdict, i)
         handle.OM_hres_valid(answerdict, i)
         handle.heartbeat_valid(answerdict, i)
-        handle.history_template_valid(answerdict, i)
+        #handle.history_template_valid(answerdict, i)
         handle.exp_dir_valid(answerdict, i)
         
         # strips the first word from every select type question

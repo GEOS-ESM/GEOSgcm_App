@@ -20,7 +20,7 @@ umask 022
 
 limit stacksize unlimited
 
-@SETENVS
+{{ SETENVS }}
 
 {{ MPT_SHEPHERD }}
 

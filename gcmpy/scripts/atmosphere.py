@@ -21,8 +21,8 @@ class atmosphere:
         self.nf                 = 6
         self.use_hydrostatic    = answerdict["use_hydrostatic"].q_answer
         self.microphysics       = answerdict["AM_microphysics"].q_answer
-        self.im_hist            = self.im * 4
-        self.jm_hist            = self.jm * 2 + 1
+        self.hist_im            = self.im * 4
+        self.hist_jm            = self.im * 2 + 1
         self.gridfile           = f"Gnomonic_c{self.im}.dat"
         self.job_sgmt           = None
         self.num_sgmt           = None
@@ -30,8 +30,9 @@ class atmosphere:
         self.post_NDS           = None
         self.nx_convert         = 2
         self.ny_convert         = 24
-        self.conus              = "#"
-        self.stretch_factor     = None
+        self.conus              = '#'
+        self.stretch_factor     = ''
+        self.FV_stretch_fac     = ''
         self.gridname           = f"PE{self.im}x{self.jm}-CF"
         self.res_dateline       = f"{self.im}x{self.jm}"
         self.BACM_1M            = "#"
@@ -78,6 +79,7 @@ class atmosphere:
                 self.post_NDS       = 4
                 self.nx_convert     = 1
                 self.ny_convert     = 6
+                self.res            = 'CF0012x6C'
 
             case "c24":
                 self.dt_solar       = 3600
@@ -91,6 +93,7 @@ class atmosphere:
                 self.post_NDS       = 4
                 self.nx_convert     = 1
                 self.ny_convert     = 6
+                self.res            = 'CF0024x6C'
 
             case "c48":
                 self.dt_solar       = 3600
@@ -104,6 +107,9 @@ class atmosphere:
                 self.job_sgmt       = f"{15:08}"
                 self.num_sgmt       = 20
                 self.post_NDS       = 4
+                self.res            = 'CF0048x6C'
+                self.hist_im        = 180
+                self.hist_jm        = 91
 
             case "c90":
                 self.dt_solar       = 3600
@@ -125,6 +131,7 @@ class atmosphere:
                 self.job_sgmt       = f"{32:08}"
                 self.num_sgmt       = 4
                 self.post_NDS       = 8
+                self.res            = 'CF0090x6C'
 
             case "c180":
                 self.dt_solar       = 3600
@@ -142,6 +149,7 @@ class atmosphere:
                 self.num_sgmt       = 1
                 self.post_NDS       = 8
                 self.num_readers    = 2
+                self.res            = 'CF0180x6C'
 
             case "c360":
                 self.dt_solar       = 3600
@@ -155,6 +163,7 @@ class atmosphere:
                 self.num_sgmt       = 1
                 self.post_NDS       = 12
                 self.nx_convert     = 4
+                self.res            = 'CF0360x6C'
 
             case "c720":
                 self.dt_solar       = 3600
@@ -169,6 +178,7 @@ class atmosphere:
                 self.post_NDS       = 16
                 self.nx_convert     = 8
                 self.use_SHMEM      = True
+                self.res            = 'CF0720x6C'
 
             case "c1440":
                 self.dt_solar       = 1800
@@ -183,6 +193,7 @@ class atmosphere:
                 self.post_NDS       = 32
                 self.nx_convert     = 8
                 self.use_SHMEM      = True
+                self.res            = 'CF1440x6C'
 
             case "c2880":
                 self.dt_solar       = 1800
@@ -198,6 +209,7 @@ class atmosphere:
                 self.nx_convert     = 8
                 self.use_SHMEM      = True
                 self.convpar_option = 'NONE'
+                self.res            = 'CF2880x6C'
 
             case "c5760":
                 self.dt_solar       = 900
@@ -213,6 +225,7 @@ class atmosphere:
                 self.nx_convert     = 8
                 self.use_SHMEM      = True
                 self.convpar_option = 'NONE'
+                self.res            = 'CF5760x6C'
 
             case "c270":
                 self.dt_solar       = 3600
@@ -229,6 +242,7 @@ class atmosphere:
                 self.use_SHMEM      = True
                 self.conus          = ""
                 self.stretch_factor = 2.5
+                self.res            = 'CF0270x6C-SG001'
 
             case "c540":
                 self.dt_solar       = 3600
@@ -245,6 +259,7 @@ class atmosphere:
                 self.use_SHMEM      = True
                 self.conus          = ""
                 self.stretch_factor = 2.5
+                self.res            = 'CF0540x6C-SG001'
 
             case "c1080":
                 self.dt_solar       = 900
@@ -260,7 +275,8 @@ class atmosphere:
                 self.nx_convert     = 8
                 self.use_SHMEM      = True
                 self.conus          = ""
-                self.stretch_factor = 2.
+                self.stretch_factor = 2.5
+                self.res            = 'CF1080x6C-SG001'
 
             case "c1536":
                 self.dt_solar       = 900
@@ -277,6 +293,7 @@ class atmosphere:
                 self.use_SHMEM      = True
                 self.conus          = ""
                 self.stretch_factor = 3.0
+                self.res            = 'CF1536x6C-SG002'
 
             case "c2160":
                 self.dt_solar       = 900
@@ -293,6 +310,7 @@ class atmosphere:
                 self.use_SHMEM      = True
                 self.conus          = ""
                 self.stretch_factor = 2.5
+                self.res            = 'CF2160x6C-SG001'
 
         if answerdict["OM_name"].q_answer == "MIT":
             self.dt_ocean = self.dt
@@ -328,14 +346,15 @@ class atmosphere:
     def set_conus(self):
         if self.conus == "#":
             self.schmidt        = "do_schmidt  = .false."
-            self.stretch_factor = "stretch_fac = 1.0"
+            self.FV_stretch_fac = "stretch_fac = 1.0"
             self.target_lon     = "target_lon  = 0.0"
-            self.target_lat     = "target_lat  = 0.0"
+            self.target_lat     = "target_lat  = -90.0"
         else:
             self.schmidt        = "do_schmidt  = .true."
-            self.stretch_factor = "stretch_fac = $STRETCH_FACTOR"
+            self.FV_stretch_fac = "stretch_fac = $STRETCH_FACTOR"
             self.target_lon     = "target_lon  = -98.35"
             self.target_lat     = "target_lat  = 39.5"
+            self.FV_hwt         = ''
 
     def set_wsub_extdata(self):
         if self.microphysics == 'BACM_1M' or self.microphysics == 'GFDL_1M':
