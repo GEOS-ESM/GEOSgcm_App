@@ -33,7 +33,11 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+# We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
+if ( $?BASEDIR ) then
+    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+endif
 
 setenv RUN_CMD "@RUN_CMD"
 
@@ -174,24 +178,24 @@ awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
 set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
->>>EMIP_OLDLAND<<<# Copy MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# ---------------------
->>>EMIP_NEWLAND<<<# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ----------------------------------------------
+@EMIP_OLDLAND# Copy MERRA-2 Restarts
+@EMIP_OLDLAND# ---------------------
+@EMIP_NEWLAND# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+@EMIP_NEWLAND# ----------------------------------------------
 cp /discover/nobackup/projects/gmao/g6dev/ltakacs/@EMIP_MERRA2/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
 tar xf  restarts.${year}${month}.tar
 /bin/rm restarts.${year}${month}.tar
->>>EMIP_OLDLAND<<</bin/rm MERRA2*bin
+@EMIP_OLDLAND/bin/rm MERRA2*bin
 
 
->>>EMIP_OLDLAND<<<# Regrid MERRA-2 Restarts
->>>EMIP_OLDLAND<<<# -----------------------
->>>EMIP_NEWLAND<<<# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
->>>EMIP_NEWLAND<<<# ------------------------------------------------
+@EMIP_OLDLAND# Regrid MERRA-2 Restarts
+@EMIP_OLDLAND# -----------------------
+@EMIP_NEWLAND# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
+@EMIP_NEWLAND# ------------------------------------------------
 set RSTID = `/bin/ls *catch* | cut -d. -f1`
 set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
 $GEOSBIN/regrid.pl -np -ymd ${year}${month}${day} -hr 21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -outdir . -d . -expid $RSTID -tagin @EMIP_BCS_IN -oceanin e -i -nobkg -lbl -nolcv -tagout @LSMBCS -rs 3 -oceanout @OCEANOUT
->>>EMIP_OLDLAND<<</bin/rm $RSTID.*.bin
+@EMIP_OLDLAND/bin/rm $RSTID.*.bin
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -208,8 +212,8 @@ if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
 $GEOSBIN/stripname C${AGCM_IM}@OCEANOUT_${RSTID}.
 $GEOSBIN/stripname .${year}${month}${day}_21z.$ext.@LSMBCS_@BCSTAG.@ATMOStag_@OCEANtag
->>>EMIP_OLDLAND<<</bin/mv gocart_internal_rst gocart_internal_rst.merra2
->>>EMIP_OLDLAND<<<$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
+@EMIP_OLDLAND/bin/mv gocart_internal_rst gocart_internal_rst.merra2
+@EMIP_OLDLAND$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
 
 
 # Create CAP.rc and cap_restart
@@ -376,8 +380,8 @@ cat << _EOF_ > $FILE
 @COUPLED/bin/ln -sf $ABCSDIR/green_clim_@RES_DATELINE.data green.data
 @COUPLED/bin/ln -sf $ABCSDIR/ndvi_clim_@RES_DATELINE.data ndvi.data
 
->>>GCMRUN_CATCHCN<<<if ( -f $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data lnfm.data
->>>GCMRUN_CATCHCN<<</bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
+@GCMRUN_CATCHCNif ( -f $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@RES_DATELINE.data lnfm.data
+@GCMRUN_CATCHCN/bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
 
 #@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_DYN_ave_@RES_DATELINE.data topo_dynave.data
 #@DATAOCEAN/bin/ln -sf $BCSDIR/$BCRSLV/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
@@ -390,9 +394,9 @@ cat << _EOF_ > $FILE
 @COUPLED/bin/ln -sf $ABCSDIR/topo_GWD_var_@RES_DATELINE.data topo_gwdvar.data
 @COUPLED/bin/ln -sf $ABCSDIR/topo_TRB_var_@RES_DATELINE.data topo_trbvar.data
 
->>>FVCUBED<<<if(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
->>>FVCUBED<<</bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
->>>FVCUBED<<<endif
+@FVCUBEDif(     -e  $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat ) then
+@FVCUBED/bin/ln -sf $BCSDIR/$BCRSLV/Gnomonic_$BCRSLV.dat .
+@FVCUBEDendif
 
 @COUPLED cp $HOMDIR/*_table .
 @COUPLED cp $OBCSDIR/INPUT/* INPUT
@@ -401,10 +405,10 @@ cat << _EOF_ > $FILE
 
 _EOF_
 
->>>GCMRUN_CATCHCN<<<set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
->>>GCMRUN_CATCHCN<<<if ($LSM_CHOICE == 2) then
->>>GCMRUN_CATCHCN<<<  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
->>>GCMRUN_CATCHCN<<<endif
+@GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
+@GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
+@GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+@GCMRUN_CATCHCNendif
 
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@SSTFILE   sst.data' >> $FILE
 @DATAOCEAN echo "/bin/ln -sf $SSTDIR"'/@ICEFILE fraci.data' >> $FILE

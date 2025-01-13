@@ -7,6 +7,7 @@ EXPID:  f5294_fp
 EXPDSC: f5294_fp__GEOSadas-5_29_4__agrid_C720__ogrid_C
 EXPSRC: GEOSadas-5_29_4
 BlockSize: 10
+Allow_Overwrite: .true.
 
 GRID_LABELS: PC1152x721-DC
              PC576x361-DC
@@ -190,8 +191,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'Q'      , 'MOIST'      , 'QV'  ,
                                          'QLTOT'  , 'AGCM'       , 'QL'  ,
                                          'QITOT'  , 'AGCM'       , 'QI'  ,
-                                         'QR'     , 'MOIST'      , 'QR'  ,
-                                         'QS'     , 'MOIST'      , 'QS'  ,
+                                         'QRTOT'  , 'MOIST'      , 'QR'  ,
+                                         'QSTOT'  , 'MOIST'      , 'QS'  ,
                                          'RH2'    , 'MOIST'      , 'RH'  ,
                                          'ZLE'    , 'DYN'        , 'H'   ,
                                          'O3'     , 'CHEMISTRY'  ,
@@ -219,8 +220,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'Q'      , 'MOIST'      , 'QV'     ,
                                          'QLTOT'  , 'AGCM'       , 'QL'     ,
                                          'QITOT'  , 'AGCM'       , 'QI'     ,
-                                         'QR'     , 'MOIST'      , 'QR'     ,
-                                         'QS'     , 'MOIST'      , 'QS'     ,
+                                         'QRTOT'  , 'MOIST'      , 'QR'     ,
+                                         'QSTOT'  , 'MOIST'      , 'QS'     ,
                                          'RH2'    , 'MOIST'      , 'RH'     ,
                                          'ZL'     , 'DYN'        , 'H'      ,
                                          'O3'     , 'CHEMISTRY'  ,
@@ -1220,8 +1221,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                                          'QITOT'      , 'AGCM'       , 'qitot'      ,
                                          'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                                         'QR'         , 'MOIST'      , 'qrtot'      ,
-                                         'QS'         , 'MOIST'      , 'qstot'      ,
+                                         'QRTOT'      , 'MOIST'      , 'qrtot'      ,
+                                         'QSTOT'      , 'MOIST'      , 'qstot'      ,
                                           ::
 
   bkg.sfc.format:                        'CFIO' ,
@@ -1991,8 +1992,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'Q'      , 'MOIST'      , 'QV'  ,
                                          'QLTOT'  , 'AGCM'       , 'QL'  ,
                                          'QITOT'  , 'AGCM'       , 'QI'  ,
-                                         'QR'     , 'MOIST'      , 'QR'  ,
-                                         'QS'     , 'MOIST'      , 'QS'  ,
+                                         'QRTOT'  , 'MOIST'      , 'QR'  ,
+                                         'QSTOT'  , 'MOIST'      , 'QS'  ,
                                          'RH2'    , 'MOIST'      , 'RH'  ,
                                          'ZLE'    , 'DYN'        , 'H'   ,
                                          'O3'     , 'CHEMISTRY'  ,
@@ -2020,8 +2021,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'Q'      , 'MOIST'      , 'QV'     ,
                                          'QLTOT'  , 'AGCM'       , 'QL'     ,
                                          'QITOT'  , 'AGCM'       , 'QI'     ,
-                                         'QR'     , 'MOIST'      , 'QR'     ,
-                                         'QS'     , 'MOIST'      , 'QS'     ,
+                                         'QRTOT'  , 'MOIST'      , 'QR'     ,
+                                         'QSTOT'  , 'MOIST'      , 'QS'     ,
                                          'RH2'    , 'MOIST'      , 'RH'     ,
                                          'ZL'     , 'DYN'        , 'H'      ,
                                          'O3'     , 'CHEMISTRY'  ,
@@ -2614,8 +2615,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'Q'      , 'MOIST'      , 'QV'  ,
                                          'QLTOT'  , 'AGCM'       , 'QL'  ,
                                          'QITOT'  , 'AGCM'       , 'QI'  ,
-                                         'QR'     , 'MOIST'      , 'QR'  ,
-                                         'QS'     , 'MOIST'      , 'QS'  ,
+                                         'QRTOT'  , 'MOIST'      , 'QR'  ,
+                                         'QSTOT'  , 'MOIST'      , 'QS'  ,
                                          'RH2'    , 'MOIST'      , 'RH'  ,
                                          'ZLE'    , 'DYN'        , 'H'   ,
                                          'O3'     , 'CHEMISTRY'  ,
@@ -2930,8 +2931,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'Q'          , 'MOIST'      , 'sphu'       ,
                                          'QITOT'      , 'AGCM'       , 'qitot'      ,
                                          'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                                         'QR'         , 'MOIST'      , 'qrtot'      ,
-                                         'QS'         , 'MOIST'      , 'qstot'      ,
+                                         'QRTOT'      , 'MOIST'      , 'qrtot'      ,
+                                         'QSTOT'      , 'MOIST'      , 'qstot'      ,
                                          'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                                           ::
 
@@ -3035,8 +3036,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                                          'QITOT'      , 'AGCM'       , 'qitot'      ,
                                          'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                                         'QR'         , 'MOIST'      , 'qrtot'      ,
-                                         'QS'         , 'MOIST'      , 'qstot'      ,
+                                         'QRTOT'      , 'MOIST'      , 'qrtot'      ,
+                                         'QSTOT'      , 'MOIST'      , 'qstot'      ,
                                           ::
 
   traj.lcv.format:                       'CFIO' ,
@@ -3055,8 +3056,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DELP'             , 'DYN'         , 'DP'       ,
                                          'QITOT'            , 'AGCM'        , 'QI'       ,
                                          'QLTOT'            , 'AGCM'        , 'QL'       ,
-                                         'QR'               , 'MOIST'       , 'QR'       ,
-                                         'QS'               , 'MOIST'       , 'QS'       ,
+                                         'QRTOT'            , 'MOIST'       , 'QR'       ,
+                                         'QSTOT'            , 'MOIST'       , 'QS'       ,
                                          'O3PPMV'           , 'CHEMISTRY'   , 'O3'       ,
                                          'QCLSX0'           , 'MOIST'       , 'QLS'      ,
                                          'QCCNX0'           , 'MOIST'       , 'QCN'      ,

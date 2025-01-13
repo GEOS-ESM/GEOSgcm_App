@@ -57,6 +57,7 @@ if __name__ == '__main__':
    - WSUB_ExtData.yaml
    - DataSea_ExtData.yaml
    - UMWM_ExtData.yaml
+   - JRA55-DO_DataAtm_Forcings_ExtData.yaml
    """)
    components = {}
    for line in temp_text:
