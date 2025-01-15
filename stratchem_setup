@@ -370,6 +370,8 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c720'  | \
     $HRCODE == 'c1120' | \
     $HRCODE == 'c1440' | \
+    $HRCODE == 'c2880' | \
+    $HRCODE == 'c5760' | \
     $HRCODE == 'c270'  | \
     $HRCODE == 'c540'  | \
     $HRCODE == 'c1080' | \
@@ -423,6 +425,7 @@ if ( $SITE == 'NCCS' ) then
    if ("$BUILT_ON_SLES15" == "TRUE") then
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
       echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -430,11 +433,16 @@ if ( $SITE == 'NCCS' ) then
          set MODEL = 'mil'
       endif
 
-      if( $MODEL != 'mil' ) goto ASKPROC
+      if( $MODEL != 'mil' & \
+          $MODEL != 'cas' ) goto ASKPROC
 
       if ($MODEL == 'mil') then
          # For even division, we use 120 cores per node
+         # We save a couple processes for the kernel
          set NCPUS_PER_NODE = 120
+      else if ($MODEL == 'cas') then
+         # We use 40 of 46 cores per node for even division
+         set NCPUS_PER_NODE = 40
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
@@ -2283,6 +2291,9 @@ if ( $SITE == 'NCCS' ) then
 
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
+
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
 EOF
@@ -2314,6 +2325,9 @@ endif # if NCCS
 
 endif # if mpi
 
+# Check for gwd_internal for Ridge Scheme
+                                             set NCAR_NRDG = 0
+if ( -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 16
 
 #######################################################################
 #               Create Local Scripts and Resource Files
@@ -2368,6 +2382,7 @@ s?@KPARFILE?$KPARFILE?g
 s?@CHMDIR?$CHMDIR?g
 s?@COUPLEDIR?$COUPLEDIR?g
 s?@GWDRSDIR?$GWDRSDIR?g
+s?@NCAR_NRDG?$NCAR_NRDG?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
