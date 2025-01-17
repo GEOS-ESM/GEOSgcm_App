@@ -56,6 +56,7 @@ if __name__ == '__main__':
    - ChemEnv_ExtData.yaml
    - WSUB_ExtData.yaml
    - DataSea_ExtData.yaml
+   - DataSeaIce_ExtData.yaml
    - UMWM_ExtData.yaml
    """)
    components = {}
