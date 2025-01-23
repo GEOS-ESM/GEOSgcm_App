@@ -420,6 +420,7 @@ if ( $SITE == 'NCCS' ) then
    if ("$BUILT_ON_SLES15" == "TRUE") then
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
       echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -427,11 +428,20 @@ if ( $SITE == 'NCCS' ) then
          set MODEL = 'mil'
       endif
 
-      if( $MODEL != 'mil' ) goto ASKPROC
+      if( $MODEL != 'mil' & \
+          $MODEL != 'cas' ) goto ASKPROC
 
       if ($MODEL == 'mil') then
          # We save a couple processes for the kernel
          set NCPUS_PER_NODE = 126
+      else if ($MODEL == 'cas') then
+         # NCCS currently recommends that users do not run with
+         # 48 cores per node on SCU16 due to OS issues and
+         # recommends that CPU-intensive works run with 46 or less
+         # cores. As 45 is a multiple of 3, it's the best value
+         # that doesn't waste too much
+         #set NCPUS_PER_NODE = 48
+         set NCPUS_PER_NODE = 45
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
@@ -2309,6 +2319,9 @@ if ( $SITE == 'NCCS' ) then
 
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
+
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
 EOF
