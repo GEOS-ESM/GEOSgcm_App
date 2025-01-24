@@ -2,7 +2,7 @@
 
 #######################################################################
 #                            Define Colors
-#         Note:  For No Colors, set C1 and C2 to NONE 
+#         Note:  For No Colors, set C1 and C2 to NONE
 #######################################################################
 
 set BLACK   = `tput setaf 0`
@@ -57,8 +57,9 @@ endif
 #######################################################################
 
 # Set default behavior of switches
-set GPU   = FALSE
 set LINKX = FALSE
+set EXE_VERB = "copied"
+set USING_SINGULARITY = FALSE
 
 while ( $#argv > 0 )
    set arg = $argv[1]
@@ -69,17 +70,15 @@ while ( $#argv > 0 )
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
 
-      # Run the gpu code
-      case -[Gg]:
-      case --[Gg][Pp][Uu]:
-
-         # If we get here, the environment is (probably) right for GPUs
-         set GPU = TRUE
-         breaksw
-
       # Symlink GEOSgcm.x
       case --link:
          set LINKX = TRUE
+         set EXE_VERB = "linked"
+         breaksw
+
+      # Using Singularity
+      case --singularity:
+         set USING_SINGULARITY = TRUE
          breaksw
 
       # Here any string not above will trigger USAGE
@@ -106,6 +105,8 @@ setenv BASEDIR `awk '{print $2}' $ETCDIR/BASEDIR.rc`
 
      if ( `echo $BASEDIR | grep -i mvapich2` != '') then
    set MPI = mvapich2
+else if ( `echo $BASEDIR | grep -i mpich`    != '') then
+   set MPI = mpich
 else if ( `echo $BASEDIR | grep -i openmpi`  != '') then
    set MPI = openmpi
 else if ( `echo $BASEDIR | grep -i hpcx`     != '') then
@@ -118,7 +119,7 @@ else if ( `echo $BASEDIR | grep -i mpt`      != '') then
    set MPI = mpt
 else
    # Assume default is Intel MPI in case of older baselibs
-   set MPI = intelmpi 
+   set MPI = intelmpi
 endif
 
 #######################################################################
@@ -349,10 +350,63 @@ endif
 ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
+
+   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
+
+   if ("$BUILT_ON_SLES15" == "TRUE") then
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'mil'
+      endif
+
+      if( $MODEL != 'mil' ) goto ASKPROC
+
+      if ($MODEL == 'mil') then
+         # We save a couple processes for the kernel
+         set NCPUS_PER_NODE = 126
+      endif
+   else
+      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+      echo "   ${C2}sky  (Skylake)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
+      echo " "
+      set MODEL = `echo $<`
+      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+      if ( .$MODEL == .) then
+         set MODEL = 'sky'
+      endif
+
+      if( $MODEL != 'sky'  & \
+          $MODEL != 'cas' ) goto ASKPROC
+
+      if ($MODEL == 'sky') then
+         set NCPUS_PER_NODE = 40
+      else if ($MODEL == 'cas') then
+         # NCCS currently recommends that users do not run with
+         # 48 cores per node on SCU16 due to OS issues and
+         # recommends that CPU-intensive works run with 46 or less
+         # cores. As 45 is a multiple of 3, it's the best value
+         # that doesn't waste too much
+         #set NCPUS_PER_NODE = 48
+         set NCPUS_PER_NODE = 45
+      endif
+   endif
+
+else if ( $SITE == 'NAS' ) then
+
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}hasw (Haswell)${CN}"
-   echo "   ${C2}sky  (Skylake)${CN} (default)"
-   echo "   ${C2}cas  (Cascade Lake)${CN}"
+   echo "   ${C2}has (Haswell)${CN}"
+   echo "   ${C2}bro (Broadwell)${CN}"
+   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}cas (Cascade Lake)${CN}"
+   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo " "
+   echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
+   echo "      and Ivy Bridge are not supported by current GEOS"
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -360,74 +414,16 @@ if ( $SITE == 'NCCS' ) then
       set MODEL = 'sky'
    endif
 
-   if( $MODEL != 'hasw' & \
-       $MODEL != 'sky'  & \
-       $MODEL != 'cas' ) goto ASKPROC
-
-   if (     $MODEL == 'hasw') then
-      set NCPUS_PER_NODE = 28
-   else if ($MODEL == 'sky') then
-      set NCPUS_PER_NODE = 40
-   else if ($MODEL == 'cas') then
-      # NCCS currently recommends that users do not run with
-      # 48 cores per node on SCU16 due to OS issues and 
-      # recommends that CPU-intensive works run with 46 or less
-      # cores. As 45 is a multiple of 3, it's the best value
-      # that doesn't waste too much
-      #set NCPUS_PER_NODE = 48
-      set NCPUS_PER_NODE = 45
-   endif
-
-else if ( $SITE == 'NAS' ) then
-
-   # At NAS, if you build on Rome, we currently limit you to run on
-   # Rome; this is for two reasons. First, Romes are on SLES 15 and
-   # if you build on SLES 15, you can only run on SLES 15. Second,
-   # while a built-on-Rome GEOS might work on Intel processors, it
-   # will (probably) have a different output than if built on Intel
-   # due to different optimization flags.  This would violate the GEOS
-   # capability to get the same answers at NAS and NCCS
-
-   set BUILT_ON_ROME = @CFG_BUILT_ON_ROME@
-
-   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   if( "$BUILT_ON_ROME" != "TRUE" ) then
-      echo "   ${C2}has (Haswell)${CN}"
-      echo "   ${C2}bro (Broadwell)${CN}"
-      echo "   ${C2}sky (Skylake)${CN} (default)"
-      echo "   ${C2}cas (Cascade Lake)${CN}"
-      echo " "
-      echo " NOTE: Due to how FV3 is compiled by default, Sandy Bridge"
-      echo "       and Ivy Bridge are not supported by current GEOS"
-   else
-      echo "   ${C2}rom (AMD Rome)${CN} (default)"
-   endif
-   echo " "
-   set MODEL = `echo $<`
-   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-   if ( .$MODEL == .) then
-      if( "$BUILT_ON_ROME" != "TRUE" ) then
-         set MODEL = 'sky'
-      else
-         set MODEL = 'rom'
-      endif
-   endif
-
-   if( "$BUILT_ON_ROME" != "TRUE" ) then
-      if( $MODEL != 'has' & \
-          $MODEL != 'bro' & \
-          $MODEL != 'sky' & \
-          $MODEL != 'cas' ) goto ASKPROC
-   else
-      if( $MODEL != 'rom' ) goto ASKPROC
-   endif
+   if( $MODEL != 'has' & \
+       $MODEL != 'bro' & \
+       $MODEL != 'sky' & \
+       $MODEL != 'cas' & \
+       $MODEL != 'rom' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
 
-   if ($MODEL == bro ) then
-      set MODEL = 'bro_ele'
-   else if ($MODEL == sky) then
+   if ($MODEL == sky) then
       set MODEL = 'sky_ele'
    else if ($MODEL == cas) then
       set MODEL = 'cas_ait'
@@ -441,7 +437,7 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 20
    else if ($MODEL == 'has') then
       set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'bro_ele') then
+   else if ($MODEL == 'bro') then
       set NCPUS_PER_NODE = 28
    else if ($MODEL == 'sky_ele') then
       set NCPUS_PER_NODE = 40
@@ -449,8 +445,6 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 40
    else if ($MODEL == 'rom_ait') then
       set NCPUS_PER_NODE = 128
-      # Romes are on a different aoe
-      set MODEL='rom_ait:aoe=sles15'
    endif
 
 else
@@ -1797,79 +1791,96 @@ set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
+
 if( $MPI == openmpi ) then
 
 # Open MPI and GEOS has issues with restart writing. Having the
 # oserver write them can be orders of magnitude faster
+
 set RESTART_BY_OSERVER = YES
 
-# This turns off an annoying warning when running
-# Open MPI on a system where TMPDIRs are on a networked
-# file system
+# Testing by Bill Putman determined some useful
+# Open MPI parameters. Testing shows these work
+# on both OSs at NCCS and on macOS
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# Turn off warning about TMPDIR on NFS
+setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+# pre-connect MPI procs on mpi_init
+setenv OMPI_MCA_mpi_preconnect_all 1
+setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
+setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
+setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 3
+setenv OMPI_MCA_coll_tuned_allreduce_algorithm 3
+setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
+setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
+setenv OMPI_MCA_coll_tuned_gather_algorithm 1
+setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+# required for a tuned flag to be effective
+setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+# disable file locks
+setenv OMPI_MCA_sharedfp "^lockedfile,individual"
 EOF
 
 # The below settings seem to be recommended for hybrid
-# systems using MVAPICH2 but could change
+# systems using MVAPICH but could change
 
-else if( $MPI == mvapich2 ) then
+else if( $MPI == mvapich ) then
 
-if( $GPU == "TRUE" ) then
-cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY     0
-   setenv MV2_RNDV_PROTOCOL       RPUT
-   setenv MV2_USE_RDMA_ONE_SIDED  1
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
-EOF
-
-else
+# MVAPICH and GEOS has issues with restart writing. Having the
+# oserver write them seems to...work
+set RESTART_BY_OSERVER = YES
 
 cat > $HOMDIR/SETENV.commands << EOF
-   setenv MV2_ENABLE_AFFINITY     0
-   setenv SLURM_DISTRIBUTION block
-   setenv MV2_MPIRUN_TIMEOUT 100
-   setenv MV2_GATHERV_SSEND_THRESHOLD 256
+setenv MV2_ENABLE_AFFINITY 0
+setenv SLURM_DISTRIBUTION block
+setenv MV2_MPIRUN_TIMEOUT 100
+setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
-
-endif # if GPU and mvapich2
 
 else if( $MPI == mpt ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
 
-   setenv MPI_COLL_REPRODUCIBLE
-   setenv SLURM_DISTRIBUTION block
+setenv MPI_COLL_REPRODUCIBLE
+setenv SLURM_DISTRIBUTION block
 
-   #setenv MPI_DISPLAY_SETTINGS 1
-   #setenv MPI_VERBOSE 1
-   
-   unsetenv MPI_MEMMAP_OFF
-   unsetenv MPI_NUM_MEMORY_REGIONS
-   setenv MPI_XPMEM_ENABLED yes
-   unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+#setenv MPI_DISPLAY_SETTINGS 1
+#setenv MPI_VERBOSE 1
 
-   setenv MPI_LAUNCH_TIMEOUT 40
+setenv MPI_MEMMAP_OFF
+unsetenv MPI_NUM_MEMORY_REGIONS
+setenv MPI_XPMEM_ENABLED yes
+unsetenv SUPPRESS_XPMEM_TRIM_THRESH
 
-   # For some reason, PMI_RANK is randomly set and interferes
-   # with binarytile.x and other executables.
-   unsetenv PMI_RANK
+setenv MPI_LAUNCH_TIMEOUT 40
 
-   # Often when debugging on MPT, the traceback from Intel Fortran
-   # is "absorbed" and only MPT's errors are displayed. To allow the
-   # compiler's traceback to be displayed, uncomment this environment
-   # variable
-   #setenv FOR_IGNORE_EXCEPTIONS false
+setenv MPI_COMM_MAX  1024
+setenv MPI_GROUP_MAX 1024
+setenv MPI_BUFS_PER_PROC 256
+
+# For some reason, PMI_RANK is randomly set and interferes
+# with binarytile.x and other executables.
+unsetenv PMI_RANK
+
+# Often when debugging on MPT, the traceback from Intel Fortran
+# is "absorbed" and only MPT's errors are displayed. To allow the
+# compiler's traceback to be displayed, uncomment this environment
+# variable
+#setenv FOR_IGNORE_EXCEPTIONS false
 
 EOF
+
+# Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
+# to run. We believe this is due to LD_PRELOAD. For now we only set
+# this for coupled runs.
+if( $OGCM == TRUE ) then
+   set MPT_SHEPHERD = "setenv MPI_SHEPHERD true"
+endif
 
 else if( $MPI == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_DAPL_UD enable
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
 
@@ -1885,14 +1896,38 @@ if ( $SITE == 'NCCS' ) then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
-setenv I_MPI_EXTRA_FILESYSTEM 1
-setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-setenv ROMIO_FSTYPE_FORCE "gpfs:"
 EOF
 
-endif # if NCCS
+# Testing at NCCS showed these caused a crash at higher resolutions at
+# restart read
+if ( $USING_SINGULARITY == FALSE ) then
 
-endif # if mpi
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_EXTRA_FILESYSTEM 1
+setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
+EOF
+
+endif # if NOT Singularity
+
+# Testing by Bill Putman found these to be
+# useful flags with Intel MPI on SLES15 on the
+# Milan nodes.
+# Note 1: Testing by NCCS shows the PSM3 provider
+# runs on the Infiniband fabric. Tests show it runs
+# up to C720.
+# Note 2: When the Cascade Lakes are moved to
+# SLES15, these will need to be Milan-only flags
+# as Intel MPI will probably work just fine with
+# Intel chips.
+if ("$BUILT_ON_SLES15" == "TRUE") then
+cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_FALLBACK 0
+setenv I_MPI_FABRICS ofi
+setenv I_MPI_OFI_PROVIDER psm3
+
+setenv I_MPI_ADJUST_GATHERV 3
+setenv I_MPI_ADJUST_ALLREDUCE 12
+EOF
 
 #######################################################################
 #                      Create GPU Hyper-Q Commands
