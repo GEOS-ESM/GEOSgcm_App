@@ -326,39 +326,6 @@ else
    endif
 endif
 
-
-#######################################################################
-#   Test to see if using hydrostatic or non-hydrostatic atmosphere
-#######################################################################
-
-ASKHYDRO:
-
-set DEFAULT_HYDROSTATIC = FALSE
-
-echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
-set   USE_HYDROSTATIC = $<
-
-if( .$USE_HYDROSTATIC == . ) then
-   set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
-else
-   set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
-   if(  $USE_HYDROSTATIC == "Y"     | \
-        $USE_HYDROSTATIC == "YES"   | \
-        $USE_HYDROSTATIC == "T"     | \
-        $USE_HYDROSTATIC == "TRUE"  ) set USE_HYDROSTATIC = TRUE
-   if(  $USE_HYDROSTATIC == "N"     | \
-        $USE_HYDROSTATIC == "NO"    | \
-        $USE_HYDROSTATIC == "F"     | \
-        $USE_HYDROSTATIC == "FALSE" ) set USE_HYDROSTATIC = FALSE
-
-   if( "$USE_HYDROSTATIC" != "TRUE" & "$USE_HYDROSTATIC" != "FALSE" ) then
-      echo
-      echo "Use ${C1}Hydrostatic Atmosphere${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
-      goto ASKHYDRO
-   endif
-endif
-
-
 #######################################################################
 #            Test to see if you want to use ioserver
 #######################################################################
@@ -1013,7 +980,6 @@ if( $AGCM_IM ==  "c12" ) then
         set    NX = 2
      endif
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1031,7 +997,6 @@ if( $AGCM_IM ==  "c24" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1049,7 +1014,6 @@ if( $AGCM_IM ==  "c48" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 6
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = 180
      set HIST_JM  =  91
      set JOB_SGMT = 00000015
@@ -1082,7 +1046,6 @@ if( $AGCM_IM ==  "c90" ) then
         set  NY = `expr $NX \* 6`
         set OCEAN_DT = 3600
      endif
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000032
@@ -1112,7 +1075,6 @@ if( $AGCM_IM ==  "c180" ) then
         set  NY = `expr $NX \* 6`
         set OCEAN_DT = 3600
      endif
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 2
@@ -1131,7 +1093,6 @@ if( $AGCM_IM == "c360" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 4
@@ -1150,7 +1111,6 @@ if( $AGCM_IM == "c720" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 40
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1170,7 +1130,6 @@ if( $AGCM_IM == "c1120" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 60
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1190,7 +1149,6 @@ if( $AGCM_IM == "c1440" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1210,7 +1168,6 @@ if( $AGCM_IM == "c2880" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1232,7 +1189,6 @@ if( $AGCM_IM == "c5760" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1257,7 +1213,6 @@ if( $AGCM_IM == "c270" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 20
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1279,7 +1234,6 @@ if( $AGCM_IM == "c540" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1301,7 +1255,6 @@ if( $AGCM_IM == "c1080" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 40
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1323,7 +1276,6 @@ if( $AGCM_IM == "c1536" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 60
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1345,7 +1297,6 @@ if( $AGCM_IM == "c2160" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1367,7 +1318,6 @@ if( $AGCM_IM == "c4320" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1409,7 +1359,7 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 
 
 #######################################################################
-#           Setting for Microphysics & Hydrostatic Mode               #
+#           Setting for Microphysics                                  #
 #######################################################################
 
 set BACM_1M_ = "#"
@@ -1427,25 +1377,11 @@ if ( "$CLDMICRO" == "MGB2_2M" ) then
    set MGB2_2M_ = ""
 endif
 
-set GFDL_HYDRO = ".TRUE."
-
 # BACM_1M and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
    set MP_TURN_OFF_WSUB_EXTDATA = ""
 else
    set MP_TURN_OFF_WSUB_EXTDATA = "#DELETE#"
-endif
-
-# Settings for fvcore_layout.rc
-if ( "$USE_HYDROSTATIC" == "TRUE" ) then
-   set FV_MAKENH     = "Make_NH     = .F."
-   set FV_HYDRO      = "hydrostatic = .T."
-else
-   set FV_MAKENH     = "Make_NH     = .T."
-   set FV_HYDRO      = "hydrostatic = .F."
-   if ( "$CLDMICRO" == "GFDL_1M" ) then
-      set GFDL_HYDRO = ".FALSE."
-   endif
 endif
 
 if ($CONUS == '#') then
@@ -2520,14 +2456,10 @@ EOF
 
 cat >> $HOMDIR/sedfile << EOF
 
-s^@HYDROSTATIC^$HYDROSTATIC^g
 s?@FV_SCHMIDT?$SCHMIDT?g
 s?@FV_STRETCH_FAC?$STRETCH_FAC?g
 s?@FV_TARGET_LON?$TARGET_LON?g
 s?@FV_TARGET_LAT?$TARGET_LAT?g
-s?@FV_MAKENH?$FV_MAKENH?g
-s?@FV_HYDRO?$FV_HYDRO?g
-s?@GFDL_HYDRO?$GFDL_HYDRO?g
 
 EOF
 
