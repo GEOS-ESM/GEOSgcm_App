@@ -48,6 +48,8 @@ if __name__ == '__main__':
    - TR_ExtData.yaml
    DNA:
    - DNA_ExtData.yaml
+   RRG:
+   - RRG_GridComp_ExtData.yaml
    HEMCO:
    - HEMCOgmi_ExtData.yaml
    - HEMCOgocart2g_ExtData.yaml
