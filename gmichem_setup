@@ -445,7 +445,6 @@ if ( $SITE == 'NCCS' ) then
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}sky  (Skylake)${CN}"
       echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
       echo " "
       set MODEL = `echo $<`
@@ -454,12 +453,9 @@ if ( $SITE == 'NCCS' ) then
          set MODEL = 'cas'
       endif
 
-      if( $MODEL != 'sky'  & \
-          $MODEL != 'cas' ) goto ASKPROC
+      if( $MODEL != 'cas' ) goto ASKPROC
 
-      if ($MODEL == 'sky') then
-         set NCPUS_PER_NODE = 40
-      else if ($MODEL == 'cas') then
+      if ($MODEL == 'cas') then
          # NCCS currently recommends that users do not run with
          # 48 cores per node on SCU16 due to OS issues and
          # recommends that CPU-intensive works run with 46 or less
@@ -475,9 +471,9 @@ else if ( $SITE == 'NAS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}has (Haswell)${CN}"
    echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}sky (Skylake)${CN}"
    echo "   ${C2}cas (Cascade Lake)${CN}"
-   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo "   ${C2}rom (AMD Rome) (default)${CN}"
    echo "   ${C2}mil (AMD Milan)${CN}"
    echo " "
    echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
@@ -486,7 +482,7 @@ else if ( $SITE == 'NAS' ) then
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      set MODEL = 'rom'
    endif
 
    if( $MODEL != 'has' & \
