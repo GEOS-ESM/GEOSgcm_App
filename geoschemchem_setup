@@ -1657,6 +1657,10 @@ RATSPRO:
      endif
      endif
 
+# Additional RATS settings for specific GHGs
+# ------------------------------------------
+set CH4_PROVIDER     = none
+set CO2_PROVIDER     = none
 
 #######################################################################
 #                  Confirm HEARTBEAT time for the model
@@ -2484,6 +2488,9 @@ s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g
 s?@OANA_PROVIDER?PCHEM?g
 s?@EMISSIONS?$EMISSIONS?g
+
+s?@CH4_PROVIDER?$CH4_PROVIDER?g
+s?@CO2_PROVIDER?$CO2_PROVIDER?g
 
 s^@DYCORE^$DYCORE^g
 s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
