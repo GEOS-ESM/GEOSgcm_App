@@ -1,255 +1,262 @@
-from env import answerdict
+from env import answerdict 
 from utility import color
 from datetime import date
 
 class ocean:
-    def __init__(self):
-        self.model = answerdict['OM_name'].q_answer
-        self.coupled = answerdict['OM_coupled'].q_answer
-        self.seaice_model = answerdict['OM_seaice_model'].q_answer
-        self.gridtype = ''
-        self.gridtype_abrv = ''
-        self.gridname = ''
-        self.data = ''
-        self.preload = ''
-        self.history_template = answerdict['history_template'].q_answer
-        self.im = None
-        self.jm = None
-        self.lm = answerdict['OM_vertical_res'].q_answer
-        self.imo = None
-        self.jmo = None
-        self.res = ''
-        self.tag = 'Reynolds'
-        self.sst_name = ''
-        self.sst_file = ''
-        self.ice_file = ''
-        self.kpar_file = ''
-        self.ostia = ''
-        self.out = ''
-        self.nx = None
-        self.ny = None
-        self.nf = None
-        self.latlon = ''
-        self.cube = ''
-        self.n_procs = None
-        self.MOM5 = ''
-        self.MOM6 = ''
-        self.MIT = ''
-        self.mpt_shepherd = ''
+    def __init__(ocean):
+        ocean.running_ocean = answerdict['OM_coupled'].q_answer
+        ocean.model = answerdict['OM_name'].q_answer
+        ocean.seaice_model = answerdict['OM_seaice_model'].q_answer
+        ocean.history_template = answerdict['history_template'].q_answer 
+        ocean.LM = answerdict['OM_vertical_res'].q_answer
+        ocean.data_atmos = answerdict['OM_data_atmos'].q_answer
+        ocean.name = ''
+        ocean.preload = ''
+        ocean.seaice_name = ''
+        ocean.seaice_preload = ''
+        ocean.gridtyp = ''
 
 
-    # for debugging purposes
-    def print_vars(self):
-        all_vars = vars(self)
-        for var_name, var_value in all_vars.items():
-            print(f"{color.CYAN}{var_name}: {var_value}{color.RESET}")
-
-
-    def set_IMO(self):
-        self.imo = "%04d" % self.im
-
-    def set_JMO(self):
-        self.jmo = "%04d" % self.jm
-
-    def set_res(self):
-        hres = answerdict["OM_horizontal_res"].q_answer
-        if self.coupled == False and hres == "CS":
-            self.res = f"{self.gridtype_abrv}{self.imo}x6C"
-        elif self.coupled == False:
-            self.res = f"{self.gridtype_abrv}{self.imo}xPE{self.jmo}"
-        elif self.coupled == True:
-            self.res = f"{self.gridtype_abrv}{self.imo}x{self.gridtype_abrv}{self.jmo}"
-            # Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
-            # to run. We believe this is due to LD_PRELOAD. For now we only set
-            # this for coupled runs.
-            self.mpt_shepherd = "setenv MPI_SHEPHERD true"
-
-    def set_gridname(self):
-        if self.gridtype_abrv == "CF":
-            self.gridname = f"OC{self.im}x{self.jm}-{self.gridtype_abrv}"
-        elif self.model == "MIT":
-            self.gridname = f"{self.gridtype_abrv}{self.im}x{self.jm}-{self.gridtype_abrv}"
+    def config(ocean):
+        if ocean.running_ocean == True:
+            ocean.set_coupled()
+            ocean.set_seaice()
+            ocean.set_preload()
+            ocean.set_data_atmosphere()
         else:
-            self.gridname = f"PE{self.im}x{self.jm}-{self.gridtype_abrv}"
+            ocean.set_uncoupled()
 
-    def set_kpar_file(self):
-        self.kpar_file = f"SEAWIFS_KPAR_mon_clim.{self.im}x{self.jm}"
-
-    def coupled_hres(self):
-        if self.model == 'MOM5':
-            self.model = 'MOM'
-            self.preload = "env LD_PRELOAD=$GEOSDIR/lib/libmom.dylib" 
-            mom5_warning = (
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+    
+    def set_coupled(ocean):
+        # NOTE: We use a CMake variable here because the shared library
+        # suffix is different on Linux and macOS. This is set by configure_file()
+        if ocean.model == 'MOM5':
+            ocean.name = 'MOM'
+            ocean.gridtyp = 'M5TP'
+            ocean.grid_type = 'Tripolar'
+            ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
+            ocean.MOM5 = ''
+            ocean.MOM6 = '#DELETE'
+            ocean.MIT = '#DELETE'
+            MOM5_warning = (
+                "######################################################\n"
                 "You have chosen to set up a coupled model experiment with MOM5.\n"
                 "Be aware that such a set up is _known_ to have problems. See following for more details:\n"
                 "https://github.com/GEOS-ESM/MOM5/issues/19\n"
                 "If your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\n"
                 "Otherwise, until this above issue is _fixed_ you are on your own with above choice.\n"
-                "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+                "######################################################"
             )
-            print(color.GREEN + mom5_warning + color.RESET)
-        elif self.model == 'MOM6':
-            self.preload = "env LD_PRELOAD=$GEOSDIR/lib/libmom6.dylib"
-        elif self.model == 'MIT':
-            self.gridtype_abrv = "llc"
+            print(color.GREEN + MOM5_warning + color.RESET)
+            ocean.NX = 36
+            ocean.NY = 10
+            resolution = answerdict['OM_MOM_horizontal_res'].q_answer.split()
+            ocean.IM = int(resolution[0])
+            ocean.JM = int(resolution[1])
+        elif ocean.model == 'MOM6':
+            ocean.name = 'MOM6'
+            ocean.gridtyp = 'M6TP'
+            ocean.grid_type = 'Tripolar'
+            ocean.preload = 'env @PRELOAD_COMMAND=\\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+            ocean.MOM5 = '#DELETE'
+            ocean.MOM6 = ''
+            ocean.MIT = '#DELETE'
+            ocean.set_MOM6_resolution()
+        elif ocean.model == 'MIT':
+            ocean.name = 'MIT'
+            ocean.grid_type = 'llc'
+            ocean.gridtyp = 'MITLLC'
+            ocean.MOM5 = '#DELETE'
+            ocean.MOM6 = '#DELETE'
+            ocean.MIT = ''
+            ocean.JM = 15
+            ocean.IM = ocean.jm * 360
+            ocean.NX = 360
+            ocean.NY = 1
+            #ocean.gridspec = 'mit.ascii' <-- dead code
 
-        if self.model == 'MIT' and answerdict["OM_MIT_horizontal_res"].q_answer == 'cs32':
-            self.jm = 32
-            self.im = self.jm * 6
-            self.gridtype_abrv = "CM"
-        elif self.model == 'MIT' and answerdict["OM_MIT_horizontal_res"].q_answer == 'llc90':
-            self.gridtype_abrv = "LL"
-            if answerdict["AM_horizontal_res"].q_answer == "c48":
-                self.jm = 30
-                self.im = self.jm * 96
-            else:
-                self.jm = 15
-                self.im = self.jm * 360
-        elif self.model == 'MIT' and answerdict["OM_MIT_horizontal_res"].q_answer == 'llc1080':
-            self.gridtype_abrv = "LL"
-            self.jm = 60
-            self.im = self.jm * 2880
-        elif self.model == 'MIT' and answerdict["OM_MIT_horizontal_res"].q_answer == 'llc2160':
-            self.gridtype_abrv = "LL"
-            self.jm = 72
-            self.im = self.jm * 7776
-        elif self.model == "MOM" or self.model == "MOM6":
-            temp = answerdict["OM_MOM_horizontal_res"].q_answer.split()
-            self.im = int(temp[0])
-            self.jm = int(temp[1])
-            self.gridtype = "TM"
+        ocean.coupled = ''
+        IMO = '%04d' % ocean.IM
+        JMO = '%04d' % ocean.JM
+        ocean.res = f"{ocean.gridtyp}{IMO}x{JMO}"
+        ocean.tag = 'Reynolds'
+        ocean.sst_name = '#DELETE'
+        ocean.sst_file = '#DELETE'
+        ocean.ice_file = '#DELETE'
+        ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
+        ocean.ostia = '#DELETE'
+        ocean.out = '#DELETE'
+        ocean.latlon = ''
+        ocean.cube = '#DELETE'
+        ocean.data = '#DELETE'
+        ocean.mpt_shepherd = 'setenv MPI_SHEPHERD true'
+        ocean.NF = 1
 
-
-    def coupled_vres(self):
-        if answerdict["AM_horizontal_res"].q_answer == "c12":
-            self.nx = 3
-            self.ny = 2 
-        else:
-            self.nx = 36
-            self.ny = 10
-
-        self.n_procs = self.nx*self.ny
-        
-        if self.model == "MOM" or self.model == "MOM6":
-            self.gridtype = "Tripolar"
-        elif self.model == "MIT":
-            if self.gridtype_abrv == "CM":
-                self.nx = 6
-                self.ny = 1
-            elif answerdict["AM_horizontal_res"].q_answer == 'c48':
-                self.nx = 96
-                self.ny = 1
-            elif answerdict["AM_horizontal_res"].q_answer == 'c90':
-                self.nx = 360
-                self.ny = 1
-            elif answerdict["AM_horizontal_res"].q_answer == 'c720':
-                self.nx = 2880
-                self.ny = 1
-            elif answerdict["AM_horizontal_res"].q_answer == 'c1440':
-                self.nx = 7776
-                self.ny = 1
+        ocean.nprocs = ocean.NX * ocean.NY # This might be bugged(!)
+        ocean.set_gridname()
 
 
-    def uncoupled_hres(self):
+    def set_uncoupled(ocean):
+        #rename this to 'uncoupled_hres'
+        hr_code = answerdict['OM_horizontal_res'].q_answer
         todays_date = date.today()
-        match answerdict["OM_horizontal_res"].q_answer:
-            case "o1":
-                temp_res = "360 180"
-                self.im, self.jm = map(int, temp_res.split())
-                self.gridtype = "LatLon"
-                self.nf = 1
-                self.tag = "Reynolds"
-                self.sst_name = "SST"
-                self.out = "360x180"
-                self.sst_file = f"dataoceanfile_MERRA_sst_1971-current.{self.im}x{self.jm}.LE"
-                self.ice_file = f"dataoceanfile_MERRA_fraci_1971-current.{self.im}x{self.jm}.LE"
-                self.set_kpar_file()
-                self.gridtype_abrv = "DE"
-                self.latlon = ""
-                self.cube = "#DELETE"
-                self.ostia = "#DELETE"
-                self.data = ""
-            case "o2":
-                temp_res = "1440 720"
-                self.im, self.jm = map(int, temp_res.split())
-                self.gridtype = "LatLon"
-                self.nf = 1
-                self.tag = "MERRA-2"
-                self.sst_name  = "MERRA2"
-                self.out = "1440x720"
-                self.sst_file = f"dataoceanfile_MERRA2_SST.{self.im}x{self.jm}.{todays_date.year}.data"
-                self.ice_file  = f"dataoceanfile_MERRA2_ICE.{self.im}x{self.jm}.{todays_date.year}.data"
-                self.set_kpar_file()
-                self.gridtype_abrv = "DE"
-                self.latlon = ""
-                self.cube = "#DELETE"
-                self.ostia = ""
-                self.data = ""
-            case "o3":
-                temp_res = "2880 1440"
-                self.im, self.jm = map(int, temp_res.split())
-                self.gridtype = "LatLon"
-                self.nf = 1
-                self.tag = "Ostia"
-                self.sst_name  = "OSTIA_REYNOLDS"
-                self.out = "2880x1440"
-                self.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{OGCM_IM}x{OGCM_JM}.{todays_date.year}.data"
-                self.ice_file  = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{OGCM_IM}x{OGCM_JM}.{todays_date.year}.data"
-                self.set_kpar_file()
-                self.gridtype_abrv = "DE"
-                self.latlon = ""
-                self.cube = "#DELETE"
-                self.ostia = ""
-                self.data = ""
-            case "CS":
-                if int(answerdict["AM_horizontal_res"].q_answer[1:]) >= 90:
-                    self.im = int(answerdict["AM_horizontal_res"].q_answer[1:])
-                    self.jm  = self.im * 6
-                    self.gridtype = "Cubed-Sphere"
-                    self.nf = 6
-                    self.tag = "Ostia"
-                    self.sst_name = "OSTIA_REYNOLDS"
-                    self.out = "CS"
-                    self.sst_file  = f"dataoceanfile_OSTIA_REYNOLDS_SST.{self.im}x{self.jm}.{todays_date.year}.data"
-                    self.ice_file  = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{self.im}x{self.jm}.{todays_date.year}.data"
-                    self.set_kpar_file()
-                    self.gridtype_abrv = "CF"
-                    self.latlon = "#DELETE"
-                    self.cube = ""
-                    self.ostia = ""
-                    self.data = "#DELETE"
-                else:
-                    print(color.RED + "ERROR: Cubed-Sphere Ocean with " + color.BLUE + \
-                            answerdict["AM_horizontal_res"].q_answer + color.RED + \
-                            " is not currently supported. Must be c90 or higher!")
-                    exit(1)
 
-        self.set_IMO()
-        self.set_JMO()
-        self.set_res() 
-        self.lm = 34
-        self.model = f"Data Ocean ({answerdict['AM_horizontal_res'].q_answer})"
-        self.coupled = "#DELETE"
-        self.MOM5 = "#DELETE"
-        self.MOM6 = "#DELETE"
-        self.MIT = "#DELETE"
-
-
-
-    # ocean model driver 
-    def config(self):
-        if answerdict["OM_coupled"].q_answer == True:
-            self.coupled_hres()
-            self.coupled_vres()
+        if hr_code == 'o1':
+            ocean.IM = 360
+            ocean.JM = 180
+            ocean.grid_type = 'LatLon'
+            ocean.NF = 1
+            ocean.tag = 'Reynolds'
+            ocean.sst_name = 'SST'
+            ocean.out = '360x180'
+            ocean.sst_file = f"dataoceanfile_MERRA_sst_1971-current.{ocean.IM}x{ocean.JM}.LE"
+            ocean.ice_file = f"dataoceanfile_MERRA_fraci_1971-current.{ocean.IM}x{ocean.JM}.LE"
+            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
+            ocean.gridtyp = 'DE'
+            ocean.latlon = ''
+            ocean.cube = '#DELETE'
+            ocean.ostia = '#DELETE'
+            ocean.data = ''
+        elif hr_code == 'o2':
+            ocean.IM = 1440
+            ocean.JM = 720
+            ocean.grid_type = 'LatLon'
+            ocean.NF = 1
+            ocean.tag = 'MERRA-2'
+            ocean.sst_name = 'MERRA2'
+            ocean.out = '1440x720'
+            ocean.sst_file = f"dataoceanfile_MERRA2_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.ice_file = f"dataoceanfile_MERRA2_ICE.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
+            ocean.gridtyp = 'DE'
+            ocean.latlon = ''
+            ocean.cube = '#DELETE'
+            ocean.ostia = ''
+            ocean.data = ''
+        elif hr_code == 'o3':
+            ocean.IM = 2880
+            ocean.JM = 1440
+            ocean.grid_type = 'LatLon'
+            ocean.NF = 1
+            ocean.tag = 'Ostia'
+            ocean.sst_name = 'OSTIA_REYNOLDS'
+            ocean.out = '2880x1440'
+            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
+            ocean.gridtyp = 'DE'
+            ocean.latlon = ''
+            ocean.cube = '#DELETE'
+            ocean.ostia = ''
+            ocean.data = ''
+        elif hr_code == 'cs':
+            # need to add input validation for this case
+            ocean.IM = int(answerdict['AM_horizontal_res'].q_answer[1:])
+            ocean.JM = ocean.IM * 6
+            ocean.grid_type = 'Cubed-Sphere'
+            ocean.NF = 6
+            ocean.tag = 'Ostia'
+            ocean.sst_name = 'OSTIA_REYNOLDS'
+            ocean.out = 'CS'
+            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data" 
+            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
+            ocean.gridtyp = 'CF'
+            ocean.latlon = '#DELETE'
+            ocean.cube = ''
+            ocean.ostia = ''
+            ocean.data = '#DELETE'
+        
+        IMO = '%04d' % ocean.IM
+        JMO = '%04d' % ocean.JM
+        if hr_code == 'cs':
+            ocean.res = f"CF{IMO}x6C"
         else:
-            self.uncoupled_hres()
+            ocean.res = f"DE{IMO}xPE{JMO}"
+        #ocean.data = #THIS IS WILL OVERWRITE THE BLOCK ABOVE
+        ocean.name = ''
+        ocean.preload = ''
+        ocean.coupled = '#DELETE'
+        ocean.MOM5 = '#DELETE'
+        ocean.MOM6 = '#DELETE'
+        ocean.MIT = '#DELETE'
+        ocean.CICE4 = '#DELETE'
+        ocean.CICE6 = '#DELETE'
+        ocean.hist_CICE4 = '#DELETE'
+        ocean.model = f"Data Ocean ({hr_code})"
+        ocean.NX = ''
+        ocean.NY = ''
+        ocean.nprocs = ''
+        ocean.mpt_shepherd = ''
+        ocean.set_gridname()
 
-        self.set_gridname()
 
 
 
+    def set_MOM6_resolution(ocean):
+        # For MOM6 we currently have only 3 allowed ocean resolutions based on the
+        # atmospheric resolution. The allowed are:
+        #
+        # Atm Res  Atm NXxNY  Atm IMxJM  Ocean NXxNY  Ocean IMxJM  Ocean LM
+        # -------  ---------  ---------  -----------  -----------  --------
+        # c12      1x6        12x72      3x2          72x36        50
+        # c90      5x36       90x540     90x2         540x458      50
+        # c180     30x36      180x1080   36x30        1440x1080    75
+        #
+        # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
+
+        atmos_res = answerdict['AM_horizontal_res'].q_answer
+
+        if atmos_res == 'c12':
+            ocean.NX = 3
+            ocean.NY = 2
+            ocean.IM = 72
+            ocean.JM = 36
+            ocean.LM = 50
+        elif atmos_res == 'c90':
+            ocean.NX = 90
+            ocean.NY = 2
+            ocean.IM = 540
+            ocean.JM = 458
+            ocean.LM = 50
+        elif atmos_res == 'c180':
+            ocean.NX = 36
+            ocean.NY = 30
+            ocean.IM = 1440
+            ocean.JM = 1080
+            ocean.LM = 75
+
+    def set_preload(ocean):
+        ocean.preload = f"{ocean.preload}:{ocean.seaice_preload}"
 
 
+    def set_seaice(ocean):
+        if ocean.seaice_model == 'CICE4':
+            ocean.seaice_preload = '$GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
+            ocean.CICE4 = ''
+            ocean.CICE6 = '#DELETE'
+            ocean.hist_CICE4 = ''
+        elif ocean.seaice_model == 'CICE6':
+            ocean.seaice_preload = '$GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+            ocean.CICE4 = '#DELETE'
+            ocean.CICE6 = ''
+            ocean.hist_CICE4 = '#DELETE'
+
+
+    def set_data_atmosphere(ocean):
+        if ocean.data_atmos == True:
+            ocean.modelatm = '#DELETE'
+            ocean.use_data_ATM4OCN = '.TRUE.'
+        else:
+            ocean.modelatm = ''
+            ocean.use_data_ATM4OCN = '.FALSE.'
+
+    def set_gridname(ocean):
+        if ocean.gridtyp == 'CF':
+            ocean.gridname = f"OC{ocean.IM}x{ocean.JM}-{ocean.gridtyp}"
+        elif ocean.model == 'MIT':
+            ocean.gridname = f"{ocean.gridtyp}{ocean.IM}x{ocean.JM}-{ocean.gridtyp}"
+        else:
+            ocean.gridname = f"PE{ocean.IM}x{ocean.JM}-{ocean.gridtyp}"
 
 

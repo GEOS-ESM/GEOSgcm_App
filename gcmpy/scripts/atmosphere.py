@@ -8,10 +8,10 @@ class atmosphere:
         self.force_gcm          = "#"
         self.num_readers        = 1
         self.num_writers        = 1
-        self.dt                 = answerdict["heartbeat"].q_answer
+        self.dt                 = answerdict['heartbeat'].q_answer
         self.dt_solar           = None
         self.dt_irrad           = None
-        self.dt_ocean           = None
+        self.DT_ocean           = answerdict['heartbeat'].q_answer
         self.dt_long            = None
         self.lm                 = int(answerdict['AM_vertical_res'].q_answer)
         self.im                 = int(answerdict['AM_horizontal_res'].q_answer[1:])
@@ -67,7 +67,6 @@ class atmosphere:
             case "c12":
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = self.dt
                 if answerdict["OM_name"].q_answer == "MOM6":
                     self.nx         = 1
@@ -84,7 +83,6 @@ class atmosphere:
             case "c24":
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = self.dt
                 self.nx             = 4
                 self.ny             = self.nx * 6
@@ -98,7 +96,6 @@ class atmosphere:
             case "c48":
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = self.dt
                 self.nx             = 4
                 self.ny             = self.nx * 6
@@ -119,15 +116,12 @@ class atmosphere:
                     case "MIT":
                         self.nx     = 10
                         self.ny     = 36
-                        self.dt_ocean   = self.dt
                     case "MOM5","MOM6":
                         self.nx     = ocean_nx
                         self.ny     = ocean_ny
-                        self.dt_ocean   = self.dt
                     case _:
                         self.nx     = 3
                         self.ny     = self.nx * 6
-                        self.dt_ocean   = self.dt_irrad
                 self.job_sgmt       = f"{32:08}"
                 self.num_sgmt       = 4
                 self.post_NDS       = 8
@@ -140,11 +134,9 @@ class atmosphere:
                 if answerdict["OM_coupled"].q_answer == True:
                     self.nx         = ocean_nx
                     self.ny         = ocean_ny
-                    self.dt_ocean   = self.dt
                 else:
                     self.nx         = 6
                     self.ny         = self.nx * 6
-                    self.dt_ocean   = self.dt_irrad
                 self.job_sgmt       = f"{16:08}"
                 self.num_sgmt       = 1
                 self.post_NDS       = 8
@@ -154,7 +146,6 @@ class atmosphere:
             case "c360":
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = self.dt
                 self.nx             = 12
                 self.ny             = self.nx * 6
@@ -168,7 +159,6 @@ class atmosphere:
             case "c720":
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = 450
                 self.nx             = 24
                 self.ny             = self.nx * 6
@@ -183,7 +173,6 @@ class atmosphere:
             case "c1440":
                 self.dt_solar       = 1800
                 self.dt_irrad       = 1800
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = 300
                 self.nx             = 48
                 self.ny             = self.nx * 6
@@ -198,7 +187,6 @@ class atmosphere:
             case "c2880":
                 self.dt_solar       = 1800
                 self.dt_irrad       = 1800
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = 300
                 self.nx             = 96
                 self.ny             = self.nx * 6
@@ -214,7 +202,6 @@ class atmosphere:
             case "c5760":
                 self.dt_solar       = 900
                 self.dt_irrad       = 900
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = 300
                 self.nx             = 192
                 self.ny             = self.nx * 6
@@ -230,7 +217,6 @@ class atmosphere:
             case "c270":
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = self.dt
                 self.nx             = 18
                 self.ny             = self.nx * 6
@@ -247,7 +233,6 @@ class atmosphere:
             case "c540":
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = self.dt
                 self.nx             = 36
                 self.ny             = self.nx * 6 * 2
@@ -264,7 +249,6 @@ class atmosphere:
             case "c1080":
                 self.dt_solar       = 900
                 self.dt_irrad       = 900
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = 300
                 self.nx             = 72
                 self.ny             = self.nx * 6 * 2
@@ -281,7 +265,6 @@ class atmosphere:
             case "c1536":
                 self.dt_solar       = 900
                 self.dt_irrad       = 900
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = 300
                 self.nx             = 96
                 self.ny             = self.nx * 6
@@ -298,7 +281,6 @@ class atmosphere:
             case "c2160":
                 self.dt_solar       = 900
                 self.dt_irrad       = 900
-                self.dt_ocean       = self.dt_irrad
                 self.dt_long        = 300
                 self.nx             = 192
                 self.ny             = self.nx * 6 * 2
@@ -312,8 +294,6 @@ class atmosphere:
                 self.stretch_factor = 2.5
                 self.res            = 'CF2160x6C-SG001'
 
-        if answerdict["OM_name"].q_answer == "MIT":
-            self.dt_ocean = self.dt
 
     def set_microphysics(self):
         match self.microphysics:

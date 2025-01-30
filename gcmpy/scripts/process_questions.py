@@ -37,8 +37,6 @@ class handle:
 
     @staticmethod
     def MIT_hres_choices(answerdict, i):
-        # This is a dumb case, but these are the only known ocean resolutions that work
-        # with these atmosphere resolutions, so we will only give the users these choices
         if i == "OM_MIT_horizontal_res":
             if answerdict["AM_horizontal_res"].q_answer == "c720":
                 answerdict[i].q_choices = ["llc1080 (1/12-deg, Lat-Lon-Cube)"]
@@ -59,6 +57,12 @@ class handle:
             while not re.match(r"^\d+\s\d+$", answerdict[i].q_answer):
                 print(color.RED + "please enter exactly 2 numbers separated by a space! (int int)\n")
                 answerdict[i].load_question(answerdict)
+
+    @staticmethod
+    def seaice_choices(answerdict, i):
+        if i == 'OM_seaice_model' and answerdict['OM_name'] == 'MOM6':
+            answerdict[i].q_choices = ['CICE6']
+
 
     @staticmethod
     def heartbeat_default(answerdict, i):
@@ -111,25 +115,17 @@ class handle:
     @staticmethod
     def history_template_default(answerdict, i):
         if i == "history_template":
-
-            match answerdict["OM_name"]:
-                case "MOM5":
-                    answerdict[i].q_default = "HISTORY.AOGCM-MOM5.rc.tmpl"
-                case "MOM6":
-                    answerdict[i].q_default = "HISTORY.AOGCM.rc.tmpl"
-                case "MIT":
-                    answerdict[i].q_default = "HISTORY.AOGCM_MITgcm.rc.tmpl"
-                case _:            
-                    answerdict[i].q_default = "HISTORY.AGCM.rc.tmpl"
-
-    ''' 
-    @staticmethod
-    def history_template_valid(answerdict, i):
-        if i == "history_template":
-            while not os.path.exists(answerdict[i].q_answer):
-                print(f"Error: Could not find {color.RED}{answerdict[i]}{color.RESET}")
-                answerdict[i].load_question(answerdict)
-    '''
+            
+            if answerdict['OM_name'].q_answer == 'MOM5':
+                answerdict[i].q_default = 'HISTORY.AOGCM-MOM5.rc.tmpl'
+            elif answerdict['OM_name'].q_answer == "MOM6":
+                answerdict[i].q_default = 'HISTORY.AOGCM.rc.tmpl'
+            elif answerdict['OM_name'].q_answer == 'MIT':
+                answerdict[i].q_default = 'HISTORY.AOGCM_MITgcm.rc.tmpl'
+            elif answerdict['OM_data_atmos'].q_answer == True:
+                answerdict[i].q_default == 'HISTORY.DATAATM.rc.tmpl'
+            else:
+                answerdict[i].q_default = 'HISTORY.AGCM.rc.tmpl'
 
     @staticmethod
     def exp_dir_default(answerdict, i):
@@ -209,6 +205,7 @@ def process():
         handle.processor_choices(answerdict,i)
         handle.MIT_hres_choices(answerdict, i)        
         handle.MOM_hres_default(answerdict, i)
+        handle.seaice_choices(answerdict, i)
         handle.heartbeat_default(answerdict, i)
         handle.history_template_default(answerdict, i)
         handle.exp_dir_default(answerdict, i)

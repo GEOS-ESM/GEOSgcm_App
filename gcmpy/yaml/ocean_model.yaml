@@ -70,5 +70,13 @@ OM_seaice_model:
   choices:        ['CICE4', 'CICE6']
   default_answer: ''
   follows_up:
-    - ['OM_coupled', ['True']]
+    - ['OM_coupled', [True]]
+
+OM_data_atmos:
+  type:           'confirm'
+  prompt:         'Do you wish to run Data Atmosphere?'
+  choices:        ''
+  default_answer: False
+  follows_up:
+    - ['OM_coupled', [True]]
 # ----------------------------------------------------------------------------------------------

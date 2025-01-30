@@ -4,7 +4,7 @@ from land import land
 from gocart import gocart
 from env import answerdict, linkx
 from utility import envdict, pathdict, color
-import math, os, shutil, tempfile, yaml, re
+import math, os, shutil, tempfile, yaml, re, glob
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Undefined
 
@@ -49,7 +49,7 @@ class setup:
 
     def config_models(self):
         self.ocean.config()
-        self.atmos.config(self.ocean.nx, self.ocean.ny)
+        self.atmos.config(self.ocean.NX, self.ocean.NY)
         self.land.config()
         self.gocart.config()
         self.file_list.append(self.ocean.history_template)
@@ -57,7 +57,7 @@ class setup:
 
     # setup some variables idk
     def set_some_stuff(self):
-        if self.atmos.hist_im >= self.ocean.im:
+        if self.atmos.hist_im >= self.ocean.IM:
             self.interpolate_sst = True
         else:
             self.interpolate_sst = False
@@ -199,12 +199,12 @@ class setup:
             self.M2_replay_ana_location  = f"{self.boundary_path}/merra2/data"
 
             # defines location of SST Boundary Conditions
-            oceanres = f"{self.ocean.im}x{self.ocean.jm}"
+            oceanres = f"{self.ocean.IM}x{self.ocean.JM}"
             if oceanres == "1440x720":
                 self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/SST/{oceanres}"
             else:
                 self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/realtime/@SSTNAME/{oceanres}"
-            if self.ocean.gridtype_abrv == "LL":
+            if self.ocean.gridtyp == "LL":
                 self.sst_dir = "/nobackupp2/estrobac/geos5/SSTDIR"
 
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
@@ -249,12 +249,12 @@ class setup:
 
 
             # define location of SST Boundary Conditions
-            oceanres    = f"{self.ocean.im}x{self.ocean.jm}"
+            oceanres    = f"{self.ocean.IM}x{self.ocean.JM}"
             if oceanres == "1440x720":
                 self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/SST/{oceanres}"
             else:
                 self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/{oceanres}"
-            if self.ocean.gridtype_abrv == "LL":
+            if self.ocean.gridtyp == "LL":
                 self.sst_dir = "/discover/nobackup/estrobac/geos5/SSTDIR"
 
             self.chem_dir         = f"{os.environ.get('SHARE')}/gmao_ops/fvInput_nc3"
@@ -296,7 +296,7 @@ class setup:
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.im}x{self.ocean.jm}"
+            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.IM}x{self.ocean.JM}"
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME')
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
@@ -331,7 +331,7 @@ class setup:
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.im}x{self.ocean.jm}"
+            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.IM}x{self.ocean.JM}"
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME') 
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
@@ -429,26 +429,33 @@ class setup:
         self.copy_helper(f"{pathdict['install']}/post/post.rc", f"{self.exp_dir}/post.rc", "post.rc")
 
         # These files will be added if user chose to run coupled, regardless of ocean model selected.
-        if self.ocean.coupled == True:
-            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/plotcon.j", f"{self.exp_dir}/plotcon.j", "plotocn.j")
-            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/confon.py", f"{self.exp_dir}/__init__.py", "confocn.py")
-            self.file_list.extend(['input.nml', 'diag_table', 'plotocn.j', '__init__.py'])
+        if self.ocean.running_ocean == True and self.ocean.model != 'MIT':
+            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/plotocn.j", f"{self.exp_dir}/plotocn.j", "plotocn.j")
+            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/confocn.py", f"{self.exp_dir}/__init__.py", "confocn.py")
+            self.file_list.extend(['input.nml', 'diag_table','plotocn.j', '__init__.py'])
 
         if self.ocean.model == 'MOM5':
-            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.im}x{self.ocean.jm}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
-            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.im}x{self.ocean.jm}/diag_table", f"{self.exp_dir}/diag_table.nml", "diag_table")
-            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.im}x{self.ocean.jm}/field_table", f"{self.exp_dir}/field_table.nml", "field_table")
             self.file_list.append('field_table')
+            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/INPUT/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
+            MOM5_path = os.path.join(pathdict['etc'], 'MOM5', 'geos5', f"{self.ocean.IM}x{self.ocean.JM}", 'INPUT', '*table')
+            files = glob.glob(MOM5_path)
+            for file in files: 
+                file_name = os.path.basename(file)
+                self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
         elif self.ocean.model == 'MOM6':
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.im}x{self.ocean.jm}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.im}x{self.ocean.jm}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.im}x{self.ocean.jm}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.im}x{self.ocean.jm}/diag_table", f"{self.exp_dir}/diag_table", "diag_table")
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.im}x{self.ocean.jm}/field_table", f"{self.exp_dir}/field_table", "field_table")
             self.file_list.extend(['MOM_input', 'MOM_override', 'data_table'])
 
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
+            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
+            MOM6_path = os.path.join(pathdict['etc'], 'MOM6', 'mom6_app', f"{self.ocean.IM}x{self.ocean.JM}", '*table')
+            files = glob.glob(MOM6_path)
+            for file in files: 
+                file_name = os.path.basename(file)
+                self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
+
         if self.ocean.seaice_model == 'CICE6':
-            self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.im}x{self.ocean.jm}/ice_in", f"{self.exp_dir}/ice_in") 
+            self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in") 
             self.file_list.append('ice_in')
 
         print(f"{color.GREEN}Done!{color.RESET}\n")
@@ -566,14 +573,16 @@ class setup:
         # With MOM5 we need to change dt lines in input.nml to
         # use $OCEAN_DT instead. NOTE: This regex assumes integer followed by comma
         if self.ocean.model == 'MOM5':
+            
             with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'r') as file:
                 file_content = file.read()
-
-            file_content = re.sub(r'(dt_cpld\s*=\s*)[0-9]+(\,)', r'\1'+self.atmos.DT_ocean+r'\2', file_content)
-            file_content = re.sub(r'(dt_atmos\s*=\s*)[0-9]+(\,)', r'\1'+self.atmos.DT_ocean+r'\2', file_content)
-
-            with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'r') as file:
+            
+            file_content = re.sub(r'dt_cpld\s*=\s*.*(,)', rf"dt_cpld = {self.atmos.DT_ocean}\1", file_content)
+            file_content = re.sub(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.DT_ocean}\1", file_content)
+            
+            with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'w') as file:
                 file.write(file_content)
+            
 
         # We also must change the MOM_override file to
         # have consistent DTs with the AGCM. So we use OCEAN_DT
@@ -583,10 +592,10 @@ class setup:
             with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'r') as file:
                 file_content = file.read()
 
-            file_content = re.sub(r'(DT\s*=\s*).*(\,)', r'\1'+self.atmos.DT_ocean+r'\2', file_content)
-            file_content = re.sub(r'(DT_THERM\s*=\s*).*(\,)', r'\1'+self.atmos.DT_ocean+r'\2', file_content)
+            file_content = re.sub(r'DT\s*=\s*.*(,)', rf"DT = {self.atmos.DT_ocean}\1", file_content)
+            file_content = re.sub(r'DT_THERM\s*=\s*.*(,)', rf"DT_THERM = {self.atmos.DT_ocean}\1", file_content)
 
-            with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'r') as file:
+            with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'w') as file:
                 file.write(file_content)
 
 
@@ -669,9 +678,9 @@ class setup:
             'BASE_BIND_PATH': '',
             'BOUNDARY_DIR': self.boundary_path,
             'CHECKPOINT_TYPE': 'default',
-            'OGCM_NX': self.ocean.nx,
-            'OGCM_NY': self.ocean.ny,
-            'OGCM_NPROCS': self.ocean.n_procs, 
+            'OGCM_NX': self.ocean.NX,
+            'OGCM_NY': self.ocean.NY,
+            'OGCM_NPROCS': self.ocean.nprocs, 
             'OBSERVER_FRQ': 0,
             'DASTUNING': '#',
             'COUPLED': self.ocean.coupled, 
@@ -679,8 +688,9 @@ class setup:
             'MOM5': self.ocean.MOM5,
             'MOM6': self.ocean.MOM6,
             'OCNMODEL': self.ocean.model, 
-            'CICE4': '#DELETE',
-            'CICE6': '#DELETE',
+            'CICE4': self.ocean.CICE4,
+            'CICE6': self.ocean.CICE6,
+            'HIST_CICE4': self.ocean.hist_CICE4,
             'MIT': self.ocean.MIT, 
             'DATAOCEAN': self.ocean.data,
             'OPS_SPECIES': self.gocart.ops_species,
@@ -688,7 +698,7 @@ class setup:
             'MERRA2OX_SPECIES': self.gocart.MERRA2OX_species,
             'HIST_GOCART': self.gocart.gocart_hist,
             'LSM_PARMS': self.land.parameters,
-            'OCEAN_NAME': self.ocean.model,
+            'OCEAN_NAME': self.ocean.name,
             'OCEAN_PRELOAD': self.ocean.preload,
             'ana4replay.eta.%y4%m2%d2_%h2z.nc4': '/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g',
             'REPLAY_ANA_EXPID': self.replay_ana_expID,
@@ -714,7 +724,7 @@ class setup:
             'DT': self.atmos.dt,
             'SOLAR_DT': self.atmos.dt_solar,
             'IRRAD_DT': self.atmos.dt_irrad,
-            'OCEAN_DT': self.atmos.dt_ocean,
+            'OCEAN_DT': self.atmos.DT_ocean,
             'LONG_DT': self.atmos.dt_long,
             'NX': self.atmos.nx,
             'NY': self.atmos.ny,
@@ -735,11 +745,11 @@ class setup:
             'AGCM_IM': self.atmos.im,
             'AGCM_JM': self.atmos.jm,
             'AGCM_LM': self.atmos.lm,
-            'OGCM_IM': self.ocean.im,
-            'OGCM_JM': self.ocean.jm,
-            'OGCM_LM': self.ocean.lm,
-            'OGCM_NF': self.ocean.nf,
-            'OGCM_GRID_TYPE': self.ocean.gridtype,
+            'OGCM_IM': self.ocean.IM,
+            'OGCM_JM': self.ocean.JM,
+            'OGCM_LM': self.ocean.LM,
+            'OGCM_NF': self.ocean.NF,
+            'OGCM_GRID_TYPE': self.ocean.grid_type,
             'BEG_DATE': self.begin_date,
             'END_DATE': self.end_date,
             'JOB_SGMT': self.job_sgmt,
