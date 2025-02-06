@@ -104,8 +104,8 @@ if ( $?TSE_TMPDIR ) then
 
       setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/$SCRDIR_NAME
 
-      if (-e $EXPDIR/$SCRDIR_NAME ) /bin/rm -rf $EXPDIR/$SCRDIR_NAME
-      if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+      if ( -e $EXPDIR/$SCRDIR_NAME || -l $EXPDIR/$SCRDIR_NAME ) /bin/rm -rf $EXPDIR/$SCRDIR_NAME
+      if ( -e $SCRDIR ) /bin/rm -rf $SCRDIR
       mkdir -p $SCRDIR
       ln -s $SCRDIR $EXPDIR/$SCRDIR_NAME
 
@@ -236,15 +236,14 @@ set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
 # Copy Restarts from v11.5.2 REPLAY to MERRA-2
 # ----------------------------------------------
-cp /discover/nobackup/projects/gmao/geos_itv/sdrabenh/REMIP_Experiments/v11.5.2_L072_C180_M2_REMIP/restarts/restarts.e${year}${month}10_21z.tar .
+ln -s /discover/nobackup/projects/gmao/geos_itv/sdrabenh/REMIP_Experiments/v11.5.2_L072_C180_M2_REMIP/restarts/restarts.e${year}${month}10_21z.tar .
 tar -xvf restarts.e${year}${month}10_21z.tar --wildcards "*_internal_rst*"
-#/bin/rm restarts.e${year}${month}10_21z.tar
 
 # Regrid v11.5.2 Restarts
 # ------------------------------------------------
 set RSTID = `/bin/ls *catch* | /bin/grep -Po '^.*(?=\.\w+_rst\.)'`
 set day   = `/bin/ls *catch* | /bin/grep -Po '(?<=\d{6})\d{2}(?=_21z)'`
-$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nonhydrostatic -nobkg -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -out_bc_base @BC_BASE
+$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nobkg -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -out_bc_base @BC_BASE
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
