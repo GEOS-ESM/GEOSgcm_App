@@ -1420,8 +1420,8 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
-else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
-    set LSM_BCS      = "v12"
+else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
+    set LSM_BCS      = "v13"
     set LSM_PARMS    = ""
     set EMIP_BCS_IN  = "NL3"
     set EMIP_OLDLAND = "#DELETE"
