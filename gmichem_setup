@@ -405,7 +405,6 @@ if ( $SITE == 'NCCS' ) then
 
       if ($MODEL == 'mil') then
          # For even division, we use 120 cores per node
-         # We save a couple processes for the kernel
          set NCPUS_PER_NODE = 120
       else if ($MODEL == 'cas') then
          # We use 40 of 46 cores per node for even division
@@ -1520,6 +1519,7 @@ if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set EMIP_OLDLAND = ""
     set EMIP_NEWLAND = "#DELETE"
     set EMIP_MERRA2  = "MERRA2"
+    set GWD_IN_BCS   = "FALSE"
 else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set LSM_BCS      = "NL3"
     set LSM_PARMS    = ""
@@ -1527,6 +1527,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
+    set GWD_IN_BCS   = "FALSE"
 else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
     set LSM_BCS      = "v13"
     set LSM_PARMS    = ""
@@ -1534,6 +1535,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
+    set GWD_IN_BCS   = "TRUE"
 else
     echo
     echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v13${CN}!"
@@ -2436,8 +2438,13 @@ endif # if NCCS
 endif # if mpi
 
 # Check for gwd_internal for Ridge Scheme
-                                             set NCAR_NRDG = 0
-if ( -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 16
+
+# For ICA and NL3 the gwd files are in a non-bcs location
+# and may or may not exist. If they don't we set NCAR_NRDG to 0
+set NCAR_NRDG = 16
+if ( $GWD_IN_BCS == FALSE ) then
+  if ( ! -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 0
+endif
 
 #######################################################################
 #               Create Local Scripts and Resource Files
