@@ -68,10 +68,10 @@ set MERRA2OX_SPECIES = "#"
 if ( -e $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/gwd_internal_rst ) then
    echo "Found gwd_internal_rst in bcsdir. Copying to scratch directory"
    /bin/cp -vf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/gwd_internal_rst gwd_internal_rst
-else if (-e @GWDRSDIR/gwd_internal_c${AGCM_IM}) then
-   echo "Found gwd_internal_c${AGCM_IM}. Copying to scratch directory"
+else if (-e @GWDRSDIR/gwd_internal_c@AGCM_IM) then
+   echo "Found gwd_internal_c@AGCM_IM. Copying to scratch directory"
    /bin/rm gwd_internal_rst
-   /bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
+   /bin/cp @GWDRSDIR/gwd_internal_c@AGCM_IM gwd_internal_rst
 endif
 
 @COUPLEDcp $HOMDIR/*_table .
