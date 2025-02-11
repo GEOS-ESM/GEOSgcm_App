@@ -392,6 +392,7 @@ if ( $SITE == 'NCCS' ) then
    if ("$BUILT_ON_SLES15" == "TRUE") then
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
       echo "   ${C2}mil  (Milan)${CN} (default)"
+      echo "   ${C2}cas  (Cascade Lake)${CN}"
       echo " "
       set MODEL = `echo $<`
       set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -399,15 +400,18 @@ if ( $SITE == 'NCCS' ) then
          set MODEL = 'mil'
       endif
 
-      if( $MODEL != 'mil' ) goto ASKPROC
+      if( $MODEL != 'mil' & \
+          $MODEL != 'cas' ) goto ASKPROC
 
       if ($MODEL == 'mil') then
          # For even division, we use 120 cores per node
          set NCPUS_PER_NODE = 120
+      else if ($MODEL == 'cas') then
+         # We use 40 of 46 cores per node for even division
+         set NCPUS_PER_NODE = 40
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}sky  (Skylake)${CN}"
       echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
       echo " "
       set MODEL = `echo $<`
@@ -416,12 +420,9 @@ if ( $SITE == 'NCCS' ) then
          set MODEL = 'cas'
       endif
 
-      if( $MODEL != 'sky'  & \
-          $MODEL != 'cas' ) goto ASKPROC
+      if( $MODEL != 'cas' ) goto ASKPROC
 
-      if ($MODEL == 'sky') then
-         set NCPUS_PER_NODE = 40
-      else if ($MODEL == 'cas') then
+      if ($MODEL == 'cas') then
          # We use 40 of 46 cores per node for even division
          set NCPUS_PER_NODE = 40
       endif
@@ -432,9 +433,9 @@ else if ( $SITE == 'NAS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}has (Haswell)${CN}"
    echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}sky (Skylake)${CN}"
    echo "   ${C2}cas (Cascade Lake)${CN}"
-   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo "   ${C2}rom (AMD Rome)${CN} (Default)"
    echo "   ${C2}mil (AMD Milan)${CN}"
    echo " "
    echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
@@ -443,7 +444,7 @@ else if ( $SITE == 'NAS' ) then
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      set MODEL = 'rom'
    endif
 
    if( $MODEL != 'has' & \
@@ -1518,6 +1519,7 @@ if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set EMIP_OLDLAND = ""
     set EMIP_NEWLAND = "#DELETE"
     set EMIP_MERRA2  = "MERRA2"
+    set GWD_IN_BCS   = "FALSE"
 else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set LSM_BCS      = "NL3"
     set LSM_PARMS    = ""
@@ -1525,6 +1527,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
+    set GWD_IN_BCS   = "FALSE"
 else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
     set LSM_BCS      = "v13"
     set LSM_PARMS    = ""
@@ -1532,6 +1535,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
+    set GWD_IN_BCS   = "TRUE"
 else
     echo
     echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v13${CN}!"
@@ -2399,6 +2403,9 @@ if ( $SITE == 'NCCS' ) then
 
 if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
+
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
 EOF
@@ -2431,8 +2438,13 @@ endif # if NCCS
 endif # if mpi
 
 # Check for gwd_internal for Ridge Scheme
-                                             set NCAR_NRDG = 0
-if ( -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 16
+
+# For ICA and NL3 the gwd files are in a non-bcs location
+# and may or may not exist. If they don't we set NCAR_NRDG to 0
+set NCAR_NRDG = 16
+if ( $GWD_IN_BCS == FALSE ) then
+  if ( ! -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 0
+endif
 
 #######################################################################
 #               Create Local Scripts and Resource Files
