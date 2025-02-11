@@ -382,16 +382,36 @@ if( $EXTDATA2G_TRUE == 1 ) then
 
 endif
 
+if( $LM  != 72 ) then
+    set files = `/bin/ls  *.yaml`
+    foreach file ($files)
+      cp $file dummy
+      cat dummy | sed -e "s|/L72/|/L${LM}/|g" | sed -e "s|z72|z${LM}|g" > $file
+    end
+
+    # We have to do something special for L186. By default all of the GOCART emissions have:
+    #   pressure_lid_in_hPa: 0.01
+    # which is the pressure lid in hPa for all other GEOS vertical levels. But L186 has a lid
+    # at 0.00025 Pa. So we need to change this value in the GOCART emissions files for L186.
+    if ( $LM == 186 ) then
+       set files = `/bin/ls  *.rc`
+       foreach file ($files)
+          cp $file dummy
+          cat dummy | sed -e '/pressure_lid_in_hPa:/c\pressure_lid_in_hPa: 2.5e-6' > $file
+       end
+    endif
+endif
+
 # Move GOCART to use RRTMGP Bands
 # -------------------------------
 # UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
 #
-#set instance_files = `/bin/ls -1 *_instance*.rc`
-#foreach instance ($instance_files)
-#   /bin/mv $instance $instance.tmp
-#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
-#   /bin/rm $instance.tmp
-#end
+set instance_files = `/bin/ls -1 *_instance*.rc`
+foreach instance ($instance_files)
+   /bin/mv $instance $instance.tmp
+   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+   /bin/rm $instance.tmp
+end
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------

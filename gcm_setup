@@ -326,39 +326,6 @@ else
    endif
 endif
 
-
-#######################################################################
-#   Test to see if using hydrostatic or non-hydrostatic atmosphere
-#######################################################################
-
-ASKHYDRO:
-
-set DEFAULT_HYDROSTATIC = FALSE
-
-echo "Use ${C1}Hydrostatic Atmosphere${CN}? (Default: ${C2}${DEFAULT_HYDROSTATIC}${CN})"
-set   USE_HYDROSTATIC = $<
-
-if( .$USE_HYDROSTATIC == . ) then
-   set USE_HYDROSTATIC = $DEFAULT_HYDROSTATIC
-else
-   set USE_HYDROSTATIC = `echo $USE_HYDROSTATIC | tr "[:lower:]" "[:upper:]"`
-   if(  $USE_HYDROSTATIC == "Y"     | \
-        $USE_HYDROSTATIC == "YES"   | \
-        $USE_HYDROSTATIC == "T"     | \
-        $USE_HYDROSTATIC == "TRUE"  ) set USE_HYDROSTATIC = TRUE
-   if(  $USE_HYDROSTATIC == "N"     | \
-        $USE_HYDROSTATIC == "NO"    | \
-        $USE_HYDROSTATIC == "F"     | \
-        $USE_HYDROSTATIC == "FALSE" ) set USE_HYDROSTATIC = FALSE
-
-   if( "$USE_HYDROSTATIC" != "TRUE" & "$USE_HYDROSTATIC" != "FALSE" ) then
-      echo
-      echo "Use ${C1}Hydrostatic Atmosphere${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
-      goto ASKHYDRO
-   endif
-endif
-
-
 #######################################################################
 #            Test to see if you want to use ioserver
 #######################################################################
@@ -370,6 +337,8 @@ if( $HRCODE == 'c180'  | \
     $HRCODE == 'c720'  | \
     $HRCODE == 'c1120' | \
     $HRCODE == 'c1440' | \
+    $HRCODE == 'c2880' | \
+    $HRCODE == 'c5760' | \
     $HRCODE == 'c270'  | \
     $HRCODE == 'c540'  | \
     $HRCODE == 'c1080' | \
@@ -819,12 +788,31 @@ else
     # OGCM = FALSE (Data Ocean Resolution)
     # ------------------------------------
     DORSLV:
-    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds) Default"
+
+    # We have two different default ocean resolutions based on the atmospheric resolution
+    # if LOW_ATM_RES is TRUE, we use o1 (Reynolds) as the default
+    # if LOW_ATM_RES is FALSE, we use CS (Cubed-Sphere OSTIA) as the default
+
+    if( $LOW_ATM_RES == 'TRUE') then
+      set DEFAULT_HRCODE = 'o1'
+      set O1_DEFAULT = ' (Default)'
+      set CS_DEFAULT = ''
+    else
+      set DEFAULT_HRCODE = 'CS'
+      set O1_DEFAULT = ''
+      set CS_DEFAULT = ' (Default)'
+      set DEFAULT_HRCODE = 'CS'
+    endif
+    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds)${O1_DEFAULT}"
     echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)"
     echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
-    echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)"
+    echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)${CS_DEFAULT}"
+    # We also note that the Reynolds ocean does not exist past 2022
+    echo ""
+    echo "NOTE: The Reynolds ocean resolution is only available up to 2022"
+
     set   HRCODE = `echo $<`
-    if( .$HRCODE == . ) set HRCODE = o1
+    if( .$HRCODE == . ) set HRCODE = $DEFAULT_HRCODE
     set   HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
 
     if( $HRCODE != 'o1' & \
@@ -886,30 +874,29 @@ else
         set DATAOCEAN = ""
     endif
     if( $HRCODE == 'cs' ) then
-        if( $LOW_ATM_RES == 'FALSE') then
-             set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
-             set OGCM_JM  = `expr $OGCM_IM \* 6`
-             set Resolution = `echo $OGCM_IM $OGCM_JM`
-             set OGCM_IM  = $Resolution[1]
-             set OGCM_JM  = $Resolution[2]
-             set OGCM_GRID_TYPE = Cubed-Sphere
-             set OGCM_NF = 6
-             set LATLON_OGCM = "#DELETE"
-             set CUBE_OGCM = ""
-             set DATAOCEAN = "#DELETE"
-
-             set OCEAN_TAG = Ostia
-             set SSTNAME  = OSTIA_REYNOLDS
-             set OCEANOUT = "CS"
-             set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-             set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
-             set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
-             set OGRIDTYP = "CF"
-             set OSTIA    = ""
-        else
+        if( $LOW_ATM_RES == 'TRUE') then
              echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
              exit 7
         endif
+        set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
+        set OGCM_JM  = `expr $OGCM_IM \* 6`
+        set Resolution = `echo $OGCM_IM $OGCM_JM`
+        set OGCM_IM  = $Resolution[1]
+        set OGCM_JM  = $Resolution[2]
+        set OGCM_GRID_TYPE = Cubed-Sphere
+        set OGCM_NF = 6
+        set LATLON_OGCM = "#DELETE"
+        set CUBE_OGCM = ""
+        set DATAOCEAN = "#DELETE"
+
+        set OCEAN_TAG = Ostia
+        set SSTNAME  = OSTIA_REYNOLDS
+        set OCEANOUT = "CS"
+        set SSTFILE  = dataoceanfile_OSTIA_REYNOLDS_SST.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set ICEFILE  = dataoceanfile_OSTIA_REYNOLDS_ICE.${OGCM_IM}x${OGCM_JM}.\${YEAR}.data
+        set KPARFILE = SEAWIFS_KPAR_mon_clim.${OGCM_IM}x${OGCM_JM}
+        set OGRIDTYP = "CF"
+        set OSTIA    = ""
     endif
 
     set IMO = ${OGCM_IM}
@@ -992,7 +979,6 @@ if( $AGCM_IM ==  "c12" ) then
         set    NX = 2
      endif
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1010,7 +996,6 @@ if( $AGCM_IM ==  "c24" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 4
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1028,7 +1013,6 @@ if( $AGCM_IM ==  "c48" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 6
      set       NY = `expr $NX \* 6`
-     set   HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = 180
      set HIST_JM  =  91
      set JOB_SGMT = 00000015
@@ -1061,7 +1045,6 @@ if( $AGCM_IM ==  "c90" ) then
         set  NY = `expr $NX \* 6`
         set OCEAN_DT = 3600
      endif
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000032
@@ -1091,7 +1074,6 @@ if( $AGCM_IM ==  "c180" ) then
         set  NY = `expr $NX \* 6`
         set OCEAN_DT = 3600
      endif
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 2
@@ -1110,7 +1092,6 @@ if( $AGCM_IM == "c360" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 4
@@ -1129,7 +1110,6 @@ if( $AGCM_IM == "c720" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 40
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1149,7 +1129,6 @@ if( $AGCM_IM == "c1120" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 60
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1169,7 +1148,6 @@ if( $AGCM_IM == "c1440" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1189,7 +1167,6 @@ if( $AGCM_IM == "c2880" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1211,7 +1188,6 @@ if( $AGCM_IM == "c5760" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1236,7 +1212,6 @@ if( $AGCM_IM == "c270" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 20
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1258,7 +1233,6 @@ if( $AGCM_IM == "c540" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 30
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1280,7 +1254,6 @@ if( $AGCM_IM == "c1080" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 40
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1302,7 +1275,6 @@ if( $AGCM_IM == "c1536" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 60
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1324,7 +1296,6 @@ if( $AGCM_IM == "c2160" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1346,7 +1317,6 @@ if( $AGCM_IM == "c4320" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
      set       NY = `expr $NX \* 6`
-     set HYDROSTATIC = $USE_HYDROSTATIC
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1388,7 +1358,7 @@ set JOB_SGMT = "$JOB_SGMT 000000"
 
 
 #######################################################################
-#           Setting for Microphysics & Hydrostatic Mode               #
+#           Setting for Microphysics                                  #
 #######################################################################
 
 set BACM_1M_ = "#"
@@ -1406,25 +1376,11 @@ if ( "$CLDMICRO" == "MGB2_2M" ) then
    set MGB2_2M_ = ""
 endif
 
-set GFDL_HYDRO = ".TRUE."
-
 # BACM_1M and GFDL do not use WSUB_CLIM, so this eliminates a regrid
 if ( "$CLDMICRO" == "BACM_1M" | "$CLDMICRO" == "GFDL_1M" ) then
    set MP_TURN_OFF_WSUB_EXTDATA = ""
 else
    set MP_TURN_OFF_WSUB_EXTDATA = "#DELETE#"
-endif
-
-# Settings for fvcore_layout.rc
-if ( "$USE_HYDROSTATIC" == "TRUE" ) then
-   set FV_MAKENH     = "Make_NH     = .F."
-   set FV_HYDRO      = "hydrostatic = .T."
-else
-   set FV_MAKENH     = "Make_NH     = .T."
-   set FV_HYDRO      = "hydrostatic = .F."
-   if ( "$CLDMICRO" == "GFDL_1M" ) then
-      set GFDL_HYDRO = ".FALSE."
-   endif
 endif
 
 if ($CONUS == '#') then
@@ -1446,9 +1402,9 @@ endif
 # Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
-echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v12${CN} (Default)"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v13${CN} (Default)"
 set   LSM_BCS  = $<
-if( .$LSM_BCS == . ) set LSM_BCS = "v12"
+if( .$LSM_BCS == . ) set LSM_BCS = "v13"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set LSM_BCS      = "ICA"
     set LSM_PARMS    = "#DELETE"
@@ -1463,8 +1419,8 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
-else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
-    set LSM_BCS      = "v12"
+else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
+    set LSM_BCS      = "v13"
     set LSM_PARMS    = ""
     set EMIP_BCS_IN  = "NL3"
     set EMIP_OLDLAND = "#DELETE"
@@ -1472,7 +1428,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
     set EMIP_MERRA2  = "MERRA2_NewLand"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v12${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v13${CN}!"
     goto LSM_BCS
 endif
 
@@ -2255,9 +2211,6 @@ EOF
 else
 
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
-
 setenv I_MPI_SHM_HEAP_VSIZE 512
 setenv PSM2_MEMORY large
 EOF
@@ -2279,6 +2232,9 @@ endif # if NCCS
 
 endif # if mpi
 
+# Check for gwd_internal for Ridge Scheme
+                                             set NCAR_NRDG = 0
+if ( -e $GWDRSDIR/gwd_internal_c${AGCM_IM} ) set NCAR_NRDG = 16
 
 #######################################################################
 #               Create Local Scripts and Resource Files
@@ -2333,6 +2289,7 @@ s?@KPARFILE?$KPARFILE?g
 s?@CHMDIR?$CHMDIR?g
 s?@COUPLEDIR?$COUPLEDIR?g
 s?@GWDRSDIR?$GWDRSDIR?g
+s?@NCAR_NRDG?$NCAR_NRDG?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
 s?@HOMDIR?$HOMDIR?g
@@ -2495,14 +2452,10 @@ EOF
 
 cat >> $HOMDIR/sedfile << EOF
 
-s^@HYDROSTATIC^$HYDROSTATIC^g
 s?@FV_SCHMIDT?$SCHMIDT?g
 s?@FV_STRETCH_FAC?$STRETCH_FAC?g
 s?@FV_TARGET_LON?$TARGET_LON?g
 s?@FV_TARGET_LAT?$TARGET_LAT?g
-s?@FV_MAKENH?$FV_MAKENH?g
-s?@FV_HYDRO?$FV_HYDRO?g
-s?@GFDL_HYDRO?$GFDL_HYDRO?g
 
 EOF
 

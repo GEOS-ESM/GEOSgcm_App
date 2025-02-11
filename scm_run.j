@@ -32,4 +32,6 @@ cd $EXPDIR
 
 $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
+cp fvcore_layout.rc input.nml
+
 $RUN_CMD 1 ./GEOSgcm.x --logging_config 'logging.yaml'
