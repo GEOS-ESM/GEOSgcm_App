@@ -589,38 +589,6 @@ else
 endif
 wait
 
-# Get proper ridge scheme GWD internal restart
-# --------------------------------------------
-if ( $rst_by_face == YES ) then
-  echo "WARNING: The generated gwd_internal_face_x_rst are used"
-  #foreach n (1 2 3 4 5 6)
-    #/bin/rm gwd_internal_face_${n}_rst
-    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
-  #end
-else
-  # We want to look for the existence of a gwd_internal_rst file
-  # as not all resolutions have them (yet). If it exists, we copy
-  # it to the scratch directory. If it doesn't exist, we need to
-  # add "NCAR_NRDG: 0" to the AGCM.rc file to prevent the model from
-  # trying to use it.
-
-  if (-e @GWDRSDIR/gwd_internal_c${AGCM_IM}) then
-    echo "Found gwd_internal_c${AGCM_IM}. Copying to scratch directory"
-    /bin/rm gwd_internal_rst
-    /bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
-  else
-    echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
-    # Now, if the user has already set an NCAR_NRDG value, we need to
-    # change it to 0. If they haven't set it, we need to add it to the
-    # AGCM.rc file.
-    if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
-      echo "NCAR_NRDG: 0" >> AGCM.rc
-    else
-      sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
-    endif
-  endif
-endif
-
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
@@ -890,6 +858,28 @@ end
 # ---------------------------------------------
 setenv YEAR $yearc
 ./linkbcs
+
+# Get proper ridge scheme GWD internal restart
+# --------------------------------------------
+if ( $rst_by_face == YES ) then
+  echo "WARNING: The generated gwd_internal_face_x_rst are used"
+  #foreach n (1 2 3 4 5 6)
+    #/bin/rm gwd_internal_face_${n}_rst
+    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+  #end
+else
+  if (! -e gwd_internal_rst) then
+    echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+    # Now, if the user has already set an NCAR_NRDG value, we need to
+    # change it to 0. If they haven't set it, we need to add it to the
+    # AGCM.rc file.
+    if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+      echo "NCAR_NRDG: 0" >> AGCM.rc
+    else
+      sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+    endif
+  endif
+endif
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
