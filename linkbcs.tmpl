@@ -63,7 +63,7 @@ set MERRA2OX_SPECIES = "#"
 /bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_DYN_ave_@AGCM_IMx@AGCM_JM.data topo_dynave.data
 /bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_GWD_var_@AGCM_IMx@AGCM_JM.data topo_gwdvar.data
 /bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_TRB_var_@AGCM_IMx@AGCM_JM.data topo_trbvar.data
-
+if ( -e $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/gwd_internal_rst ) /bin/cp -vf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/gwd_internal_rst gwd_internal_rst
 
 @COUPLEDcp $HOMDIR/*_table .
 @COUPLEDcp $CPLDIR/@OGCM_IMx@OGCM_JM/INPUT/* INPUT
