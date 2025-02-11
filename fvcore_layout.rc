@@ -1,12 +1,10 @@
 &fv_core_nml
- @FV_HYDRO
- range_warn = .T.
+ range_warn = .F.
  fv_debug = .F.
  @FV_SCHMIDT
  @FV_STRETCH_FAC
  @FV_TARGET_LON
  @FV_TARGET_LAT
- compute_coords_locally = .false.
 /
 
 &main_nml
@@ -21,7 +19,7 @@
 
 &fms_nml
   print_memory_usage=.true.
-  domains_stack_size = 24000000
+  domains_stack_size = 12000000
   clock_grain='MODULE',
   clock_flags='DETAILED',
 /

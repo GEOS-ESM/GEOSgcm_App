@@ -33,6 +33,16 @@ AGCM.IM_WORLD: @AGCM_IM
 @CONUS AGCM.TARGET_LON: -98.35
 
 ###########################################################
+# debug options
+# ----------------------------------------
+#DEBUG_DYN: .TRUE.
+#DEBUG_GWD: .TRUE.
+#DEBUG_MST: .TRUE.
+#DEBUG_TRB: .TRUE.
+#DEBUG_SYNCTQ: .TRUE.
+###########################################################
+
+###########################################################
 # long physics DT options
 # use extreme caution when adjusing these
 # the defaults are most ideal
@@ -74,7 +84,6 @@ ORBIT_ANAL2B: .TRUE.
 # GFDL_1M microphysics options
 # ----------------------------------------
 @GFDL_1M_CLDMICR_OPTION: GFDL_1M
-@GFDL_1M_HYDROSTATIC: @GFDL_HYDRO
 ###########################################################
 
 ###########################################################
@@ -321,41 +330,6 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
 #   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
 
-# Typical MERRA-2 Regular REPLAY Configuration
-# --------------------------------------------
-#M2 REPLAY_ANA_EXPID:   MERRA-2
-#M2 REPLAY_ANA_LOCATION: @M2_REPLAY_ANA_LOCATION
-#M2 REPLAY_MODE: Regular
-#M2 REPLAY_FILE: ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4
-# -----------------------------------------------------------------
-
-#   ANA EXPID and LOCATION used for REPLAY
-#   --------------------------------------
-#X_EXP REPLAY_ANA_EXPID:    @ANA_EXPID
-#X_EXP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@ANA_EXPID
-#X_EXP REPLAY_MODE: Regular
-#X_EXP REPLAY_FILE: ana/Y%y4/M%m2/@ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#X_EXP REPLAY_FILE_FREQUENCY: 7200
-
-
-#FP REPLAY_ANA_EXPID: f5295_fp
-#FP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos_fp_arch/f5295_fp
-#FP REPLAY_MODE: Regular
-#FP REPLAY_FILE: ana/Y%y4/M%m2/f5295_fp.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#FP REPLAY_FILE_FREQUENCY: 7200
-
-#   Regular REPLAY to ERA5
-#   ----------------------
-#ERA5  REPLAY_MODE:                 Regular
-#ERA5  REPLAY_FILE_FREQUENCY:       21600
-#ERA5  REPLAY_FILE_REFERENCE_TIME:  000000
-#ERA5  REPLAY_ANA_EXPID:            era5
-#ERA5  REPLAY_ANA_LOCATION:         /discover/nobackup/projects/gmao/geos_itv/sdrabenh/valdat/era5/ana
-#ERA5  REPLAY_FILE:                 /discover/nobackup/projects/gmao/geos_itv/sdrabenh/valdat/era5/ana/Y%y4/M%m2/era5_eta2eta_L137.%y4%m2%d2_%h2z.nc4
-#ERA5  REPLAY_O3:          NO
-#ERA5  REPLAY_DAMPBEG:  500.0
-#ERA5  REPLAY_DAMPEND: 5000.0
-
 #   Typical Exact REPLAY Configuration
 #   ----------------------------------
 #   REPLAY_MODE: Exact
@@ -371,7 +345,50 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   REPLAY_FILE09: ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana09.eta.%y4%m2%d2_%h2z.nc4
 #   REPLAY_FILE_FREQUENCY:       10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
+ 
+# MERRA-2 Regular REPLAY Configuration
+# --------------------------------------------
+#M2 REPLAY_ANA_EXPID: MERRA-2
+#M2 REPLAY_ANA_LOCATION: @M2_REPLAY_ANA_LOCATION
+#M2 REPLAY_MODE: Regular
+#M2 REPLAY_FILE: ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4
+#M2 MKIAU_JCAP: 62
 
+# GEOS-IT Regular REPLAY Configuration
+# --------------------------------------------
+#IT REPLAY_ANA_EXPID: GEOS-IT
+#IT REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos-it/dao_ops/archive/d5294_geosit_jan18
+#IT REPLAY_MODE: Regular
+#IT REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit_jan18.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#IT MKIAU_JCAP: 62
+
+# 4dvar ANA EXPID and LOCATION used for REPLAY
+# --------------------------------------
+#X_EXP REPLAY_ANA_EXPID: @ANA_EXPID
+#X_EXP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@ANA_EXPID
+#X_EXP REPLAY_MODE: Regular
+#X_EXP REPLAY_FILE: ana/Y%y4/M%m2/@ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#X_EXP REPLAY_FILE_FREQUENCY: 7200
+
+# Regular REPLAY to GEOS-FP
+# -------------------------
+#FP REPLAY_ANA_EXPID: f5295_fp
+#FP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos_fp_arch/f5295_fp
+#FP REPLAY_MODE: Regular
+#FP REPLAY_FILE: ana/Y%y4/M%m2/f5295_fp.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+
+# Regular REPLAY to ERA5
+# ----------------------
+#ERA5 REPLAY_MODE: Regular
+#ERA5 REPLAY_FILE_FREQUENCY: 21600
+#ERA5 REPLAY_FILE_REFERENCE_TIME: 000000
+#ERA5 REPLAY_ANA_EXPID: era5
+#ERA5 REPLAY_ANA_LOCATION: /css/era5
+#ERA5 REPLAY_FILE: ana/L137/Y%y4/M%m2/era5-L137.ana.eta.%y4%m2%d2_%h2z.nc4
+#ERA5 REPLAY_O3: NO
+#ERA5 MKIAU_JCAP: 62
+#ERA5 REPLAY_DAMPBEG:  500.0
+#ERA5 REPLAY_DAMPEND: 5000.0
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
