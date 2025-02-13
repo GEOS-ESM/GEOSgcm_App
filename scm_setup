@@ -458,6 +458,9 @@ cat $expdir/WSUB_ExtData.tmp | sed '/collection:/ s#WSUB_SWclim.*#/dev/null#' > 
 /bin/cp $SOURCEDIR/sedfile.CASE $expdir
 /bin/cp $SOURCEDIR/AGCM.CASE.txt $expdir
 
+# These are the weights files
+/bin/cp $SOURCEDIR/rh_* $expdir
+
 # MAT These sed commands have to be done in the experiment directory.
 #     This should probably be fixed at some point
 

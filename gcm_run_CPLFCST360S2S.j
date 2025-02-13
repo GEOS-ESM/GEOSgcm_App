@@ -102,7 +102,7 @@ set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
 @COUPLED set HIST_IM_Tag = `echo $HIST_IM | awk '{printf "%4.4i", $1}'`
 @COUPLED set HIST_JM_Tag = `echo $HIST_JM | awk '{printf "%4.4i", $1}'`
 
->>>FVLATLON<<<set ATMOStag = DC${AGCM_IM_Tag}xPC${AGCM_JM_Tag}
+@FVLATLONset ATMOStag = DC${AGCM_IM_Tag}xPC${AGCM_JM_Tag}
 @FVCUBEDset ATMOStag = CF${AGCM_IM_Tag}x6C
 @DATAOCEAN set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
 @COUPLED set OCEANtag = TM${OGCM_IM_Tag}xTM${OGCM_JM_Tag}
