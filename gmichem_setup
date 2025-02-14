@@ -404,10 +404,10 @@ if ( $SITE == 'NCCS' ) then
           $MODEL != 'cas' ) goto ASKPROC
 
       if ($MODEL == 'mil') then
-         # For even division, we use 120 cores per node
+         # For even division, use 120 cores per node
          set NCPUS_PER_NODE = 120
       else if ($MODEL == 'cas') then
-         # We use 40 of 46 cores per node for even division
+         # For even division, use  40 cores per node
          set NCPUS_PER_NODE = 40
       endif
    else
@@ -1033,6 +1033,44 @@ else
     set OGCM_NPROCS   = ""
 endif
 
+# Check for Data Atmosphere
+#--------------------------
+set DATA_ATMOS = FALSE
+set MODELATM = ""
+set USE_DATA_ATM4OCN = .FALSE.
+
+if( $OGCM == "TRUE" ) then
+
+DATATMOS:
+   echo "Do you wish to run ${C1}Data Atmosphere${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+   set DATA_ATMOS = $<
+   if (.$DATA_ATMOS == .) then
+      set DATA_ATMOS = FALSE
+   else
+      set DATA_ATMOS = `echo $DATA_ATMOS | tr "[:lower:]" "[:upper:]"`
+      if ($DATA_ATMOS == "Y"    | \
+          $DATA_ATMOS == "YES"  | \
+          $DATA_ATMOS == "T"    | \
+          $DATA_ATMOS == "TRUE" ) set DATA_ATMOS = TRUE
+      if ($DATA_ATMOS == "N"    | \
+          $DATA_ATMOS == "NO"   | \
+          $DATA_ATMOS == "F"    | \
+          $DATA_ATMOS == "FALSE") set DATA_ATMOS = FALSE
+      if ($DATA_ATMOS != TRUE & $DATA_ATMOS != FALSE) then
+         echo
+         echo "Please answer ${C2}YES${CN} or ${C2}NO${CN}!"
+         goto DATATMOS
+      endif
+   endif
+
+   if ($DATA_ATMOS == TRUE) then
+      set MODELATM = "#DELETE"
+      set USE_DATA_ATM4OCN = .TRUE.
+
+      set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
+   endif
+endif
+
 # Set DEFAULT SHMEM Parameter
 # ---------------------------
      set USE_SHMEM = 0
@@ -1509,6 +1547,23 @@ endif
 # Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
+
+# If we are running DATA_ATMOS, we can skip the Land bits, but we must still fill
+# things out with something. So we use the default Land settings.
+
+if ($DATA_ATMOS == TRUE) then
+  set LSM_BCS = "NL3"
+  set LSM_CHOICE  = 1
+  set LSM_BCS      = "NL3"
+  set LSM_PARMS    = ""
+  set EMIP_BCS_IN  = "NL3"
+  set EMIP_OLDLAND = "#DELETE"
+  set EMIP_NEWLAND = ""
+  set EMIP_MERRA2  = "MERRA2_NewLand"
+  set HIST_CATCHCN   = "#DELETE"
+  set GCMRUN_CATCHCN = "#DELETE"
+else
+
 echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v13${CN} (Default)"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = "v13"
@@ -1562,6 +1617,9 @@ else if( $LSM_CHOICE == 2 ) then
     set HIST_CATCHCN   = ""
     set GCMRUN_CATCHCN = ""
 endif
+
+endif # DATA_ATMOS
+
 #######################################################################
 #                   Check for AEROSOL/Chemistry Models
 #######################################################################
@@ -1569,6 +1627,24 @@ endif
 # Check for GOCART
 # ----------------
 GOCART:
+
+# If we are running DATA_ATMOS, we can skip the GOCART bits, but we must still fill
+# things out with something. So we use the climatological aerosols settings so
+# the sed scripts don't get confused.
+if ($DATA_ATMOS == TRUE) then
+   set GOKART           = FALSE
+   set DATA_DRIVEN      = FALSE
+   set AERO_PROVIDER    = GOCART2G
+   set EMISSIONS        = ""
+   set GOCART           = "#"
+   set HIST_GOCART      = ""
+   set OPS_SPECIES      = "#"
+   set CMIP_SPECIES     = "#"
+   set MERRA2OX_SPECIES = "#"
+   set PCHEM_CLIM_YEARS = ""
+   set OX_RELAXTIME     = 0.0
+else
+
 echo
 echo "------------------------------------"
 echo "Specify the AERO_PROVIDER by number:"
@@ -1716,6 +1792,8 @@ if( $MEG != 1 & $MEG != 2 ) then
 else
   echo
 endif
+
+endif # DATA_ATMOS
 
 # RATS Provider
 # -------------
@@ -2655,6 +2733,9 @@ s?@MGB2_2M_?$MGB2_2M_?g
 s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
+
+s?@MODELATM?$MODELATM?g
+s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 EOF
 
