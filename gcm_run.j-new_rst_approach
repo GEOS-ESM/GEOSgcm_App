@@ -589,7 +589,7 @@ if($numrs == 0) then
          set ext  = bin
       else
          set ext  = nc4
-      endif 
+      endif
       if( -e $rst & ! -e ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.$ext ) then
             cp $rst ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.$ext &
       endif
@@ -851,7 +851,7 @@ endif
 set instance_files = `/bin/ls -1 *_instance*.rc`
 foreach instance ($instance_files)
    /bin/mv $instance $instance.tmp
-   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
    /bin/rm $instance.tmp
 end
 
@@ -1098,7 +1098,7 @@ endif
 echo OMP_NUM_THREADS $OMP_NUM_THREADS
 
 ~/bin/strip GWD_GridComp.rc
-if (${OMP_NUM_THREADS} > 1) then 
+if (${OMP_NUM_THREADS} > 1) then
   sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
 endif
 
@@ -1228,7 +1228,7 @@ echo "RH_WEIGHTS_DIR: $RH_WEIGHTS_DIR"
 if (! -e $RH_WEIGHTS_DIR ) mkdir -p $RH_WEIGHTS_DIR
 set rh_files = `/bin/ls -1 *rh_*method*`
 foreach rh_file ($rh_files)
-  if (! -e $RH_WEIGHTS_DIR/$rh_file) /bin/mv $rh_file $RH_WEIGHTS_DIR/$rh_file 
+  if (! -e $RH_WEIGHTS_DIR/$rh_file) /bin/mv $rh_file $RH_WEIGHTS_DIR/$rh_file
 end
 
 #######################################################################
