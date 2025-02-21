@@ -702,7 +702,7 @@ endif
 set instance_files = `/bin/ls -1 *_instance*.rc`
 foreach instance ($instance_files)
    /bin/mv $instance $instance.tmp
-   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
+   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
    /bin/rm $instance.tmp
 end
 
