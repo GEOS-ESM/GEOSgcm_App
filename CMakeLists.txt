@@ -9,12 +9,8 @@ ecbuild_add_executable (
 # To fix this, we explicitly set the linker language to Fortran.
 set_target_properties (GEOSgcm.x PROPERTIES LINKER_LANGUAGE Fortran)
 
-# Using JeMalloc will be optional, default OFF
-option (USE_JEMALLOC "Use JeMalloc" OFF)
-if (USE_JEMALLOC)
-  find_package (JeMalloc REQUIRED)
-  target_link_libraries (GEOSgcm.x JeMalloc::JeMalloc)
-endif ()
+find_package (JeMalloc)
+target_link_libraries (GEOSgcm.x PRIVATE $<$<BOOL:${JeMalloc_FOUND}>:JeMalloc::JeMalloc>)
 
 ecbuild_add_executable (
   TARGET idfupd.x
