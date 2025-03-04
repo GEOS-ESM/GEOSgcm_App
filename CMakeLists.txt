@@ -10,7 +10,10 @@ ecbuild_add_executable (
 set_target_properties (GEOSgcm.x PROPERTIES LINKER_LANGUAGE Fortran)
 
 find_package (JeMalloc)
-target_link_libraries (GEOSgcm.x PRIVATE $<$<BOOL:${JeMalloc_FOUND}>:JeMalloc::JeMalloc>)
+if(JeMalloc_FOUND)
+  message(STATUS "JeMalloc found, using for GEOSgcm.x")
+  target_link_libraries (GEOSgcm.x JeMalloc::JeMalloc)
+endif()
 
 ecbuild_add_executable (
   TARGET idfupd.x
