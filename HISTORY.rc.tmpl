@@ -130,6 +130,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
              'bkg.eta'
              'bkg.sfc'
              'cbkg.eta'
+             'bkg.inst1_2d_lfo'
+             'bkg.tavg1_2d_lfo'
              'vtx.mix'
 #            'vtx.prs'
 #            'prog.sfc+-'
@@ -1011,6 +1013,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'SPEED'  , 'DYN'  , 'SPEEDLML'  ,
                                   'PS'     , 'DYN'  ,
                                    ::
+  
 
   tavg1_2d_ocn_Nx-.format:        'CFIO' ,
   tavg1_2d_ocn_Nx-.descr:         '2d,1-Hourly,Time-Averaged,Single-Level,Assimilation,Ocean Surface' ,
@@ -1284,6 +1287,48 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'GOCART::CO'   , 'GOCART'   , 'CO'   ,
                                   'GOCART::CO2'  , 'GOCART'   , 'CO2'  ,
                                    ::
+
+#######################################################################
+#                    Ldas bkg forcing 
+#######################################################################
+
+  bkg.tavg1_2d_lfo.format:   'CFIO' ,
+  bkg.tavg1_2d_lfo.descr:      '2d,1-Hourly,Time-Averaged,Single-Level,Land Surface Forcings' , 
+  bkg.tavg1_2d_lfo.template:   '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  bkg.tavg1_2d_lfo.mode:       'time-averaged' ,
+  bkg.tavg1_2d_lfo.frequency:  010000 ,
+  bkg.tavg1_2d_lfo.duration:   010000 ,
+  bkg.tavg1_2d_lfo.ref_date:   >>>IOBBKGD<<< ,
+  bkg.tavg1_2d_lfo.ref_time:   >>>IOBBKGT<<< ,
+  bkg.tavg1_2d_lfo.end_date:   >>>IOEBKGD<<< ,
+  bkg.tavg1_2d_lfo.end_time:   >>>IOEBKGT<<< ,
+  bkg.tavg1_2d_lfo.fields:     'SLRSF'   , 'SOLAR'    , 'SWGDN'    ,
+                                'SWLAND'  , 'SURFACE'  ,
+                                'LWS'     , 'IRRAD'    , 'LWGAB'    ,
+                                'PCU'     , 'SURFACE'  , 'PRECCU'   ,
+                                'PLS'     , 'SURFACE'  , 'PRECLS'   ,
+                                'SNO'     , 'SURFACE'  , 'PRECSNO'  ,
+                                'DFPAR'   , 'SOLAR'    , 'PARDF'    ,
+                                'DRPAR'   , 'SOLAR'    , 'PARDR'    ,
+                               ::
+
+  bkg.inst1_2d_lfo.format:     'CFIO' ,
+  bkg.inst1_2d_lfo.descr:      '2d,1-Hourly,Instantaneous,Single-Level,Land Surface Forcings' ,
+  bkg.inst1_2d_lfo.template:   '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  bkg.inst1_2d_lfo.mode:       'instantaneous' ,
+  bkg.inst1_2d_lfo.frequency:  010000 ,
+  bkg.inst1_2d_lfo.duration:   010000 ,
+  bkg.inst1_2d_lfo.ref_date:   >>>IOBBKGD<<< ,
+  bkg.inst1_2d_lfo.ref_time:   >>>IOBBKGT<<< ,
+  bkg.inst1_2d_lfo.end_date:   >>>IOEBKGD<<< ,
+  bkg.inst1_2d_lfo.end_time:   >>>IOEBKGT<<< ,
+  bkg.inst1_2d_lfo.fields:     'DZ'     , 'DYN'  , 'HLML'      ,
+                                'TA'     , 'DYN'  , 'TLML'      ,
+                                'QA'     , 'DYN'  , 'QLML'      ,
+                                'SPEED'  , 'DYN'  , 'SPEEDLML'  ,
+                                'PS'     , 'DYN'  ,
+                               ::
+
 
 #######################################################################
 #                     Aerosols/Constituents
