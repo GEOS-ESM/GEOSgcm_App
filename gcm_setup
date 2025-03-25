@@ -387,45 +387,25 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
 
-   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}mil  (Milan)${CN} (default)"
+   echo "   ${C2}cas  (Cascade Lake)${CN}"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'mil'
+   endif
 
-   if ("$BUILT_ON_SLES15" == "TRUE") then
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}mil  (Milan)${CN} (default)"
-      echo "   ${C2}cas  (Cascade Lake)${CN}"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'mil'
-      endif
+   if( $MODEL != 'mil' & \
+       $MODEL != 'cas' ) goto ASKPROC
 
-      if( $MODEL != 'mil' & \
-          $MODEL != 'cas' ) goto ASKPROC
-
-      if ($MODEL == 'mil') then
-         # For even division, use 120 cores per node
-         set NCPUS_PER_NODE = 120
-      else if ($MODEL == 'cas') then
-         # For even division, use  40 cores per node
-         set NCPUS_PER_NODE = 40
-      endif
-   else
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'cas'
-      endif
-
-      if( $MODEL != 'cas' ) goto ASKPROC
-
-      if ($MODEL == 'cas') then
-         # We use 40 of 46 cores per node for even division
-         set NCPUS_PER_NODE = 40
-      endif
+   if ($MODEL == 'mil') then
+      # For even division, use 120 cores per node
+      set NCPUS_PER_NODE = 120
+   else if ($MODEL == 'cas') then
+      # For even division, use  40 cores per node
+      set NCPUS_PER_NODE = 40
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -2277,13 +2257,6 @@ EOF
 # specific compared to the above adjustments
 if ( $SITE == 'NCCS' ) then
 
-# Some flags we know work on SLES15 and Milan (see below)
-# For safety, we keep the old SLES12 flags for that system
-#
-# NOTE: When Cascade Lake is on SLES15, the following flags
-# might need to be Milan only
-
-if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
@@ -2291,29 +2264,6 @@ setenv I_MPI_ADJUST_GATHERV 3
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
 EOF
-
-else
-
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
-
-setenv I_MPI_SHM_HEAP_VSIZE 512
-setenv PSM2_MEMORY large
-EOF
-
-# Testing at NCCS showed these caused a crash at higher resolutions at
-# restart read
-if ( $USING_SINGULARITY == FALSE ) then
-
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_EXTRA_FILESYSTEM 1
-setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-EOF
-
-endif # if NOT Singularity
-
-endif # if SLES15
 
 endif # if NCCS
 
