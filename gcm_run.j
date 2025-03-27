@@ -277,9 +277,9 @@ endif
 @CICE6 set OGCM_NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
 @CICE6 set CICE_BLK_X = `expr $OGCM_IM / $OGCM_NX`
 @CICE6 set CICE_BLK_Y = `expr $OGCM_JM / $OGCM_NY`
-@CICE6 sed -i -E "s/nprocs[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/nprocs            = $MODEL_NPES/g" $HOMDIR/ice_in
-@CICE6 sed -i -E "s/block_size_x[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/block_size_x            = $CICE_BLK_X/g" $HOMDIR/ice_in
-@CICE6 sed -i -E "s/block_size_y[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/block_size_y            = $CICE_BLK_Y/g" $HOMDIR/ice_in
+@CICE6 sed -i -E "s/nprocs[[:space:]]*=[[:space:]]*-?[0-9]+(\.[0-9]+)?/nprocs            = $MODEL_NPES/g" $HOMDIR/ice_in
+@CICE6 sed -i -E "s/block_size_x[[:space:]]*=[[:space:]]*-?[0-9]+(\.[0-9]+)?/block_size_x      = $CICE_BLK_X/g" $HOMDIR/ice_in
+@CICE6 sed -i -E "s/block_size_y[[:space:]]*=[[:space:]]*-?[0-9]+(\.[0-9]+)?/block_size_y      = $CICE_BLK_Y/g" $HOMDIR/ice_in
 
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
@@ -770,10 +770,10 @@ endif
 @CICE6 set CICE_INIT_MIN  = `echo $nhmsc | cut -c3-4`
 @CICE6 set CICE_INIT_SEC  = `echo $nhmsc | cut -c5-6`
 @CICE6 @ CICE_INIT_SECOND = $CICE_INIT_SEC + 60 * $CICE_INIT_MIN + 3600 * $CICE_INIT_HOUR
-@CICE6 sed -i -E "s/year_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/year_init            = $CICE_INIT_YEAR/g" ice_in
-@CICE6 sed -i -E "s/month_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/month_init            = $CICE_INIT_MON/g" ice_in
-@CICE6 sed -i -E "s/day_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/day_init            = $CICE_INIT_DAY/g" ice_in
-@CICE6 sed -i -E "s/sec_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/sec_init            = $CICE_INIT_SECOND/g" ice_in
+@CICE6 sed -i -E "s/year_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/year_init      = $CICE_INIT_YEAR/g" ice_in
+@CICE6 sed -i -E "s/month_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/month_init     = $CICE_INIT_MON/g" ice_in
+@CICE6 sed -i -E "s/day_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/day_init       = $CICE_INIT_DAY/g" ice_in
+@CICE6 sed -i -E "s/sec_init[[:space:]]*=[[:space:]]*[0-9]+(\.[0-9]+)?/sec_init       = $CICE_INIT_SECOND/g" ice_in
 
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
