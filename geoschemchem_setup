@@ -2745,12 +2745,10 @@ echo ""
 
 if( -e $HOMDIR/tmpfile )              /bin/rm $HOMDIR/tmpfile
 if( -e $HOMDIR/sedfile )              /bin/rm $HOMDIR/sedfile
-if( -e $HOMDIR/gsi_cdas_1.txt )  /bin/rm $HOMDIR/gsi_cdas_1.txt
-if( -e $HOMDIR/gsi_cdas_2.txt )  /bin/rm $HOMDIR/gsi_cdas_2.txt
-if( -e $HOMDIR/gsi_cdas_3.txt )  /bin/rm $HOMDIR/gsi_cdas_3.txt
-if( -e $HOMDIR/gsi_cdas_4.txt )  /bin/rm $HOMDIR/gsi_cdas_4.txt
-if( -e $HOMDIR/qfednrt.txt )     /bin/rm $HOMDIR/qfednrt.txt
-if( -e $HOMDIR/geosit_tmp.txt )  /bin/rm $HOMDIR/geosit_tmp.txt
+ls $HOMDIR/*.txt >& /dev/null
+if ($status == 0) then
+   rm $HOMDIR/*.txt
+endif
 
 #######################################################################
 #                     Copy over Source Tarfile
