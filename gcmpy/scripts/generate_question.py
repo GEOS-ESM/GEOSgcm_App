@@ -24,17 +24,17 @@ class generateQuestion:
     def should_ask(self, answerdict):
         if self.q_follows_up:
             for prev_question, accepted_answers in self.q_follows_up:
-                if answerdict[prev_question].q_answer in accepted_answers or ('any' in accepted_answers and answerdict[prev_question].q_answer != None):
+                if answerdict[prev_question].q_answer in accepted_answers or ('any' in accepted_answers and answerdict[prev_question].q_answer != None) or ('was_not_asked' in accepted_answers):
                     return True
             return False
         return True
 
 
     # loads the questionary api based on yaml configurations
-    def load_question(self, answerdict):
+    def load_question(self, question):
 
         # check if the yaml entry should be skipped
-        if not self.should_ask(answerdict):
+        if not self.should_ask(question):
             return 
 
         # if should_ask() returns true, call correct questionary API

@@ -127,7 +127,6 @@ class setup:
         self.archive_n = f"{answerdict['experiment_id'].q_answer[:200]}_ARCH"   # ARCHIVE  Job Name
         self.regress_n = f"{answerdict['experiment_id'].q_answer[:200]}_RGRS"   # REGRESS  Job Name
 
-
         # Here we need to convert POST_NDS to total tasks. Using 16 cores
         # per task as a good default
         post_npes = self.atmos.post_NDS * 16
@@ -150,6 +149,7 @@ class setup:
         run_q                   - Batch queue name for gcm_run.j
         run_p                   - PE Configuration for gcm_run.j
         run_fp                  - PE Configuration for gcm_forecast.j
+        regress_p               - PE Configuration for gcm_regress.j
         post_q                  - Batch queue name for gcm_post.j
         plot_q                  - Batch queue name for gcm_plot.j
         move_q                  - Batch queue name for gcm_moveplot.j
@@ -183,7 +183,8 @@ class setup:
             self.archive_t        = "8:00:00"                                                      
             self.run_q            = f"PBS -q normal"                    
             self.run_p            = f"PBS -l select={self.nodes}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}" 
-            self.run_fp           = f"PBS -l select=24:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"           
+            self.run_fp           = f"PBS -l select=24:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"          
+            self.regress_p        = f"PBS -l select={self.nodes * 2}:ncpus=${NCPUS_PER_NODE_HALF}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer / 2}"
             self.post_q           = "PBS -q normal"                      
             self.plot_q           = "PBS -q normal"                     
             self.move_q           = "PBS -q normal"
@@ -233,6 +234,7 @@ class setup:
             self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
+            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] / 2}"
             self.post_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.plot_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.move_q           = "SBATCH --partition=datamove"
@@ -283,6 +285,7 @@ class setup:
             self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}" 
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
+            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] / 2}"
             self.post_q           = "NULL"
             self.plot_q           = "NULL"
             self.move_q           = "NULL"
@@ -318,6 +321,7 @@ class setup:
             self.run_q            = "NULL"
             self.run_p            = "NULL"
             self.run_fp           = "NULL"
+            self.regress_p        = "NULL"
             self.post_q           = "NULL"
             self.plot_q           = "NULL"
             self.move_q           = "NULL"
@@ -343,6 +347,15 @@ class setup:
             answerdict["io_server"].q_answer = False
             self.n_oserver_nodes = 0
             self.n_backend_pes = 0
+
+
+        # For ICA and NL3 the gwd files are in a non-bcs location
+        # and may or may not exist. If they don't we set NCAR_NRDG to 0
+        self.NCAR_NRDG = 16
+        if self.land.gwd_in_bcs == False and not os.path.exists(f"{self.gwdrs_dir}/gwd_internal_c{self.atmos.im}"):
+            self.NCAR_NRDG = 0
+            
+
 
 
     # mainly used to create .{*}root files and/or populate them
@@ -503,7 +516,11 @@ class setup:
         # file in the RC dir and modify the atmos.lm values
         for file_name in os.listdir(rc_dir):
             file_path = os.path.join(rc_dir, file_name)
-            
+
+            # ignore the subdirectories in RC/
+            if not os.path.isfile(file_path):
+                continue
+
             with open(file_path, 'r') as file:
                 file_content = file.read()
 
@@ -577,8 +594,8 @@ class setup:
             with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'r') as file:
                 file_content = file.read()
             
-            file_content = re.sub(r'dt_cpld\s*=\s*.*(,)', rf"dt_cpld = {self.atmos.DT_ocean}\1", file_content)
-            file_content = re.sub(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.DT_ocean}\1", file_content)
+            file_content = re.sub(r'dt_cpld\s*=\s*.*(,)', rf"dt_cpld = {self.atmos.dt_ocean}\1", file_content)
+            file_content = re.sub(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.dt_ocean}\1", file_content)
             
             with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'w') as file:
                 file.write(file_content)
@@ -592,8 +609,8 @@ class setup:
             with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'r') as file:
                 file_content = file.read()
 
-            file_content = re.sub(r'DT\s*=\s*.*(,)', rf"DT = {self.atmos.DT_ocean}\1", file_content)
-            file_content = re.sub(r'DT_THERM\s*=\s*.*(,)', rf"DT_THERM = {self.atmos.DT_ocean}\1", file_content)
+            file_content = re.sub(r'DT\s*=\s*.*(,)', rf"DT = {self.atmos.dt_ocean}\1", file_content)
+            file_content = re.sub(r'DT_THERM\s*=\s*.*(,)', rf"DT_THERM = {self.atmos.dt_ocean}\1", file_content)
 
             with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'w') as file:
                 file.write(file_content)
@@ -624,6 +641,7 @@ class setup:
             'RUN_T': self.run_t,
             'RUN_P': self.run_p,
             'RUN_FP': self.run_fp,
+            'REGRESS_P': self.regress_p,
             'RUN_Q': self.run_q,
             'POST_N': self.post_n,
             'POST_T': self.post_t,
@@ -655,6 +673,7 @@ class setup:
             'CHMDIR': self.chem_dir, 
             'COUPLEDIR': self.coupled_dir,
             'GWDRSDIR': self.gwdrs_dir,
+            'NCAR_NRDG': self.NCAR_NRDG,
             'EXPDIR': self.exp_dir,
             'EXPDSC': answerdict['experiment_description'].q_answer,
             'HOMDIR': self.exp_dir,
@@ -710,6 +729,8 @@ class setup:
             'AERO_PROVIDER': self.gocart.aero_provider,
             'OANA_PROVIDER': 'PCHEM',
             'EMISSIONS': self.gocart.emissions,
+            'CH4_PROVIDER': self.gocart.ch4_provider,
+            'CO2_PROVIDER': self.gocart.c02_provider,
             'DYCORE': 'FV3',
             'AGCM_GRIDNAME': self.atmos.gridname, 
             'OGCM_GRIDNAME': self.ocean.gridname,
@@ -724,7 +745,7 @@ class setup:
             'DT': self.atmos.dt,
             'SOLAR_DT': self.atmos.dt_solar,
             'IRRAD_DT': self.atmos.dt_irrad,
-            'OCEAN_DT': self.atmos.DT_ocean,
+            'OCEAN_DT': self.atmos.dt_ocean,
             'LONG_DT': self.atmos.dt_long,
             'NX': self.atmos.nx,
             'NY': self.atmos.ny,
@@ -755,7 +776,6 @@ class setup:
             'JOB_SGMT': self.job_sgmt,
             'NUM_SGMT': self.atmos.num_sgmt,
             'CONUS': self.atmos.conus,
-            'FV_HWT': self.atmos.FV_hwt,
             'CONVPAR_OPTION': self.atmos.convpar_option,
             'STRETCH_FACTOR': self.atmos.stretch_factor,
             'INTERPOLATE_SST': self.interpolate_sst, 
@@ -777,16 +797,12 @@ class setup:
             'PRELOAD_COMMAND': envdict['preload_command'],
             'LD_LIBRARY_PATH_CMD': envdict['ld_library_path_command'],
             'RUN_CMD': envdict['run_command'],
-            'HYDROSTATIC': self.atmos.use_hydrostatic,
+            'MODELATM': self.ocean.modelatm,
+            'USE_DATA_ATM4OCN': self.ocean.use_data_ATM4OCN,
             'FV_SCHMIDT': self.atmos.schmidt,
             'FV_STRETCH_FAC': self.atmos.FV_stretch_fac,
             'FV_TARGET_LON': self.atmos.target_lon,
             'FV_TARGET_LAT': self.atmos.target_lat,
-            'FV_MAKENH': self.atmos.FV_make_NH,
-            'FV_HYDRO': self.atmos.FV_hydro,
-            'GFDL_PROG_CCN': self.atmos.GFDL_prog_ccn,
-            'GFDL_USE_CCN': self.atmos.GFDL_use_ccn,
-            'GFDL_HYDRO': self.atmos.GFDL_hydro,
             'FORCEDAS': self.atmos.force_das,
             'FORCEGCM': self.atmos.force_gcm, 
             'HIST_CICE4': '#DELETE',

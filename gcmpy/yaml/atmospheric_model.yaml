@@ -1,22 +1,22 @@
 AM_horizontal_res:
   type:           'select'
   prompt:         'Select the atmospheric models HORIZONTAL resolution:'
-  choices:        ['c12  -- 8    deg (750.0    km)', 'c24  -- 4    deg (375.0    km)', 'c48  -- 2    deg (187.5    km)', 'c90  -- 1    deg (100.0    km)', 'c180 -- 1/2  deg ( 50.0    km)', 'c360 -- 1/4  deg ( 25.0    km)', 'c720 -- 1/8  deg ( 12.5    km)', 'c1440 - 1/16 deg (  6.25   km)', 'c2880 - 1/32 deg (  3.125  km)', 'c5760 - 1/64 deg (  1.5625 km)','c270 --  (16.0 -100 km)', 'c540 --  ( 8.0 - 50 km)', 'c1080 -  ( 4.0 - 25 km)', 'c1536 -  ( 2.0 - 20 km)', 'c2160 -  ( 2.0 - 12 km)']
+  choices:        ['c12  -- 8    deg (750.0    km)', 'c24  -- 4    deg (375.0    km)', 'c48  -- 2    deg (187.5    km)', 'c90  -- 1    deg (100.0    km)', 'c180 -- 1/2  deg ( 50.0    km)', 'c360 -- 1/4  deg ( 25.0    km)', 'c720 -- 1/8  deg ( 12.5    km)', 'c1120 -- 1/12 deg (  8.0    km)', 'c1440 - 1/16 deg (  6.25   km)','c270 --  (16.0 -100 km)', 'c540 --  ( 8.0 - 50 km)', 'c1080 -  ( 4.0 - 25 km)', 'c1536 -  ( 2.0 - 20 km)', 'c2160 -  ( 2.0 - 12 km)']
   default_answer: ''
   follows_up:     ''
-  answer:         'c12'
+  answer:         ''
 
 AM_vertical_res:
-  type:           'select'
+  type:           'text'
   prompt:         'Enter the atmospheric models VERTICAL resolution:'
-  choices:        ['72', '91', '137', '181']
-  default_answer: ''
+  choices:        ''
+  default_answer: '181'
   follows_up:     ''
 
 AM_microphysics:
   type:           'select'
   prompt:         'Select the Atmospheric Model Microphysics:'
-  choices:        ['BACM_1M  --  3-phase 1-moment Bacmeister et al', 'GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory', 'MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman']
+  choices:        ['GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory', 'BACM_1M  --  3-phase 1-moment Bacmeister et al', 'MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman']
   default_answer: ''
   follows_up:     ''
 
@@ -38,7 +38,7 @@ io_server:
   type:           'confirm'
   prompt:         'Would you like to IOSERVER?'
   choices:        ''
-  default_answer: False
+  default_answer: ''
   follows_up:     ''
 
 

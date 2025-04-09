@@ -74,31 +74,29 @@ answerdict = pq.process()
 #                    Set Number of CPUs per Node
 #######################################################################
 if envdict['site'] == 'NCCS':
-    # NOTE: in the current version of gcm_setup, we never build on 
-    # SLES15, so milan nodes are not an option for NCCS.
-    if answerdict['processor'].q_answer == 'sky':
-        envdict['n_CPUs'] = 40
-    elif answerdict['processor'].q_answer == 'cas':
-        '''
-        NCCS currently recommends that users do not run with
-        48 cores per n_CPUs on SCU16 due to OS issues and
-        recommends that CPU-intensive works run with 46 or less
-        cores. As 45 is a multiple of 3, it's the best value
-        that doesn't waste too much
-        '''
-        envdict['n_CPUs'] = 45
+    '''
+    NCCS currently recommends that users do not run with
+    48 cores per n_CPUs on SCU16 due to OS issues and
+    recommends that CPU-intensive works run with 46 or less
+    cores. As 45 is a multiple of 3, it's the best value
+    that doesn't waste too much
+    '''
+    envdict['n_CPUs'] = 40
 
 elif envdict['site'] == 'NAS':
     if answerdict['processor'].q_answer == 'has':
         envdict['n_CPUs'] = 24
     elif answerdict['processor'].q_answer == 'bro':
-        envdict['n_CPUs'] = 28
+        envdict['n_CPUs'] = 24
     elif answerdict['processor'].q_answer == 'sky':
+        answerdict['processor'].q_answer = 'sky_ele'
         envdict['n_CPUs'] = 40
     elif answerdict['processor'].q_answer == 'cas':
+        answerdict['processor'].q_answer = 'cas_ait'
         envdict['n_CPUs'] = 40
-    else:
-        envdict['n_CPUs'] = 128
+    elif answerdict['processor'].q_answer == 'rom' or answerdict['processor'].q_answer == 'mil':
+        answerdict['processor'].q_answer += '_ait'
+        envdict['n_CPUs'] = 120
 
 elif envdict['site'] == 'AWS' or envdict['site'] == 'AZURE':
     # Because we do not know the name of the model or the number of CPUs

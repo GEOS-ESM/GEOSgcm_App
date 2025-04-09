@@ -23,40 +23,77 @@ class handle:
                 answerdict[i].load_question(answerdict)
 
     @staticmethod
-    def processor_choices(answerdict, i):
-        if i == "processor":
-            if envdict["site"] == "NCCS":
-                answerdict[i].q_choices = ["cas", "sky"]
-            elif envdict["site"] == "NAS":
-                answerdict[i].q_choices = ["sky", "has", "bro", "cas", "rom", "mil"]
-            else:
-                exit(1)
+    def io_server_defualt(answerdict, i):
+        if i != 'io_server':
+            return
+        match answerdict['AM_horizontal_res'].q_answer:
+            case 'c180' | 'c360' | 'c720' | 'c1120' | 'c1440' | 'c2880' | 'c5760' | 'c270' | 'c540' | 'c1080' | 'c1536' | 'c2160':
+                answerdict[i].q_default = True
+            case _:
+                answerdict[i].q_default = False
 
-            print(color.GREEN + "NOTE Due to how FV3 is compiled by default, Sandy Bridge\n" + \
-                                "and Ivy Bridge are not supported by current GEOS" + color.RESET)
+
+    @staticmethod
+    def processor_choices(answerdict, i):
+        if i != "processor":
+            return
+
+        if envdict["site"] == "NCCS":
+            answerdict[i].q_choices = ["cas"]
+        elif envdict["site"] == "NAS":
+            answerdict[i].q_choices = ["rom", "sky", "has", "bro", "cas", "mil"]
+        else:
+            exit(1)
+
+        print(color.GREEN + "NOTE Due to how FV3 is compiled by default, Sandy Bridge\n" + \
+                            "and Ivy Bridge are not supported by current GEOS" + color.RESET)
+
+    @staticmethod
+    def OM_horizontal_res_default(answerdict, i):
+        if i != 'OM_horizontal_res':
+            return
+
+        # The default ocean resolution is based on the atmospheric resolution
+        match answerdict['AM_horizontal_res'].q_answer:
+            case 'c12' | 'c24' | 'c48':
+                answerdict[i].q_choices = ['o1 (1  -deg,  360x180  Reynolds)', \
+                                           'o2 (1/4-deg, 1440x720  MERRA-2)',  \
+                                           'o3 (1/8-deg, 2880x1440 OSTIA)']
+            case _:
+                answerdict[i].q_choices = ['CS (Cubed-Sphere OSTIA)', \
+                                           'o1 (1  -deg,  360x180  Reynolds)', \
+                                           'o2 (1/4-deg, 1440x720  MERRA-2)', \
+                                           'o3 (1/8-deg, 2880x1440 OSTIA)']
+
 
     @staticmethod
     def MIT_hres_choices(answerdict, i):
-        if i == "OM_MIT_horizontal_res":
-            if answerdict["AM_horizontal_res"].q_answer == "c720":
-                answerdict[i].q_choices = ["llc1080 (1/12-deg, Lat-Lon-Cube)"]
-            elif answerdict["AM_horizontal_res"].q_answer == "c1440":
-                answerdict[i].q_choices = ["llc2160 (1/24-deg, Lat-Lon-Cube)"]
+        if i != "OM_MIT_horizontal_res":
+            return
+        if answerdict["AM_horizontal_res"].q_answer == "c720":
+            answerdict[i].q_choices = ["llc1080 (1/12-deg, Lat-Lon-Cube)"]
+        elif answerdict["AM_horizontal_res"].q_answer == "c1440":
+            answerdict[i].q_choices = ["llc2160 (1/24-deg, Lat-Lon-Cube)"]
 
     @staticmethod
     def MOM_hres_default(answerdict, i):
-        if i == "OM_MOM_horizontal_res" and \
-           answerdict["OM_name"].q_answer == "MOM6" and \
-           answerdict["AM_horizontal_res"].q_answer == "c12":
+        if i != "OM_MOM_horizontal_res":
+            return
+        if answerdict["OM_name"].q_answer == "MOM6" and answerdict["AM_horizontal_res"].q_answer == "c12":
            answerdict[i].q_default = "72 36"
 
+    '''
+    THIS METHOD IS BUGGED FOR NOW 
     @staticmethod 
     def OM_hres_valid(answerdict, i):
-        if i == "OM_MOM_horizontal_res" and answerdict[i].q_answer != None:
-            #input validation using regex
-            while not re.match(r"^\d+\s\d+$", answerdict[i].q_answer):
-                print(color.RED + "please enter exactly 2 numbers separated by a space! (int int)\n")
-                answerdict[i].load_question(answerdict)
+        if i != "OM_MOM_horizontal_res":
+            return
+
+        #input validation using regex
+        while not re.match(r"^\d+\s\d+$", answerdict[i].q_answer):
+            print(color.RED + "please enter exactly 2 numbers separated by a space! (int int)\n")
+            answerdict[i].load_question(answerdict)
+    '''
 
     @staticmethod
     def seaice_choices(answerdict, i):
@@ -66,96 +103,105 @@ class handle:
 
     @staticmethod
     def heartbeat_default(answerdict, i):
-        if i == "heartbeat":
-            '''
-            Default heartbeat is determined by atmospheric resolution.
-            Of course, this just the recommended value. The user can 
-            enter whatever value they like
-            '''
-            heartbeat = ""
-            match answerdict["AM_horizontal_res"].q_answer:
-                case "c12" | "c24" | "c48" | "c90":
-                    heartbeat = "1800"
-                case "c180":
-                    heartbeat = "900"
-                case "c360":
-                    heartbeat = "450"
-                case "c720":
-                    heartbeat = "225"
-                case "c1440":
-                    heartbeat = "75"
-                case "c5760":
-                    heartbeat = "30"
-                case "c270" | "c540":
-                    heartbeat = "600"
-                case "c1080":
-                    heartbeat = "150"
-                case "c1536":
-                    heartbeat = "75"
-                case "c2160":
-                    heartbeat = "60"
+        if i != "heartbeat":
+            return
+        '''
+        Default heartbeat is determined by atmospheric resolution.
+        Of course, this just the recommended value. The user can 
+        enter whatever value they like
+        '''
+        heartbeat = ""
+        match answerdict["AM_horizontal_res"].q_answer:
+            case 'c12':
+                heartbeat = 3600
+            case 'c24':
+                heartbeat = 1800
+            case 'c48':
+                heartbeat = 1200
+            case 'c90':
+                heartbeat = 900
+            case 'c180' | 'c270':
+                heartbeat = 600
+            case 'c360':
+                heartbeat = 450
+            case 'c720' | 'c1120' | 'c540':
+                heartbeat = 300
+            case 'c1440':
+                heartbeat = 225
+            case 'c2880' | 'c1080':
+                heartbeat = 150
+            case 'c5760' | 'c1536' | 'c2160':
+                heartbeat = 75
+            case 'c4320':
+                heartbeat = 30
 
 
-            # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
-            # ((IMPORTANT: default must be type string))
-            if answerdict["AM_microphysics"].q_answer == "BACM_1M":
-                heartbeat = "450"
+        # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
+        if answerdict["AM_microphysics"].q_answer == "BACM_1M":
+            heartbeat = 450
 
-            answerdict[i].q_default = heartbeat
+        # ((IMPORTANT: default must be type string due to some limitation in questionary))
+        answerdict[i].q_default = str(heartbeat)
 
 
     @staticmethod
     def heartbeat_valid(answerdict, i):
-        if i == "heartbeat":
-            # input validation using regex
-            while not re.match(r"^\d+$", answerdict[i].q_answer):
-                print(f"{color.RED}please enter exactly 1 number!{color.RESET}")
-                answerdict[i].load_question(answerdict)
+        if i != "heartbeat":
+            return
+        # input validation using regex
+        while not re.match(r"^\d+$", answerdict[i].q_answer):
+            print(f"{color.RED}please enter exactly 1 number!{color.RESET}")
+            answerdict[i].load_question(answerdict)
 
     @staticmethod
     def history_template_default(answerdict, i):
-        if i == "history_template":
+        if i != "history_template":
+            return
             
-            if answerdict['OM_name'].q_answer == 'MOM5':
-                answerdict[i].q_default = 'HISTORY.AOGCM-MOM5.rc.tmpl'
-            elif answerdict['OM_name'].q_answer == "MOM6":
-                answerdict[i].q_default = 'HISTORY.AOGCM.rc.tmpl'
-            elif answerdict['OM_name'].q_answer == 'MIT':
-                answerdict[i].q_default = 'HISTORY.AOGCM_MITgcm.rc.tmpl'
-            elif answerdict['OM_data_atmos'].q_answer == True:
-                answerdict[i].q_default == 'HISTORY.DATAATM.rc.tmpl'
-            else:
-                answerdict[i].q_default = 'HISTORY.AGCM.rc.tmpl'
+        if answerdict['OM_name'].q_answer == 'MOM5':
+            answerdict[i].q_default = 'HISTORY.AOGCM-MOM5.rc.tmpl'
+        elif answerdict['OM_name'].q_answer == "MOM6":
+            answerdict[i].q_default = 'HISTORY.AOGCM.rc.tmpl'
+        elif answerdict['OM_name'].q_answer == 'MIT':
+            answerdict[i].q_default = 'HISTORY.AOGCM_MITgcm.rc.tmpl'
+        elif answerdict['OM_data_atmos'].q_answer == True:
+            answerdict[i].q_default == 'HISTORY.DATAATM.rc.tmpl'
+        else:
+            answerdict[i].q_default = 'HISTORY.AGCM.rc.tmpl'
 
     @staticmethod
     def exp_dir_default(answerdict, i):
-        if i == "exp_dir":
-            root = f"{os.environ.get('HOME')}/.EXPDIRroot"
-            if os.path.exists(root):
-                try:
-                    with open(root, "r") as file:
-                        answerdict[i].q_default = f"{file.read().strip()}/{answerdict['experiment_id'].q_answer}"
-                except Exception as e:
-                    print(f"An error occurred while reading {color.BLUE}.EXPDIRroot{color.RESET}: {str(e)}")
-            elif envdict['site'] in ['NAS','NCCS']:
-                answerdict[i].q_default = f"/{'discover/' if envdict['site'] == 'NCCS' else ''}nobackup/{os.environ.get('LOGNAME')}/{answerdict['experiment_id'].q_answer}"
-            else:
-                answerdict[i].q_default = f"{os.environ.get('HOME')}/{answerdict['experiment_id']}"
+        if i != "exp_dir":
+            return
+        
+        root = f"{os.environ.get('HOME')}/.EXPDIRroot"
+        if os.path.exists(root):
+            try:
+                with open(root, "r") as file:
+                    answerdict[i].q_default = f"{file.read().strip()}/{answerdict['experiment_id'].q_answer}"
+            except Exception as e:
+                print(f"An error occurred while reading {color.BLUE}.EXPDIRroot{color.RESET}: {str(e)}")
+        elif envdict['site'] in ['NAS','NCCS']:
+            answerdict[i].q_default = f"/{'discover/' if envdict['site'] == 'NCCS' else ''}nobackup/{os.environ.get('LOGNAME')}/{answerdict['experiment_id'].q_answer}"
+        else:
+            answerdict[i].q_default = f"{os.environ.get('HOME')}/{answerdict['experiment_id']}"
             
 
     @staticmethod
     def exp_dir_valid(answerdict, i):
-        if i == "home_dir" or i == "exp_dir":
-            while os.path.basename(answerdict[i].q_answer) != answerdict['experiment_id'].q_answer:
-                print(f"{color.RED}This directory MUST point to the experiment ID: {color.BLUE}{answerdict['experiment_id'].q_answer}{color.RED}!{color.RESET}")
-                answerdict[i].load_question(answerdict)
+        if i != "home_dir" or i != "exp_dir":
+            return
+        while os.path.basename(answerdict[i].q_answer) != answerdict['experiment_id'].q_answer:
+            print(f"{color.RED}This directory MUST point to the experiment ID: {color.BLUE}{answerdict['experiment_id'].q_answer}{color.RED}!{color.RESET}")
+            answerdict[i].load_question(answerdict)
 
 
     @staticmethod 
     def group_root_default(answerdict, i):
-        if i == "group_root":
-            groups = subprocess.check_output('groups', shell=True).decode('utf-8').strip()
-            answerdict[i].q_default = groups.split()[0]
+        if i != "group_root":
+            return
+        groups = subprocess.check_output('groups', shell=True).decode('utf-8').strip()
+        answerdict[i].q_default = groups.split()[0]
 
 
 
@@ -196,13 +242,15 @@ def process():
                                    yaml_questions[i]["choices"],       \
                                    yaml_questions[i]["default_answer"],\
                                    yaml_questions[i]["follows_up"])
-
+        
         answerdict[i] = temp   
 
 
         # if the question properties need to dynamically change at
         # runtime call handle function BEFORE load_question()
-        handle.processor_choices(answerdict,i)
+        handle.io_server_defualt(answerdict, i)
+        handle.processor_choices(answerdict, i)
+        handle.OM_horizontal_res_default(answerdict, i)
         handle.MIT_hres_choices(answerdict, i)        
         handle.MOM_hres_default(answerdict, i)
         handle.seaice_choices(answerdict, i)
@@ -211,14 +259,13 @@ def process():
         handle.exp_dir_default(answerdict, i)
 
         # prompts the user with the question
-        answerdict[i].load_question(answerdict)   
+        answerdict[i].load_question(answerdict)
 
         # input validation and other post processing goes here,
         # AFTER load_question() call
         handle.experiment_desc(answerdict, i)
-        handle.OM_hres_valid(answerdict, i)
+        # handle.OM_hres_valid(answerdict, i)
         handle.heartbeat_valid(answerdict, i)
-        #handle.history_template_valid(answerdict, i)
         handle.exp_dir_valid(answerdict, i)
         
         # strips the first word from every select type question

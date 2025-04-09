@@ -68,12 +68,70 @@ if (! -e $EXPDIR/plot       ) mkdir -p $EXPDIR/plot
 
 if( $GCMEMIP == TRUE ) then
     if (! -e $EXPDIR/restarts/$RSTDATE ) mkdir -p $EXPDIR/restarts/$RSTDATE
-    setenv  SCRDIR  $EXPDIR/scratch.$RSTDATE
+    set SCRDIR_NAME = scratch.$RSTDATE
 else
-    setenv  SCRDIR  $EXPDIR/scratch
+    set SCRDIR_NAME = scratch
 endif
 
-if (! -e $SCRDIR ) mkdir -p $SCRDIR
+# Handling of TSE_TMPDIR
+# ----------------------
+#
+# TSE_TMPDIR only exists at NCCS so first we check if it is defined
+
+if ( $?TSE_TMPDIR ) then
+
+   # Next, we might not want to always use TSE_TMPDIR as the scratch
+   # if we need a permanent scratch directory for debugging or other
+   # purposes. So we can set a flag USE_TSE_TMPDIR to TRUE if we want
+   # and we default to TRUE
+
+   set USE_TSE_TMPDIR = TRUE
+
+   # If we want to use TSE_TMPDIR as the scratch, we create a scratch
+   # directory under TSE_TMPDIR and link it to SCRDIR
+
+   if ( $USE_TSE_TMPDIR == TRUE ) then
+
+      # Finally, we should be careful as there is a possibility we
+      # could collide if two runs use the same TSE_TMPDIR (for example
+      # a packable job). So we use $SLURM_JOB_ID and, if defined,
+      # $SLURM_ARRAY_TASK_ID to create a unique scratch directory
+
+      set TSE_TMPDIR_NAME = $SLURM_JOB_ID
+      if ( $?SLURM_ARRAY_TASK_ID ) then
+         set TSE_TMPDIR_NAME = ${TSE_TMPDIR_NAME}_${SLURM_ARRAY_TASK_ID}
+      endif
+
+      setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/$SCRDIR_NAME
+
+      if ( -e $EXPDIR/$SCRDIR_NAME || -l $EXPDIR/$SCRDIR_NAME ) /bin/rm -rf $EXPDIR/$SCRDIR_NAME
+      if ( -e $SCRDIR ) /bin/rm -rf $SCRDIR
+      mkdir -p $SCRDIR
+      ln -s $SCRDIR $EXPDIR/$SCRDIR_NAME
+
+   else
+
+      # If USE_TSE_TMPDIR is FALSE, we create a scratch directory
+      # as we did before under the experiment directory
+
+      setenv SCRDIR $EXPDIR/$SCRDIR_NAME
+      if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+      mkdir -p $SCRDIR
+   endif # USE_TSE_TMPDIR
+
+else
+
+   # If TSE_TMPDIR is not defined, we are not at NCCS and we have to
+   # act as we did before and create a scratch directory under the
+   # experiment directory
+
+   setenv SCRDIR $EXPDIR/$SCRDIR_NAME
+   if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+   mkdir -p $SCRDIR
+
+endif # is TSE_TMPDIR defined
+
+cd $SCRDIR
 
 #######################################################################
 #                   Set Experiment Run Parameters
@@ -176,24 +234,16 @@ awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 set year  = `echo $RSTDATE | cut -d_ -f1 | cut -b1-4`
 set month = `echo $RSTDATE | cut -d_ -f1 | cut -b5-6`
 
-{{ EMIP_OLDLAND }}# Copy MERRA-2 Restarts
-{{ EMIP_OLDLAND }}# ---------------------
-{{ EMIP_NEWLAND }}# Copy Jason-3_4 REPLAY MERRA-2 NewLand Restarts
-{{ EMIP_NEWLAND }}# ----------------------------------------------
-cp /discover/nobackup/projects/gmao/g6dev/ltakacs/{{ EMIP_MERRA2 }}/restarts/AMIP/M${month}/restarts.${year}${month}.tar .
-tar xf  restarts.${year}${month}.tar
-/bin/rm restarts.${year}${month}.tar
-{{ EMIP_OLDLAND }}/bin/rm MERRA2*bin
+# Copy Restarts from v11.5.2 REPLAY to MERRA-2
+# ----------------------------------------------
+ln -s /discover/nobackup/projects/gmao/geos_itv/sdrabenh/REMIP_Experiments/v11.5.2_L072_C180_M2_REMIP/restarts/restarts.e${year}${month}10_21z.tar .
+tar -xvf restarts.e${year}${month}10_21z.tar --wildcards "*_internal_rst*"
 
-
-{{ EMIP_OLDLAND }}# Regrid MERRA-2 Restarts
-{{ EMIP_OLDLAND }}# -----------------------
-{{ EMIP_NEWLAND }}# Regrid Jason-3_4 REPLAY MERRA-2 NewLand Restarts
-{{ EMIP_NEWLAND }}# ------------------------------------------------
-set RSTID = `/bin/ls *catch* | cut -d. -f1`
-set day   = `/bin/ls *catch* | cut -d. -f3 | awk 'match($0,/[0-9]{8}/) {print substr($0,RSTART+6,2)}'`
-$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin {{ EMIP_BCS_IN }} -oceanin 1440x720 -nobkg -lbl -nolcv -bcvout {{ LSMBCS }} -rs 3 -oceanout {{ OCEANOUT }} -in_bc_base @BC_BASE -out_bc_base @BC_BASE
-{{ EMIP_OLDLAND }}/bin/rm $RSTID.*.bin
+# Regrid v11.5.2 Restarts
+# ------------------------------------------------
+set RSTID = `/bin/ls *catch* | /bin/grep -Po '^.*(?=\.\w+_rst\.)'`
+set day   = `/bin/ls *catch* | /bin/grep -Po '(?<=\d{6})\d{2}(?=_21z)'`
+$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nobkg -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -out_bc_base @BC_BASE
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -204,15 +254,12 @@ else if($IMC < 1000) then
      set IMC = 0$IMC
 endif
 
-set  chk_type = `/usr/bin/file -Lb --mime-type C${AGCM_IM}[cef]_${RSTID}.*catch*`
+set  chk_type = `ls -1 regrid.catch*_internal_rst.${year}${month}${day}_21z.nc4 | xargs /usr/bin/file -Lb --mime-type `
 if( "$chk_type" =~ "application/octet-stream" ) set ext = bin
 if( "$chk_type" =~ "application/x-hdf"        ) set ext = nc4
 
-$GEOSBIN/stripname C${AGCM_IM}{{ OCEANOUT }}_${RSTID}.
-$GEOSBIN/stripname .${year}${month}${day}_21z.$ext.{{ LSMBCS }}.{{ ATMOStag }}_{{ OCEANtag }}
-{{ EMIP_OLDLAND }}/bin/mv gocart_internal_rst gocart_internal_rst.merra2
-{{ EMIP_OLDLAND }}$GEOSBIN/gogo.x -s $RSTID.Chem_Registry.rc.${year}${month}${day}_21z -t $EXPDIR/RC/Chem_Registry.rc -i gocart_internal_rst.merra2 -o gocart_internal_rst -r C${AGCM_IM} -l ${AGCM_LM}
-
+$GEOSBIN/stripname regrid.
+$GEOSBIN/stripname .${year}${month}${day}_21z.$ext
 
 # Create CAP.rc and cap_restart
 # -----------------------------
@@ -241,16 +288,20 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 endif
 
+set GIGATRAJ  = `grep '^\s*GIGATRAJ_PARCELS_FILE:'     AGCM.rc | cut -d: -f2`
+
 #######################################################################
 #   Move to Scratch Directory and Copy RC Files from Home Directory
 #######################################################################
 
 cd $SCRDIR
 /bin/rm -rf *
-
 cp -f  $EXPDIR/RC/* .
 cp     $EXPDIR/cap_restart .
 cp     $EXPDIR/linkbcs .
+if ($GIGATRAJ != "") then
+   cp   $EXPDIR/$GIGATRAJ .
+endif
 cp -f  $HOMDIR/*.rc .
 cp -f  $HOMDIR/*.nml .
 cp -f  $HOMDIR/*.yaml .
@@ -327,10 +378,10 @@ setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
 setenv EMISSIONS {{ EMISSIONS }}
 chmod +x linkbcs
 
-{{ GCMRUN_CATCHCN }}set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
-{{ GCMRUN_CATCHCN }}if ($LSM_CHOICE == 2) then
-{{ GCMRUN_CATCHCN }}  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
-{{ GCMRUN_CATCHCN }}endif
+@GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
+@GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
+@GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+@GCMRUN_CATCHCNendif
 #######################################################################
 #                  Setup executable
 #######################################################################
@@ -520,7 +571,8 @@ end
 # -----------------------
 set USE_WAVES = `grep '^\s*USE_WAVES:' AGCM.rc| cut -d: -f2`
 set wavemodel = `cat WGCM.rc | grep "wave_model:" | cut -d "#" -f1 | cut -d ":" -f 2 | sed 's/\s//g'`
-set wavewatch = `$USE_WAVES != 0 && $wavemodel == "WW3"`
+set wavewatch = 0
+if (($USE_WAVES != 0) && ($wavemodel == "WW3") ) set wavewatch = 1
 
 # Copy Restarts to Scratch Directory
 # ----------------------------------
@@ -541,20 +593,8 @@ else
 endif
 wait
 
-# Get proper ridge scheme GWD internal restart
-# --------------------------------------------
-if ( $rst_by_face == YES ) then
-  echo "WARNING: The generated gwd_internal_face_x_rst are used"
-  #foreach n (1 2 3 4 5 6)
-    #/bin/rm gwd_internal_face_${n}_rst
-    #/bin/cp {{ GWDRSDIR }}/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
-  #end
-else
-  /bin/rm gwd_internal_rst
-  /bin/cp {{ GWDRSDIR }}/gwd_internal_c${AGCM_IM} gwd_internal_rst
-endif
-{{ COUPLED }} /bin/mkdir INPUT
-{{ COUPLED }} cp $EXPDIR/RESTART/* INPUT
+@COUPLED /bin/mkdir INPUT
+@COUPLED cp $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
@@ -756,6 +796,7 @@ if( $AGCM_LM  != 72 ) then
       cp $file dummy
       cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
     end
+
 endif
 
 # Rename big ExtData files that are not needed
@@ -810,17 +851,39 @@ endif
 # -------------------------------
 # UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
 #
-#set instance_files = `/bin/ls -1 *_instance*.rc`
-#foreach instance ($instance_files)
-#   /bin/mv $instance $instance.tmp
-#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
-#   /bin/rm $instance.tmp
-#end
+set instance_files = `/bin/ls -1 *_instance*.rc`
+foreach instance ($instance_files)
+   /bin/mv $instance $instance.tmp
+   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   /bin/rm $instance.tmp
+end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
 ./linkbcs
+
+# Get proper ridge scheme GWD internal restart
+# --------------------------------------------
+if ( $rst_by_face == YES ) then
+  echo "WARNING: The generated gwd_internal_face_x_rst are used"
+  #foreach n (1 2 3 4 5 6)
+    #/bin/rm gwd_internal_face_${n}_rst
+    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+  #end
+else
+  if (! -e gwd_internal_rst) then
+    echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+    # Now, if the user has already set an NCAR_NRDG value, we need to
+    # change it to 0. If they haven't set it, we need to add it to the
+    # AGCM.rc file.
+    if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+      echo "NCAR_NRDG: 0" >> AGCM.rc
+    else
+      sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+    endif
+  endif
+endif
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
@@ -1041,6 +1104,13 @@ endif
 # Set OMP_NUM_THREADS
 # -------------------
 setenv OMP_NUM_THREADS 1
+if ($OMP_NUM_THREADS > 1) then
+  setenv OMP_STACKSIZE 16M
+  setenv KMP_AFFINITY compact
+  echo OMP_STACKSIZE    $OMP_STACKSIZE
+  echo KMP_AFFINITY     $KMP_AFFINITY
+endif
+echo OMP_NUM_THREADS $OMP_NUM_THREADS
 
 # Run GEOSgcm.x
 # -------------
@@ -1189,8 +1259,9 @@ set restarts = `/bin/ls -1 *_rst`
 # ----------------------------------------------------
     set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
 foreach  restart ($restarts)
-cp $restart ${EXPDIR}/restarts
+cp $restart ${EXPDIR}/restarts &
 end
+wait
 
 # Remove EXPID from RESTART name
 # ------------------------------
@@ -1246,20 +1317,20 @@ end
 {{ COUPLED }} # -------------------------
 {{ MOM5 }} set dsets="ocean_month"
 {{ MOM6 }} set dsets="ocean_state prog_z sfc_ave forcing"
-{{ MOM5 }}  foreach dset ( $dsets )
-{{ MOM5 }}  set num = `/bin/ls -1 $dset.nc | wc -l`
-{{ MOM5 }}  if($num != 0) then
-{{ MOM5 }}     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-{{ MOM5 }}     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-{{ MOM5 }}  endif
-{{ MOM5 }}  end 
-{{ MOM6 }}  foreach dset ( $dsets )
-{{ MOM6 }}  set num = `/bin/ls -1 $dset.nc | wc -l`
-{{ MOM6 }}  if($num != 0) then
-{{ MOM6 }}     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-{{ MOM6 }}     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-{{ MOM6 }}  endif
-{{ MOM6 }}  end
+{{ MOM5 }} foreach dset ( $dsets )
+{{ MOM5 }} set num = `/bin/ls -1 $dset.nc | wc -l`
+{{ MOM5 }} if($num != 0) then
+{{ MOM5 }}    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+{{ MOM5 }}    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+{{ MOM5 }} endif
+{{ MOM5 }} end
+{{ MOM6 }} foreach dset ( $dsets )
+{{ MOM6 }} set num = `/bin/ls -1 $dset.nc | wc -l`
+{{ MOM6 }} if($num != 0) then
+{{ MOM6 }}    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+{{ MOM6 }}    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+{{ MOM6 }} endif
+{{ MOM6 }} end
 
 {{ CICE6 }} # CICE6-Specific Output Files
 {{ CICE6 }} # -------------------------
@@ -1275,6 +1346,8 @@ end
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
+
+if ($rc == 0) then
 
 $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
 
@@ -1294,6 +1367,8 @@ if( $FSEGMENT != 00000000 ) then
      endif
 endif
 
+endif
+
 #######################################################################
 #                         Update Iteration Counter
 #######################################################################
@@ -1305,6 +1380,10 @@ if ( $capdate < $enddate ) then
 @ counter = $counter    + 1
 else
 @ counter = ${NUM_SGMT} + 1
+endif
+
+if ($rc != 0) then
+  @ counter = ${NUM_SGMT} + 1
 endif
 
 end   # end of segment loop; remain in $SCRDIR

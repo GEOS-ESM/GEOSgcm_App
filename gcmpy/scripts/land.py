@@ -3,8 +3,13 @@ from utility import color
 
 class land:
     def __init__(self):
-        self.model              = answerdict["LS_model"].q_answer
-        self.bcs                = answerdict["LS_boundary_conditions"].q_answer
+        # If data atmosphere is enabled, land questions are skipped. Use default values.
+        if answerdict['OM_data_atmos'].q_answer == True:
+            self.model = "Catchment"
+            self.bcs = "NL3"
+        else:
+            self.model              = answerdict["LS_model"].q_answer
+            self.bcs                = answerdict["LS_boundary_conditions"].q_answer
         self.parameters         = '' 
         self.emip_bcs_in        = ''
         self.emip_oldland       = ''
@@ -25,19 +30,22 @@ class land:
             self.emip_bcs_in        = "GM4"
             self.emip_oldland       = ""
             self.emip_newland       = "#DELETE"
-            self.emip_MERRA2        = "MERRA2"  
+            self.emip_MERRA2        = "MERRA2" 
+            self.gwd_in_bcs         = False
         elif self.bcs == "NL3":
             self.parameters         = ""
             self.emip_bcs_in        = "NL3"
             self.emip_oldland       = "#DELETE"
             self.emip_newland       = ""
-            self.emip_MERRA2        = "MERRA2_NewLand"  
-        elif self.bcs == "v12":
+            self.emip_MERRA2        = "MERRA2_NewLand"
+            self.gwd_in_bcs         = False
+        elif self.bcs == "v13":
             self.parameters         = ""
             self.emip_bcs_in        = "NL3"
             self.emip_oldland       = "#DELETE"
             self.emip_newland       = ""
-            self.emip_MERRA2        = "MERRA2_NewLand"             
+            self.emip_MERRA2        = "MERRA2_NewLand"   
+            self.gwd_in_bcs         = True
 
 
     def set_catchment(self):

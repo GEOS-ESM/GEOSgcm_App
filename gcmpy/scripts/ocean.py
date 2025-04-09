@@ -25,6 +25,7 @@ class ocean:
             ocean.set_data_atmosphere()
         else:
             ocean.set_uncoupled()
+            ocean.set_data_atmosphere()
 
     
     def set_coupled(ocean):
@@ -149,7 +150,7 @@ class ocean:
             ocean.cube = '#DELETE'
             ocean.ostia = ''
             ocean.data = ''
-        elif hr_code == 'cs':
+        elif hr_code == 'CS':
             # need to add input validation for this case
             ocean.IM = int(answerdict['AM_horizontal_res'].q_answer[1:])
             ocean.JM = ocean.IM * 6
@@ -176,6 +177,7 @@ class ocean:
         #ocean.data = #THIS IS WILL OVERWRITE THE BLOCK ABOVE
         ocean.name = ''
         ocean.preload = ''
+        ocean.LM = 34
         ocean.coupled = '#DELETE'
         ocean.MOM5 = '#DELETE'
         ocean.MOM6 = '#DELETE'

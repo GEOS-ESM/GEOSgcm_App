@@ -3,8 +3,13 @@ from utility import color
 
 class gocart:
     def __init__(self):
-        self.aerosol            = answerdict["gocart_aerosols"].q_answer
-        self.emissions          = f"{answerdict['gocart_emission'].q_answer}_EMISSIONS"
+        # Gocart questions are skipped if data atmosphere is turned on. Use defaults
+        if answerdict['OM_data_atmos'].q_answer == True:
+            self.aerosol = 'Actual'
+            self.emissions = 'OPS_EMISSIONS'
+        else:
+            self.aerosol = answerdict["gocart_aerosols"].q_answer
+            self.emissions = f"{answerdict['gocart_emission'].q_answer}_EMISSIONS"
         self.data_driven        = None
         self.ops_species        = '#'
         self.cmip_species       = '#'
@@ -15,6 +20,10 @@ class gocart:
         self.gocart_hist        = None
         self.aero_provider      = 'GOCART2G'
         self.rats_provider      = 'PCHEM'
+
+        # Additional RATS settings for specific GHGs
+        self.ch4_provider       = 'none'
+        self.c02_provider       = 'none'
 
     # for debugging purposes
     def print_vars(self):
