@@ -2814,9 +2814,12 @@ endif
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
 # ------------------------------------------------------------------
+# GAAS_GridComp.rc might not exist if the user does not build it
+
+if( -e $EXPDIR/RC/GAAS_GridComp.rc ) then
     /bin/mv $EXPDIR/RC/GAAS_GridComp.rc $EXPDIR/RC/GAAS_GridComp.tmp
     cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.?aod/Y%y4/M%m2/@ANA_EXPID.?g' > $EXPDIR/RC/GAAS_GridComp.rc
-
+endif
 
 # Turn on RATS_PROVIDER
 # ---------------------
