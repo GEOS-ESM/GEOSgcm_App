@@ -204,7 +204,7 @@ class setup:
             if oceanres == "1440x720":
                 self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/SST/{oceanres}"
             else:
-                self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/realtime/@SSTNAME/{oceanres}"
+                self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
             if self.ocean.gridtyp == "LL":
                 self.sst_dir = "/nobackupp2/estrobac/geos5/SSTDIR"
 
@@ -255,7 +255,7 @@ class setup:
             if oceanres == "1440x720":
                 self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/SST/{oceanres}"
             else:
-                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/{oceanres}"
+                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
             if self.ocean.gridtyp == "LL":
                 self.sst_dir = "/discover/nobackup/estrobac/geos5/SSTDIR"
 
@@ -299,7 +299,7 @@ class setup:
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.IM}x{self.ocean.JM}"
+            self.sst_dir          = f"{self.boundary_path}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME')
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
@@ -335,7 +335,7 @@ class setup:
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/@SSTNAME/{self.ocean.IM}x{self.ocean.JM}"
+            self.sst_dir          = f"{self.boundary_path}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME') 
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
