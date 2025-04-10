@@ -4,7 +4,7 @@ set (programs
   generate_question.py
   gocart.py
   land.py
-  model.py
+  gcm_setup.py
   ocean.py
   process_questions.py
   utility.py
