@@ -790,6 +790,10 @@ SURFACE_IMPORT_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
 #OH_IMPORT_CHECKPOINT_FILE:              oh_import_checkpoint
 #OH_IMPORT_CHECKPOINT_TYPE:              @CHECKPOINT_TYPE
 
+#RRG_INTERNAL_RESTART_FILE:              rrg_internal_rst
+#RRG_INTERNAL_CHECKPOINT_FILE:           rrg_internal_checkpoint
+#RRG_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+
 # OCEAN Model Restart Files
 # -------------------------
 SALTWATER_IMPORT_RESTART_FILE:          saltwater_import_rst
@@ -924,6 +928,8 @@ DIURNAL_BIOMASS_BURNING: yes
        RATS_PROVIDER: @RATS_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM (Radiatively active tracers)
        AERO_PROVIDER: @AERO_PROVIDER   # options: GOCART2G, MAM, none  (Radiatively active aerosols)
 ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOCART
+        CH4_PROVIDER: @CH4_PROVIDER    # options: GOCART, RRG, none
+        CO2_PROVIDER: @CO2_PROVIDER    # options: GOCART, RRG, none
 
 
 # Flag for real-time forecasts (persisted SST) OGCM_IS_FCST: 1 (AMIP-Style Default: 0)
@@ -951,7 +957,8 @@ USE_SKIN_LAYER: @USE_SKIN_LAYER
 # Model Tuning Parameters (For CMIP5 recommended SOLAR_CONSTANT and CO2 values, use -1)
 # -------------------------------------------------------------------------------------
 SOLAR_CONSTANT: -1
-CO2:            -1
+CO2:            -1 # CO2 conc to use in RRTMG. -2 will use 3D CO2 imported from CO2_PROVIDER set above. -1 will read from a table. >=0 sets ppmv
+RATS_DIAGNOSTICS:  # Set one or more LW diagnostic analysis for specific RATS in RRTMG (options: O3 CO2 CH4 N2O CFC11 CFC12 CFC22 CCl4)
 
 
 # Flags for SATSIM Output
