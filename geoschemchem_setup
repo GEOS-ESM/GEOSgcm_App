@@ -984,7 +984,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 3600
+     set       DT = 1800
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -1007,7 +1007,7 @@ if( $AGCM_IM ==  "c12" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 1800
+     set       DT = 1200
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600

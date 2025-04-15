@@ -1073,7 +1073,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 3600
+     set       DT = 1800
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
@@ -1096,7 +1096,7 @@ if( $AGCM_IM ==  "c12" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 1800
+     set       DT = 1200
      set SOLAR_DT  = `expr $DT \* 2`
      set IRRAD_DT  = `expr $DT \* 2`
      set OCEAN_DT = $IRRAD_DT
