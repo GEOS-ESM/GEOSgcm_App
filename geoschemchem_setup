@@ -374,7 +374,7 @@ if ( $SITE == 'NCCS' ) then
 
       if ($MODEL == 'mil') then
          # We save a couple processes for the kernel
-         set NCPUS_PER_NODE = 126
+         set NCPUS_PER_NODE = 120
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
@@ -635,12 +635,12 @@ else
     # OGCM = FALSE (Data Ocean Resolution)
     # ------------------------------------
     DORSLV:
-    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds) Default"
+    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds)"
     echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)"
     echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
-    echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)"
+    echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA) Default"
     set   HRCODE = `echo $<`
-    if( .$HRCODE == . ) set HRCODE = o1
+    if( .$HRCODE == . ) set HRCODE = cs
     set   HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
 
     if( $HRCODE != 'o1' & \
@@ -866,7 +866,7 @@ if( $AGCM_IM ==  "c90" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 15
+          set  NX = 12
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -892,7 +892,7 @@ if( $AGCM_IM ==  "c180" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 20
+          set  NX = 24
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -1243,10 +1243,10 @@ set HIST_GOCART     = ""
 # --------------
 EMISSIONS:
      set   EMISSIONS = ''
-     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} (Default) or ${C2}OPS${CN}:"
+     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} or ${C2}OPS${CN} (Default):"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = AMIP
+     set   EMISSIONS = OPS
      else
      set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
      if(  $EMISSIONS != OPS & $EMISSIONS != AMIP) then
@@ -1360,7 +1360,7 @@ while( $check == FALSE )
 
   echo "Enter the filename of the ${C1}HISTORY template${CN} to use"
   echo "-----------------------------------------------------------"
-  echo "As ${OCNMODEL} was chosen, the default HISTORY Template is ${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}"
+  echo "The default HISTORY Template is ${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}"
   echo "  1. Hit ENTER to use the default HISTORY template (${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}) or"
   echo "  2. Type the full path of the HISTORY template to use"
 
@@ -2014,6 +2014,9 @@ cat >> $HOMDIR/SETENV.commands << EOF
 
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
+
 EOF
 endif # built on SLES15
 
@@ -2609,6 +2612,7 @@ sed -i 's/BEG_DATE.*/BEG_DATE:     19500101 000000/' $HOMDIR/CAP.rc
 
 if( $RUN_GSI == 1 ) then
    sed -i 's/SkipReplayGCC: 1/SkipReplayGCC: 0/' $EXPDIR/RC/GEOSCHEMchem_GridComp.rc
+   sed -i 's/nspecies: 0/nspecies: 1/'           $EXPDIR/RC/geoschem_analysis.yml
 endif
 
 # Turn on PCHEM
@@ -2631,10 +2635,10 @@ endif
 
 # Turn on TR GridComp
 # -------------------
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
-    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
+   #  /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+   #  cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+   #  awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+   #  /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
 # Update LAND_PARAMS Choices
 # ------------------------------------------------------------------
@@ -2666,6 +2670,11 @@ if( $GOKART == TRUE ) then
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
     /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
+
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_ACHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp    
 else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
