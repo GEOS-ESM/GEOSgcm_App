@@ -866,7 +866,7 @@ if( $AGCM_IM ==  "c90" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 12
+          set  NX = 10
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -892,7 +892,7 @@ if( $AGCM_IM ==  "c180" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 24
+          set  NX = 20
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -1262,13 +1262,13 @@ EMISSIONS:
 
      # Fix up the linkbcs species.data
      # NOTE: If OPS is selected, EMISSIONS is blanked
-     if(  $EMISSIONS == OPS_EMISSIONS ) then
-        set OPS_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 1
-     else
-        set CMIP_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 228
-     endif
+   #   if(  $EMISSIONS == OPS_EMISSIONS ) then
+   #      set OPS_SPECIES = ''
+   #      set PCHEM_CLIM_YEARS = 1
+   #   else
+         set CMIP_SPECIES = ''
+         set PCHEM_CLIM_YEARS = 228
+   #   endif
 
 # AERO Provider
 # -------------
