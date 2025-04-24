@@ -1,10 +1,15 @@
 &fv_core_nml
+ d4_bg_bot = 0.04
+ n_split = 10
+ k_split = 4
+ consv_te = 0.0
+ hydrostatic = .F.
  range_warn = .F.
  fv_debug = .F.
- @FV_SCHMIDT
- @FV_STRETCH_FAC
- @FV_TARGET_LON
- @FV_TARGET_LAT
+ do_schmidt  = .true.
+ stretch_fac = 2.5
+ target_lon  = -98.35
+ target_lat  = 39.5
 /
 
 &main_nml

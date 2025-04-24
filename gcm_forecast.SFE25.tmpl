@@ -1,0 +1,1567 @@
+#!/bin/csh -f
+
+#######################################################################
+#                     Batch Parameters for Run Job
+#######################################################################
+
+#SBATCH --time=12:00:00
+#SBATCH --nodes=&NODES --ntasks-per-node=&TPNODE
+#SBATCH --job-name=&EXPID_FCST_&DATE
+#SBATCH --reservation=geosCAM --qos=geos_xl --constraint=mil --account=s1062
+##SBATCH --partition=scu18 --constraint=mil --account=s1062
+#SBATCH --output=FCSTOUT
+###SBATCH --nice
+
+#######################################################################
+#                         System Settings
+#######################################################################
+
+echo $SLURM_JOBID
+
+umask 022
+
+limit stacksize unlimited
+
+#######################################################################
+#           Architecture Specific Environment Variables
+#######################################################################
+
+setenv ARCH `uname`
+
+setenv SITE             NCCS
+
+setenv GEOSDIR  &GEOSDIR
+setenv GEOSBIN  &GEOSBIN
+setenv GEOSETC  &GEOSETC
+setenv GEOSUTIL &GEOSUTIL
+setenv  SSDDIR  &SSDDIR
+
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+
+module list
+
+setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+
+setenv GCMVER 'GEOSgcm-SFE2025'
+echo   VERSION: $GCMVER
+
+#######################################################################
+#             Experiment Specific Environment Variables
+#######################################################################
+
+setenv  EXPID   &EXPID
+setenv  EXPDIR  &EXPDIR
+setenv  HOMDIR  &HOMDIR
+
+#######################################################################
+#                  Set Forecast Run Parameters
+#######################################################################
+
+set date = `echo &DATE &HOUR`
+set dateF = `echo $date`
+
+set HEARTBEAT = &HEARTBEAT
+set   AGCM_IM = &AGCM_IM
+set   AGCM_JM = &AGCM_JM
+set   AGCM_LM = &AGCM_LM
+set        NX = &NX
+set        NY = &NY
+set     NFMAX = &NFMAX
+set       ANA = &ANA
+
+set     FSEGMENT = &FSEGMENT
+set    FCST_TYPE = &FCST_TYPE
+set    FCST_LABL = &FCST_LABL
+
+if( '&FCST_TYPE' != 'STRAIGHT'      & \
+    '&FCST_TYPE' != 'REPLAY'        & \
+    '&FCST_TYPE' != 'CYCLED_REPLAY' ) then
+     echo "FCST_TYPE must be set to a) STRAIGHT,"
+     echo "                         b) REPLAY, or "
+     echo "                         b) CYCLED_REPLAY"
+     echo "Current Value: "&FCST_TYPE
+     exit
+endif
+
+set STATS_ONLY = &STATS_ONLY
+
+#######################################################################
+#                 Create Forecast Sub-Directory
+#######################################################################
+
+     @  NFCST  = 1
+while( $NFCST <= $NFMAX )
+
+set date0 = $date[1]
+set time0 = $date[2]
+set hour  = `echo $time0 | cut -c1-2`
+set fdate = ${date0}_${hour}z
+
+set fscript = "gcm_CYCLED_REPLAY_forecast_P10800_C21600_T21600.j${date0}_${time0}z"
+setenv   FCSTDIR  $EXPDIR/forecasts/${FCST_TYPE}_${FCST_LABL}_$fdate
+
+set date  = `$GEOSUTIL/post/tick $date0 $time0 -10800`
+set nymd0 = $date[1]
+set nhms0 = $date[2]
+set hour  = `echo $nhms0 | cut -c1-2`
+
+if( $STATS_ONLY != TRUE ) then
+
+setenv    SCRDIR  $FCSTDIR/scratch
+if (! -e $SCRDIR ) then
+  set FCST_STATUS = 'BEGIN'
+  mkdir -p $SCRDIR
+  cd $SCRDIR
+else
+  if (-e done.txt) then
+     echo FCST Finished
+     exit 0
+  endif
+  echo FCST inprogress
+  set FCST_STATUS = 'RESTART'
+  cd $SCRDIR
+  set lastcheckpoint = `ls -1t irrad_internal_checkpoint*`
+  if ($#lastcheckpoint == 9) then
+     echo FCST Finished
+     exit 0
+  endif
+  if ($#lastcheckpoint >= 2) then
+    /bin/mv $ANA*nc4 ${FCSTDIR} 
+    set chkSTRING    = `echo $lastcheckpoint | cut -d. -f2`
+    set chkYYYYMMDD  = `echo $lastcheckpoint | cut -d. -f2 | cut -d_ -f1`
+    set chkHHMM      = `echo $lastcheckpoint | cut -d. -f2 | cut -d_ -f2 | cut -dz -f1`
+    set chkHHMMSS    = "${chkHHMM}00"
+    set nchkpts      = `ls -1 *checkpoint.${chkSTRING}.nc4`
+    if ($#nchkpts > 1) then
+     /bin/rm -rf *rst cap_restart
+     rename checkpoint.${chkSTRING}.nc4 rst *checkpoint.${chkSTRING}.nc4
+     echo $chkYYYYMMDD $chkHHMMSS > cap_restart
+     /bin/ln -s irrad_internal_rst irrad_internal_checkpoint.${chkSTRING}.nc4
+    endif
+    @ NDAYS = 9 - $#lastcheckpoint
+    if ($NDAYS >= 0) then
+      set nday02 = `echo $NDAYS | awk '{printf "%2.2i", $1}'`
+      set FSEGMENT = "000000${nday02}"
+    else
+      echo FCST Finished
+      exit 0
+    endif
+  else
+    set FCST_STATUS = 'BEGIN'
+    /bin/rm -rf *
+  endif
+endif
+echo FSEGMENT: ${FSEGMENT}
+
+##################################################################
+######      Create STRIP Utility for File Modifications
+######           (Removes formatted BLANK spaces)
+##################################################################
+
+set      FILE = strip
+/bin/rm $FILE
+cat << EOF > $FILE
+#!/bin/ksh
+/bin/mv \$1 \$1.tmp
+touch   \$1
+while read line
+do
+echo \$line >> \$1
+done < \$1.tmp
+exit
+EOF
+chmod +x $FILE
+
+if ($FCST_STATUS == 'BEGIN') then
+
+#######################################################################
+#                 Set Model Resolution Parameters
+#######################################################################
+
+set  AGCM_IM  = `grep '^\s*AGCM_IM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
+set  AGCM_JM  = `grep '^\s*AGCM_JM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
+set  AGCM_LM  = `grep '^\s*AGCM_LM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
+set  OGCM_IM  = `grep '^\s*OGCM\.IM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
+set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
+
+# Set ATMOS and OCEAN Horizontal Resolution Tags
+# ----------------------------------------------
+set AGCM_IM_Tag = `echo $AGCM_IM | awk '{printf "%4.4i", $1}'`
+set AGCM_JM_Tag = `echo $AGCM_JM | awk '{printf "%4.4i", $1}'`
+set OGCM_IM_Tag = `echo $OGCM_IM | awk '{printf "%4.4i", $1}'`
+set OGCM_JM_Tag = `echo $OGCM_JM | awk '{printf "%4.4i", $1}'`
+
+set ATMOStag = CF${AGCM_IM_Tag}x6C
+set OCEANtag = DE${OGCM_IM_Tag}xPE${OGCM_JM_Tag}
+
+#######################################################################
+#            Copy and Modify RC Files from Home Directory
+#######################################################################
+
+cp -f  $HOMDIR/RC/* .
+cp     $HOMDIR/linkbcs .
+cp -f  $HOMDIR/*.rc .
+cp -f  $HOMDIR/*.nml .
+cp -f  $HOMDIR/*.yaml .
+cp     $GEOSBIN/bundleParser.py .
+
+#cp -f  $HOMDIR/RC.ww3/mod_def.* .
+#cp -f  $HOMDIR/RC.ww3/ww3*.nml .
+
+# Find regrid weights
+# -------------------
+set IM5 = `echo $AGCM_IM | awk '{printf "%5.5i", $1}'`
+set JM5 = `echo $AGCM_JM | awk '{printf "%5.5i", $1}'`
+set NX5 = `echo $NX      | awk '{printf "%5.5i", $1}'`
+set NY5 = `echo $NY      | awk '{printf "%5.5i", $1}'`
+set RH_WEIGHTS_DIR = "$SSDDIR/RH_WEIGHTS_${IM5}x${JM5}_${NX5}x${NY5}"
+if ( -e $RH_WEIGHTS_DIR ) /bin/ln -s $RH_WEIGHTS_DIR/* .
+
+cat fvcore_layout.rc >> input.nml
+if (-z input.nml) then
+   echo "try cat for input.nml again"
+   cat fvcore_layout.rc >> input.nml
+endif
+if (-z input.nml) then
+   echo "input.nml is zero-length"
+   exit 0
+endif
+
+echo $nymd0 $nhms0 > cap_restart
+set year = `echo $nymd0 | cut -b1-4`
+setenv YEAR $year
+
+set nymd3 = $date0
+set nhms3 = $time0
+set REPLAY_SHUTOFF = 21600
+set nymdR = ${nymd3}
+set yr4 = `echo ${nymd3} | cut -c1-4`
+set mo2 = `echo ${nymd3} | cut -c5-6`
+set hr4 = `echo ${nhms3} | cut -c1-4`
+
+set ANA_EXPID  = `grep '^\s*REPLAY_ANA_EXPID:' $HOMDIR/AGCM.rc | cut -d: -f2`
+echo $ANA_EXPID
+
+if ($ANA_EXPID =~ "era5*") then
+#if ($ANA_EXPID =~ "ec_prs2eta_L*") then
+#set date6 = `$GEOSUTIL/post/tick $date0 $time0 21600`
+#set nymd6 = $date6[1]
+#set nhms6 = $date6[2]
+#set hour6 = `echo $nhms6 | cut -c1-2`
+#set REPLAY_SHUTOFF = 43200
+# echo "${EXPDIR}/ec_prs2eta_L${AGCM_LM}.${fdate}.nc4"
+#if (-e ${EXPDIR}/ec_prs2eta_L${AGCM_LM}.${fdate}.nc4) /bin/ln -s ${EXPDIR}/ec_prs2eta_L${AGCM_LM}.${fdate}.nc4 .
+#set num_ana = `ls -l ec_prs2eta*nc4 | grep -c ec_prs2eta_`
+#if ($num_ana <= 1) then
+#  set hour0 = `echo $time0 | cut -c1-2`
+#  if ($num_ana <= 0) ~wputman/bin/make_ecmwf_ana_eta_dev_hinterp.csh $date0 $time0 $AGCM_LM $hour0
+#  /bin/ls -l *ecmwf*
+#  /bin/ls -l ec_prs2eta_*nc4
+#  /bin/cp ec_prs2eta_*nc4 ${EXPDIR}
+#  if ($num_ana <= 1) ~wputman/bin/make_ecmwf_ana_eta_dev_hinterp.csh $date0 $time0 $AGCM_LM $hour6
+#endif
+#set ANA_TMPL = "ec_prs2eta_L${AGCM_LM}.%y4%m2%d2_%h2z.nc4"
+#set num_ana = `ls -l ec_prs2eta*nc4 | grep -c ec_prs2eta_`
+#if ($num_ana <= 1) then
+#  echo NO ECMWF ANA FILE
+#  exit 0
+#endif
+./strip AGCM.rc
+sed -i -e "s|#ERA5@| |g" AGCM.rc
+
+else
+
+./strip AGCM.rc 
+sed -i -e "s|#FP@| |g" AGCM.rc
+
+set ANA_EXPID  = `grep '^\s*REPLAY_ANA_EXPID:' $HOMDIR/AGCM.rc | cut -d: -f2`
+#GEOS-FP        
+set ANA_LOC   = "/discover/nobackup/projects/gmao/osse2/$ANA_EXPID"
+set ANA_TMPL  = "ana/Y%y4/M%m2/$ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4"
+set ANA_ETA   = "$ANA_LOC/ana/Y${yr4}/M${mo2}/$ANA_EXPID.ana.eta.${nymdR}_${hr4}z.nc4"
+set num_ana   = `ls -l $ANA_ETA | grep -c nc4`
+if ($num_ana <= 0) then
+set fprundir   = `cat /home/dao_ops/$ANA_EXPID/run/.../.FVWORK`
+if (-e $fprundir) then
+  set ANA_LOC   = "$fprundir"
+  set ANA_TMPL  = "$ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4"
+  set ANA_ETA   = "$ANA_LOC/$ANA_EXPID.ana.eta.${nymdR}_${hr4}z.nc4"
+  set num_ana   = `ls -l $ANA_ETA | grep -c nc4`
+else
+  set num_ana   = 0
+endif
+if ($num_ana <= 0) then
+  set ANA_LOC    = "/home/dao_ops/$ANA_EXPID/run/.../"
+  set ANA_TMPL   = "ana/Y%y4/M%m2/$ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4"
+  set ANA_ETA    = "$ANA_LOC/ana/Y${yr4}/M${mo2}/$ANA_EXPID.ana.eta.${nymdR}_${hr4}z.nc4"
+  set num_ana    = `ls -l $ANA_ETA | grep -c nc4`
+endif
+if ($num_ana <= 0) then
+  set ANA_LOC  = "/discover/nobackup/projects/gmao/geos_fp_arch/$ANA_EXPID"
+  set ANA_TMPL = "ana/Y%y4/M%m2/$ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4"
+  set ANA_ETA  = "$ANA_LOC/ana/Y${yr4}/M${mo2}/$ANA_EXPID.ana.eta.${nymdR}_${hr4}z.nc4"
+  set num_ana  = `ls -l $ANA_ETA | grep -c nc4`
+endif
+endif
+echo $ANA_ETA
+# frustrating here why we need to link 
+/bin/ln -s $ANA_LOC/ana .
+if ($num_ana <= 0) then
+  echo NO $ANA_EXPID $ANA_ETA FILE
+  exit 0
+endif
+endif
+./strip AGCM.rc
+sed -i -e "s|@REPLAY_ANA_LOCATION|${ANA_LOC}|g" AGCM.rc
+sed -i -e "s|@REPLAY_ANA_TEMPLATE|${ANA_TMPL}|g" AGCM.rc
+
+# disable GAAS in forecasts
+# --------------------------------------
+/bin/rm GEOS_ChemGridComp.rc
+/bin/cp $EXPDIR/RC/GEOS_ChemGridComp.rc .
+./strip GEOS_ChemGridComp.rc
+set oldstring =  `cat GEOS_ChemGridComp.rc | grep ENABLE_GAAS:`
+set newstring =  "ENABLE_GAAS: .FALSE."
+/bin/mv GEOS_ChemGridComp.rc GEOS_ChemGridComp.tmp
+cat GEOS_ChemGridComp.tmp | sed -e "s?$oldstring?$newstring?g" > GEOS_ChemGridComp.rc
+
+# Set LAYOUT based on gcm_forecast.setup
+# --------------------------------------
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep "^ *NX:"`
+set newstring =  "NX: $NX"
+/bin/mv AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep "^ *NY:"`
+set newstring =  "NY: $NY"
+/bin/mv AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+# Turn Off Final Restarts
+# ------------------------------
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep RECORD_FINAL:`
+set newstring =  "RECORD_FINAL: NO"
+/bin/mv -f AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+# Turn Off Intermediate Restarts
+# ------------------------------
+#./strip AGCM.rc
+#set oldstring =  `cat AGCM.rc | grep _FREQUENCY: | grep -v BKG_FREQUENCY:`
+#set newstring =  "##RECORD_FREQUENCY:"
+#/bin/mv -f AGCM.rc AGCM.tmp
+#cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+#./strip AGCM.rc
+#set oldstring =  `cat AGCM.rc | grep _REF_DATE: | grep -v REPLAY_REF_DATE:`
+#set newstring =  "##RECORD_REF_DATE:"
+#/bin/mv -f AGCM.rc AGCM.tmp
+#cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+#./strip AGCM.rc
+#set oldstring =  `cat AGCM.rc | grep _REF_TIME: | grep -v REPLAY_REF_TIME:`
+#set newstring =  "##RECORD_REF_TIME:"
+#/bin/mv -f AGCM.rc AGCM.tmp
+#cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+# Initialize REPLAY Forecast Options
+# ----------------------------------
+if( $FCST_TYPE == 'REPLAY' | $FCST_TYPE == 'CYCLED_REPLAY' ) then
+
+     set PAIRS = " REPLAY_SHUTOFF:$REPLAY_SHUTOFF     "
+     set PAIRS = `echo $PAIRS`
+
+     foreach PAIR ($PAIRS)
+        set KEYWORD = `echo $PAIR | cut -d: -f1`
+        set VALUE   = `echo $PAIR | cut -d: -f2`
+
+        ./strip AGCM.rc
+        set oldstring =  `cat AGCM.rc | grep ${KEYWORD}: `
+        set newstring =  "${KEYWORD}: $VALUE"
+        /bin/mv -f AGCM.rc AGCM.tmp
+        if( $#oldstring == 0 ) then
+            cat AGCM.tmp     > AGCM.rc
+            echo $newstring >> AGCM.rc
+        else
+            if( `echo $oldstring | wc -l` == 1 ) then
+                 cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+            else
+                 echo ERROR:  Multiple occurrences of ${KEYWORD}:
+                 foreach string ($oldstring)
+                   echo $string
+                 end
+                 exit
+             endif
+        endif
+     end
+
+endif
+
+#######################################################################
+#                 Create Forecast History RC Files
+#######################################################################
+
+/bin/cp /discover/nobackup/projects/gmao/osse2//stage/BCS_FILES/lambert_grid.nc4 .
+
+set         FILE = HISTORY.rc
+/bin/rm -f $FILE
+cat << _EOF_ > $FILE
+
+VERSION: 1
+EXPID:  $ANA
+EXPDSC: ${ANA}_based_on_${EXPID}
+
+file_weights: .true.
+
+COLLECTIONS: 'geosgcm_fcst'
+             'tavg1_2d_flx_Nx'
+             'inst1_2d_asm_Nx'
+             'hwt_15mn_slv_LCC'
+             'hwt_15mn_prs_LCC'
+             'hwt_01hr_slv_LCC'
+             'hwt_01hr_acc_LCC'
+## Stratosphere
+#             'inst_01hr_3d_DTDTMST_Mv'
+#             'inst_01hr_3d_DTDTCNV_Mv'
+#             'tavg_01hr_3d_WU_Mv'
+#             'tavg_01hr_3d_WV_Mv'
+#             'tavg_01hr_3d_W_Mv'
+#             'tavg_01hr_3d_U_Mv'
+#             'tavg_01hr_3d_V_Mv'
+#             'tavg_01hr_3d_H_Mv'
+             ::
+
+GRID_LABELS: PC1152x721-DC
+             PC720x361-DC
+             PC1440x721-DC
+             PC2880x1441-DC
+             PC5760x2881-DC
+             PC11520x5761-DC
+             lambert
+ ::
+
+  lambert.GRID_TYPE: XY
+  lambert.GRIDNAME: lambert_conformal
+  lambert.GRID_FILENAME: lambert_grid.nc4
+  lambert.index_name_x: Xdim
+  lambert.index_name_y: Ydim
+  lambert.var_name_y: lons
+  lambert.var_name_y: lats
+  lambert.IM_WORLD: 1799
+  lambert.JM_WORLD: 1059
+  lambert.LM: 137
+
+  PC720x361-DC.GRID_TYPE: LatLon
+  PC720x361-DC.IM_WORLD: 720
+  PC720x361-DC.JM_WORLD: 361
+  PC720x361-DC.POLE: PC
+  PC720x361-DC.DATELINE: DC
+  PC720x361-DC.LM: 137
+
+  PC1440x721-DC.GRID_TYPE: LatLon
+  PC1440x721-DC.IM_WORLD: 1440
+  PC1440x721-DC.JM_WORLD: 721
+  PC1440x721-DC.POLE: PC
+  PC1440x721-DC.DATELINE: DC
+  PC1440x721-DC.LM: 137
+
+  PC2880x1441-DC.GRID_TYPE: LatLon
+  PC2880x1441-DC.IM_WORLD: 2880
+  PC2880x1441-DC.JM_WORLD: 1441
+  PC2880x1441-DC.POLE: PC
+  PC2880x1441-DC.DATELINE: DC
+  PC2880x1441-DC.LM: 137
+
+  PC5760x2881-DC.GRID_TYPE: LatLon
+  PC5760x2881-DC.IM_WORLD: 5760
+  PC5760x2881-DC.JM_WORLD: 2881
+  PC5760x2881-DC.POLE: PC
+  PC5760x2881-DC.DATELINE: DC
+  PC5760x2881-DC.LM: 137
+
+  PC11520x5761-DC.GRID_TYPE: LatLon
+  PC11520x5761-DC.IM_WORLD: 11520
+  PC11520x5761-DC.JM_WORLD: 5761
+  PC11520x5761-DC.POLE: PC
+  PC11520x5761-DC.DATELINE: DC
+  PC11520x5761-DC.LM: 137
+
+  PC1152x721-DC.GRID_TYPE: LatLon
+  PC1152x721-DC.IM_WORLD: 1152
+  PC1152x721-DC.JM_WORLD: 721
+  PC1152x721-DC.POLE: PC
+  PC1152x721-DC.DATELINE: DC
+  PC1152x721-DC.LM: 137
+
+  hwt_01hr_acc_LCC.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  hwt_01hr_acc_LCC.archive:          '%c/Y%y4' ,
+  hwt_01hr_acc_LCC.format:           'CFIO' ,
+  hwt_01hr_acc_LCC.deflate:           1 ,
+  hwt_01hr_acc_LCC.grid_label:        lambert ,
+  hwt_01hr_acc_LCC.regrid_method:    'BILINEAR_MONOTONIC' ,
+  hwt_01hr_acc_LCC.mode:             'time-averaged' ,
+  hwt_01hr_acc_LCC.frequency:         010000 ,
+  hwt_01hr_acc_LCC.duration:          010000 ,
+  hwt_01hr_acc_LCC.acc_ref_time:      000000 ,
+  hwt_01hr_acc_LCC.acc_interval:      1200000 ,
+  hwt_01hr_acc_LCC.timestampEnd:      .true. ,
+  hwt_01hr_acc_LCC.mode:             'time-averaged' ,
+  hwt_01hr_acc_LCC.fields:           'PRECTOTAL' , 'MOIST' ,  'APCP' , 'ACCUMULATE' ,
+                                     'CN_PRCP'   , 'MOIST' , 'ACPCP' , 'ACCUMULATE' ,
+                                     'LS_PRCP'   , 'MOIST' , 'NCPCP' , 'ACCUMULATE' ,
+                                     'SNOWTOTAL' , 'MOIST'  , 'SNOWACCUM', 'ACCUMULATE'
+                                     'KUCHERA_RATIO' , 'MOIST' ,
+                                     'AREA'      , 'DYN'      ,
+                             ::
+
+  hwt_01hr_slv_LCC.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  hwt_01hr_slv_LCC.archive:          '%c/Y%y4' ,
+  hwt_01hr_slv_LCC.format:           'CFIO' ,
+  hwt_01hr_slv_LCC.deflate:           1 ,
+  hwt_01hr_slv_LCC.grid_label:        lambert ,
+  hwt_01hr_slv_LCC.regrid_method:    'BILINEAR_MONOTONIC' ,
+  hwt_01hr_slv_LCC.mode:             'time-averaged' ,
+  hwt_01hr_slv_LCC.frequency:         010000 ,
+  hwt_01hr_slv_LCC.duration:          010000 ,
+  hwt_01hr_slv_LCC.timestampEnd:      .true. ,
+  hwt_01hr_slv_LCC.fields:           'GUST'      , 'SURFACE'  , 'GUSTMX'             , 'MAX' ,
+                                     'DBZ_1KM'   , 'MOIST'    , 'MXREFD_1KM'         , 'MAX' ,
+                                     'DBZ_M10C'  , 'MOIST'    , 'MXREFD_263K'        , 'MAX' ,
+                                     'UH25'      , 'DYN'      , 'MXUPHL_2-5KM'       , 'MAX' ,
+                                     'UH25'      , 'DYN'      , 'MNUPHL_2-5KM'       , 'MIN' ,
+                                     'UH03'      , 'DYN'      , 'MXUPHL_0-3KM'       , 'MAX' ,
+                                     'UH03'      , 'DYN'      , 'MNUPHL_0-3KM'       , 'MIN' ,
+                                     'WSPD_10M'  , 'DYN'      , 'MXWSPD_10M'         , 'MAX' ,
+                              'VVEL_UP_100_1000' , 'DYN'      , 'VVELUP_100-1000hPa' , 'MAX' ,
+                              'VVEL_DN_100_1000' , 'DYN'      , 'VVELDN_100-1000hPa' , 'MIN' ,
+                                     'PRECTOTAL' , 'MOIST'    ,  'APCP_1H'           , 'ACCUMULATE' ,
+                                     'CN_PRCP'   , 'MOIST'    , 'ACPCP_1H'           , 'ACCUMULATE' ,
+                                     'LS_PRCP'   , 'MOIST'    , 'NCPCP_1H'           , 'ACCUMULATE' ,
+                                     'AREA'      , 'DYN'      ,
+                             ::
+
+  hwt_15mn_prs_LCC.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  hwt_15mn_prs_LCC.archive:          '%c/Y%y4' ,
+  hwt_15mn_prs_LCC.format:           'CFIO' ,
+  hwt_15mn_prs_LCC.deflate:          1,
+  hwt_15mn_prs_LCC.grid_label:       lambert,
+  hwt_15mn_prs_LCC.regrid_method:    'BILINEAR_MONOTONIC' ,
+  hwt_15mn_prs_LCC.mode:             'instantaneous' ,
+  hwt_15mn_prs_LCC.frequency:        001500 ,
+  hwt_15mn_prs_LCC.duration:         001500 ,
+  hwt_15mn_prs_LCC.vscale:           100.0 ,
+  hwt_15mn_prs_LCC.vunit:            'hPa' ,
+  hwt_15mn_prs_LCC.vvars:            'log(PLE)' , 'DYN' ,
+  hwt_15mn_prs_LCC.levels:           1000 925 850 700 500 400 300 250 200 150 100 ,
+  hwt_15mn_prs_LCC.fields:           'U;V'    , 'DYN'        , 'UGRD;VGRD' ,
+                                     'T'      , 'DYN'        , 'TMP'       ,
+                                     'ZLE'    , 'DYN'        , 'HGT'       ,
+                                     'Q'      , 'MOIST'      , 'SPFH'      ,
+                                     'RH2'    , 'MOIST'      , 'RH'        ,
+                                     'QITOT'  , 'AGCM'       , 'QI'  ,
+                                     'QLTOT'  , 'AGCM'       , 'QL'  ,
+                                     'QRTOT'  , 'AGCM'       , 'QR'  ,                          
+                                     'QSTOT'  , 'AGCM'       , 'QS'  ,                       
+                                     'QGTOT'  , 'AGCM'       , 'QG'  ,                   
+                                     'VORT'   , 'DYN'        ,
+                                     'DIVG'   , 'DYN'        ,
+                                     'KH'     , 'TURBULENCE' ,
+                                     'KM'     , 'TURBULENCE' ,
+                                     'CNV_MF0', 'MOIST'      , 'CNVMF0'  ,                      
+                                     'CNV_MFD', 'MOIST'      , 'CNVMFD'  ,               
+                                     'CNV_MFC', 'MOIST'      , 'CNVMFC'  ,        
+                                     'UMF_SC' , 'MOIST'      ,
+                                     'AREA'   , 'DYN'        ,
+                             ::
+
+  hwt_15mn_slv_LCC.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  hwt_15mn_slv_LCC.archive:          '%c/Y%y4' ,
+  hwt_15mn_slv_LCC.format:           'CFIO' ,
+  hwt_15mn_slv_LCC.deflate:          1,
+  hwt_15mn_slv_LCC.grid_label:       lambert,
+  hwt_15mn_slv_LCC.regrid_method:    'BILINEAR_MONOTONIC' ,
+  hwt_15mn_slv_LCC.mode:             'instantaneous' ,
+  hwt_15mn_slv_LCC.frequency:        001500 ,
+  hwt_15mn_slv_LCC.duration:         001500 ,
+  hwt_15mn_slv_LCC.fields: 'PHIS'      , 'AGCM'       , 'HGT_SFC'           ,
+                           'PS'        , 'DYN'        , 'PRES_SFC'          ,
+                           'SLP'       , 'DYN'        , 'PRMSL'             ,
+                           'T2M'       , 'SURFACE'    , 'TMP_2M'            ,
+                           'T2MDEW'    , 'SURFACE'    , 'DPT_2M'            ,
+                           'Q2M'       , 'SURFACE'    , 'SPFH_2M'           ,
+                           'RH2M'      , 'SURFACE'    , 'RH_2M'             ,
+                           'U10M;V10M' , 'SURFACE'    , 'UGRD_10M;VGRD_10M' ,
+                           'TAUTT'     , 'SOLAR'      , 'TCOT'              ,
+                           'TAULO'     , 'SOLAR'      , 'LCOT'              ,
+                           'TAUMD'     , 'SOLAR'      , 'MCOT'              ,
+                           'TAUHI'     , 'SOLAR'      , 'HCOT'              ,
+                           'CLDTT'     , 'SOLAR'      , 'TCDC'              ,
+                           'CLDLO'     , 'SOLAR'      , 'LCDC'              ,
+                           'CLDMD'     , 'SOLAR'      , 'MCDC'              ,
+                           'CLDHI'     , 'SOLAR'      , 'HCDC'              ,
+                           'ZPBL'      , 'TURBULENCE' , 'HPBL'              ,
+                      'REFL10CM_MAX'   , 'MOIST'      ,
+                           'DBZ_MAX'   , 'MOIST'      , 'REFC'              ,
+                           'DBZ_TOP'   , 'MOIST'      , 'RETOP'             ,
+                           'DBZ_1KM'   , 'MOIST'      , 'REFD_1KM'          ,
+                           'DBZ_M10C'  , 'MOIST'      , 'REFD_263K'         ,
+                           'UH25'      , 'DYN'        , 'UPHL_2-5KM'        ,
+                           'UH03'      , 'DYN'        , 'UPHL_0-3KM'        ,
+                           'SRH25'     , 'DYN'        , 'HLCY_2-5KM'        ,
+                           'SRH03'     , 'DYN'        , 'HLCY_0-3KM'        ,
+                           'SRH01'     , 'DYN'        , 'HLCY_0-1KM'        ,
+                           'CAPE'      , 'MOIST'      ,
+                           'INHB'      , 'MOIST'      , 'CIN'               , 
+                           'SBCAPE'    , 'MOIST'      , 'CAPE_SFC'          ,
+                           'SBCIN'     , 'MOIST'      , 'CIN_SFC'           ,
+                           'MLCAPE'    , 'MOIST'      , 'CAPE_90MB'         ,
+                           'MLCIN'     , 'MOIST'      , 'CIN_90MB'          ,
+                           'MUCAPE'    , 'MOIST'      , 'CAPE_255MB'        ,
+                           'MUCIN'     , 'MOIST'      , 'CIN_255MB'         ,
+                           'SLRTP'     , 'SOLAR'      , 'SWTDN'  ,     
+                           'ISRB08RG'  , 'SOLAR'      , 
+                           'ISRB09RG'  , 'SOLAR'      , 
+                           'ISRB10RG'  , 'SOLAR'      , 
+                           'ISRB11RG'  , 'SOLAR'      ,  
+                           'OSRB08RG'  , 'SOLAR'      ,                           
+                           'OSRB09RG'  , 'SOLAR'      ,
+                           'OSRB10RG'  , 'SOLAR'      , 
+                           'OSRB11RG'  , 'SOLAR'      ,
+                           'TBRB05RG'  , 'IRRAD'      ,
+                           'TBRB06RG'  , 'IRRAD'      ,
+                           'TBRB07RG'  , 'IRRAD'      ,
+                           'TBRB08RG'  , 'IRRAD'      ,
+                           'TBRB09RG'  , 'IRRAD'      ,
+                           'TBRB10RG'  , 'IRRAD'      ,
+                           'TBRB11RG'  , 'IRRAD'      ,
+                           'TBRB15RG'  , 'IRRAD'      ,
+                           'TBISCCP'   , 'SATSIM'     ,
+                           'SPEED'     , 'DYN'        ,
+                           'GUST'      , 'SURFACE'    ,
+                           'SNO'       , 'MOIST'      , 'SNOW',
+                           'ICE'       , 'MOIST'      , 'ICE',
+                           'FRZR'      , 'MOIST'      , 'FRZR' ,
+                           'RAIN'      , 'MOIST'      , 'RAIN' ,
+                           'TPREC'     , 'MOIST'      , 'PRECTOT' ,
+                           'CN_PRCP'   , 'MOIST'      , 'PRECCON' ,
+                           'LS_PRCP'   , 'MOIST'      , 'PRECLSC' ,
+                           'TQV'       , 'AGCM'       ,
+                           'TQL'       , 'AGCM'       ,
+                           'TQI'       , 'AGCM'       ,
+                           'TQR'       , 'AGCM'       ,
+                           'TQS'       , 'AGCM'       ,
+                           'TQG'       , 'AGCM'       ,
+                           'AREA'      , 'DYN'        ,
+                                'DUEXTTAU'       , 'DU'   ,
+                                'SSEXTTAU'       , 'SS'   ,
+                                'CA.brEXTTAU'    , 'CA.br'     , 'BREXTTAU'    ,
+                                'CA.bcEXTTAU'    , 'CA.bc'     , 'BCEXTTAU'    ,
+                                'CA.ocEXTTAU'    , 'CA.oc'     , 'OCEXTTAU'    ,
+                                'SUEXTTAU'       , 'SU'   ,
+                                'NIEXTTAU'       , 'NI'  , 
+                           'TAU_EC'    , 'MOIST'      ,
+                           'CNV_FRC'   , 'MOIST'      ,
+                           'EIS'       , 'MOIST'      ,
+                         ::
+
+  geosgcm_fcst.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_fcst.archive:   '%c/Y%y4',
+  geosgcm_fcst.format:    'CFIO',
+  geosgcm_fcst.frequency:  060000,
+  geosgcm_fcst.duration:   060000,
+  geosgcm_fcst.deflate:    1,
+  geosgcm_fcst.regrid_method:    'BILINEAR',
+  geosgcm_fcst.grid_label: PC720x361-DC,
+  geosgcm_fcst.vscale:     100.0,
+  geosgcm_fcst.vunit:     'hPa',
+  geosgcm_fcst.vvars:     'log(PLE)' , 'DYN'          ,
+  geosgcm_fcst.levels:     1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.2 0.1 0.07 0.05 0.04 0.03 0.02 ,
+  geosgcm_fcst.fields:    'PHIS'     , 'AGCM'         ,
+                          'SLP'      , 'DYN'          ,
+                          'DELZ'     , 'DYN'          ,
+                          'W'        , 'DYN'          ,
+                          'U;V'      , 'DYN'          ,
+                          'T'        , 'DYN'          ,
+                          'PS'       , 'DYN'          ,
+                          'TS'       , 'SURFACE'      ,
+                          'ZLE'      , 'DYN'          , 'H'   ,
+                          'OMEGA'    , 'DYN'          ,
+                          'Q'        , 'MOIST'        , 'QV'  ,
+                          'RH2'      , 'MOIST'        , 'RH'  ,
+                          ::
+
+  tavg1_2d_flx_Nx.format:      'CFIO' ,
+  tavg1_2d_flx_Nx.grid_label:   PC5760x2881-DC,
+  tavg1_2d_flx_Nx.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg1_2d_flx_Nx.mode:        'time-averaged' ,
+  tavg1_2d_flx_Nx.frequency:    010000 ,
+  tavg1_2d_flx_Nx.duration:     010000 ,
+  tavg1_2d_flx_Nx.deflate:      1,
+  tavg1_2d_flx_Nx.regrid_method:    'BILINEAR',
+  tavg1_2d_flx_Nx.fields:       'AN_PRCP'      , 'MOIST'    , 'PRECANV' ,
+                                'CN_PRCP'      , 'MOIST'    , 'PRECCON' ,
+                                'LS_PRCP'      , 'MOIST'    , 'PRECLSC' ,
+                                'TPREC'        , 'MOIST'    , 'PRECTOT' ,
+                                'KUCHERA_RATIO' , 'MOIST' ,
+                                'SNOWTOTAL' , 'MOIST'  , 'SNOWACCUM', 'ACCUMULATE'
+                                'PRECTOTAL' , 'MOIST'  , 'PRECACCUM', 'ACCUMULATE'
+                                'SNO'       , 'MOIST'  , 'SNOW' ,
+                                'ICE'       , 'MOIST'  , 'ICE' ,
+                                'FRZR'      , 'MOIST'  , 'FRZR' ,
+                                'RAIN'      , 'MOIST'  , 'RAIN' ,
+                                'SLP'       , 'DYN'    ,
+                          'DBZ_MAX'  , 'MOIST'    ,  'DBZMAX' , 'MAX' ,
+                          'DBZ_TOP'  , 'MOIST'    ,  'DBZTOP' , 'MAX' ,
+                          'DBZ_1KM'  , 'MOIST'    ,  'DBZ1KM' , 'MAX' ,
+                          'DBZ_M10C' , 'MOIST'    , 'DBZM10C' , 'MAX' ,
+                          'UH25'     , 'DYN'      ,  'UH25MX' , 'MAX' ,
+                          'UH03'     , 'DYN'      ,  'UH03MX' , 'MAX' ,
+                          'SRH25'    , 'DYN'      , 'SRH25MX' , 'MAX' ,
+                          'SRH03'    , 'DYN'      , 'SRH03MX' , 'MAX' ,
+                          'SRH01'    , 'DYN'      , 'SRH01MX' , 'MAX' ,
+                                'SPEED'     , 'DYN'    , 'SPEEDMX' , 'MAX' ,
+                                'SFCEM'   , 'IRRAD'    , 'LWGEM'        ,
+                                'LWS'     , 'IRRAD'    , 'LWGAB'        ,
+                                'OLR'     , 'IRRAD'    , 'LWTUP'        ,
+                                'SLRTP'   , 'SOLAR'    , 'SWTDN'        ,
+                                'SLRSF'   , 'SOLAR'    , 'SWGDN'        ,
+                                'RSRS'    , 'SOLAR'    , 'SWGNT'        ,
+                                'RSR'     , 'SOLAR'    , 'SWTNT'        ,
+                                'CLDTMP'  , 'SOLAR'    , 'SWCLDTMP'     ,
+                                'CLDPRS'  , 'SOLAR'    , 'SWCLDPRS'     ,
+                                'PHIS'    , 'AGCM'     ,
+                              ::
+
+  inst1_2d_asm_Nx.format:      'CFIO' ,
+  inst1_2d_asm_Nx.grid_label:   PC5760x2881-DC,
+  inst1_2d_asm_Nx.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  inst1_2d_asm_Nx.mode:        'instantaneous' ,
+  inst1_2d_asm_Nx.frequency:    003000 ,
+  inst1_2d_asm_Nx.duration:     003000 ,
+  inst1_2d_asm_Nx.deflate:      1,
+  inst1_2d_asm_Nx.regrid_method:    'BILINEAR',
+  inst1_2d_asm_Nx.fields:       'SLP'       , 'DYN'      ,
+                           'SLRTP'     , 'SOLAR'      , 'SWTDN'  ,
+                           'ISRB08RG'  , 'SOLAR'      ,
+                           'ISRB09RG'  , 'SOLAR'      ,
+                           'ISRB10RG'  , 'SOLAR'      ,
+                           'ISRB11RG'  , 'SOLAR'      ,                          
+                           'OSRB08RG'  , 'SOLAR'      , 
+                           'OSRB09RG'  , 'SOLAR'      , 
+                           'OSRB10RG'  , 'SOLAR'      , 
+                           'OSRB11RG'  , 'SOLAR'      ,
+                           'TBRB05RG'  , 'IRRAD'      ,
+                           'TBRB06RG'  , 'IRRAD'      ,
+                           'TBRB07RG'  , 'IRRAD'      ,
+                           'TBRB08RG'  , 'IRRAD'      ,
+                           'TBRB09RG'  , 'IRRAD'      ,
+                           'TBRB10RG'  , 'IRRAD'      ,
+                           'TBRB11RG'  , 'IRRAD'      ,
+                           'TBRB15RG'  , 'IRRAD'      ,
+                           'TBISCCP'   , 'SATSIM'     ,
+                           'CAPE'      , 'MOIST'      ,
+                           'DBZ_MAX'   , 'MOIST'      ,
+                           'DBZ_TOP'   , 'MOIST'      ,
+                           'DBZ_1KM'   , 'MOIST'      ,
+                           'DBZ_M10C'  , 'MOIST'      ,
+                           'UH25'      , 'DYN'        ,
+                           'UH03'      , 'DYN'        ,
+                           'SRH25'     , 'DYN'        ,
+                           'SRH03'     , 'DYN'        ,
+                           'SRH01'     , 'DYN'        ,
+                                'SPEED'     , 'DYN'      ,
+                                'U10M;V10M' , 'SURFACE'  ,
+                                'T2M'       , 'SURFACE'  ,
+                                'T2MDEW'    , 'SURFACE'  ,
+                                'H1000'     , 'DYN'      ,
+                                'H500'      , 'DYN'      ,
+                           'TQV'       , 'AGCM'       ,  
+                           'TQL'       , 'AGCM'       ,  
+                           'TQI'       , 'AGCM'       ,  
+                           'TQR'       , 'AGCM'       ,  
+                           'TQS'       , 'AGCM'       ,  
+                           'TQG'       , 'AGCM'       ,  
+                                'SNO'       , 'MOIST'    , 'SNOW' ,
+                                'ICE'       , 'MOIST'    , 'ICE' ,
+                                'FRZR'      , 'MOIST'    , 'FRZR' ,
+                                'RAIN'      , 'MOIST'    , 'RAIN' ,
+                                'PTYPE'     , 'MOIST'    ,
+                                'AN_PRCP'   , 'MOIST'    , 'PRECANV' ,
+                                'CN_PRCP'   , 'MOIST'    , 'PRECCON' ,
+                                'LS_PRCP'   , 'MOIST'    , 'PRECLSC' ,
+                                'U850;V850' , 'DYN'      ,
+                                'U250;V250' , 'DYN'      ,
+                                'VORT200'   , 'DYN'      , 
+                                'VORT500'   , 'DYN'      ,
+                                'VORT700'   , 'DYN'      ,
+                                'VORT850'   , 'DYN'      ,
+                                'DIVG200'   , 'DYN'      , 
+                                'DIVG500'   , 'DYN'      ,
+                                'DIVG700'   , 'DYN'      ,
+                                'DIVG850'   , 'DYN'      ,
+                                'RSR'       , 'SOLAR'    , 'SWTNT'    ,
+                                'OSR'       , 'SOLAR'    , 'SWTUP'    ,
+                                'OLR'       , 'IRRAD'    , 'LWTUP'    ,
+                                'CWP'       , 'MOIST'    ,
+                                'LWP'       , 'MOIST'    ,
+                                'IWP'       , 'MOIST'    ,
+                                'DUEXTTAU'       , 'DU'   ,
+                                'SSEXTTAU'       , 'SS'   ,
+                                'CA.brEXTTAU'    , 'CA.br'     , 'BREXTTAU'    ,
+                                'CA.bcEXTTAU'    , 'CA.bc'     , 'BCEXTTAU'    ,
+                                'CA.ocEXTTAU'    , 'CA.oc'     , 'OCEXTTAU'    ,
+                                'SUEXTTAU'       , 'SU'   ,
+                                'NIEXTTAU'       , 'NI'  , 
+                                'FRACI'     , 'SURFACE'  , 'frseaice'   ,         
+                                'SNOMAS'    , 'SURFACE'  ,  
+                           'TAU_EC'    , 'MOIST'      ,
+                           'CNV_FRC'   , 'MOIST'      ,
+                           'EIS'       , 'MOIST'      ,
+                                ::
+
+  inst_01hr_3d_DTDTMST_Mv.format:      'CFIO' ,
+  inst_01hr_3d_DTDTMST_Mv.descr:       '3d,1-Hourly,instantaneous,Cubed-Sphere on Model-Level,Model,DTDTMST Meteorological Field' ,
+  inst_01hr_3d_DTDTMST_Mv.nbits:       12 ,
+  inst_01hr_3d_DTDTMST_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  inst_01hr_3d_DTDTMST_Mv.mode:        'instantaneous' ,
+  inst_01hr_3d_DTDTMST_Mv.chunksize:   540 540 1 1 1,
+  inst_01hr_3d_DTDTMST_Mv.deflate:     0,  
+  inst_01hr_3d_DTDTMST_Mv.frequency:   010000 ,
+  inst_01hr_3d_DTDTMST_Mv.duration:    010000 ,
+  inst_01hr_3d_DTDTMST_Mv.fields:      'DTDT'    , 'MOIST' , 'DTDTMST'
+                             ::
+              
+  inst_01hr_3d_DTDTCNV_Mv.format:      'CFIO' ,
+  inst_01hr_3d_DTDTCNV_Mv.descr:       '3d,1-Hourly,instantaneous,Cubed-Sphere on Model-Level,Model,DTDTCNV Meteorological Field' ,
+  inst_01hr_3d_DTDTCNV_Mv.nbits:       12 ,
+  inst_01hr_3d_DTDTCNV_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  inst_01hr_3d_DTDTCNV_Mv.mode:        'instantaneous' ,
+  inst_01hr_3d_DTDTCNV_Mv.chunksize:   540 540 1 1 1,
+  inst_01hr_3d_DTDTCNV_Mv.deflate:     0,
+  inst_01hr_3d_DTDTCNV_Mv.frequency:   010000 ,
+  inst_01hr_3d_DTDTCNV_Mv.duration:    010000 ,
+  inst_01hr_3d_DTDTCNV_Mv.fields:      'DTDT_DC'    , 'MOIST'   , 'DTDTCNV' , 
+                             ::
+
+  tavg_01hr_3d_WU_Mv.format:      'CFIO' ,
+  tavg_01hr_3d_WU_Mv.descr:       '3d,1-Hourly,time-averaged,Cubed-Sphere on Model-Level,Model,WU Meteorological Field' ,
+  tavg_01hr_3d_WU_Mv.nbits:       12 ,
+  tavg_01hr_3d_WU_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg_01hr_3d_WU_Mv.mode:        'time-averaged' ,
+  tavg_01hr_3d_WU_Mv.chunksize:   540 540 1 1 1,
+  tavg_01hr_3d_WU_Mv.deflate:     0,
+  tavg_01hr_3d_WU_Mv.frequency:   010000 ,
+  tavg_01hr_3d_WU_Mv.duration:    010000 ,
+  tavg_01hr_3d_WU_Mv.fields:      'W*U'    , 'DYN'   , 'WU' ,
+                             ::
+
+  tavg_01hr_3d_WV_Mv.format:      'CFIO' ,
+  tavg_01hr_3d_WV_Mv.descr:       '3d,1-Hourly,time-averaged,Cubed-Sphere on Model-Level,Model,WV Meteorological Field' ,
+  tavg_01hr_3d_WV_Mv.nbits:       12 ,
+  tavg_01hr_3d_WV_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg_01hr_3d_WV_Mv.mode:        'time-averaged' ,
+  tavg_01hr_3d_WV_Mv.chunksize:   540 540 1 1 1,
+  tavg_01hr_3d_WV_Mv.deflate:     0,
+  tavg_01hr_3d_WV_Mv.frequency:   010000 ,
+  tavg_01hr_3d_WV_Mv.duration:    010000 ,
+  tavg_01hr_3d_WV_Mv.fields:      'W*V'    , 'DYN'   , 'WV' ,
+                             ::
+
+  tavg_01hr_3d_U_Mv.format:      'CFIO' ,
+  tavg_01hr_3d_U_Mv.descr:       '3d,1-Hourly,time-averaged,Cubed-Sphere on Model-Level,Model,U Meteorological Field' ,
+  tavg_01hr_3d_U_Mv.nbits:       12 ,
+  tavg_01hr_3d_U_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg_01hr_3d_U_Mv.mode:        'time-averaged' ,
+  tavg_01hr_3d_U_Mv.chunksize:   540 540 1 1 1,
+  tavg_01hr_3d_U_Mv.deflate:     0,
+  tavg_01hr_3d_U_Mv.frequency:   010000 ,
+  tavg_01hr_3d_U_Mv.duration:    010000 ,
+  tavg_01hr_3d_U_Mv.fields:      'U'    , 'DYN'   , 'U' ,
+                             ::
+
+  tavg_01hr_3d_V_Mv.format:      'CFIO' ,
+  tavg_01hr_3d_V_Mv.descr:       '3d,1-Hourly,time-averaged,Cubed-Sphere on Model-Level,Model,V Meteorological Field' ,
+  tavg_01hr_3d_V_Mv.nbits:       12 ,
+  tavg_01hr_3d_V_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg_01hr_3d_V_Mv.mode:        'time-averaged' ,
+  tavg_01hr_3d_V_Mv.chunksize:   540 540 1 1 1,
+  tavg_01hr_3d_V_Mv.deflate:     0,
+  tavg_01hr_3d_V_Mv.frequency:   010000 ,
+  tavg_01hr_3d_V_Mv.duration:    010000 ,
+  tavg_01hr_3d_V_Mv.fields:      'V'    , 'DYN'   , 'V' ,
+                             ::
+
+  tavg_01hr_3d_W_Mv.format:      'CFIO' ,
+  tavg_01hr_3d_W_Mv.descr:       '3d,1-Hourly,time-averaged,Cubed-Sphere on Model-Level,Model,W Meteorological Field' ,
+  tavg_01hr_3d_W_Mv.nbits:       12 ,
+  tavg_01hr_3d_W_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg_01hr_3d_W_Mv.mode:        'time-averaged' ,
+  tavg_01hr_3d_W_Mv.chunksize:   540 540 1 1 1,
+  tavg_01hr_3d_W_Mv.deflate:     0,
+  tavg_01hr_3d_W_Mv.frequency:   010000 ,
+  tavg_01hr_3d_W_Mv.duration:    010000 ,
+  tavg_01hr_3d_W_Mv.fields:      'W'    , 'DYN'   , 'W' ,
+                             ::
+
+  tavg_01hr_3d_H_Mv.format:      'CFIO' ,
+  tavg_01hr_3d_H_Mv.descr:       '3d,1-Hourly,time-averaged,Cubed-Sphere on Model-Level,Model,H Meteorological Field' ,
+  tavg_01hr_3d_H_Mv.nbits:       12 ,
+  tavg_01hr_3d_H_Mv.template:    '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg_01hr_3d_H_Mv.mode:        'time-averaged' ,
+  tavg_01hr_3d_H_Mv.chunksize:   540 540 1 1 1,
+  tavg_01hr_3d_H_Mv.deflate:     0,  
+  tavg_01hr_3d_H_Mv.frequency:   010000 ,
+  tavg_01hr_3d_H_Mv.duration:    010000 ,
+  tavg_01hr_3d_H_Mv.fields:      'ZL'   , 'DYN'   , 'H' ,
+                             ::
+
+_EOF_
+
+#######################################################################
+#                        Link Boundary Datasets
+#######################################################################
+
+echo $OGCM_IM $OGCM_JM
+set oRES4 = `echo $OGCM_IM | awk '{printf "%4.4i", $1}'`
+@ OGCM_IMx6 = $OGCM_IM * 6
+if ($OGCM_IMx6 == $OGCM_JM) then
+ set CUBE_OCEAN = 1
+else
+ set CUBE_OCEAN = 0
+endif
+if ($CUBE_OCEAN) then
+ set oOceanID = "CS"
+ set oOceanType = "Ostia"
+ set oOceanRes = "CF${oRES4}x6C"
+else
+ set oOceanID = "f"
+ set oOceanType = "Ostia"
+ set oOceanRes = "DE2880xPE1440"
+endif
+
+setenv BCSDIR    /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles/NL3
+setenv BCRSLV    CF2160x6C-SG001_CF2160x6C
+setenv BCTAG `basename $BCSDIR`
+setenv EMISSIONS OPS_EMISSIONS
+chmod +x linkbcs
+
+##############################################################################
+#                    Get Executable and RESTARTS 
+##############################################################################
+
+/bin/cp $GEOSBIN/GEOSgcm.x .
+
+set rst_types = `cat AGCM.rc | grep "RESTART_FILE"    | cut -d ":" -f1 | cut -d "_" -f1-2`
+set chk_types = `cat AGCM.rc | grep "CHECKPOINT_FILE" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set rst_files = `cat AGCM.rc | grep "RESTART_FILE"    | cut -d ":" -f2`
+set chk_files = `cat AGCM.rc | grep "CHECKPOINT_FILE" | cut -d ":" -f2`
+
+# Remove possible bootstrap parameter (+/-)
+# -----------------------------------------
+set dummy = `echo $rst_files`
+set rst_files = ''
+foreach rst ( $dummy )
+  set length  = `echo $rst | awk '{print length($0)}'`
+  set    bit  = `echo $rst | cut -c1`
+  if(  "$bit" == "+" | \
+       "$bit" == "-" ) set rst = `echo $rst | cut -c2-$length`
+  set rst_files = `echo $rst_files $rst`
+end
+
+# Copy Restarts to Scratch Directory
+# ----------------------------------
+     set year  = `echo $nymd0 | cut -c1-4`
+     set month = `echo $nymd0 | cut -c5-6`
+
+if( $FCST_TYPE == 'CYCLED_REPLAY' ) then
+    set edate = e${nymd0}_${hour}z
+    foreach rst ( $rst_files )
+       if (-e $SSDDIR/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4) then
+         echo       $SSDDIR/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4
+         /bin/ln -s $SSDDIR/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4 $rst
+       else
+         echo       $HOMDIR/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4
+         /bin/ln -s $HOMDIR/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4 $rst
+       endif
+    end
+    $GEOSBIN/stripname ${EXPID}.
+    $GEOSBIN/stripname .e${nymd0}_${hour}\*
+endif
+
+if( $FCST_TYPE == 'STRAIGHT' | $FCST_TYPE == 'REPLAY' ) then
+     set ANA_EXPID  = `grep '^\s*REPLAY_ANA_EXPID:' $HOMDIR/AGCM.rc | cut -d: -f2`
+     set ANA_LOCATION  = `grep '^\s*REPLAY_ANA_LOCATION:' $HOMDIR/AGCM.rc | cut -d: -f2`
+     /bin/ln -s $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.rst.${nymd0}_${hour}z.tar  .
+     tar xf $ANA_EXPID.rst.${nymd0}_${hour}z.tar
+         if( -e $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.agcm_import_rst.${nymd0}_${hour}z.bin ) \
+     /bin/cp -f $ANA_LOCATION/rs/Y$year/M$month/$ANA_EXPID.agcm_import_rst.${nymd0}_${hour}z.bin  .
+     $GEOSBIN/stripname $ANA_EXPID.
+     $GEOSBIN/stripname .${nymd0}_${hour}z.bin
+     $GEOSBIN/stripname .${nymd0}_${hour}z.nc4
+# Note: If Radiation Schemes differ, Radiation Restarts may need to be bootstrapped
+# ---------------------------------------------------------------------------------
+#    /bin/rm solar_internal_rst
+#    /bin/rm irrad_internal_rst
+endif
+
+# Re-Create Proper CAP.rc
+# -----------------------
+cp CAP.rc CAP.rc.orig
+awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
+
+# Re-Create Proper CAP.rc
+# -----------------------
+set oldstring =  `grep JOB_SGMT: CAP.rc`
+set newstring =  "JOB_SGMT: $FSEGMENT 030000"
+/bin/mv CAP.rc CAP.tmp
+cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+
+set oldstring =  `cat CAP.rc | grep HEARTBEAT_DT:`
+set newstring =  "HEARTBEAT_DT: $HEARTBEAT"
+/bin/mv CAP.rc CAP.tmp
+cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+
+# Set Time Variables for Current_(c), Ending_(e), and Segment_(s) dates
+# ---------------------------------------------------------------------
+set nymdc = `awk '{print $1}' cap_restart`
+set nhmsc = `awk '{print $2}' cap_restart`
+set nymde = `grep '^\s*END_DATE:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
+set nhmse = `grep '^\s*END_DATE:' CAP.rc | cut -d: -f2 | awk '{print $2}'`
+set nymds = `grep '^\s*JOB_SGMT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
+set nhmss = `grep '^\s*JOB_SGMT:' CAP.rc | cut -d: -f2 | awk '{print $2}'`
+
+# Compute Time Variables at the Finish_(f) of current segment
+# -----------------------------------------------------------
+set nyear   = `echo $nymds | cut -c1-4`
+set nmonth  = `echo $nymds | cut -c5-6`
+set nday    = `echo $nymds | cut -c7-8`
+set nhour   = `echo $nhmss | cut -c1-2`
+set nminute = `echo $nhmss | cut -c3-4`
+set nsec    = `echo $nhmss | cut -c5-6`
+       @ dt = $nsec + 60 * $nminute + 3600 * $nhour + 86400 * $nday
+
+set nymdf = $nymdc
+set nhmsf = $nhmsc
+set date  = `$GEOSBIN/tick $nymdf $nhmsf $dt`
+set nymdf =  $date[1]
+set nhmsf =  $date[2]
+set year  = `echo $nymdf | cut -c1-4`
+set month = `echo $nymdf | cut -c5-6`
+set day   = `echo $nymdf | cut -c7-8`
+
+     @  month = $month + $nmonth
+while( $month > 12 )
+     @  month = $month - 12
+     @  year  = $year  + 1
+end
+     @  year  = $year  + $nyear
+     @ nymdf  = $year * 10000 + $month * 100 + $day
+
+if( $nymdf >  $nymde )    set nymdf = $nymde
+if( $nymdf == $nymde )    then
+    if( $nhmsf > $nhmse ) set nhmsf = $nhmse
+endif
+
+set yearc = `echo $nymdc | cut -c1-4`
+set yearf = `echo $nymdf | cut -c1-4`
+
+# Which ExtData are we using
+set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.' CAP.rc | wc -l`
+
+# Select proper AMIP GOCART Emission RC Files
+# -------------------------------------------
+if( ${EMISSIONS} == AMIP_EMISSIONS) then
+    if( $EXTDATA2G_TRUE == 0 ) then
+    set AMIP_Transition_Date = 20000301
+
+       # Before 2000-03-01, we need to use AMIP.20C which has different
+       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
+       # that if you make a change to anything in $EXPDIR/RC/AMIP or
+       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
+       # directory to be consistent. Some files in AMIP.20C are symlinks to
+       # that in AMIP but others are not.
+
+       if( $nymdc < ${AMIP_Transition_Date} ) then
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
+            if( $nymdf > ${AMIP_Transition_Date} ) then
+             set nymdf = ${AMIP_Transition_Date}
+             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
+             set newstring = "END_DATE: $nymdf $nhmsf"
+             /bin/mv CAP.rc CAP.tmp
+                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+            endif
+       else
+            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+       endif
+    else
+       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
+    endif
+
+    if( $AGCM_LM == 72 ) then
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.yaml .
+    else
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
+        foreach file ($files)
+          /bin/rm -f `basename $file`
+          /bin/rm -f dummy
+          cp $file dummy
+          cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > `basename $file`
+        end
+    endif
+
+endif
+
+if( $AGCM_LM  != 72 ) then
+    set files = `/bin/ls  *.yaml`
+    foreach file ($files)
+      cp $file dummy
+      cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
+    end
+endif
+
+# Rename big ExtData files that are not needed
+# --------------------------------------------
+set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
+if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
+set           GMI_TRUE = `grep -i '^\s*ENABLE_GMICHEM:\s*\.TRUE\.'       GEOS_ChemGridComp.rc | wc -l`
+if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
+set           GCC_TRUE = `grep -i '^\s*ENABLE_GEOSCHEM:\s*\.TRUE\.'      GEOS_ChemGridComp.rc | wc -l`
+if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
+set         CARMA_TRUE = `grep -i '^\s*ENABLE_CARMA:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
+if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
+set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
+if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
+set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
+if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
+
+# 1MOM and GFDL microphysics do not use WSUB_CLIM
+# -------------------------------------------------
+if ($EXTDATA2G_TRUE == 0 ) then
+   /bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   cat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+else
+   /bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+endif
+/bin/rm WSUB_ExtData.tmp
+
+# Generate the complete ExtData.rc
+# --------------------------------
+if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
+set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+
+# Switch to MODIS v6.1 data after Nov 2021
+if( $EXTDATA2G_TRUE == 0 ) then
+   set MODIS_Transition_Date = 20211101
+   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
+       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
+   else
+   cat $extdata_files > ExtData.rc
+   endif
+endif
+
+if( $EXTDATA2G_TRUE == 1 ) then
+
+  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
+  touch ExtData.rc
+
+endif
+
+# Move GOCART to use RRTMGP Bands
+# -------------------------------
+# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
+#
+#set instance_files = `/bin/ls -1 *_instance*.rc`
+#foreach instance ($instance_files)
+#   /bin/mv $instance $instance.tmp
+#   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+#   /bin/rm $instance.tmp
+#end
+
+#######################################################################
+#                 Create Binary Tile File from ASCII
+#######################################################################
+
+# Link Boundary Conditions for Appropriate Date
+# ---------------------------------------------
+set year = `echo $date0 | cut -b1-4`
+setenv YEAR $year
+./linkbcs
+
+# forecast specific optimizations
+#sed -i -e "s|FV3|FV3+ADV|g" AGCM.rc
+#sed -i -e "s|#FCST_||g" AGCM.rc
+
+if (! -e tile.bin) then
+$GEOSBIN/binarytile.x tile.data tile.bin
+endif
+
+else #FCST BEGIN
+
+# turn off replay for continuing forecasts
+./strip AGCM.rc
+set oldstring =  `cat AGCM.rc | grep "REPLAY_MODE: Regular"`
+set newstring =  "#REPLAY_MODE: Regular"
+/bin/mv -f AGCM.rc AGCM.tmp
+cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+
+endif #FCST Restart
+
+# Re-Create Proper CAP.rc
+# -----------------------
+./strip CAP.rc
+set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
+set newstring =  "JOB_SGMT: $FSEGMENT 030000"
+/bin/mv CAP.rc CAP.tmp
+cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
+
+#######################################################################
+#                Split Saltwater Restart if detected
+#######################################################################
+
+if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
+  echo "Saltwater internal state is already split, good to go!"
+else
+ if ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) then
+
+   echo "Found Saltwater internal state. Splitting..."
+
+   # If saltwater_internal_rst is in EXPDIR move to SCRDIR
+   # -----------------------------------------------------
+   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/mv $EXPDIR/saltwater_internal_rst $SCRDIR
+
+   # The splitter script requires an OutData directory
+   # -------------------------------------------------
+   if (! -d OutData ) mkdir -p OutData
+
+   # Run the script
+   # --------------
+   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+
+   # Move restarts
+   # -------------
+   /bin/mv OutData/openwater_internal_rst OutData/seaicethermo_internal_rst .
+
+   # Remove OutData
+   # --------------
+   /bin/rmdir OutData
+
+   # Make decorated copies for restarts tarball
+   # ------------------------------------------
+   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+
+   # Inject decorated copies into restarts tarball
+   # ---------------------------------------------
+   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+
+   # Remove the decorated restarts
+   # -----------------------------
+   /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+
+   # Remove the saltwater internal restart
+   # -------------------------------------
+   /bin/rm $SCRDIR/saltwater_internal_rst
+ else
+   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
+   exit 6
+ endif
+endif
+
+# Get proper ridge scheme GWD internal restart
+# --------------------------------------------
+if (-e /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE/gwd_internal_c${AGCM_IM}) then
+  echo "Found gwd_internal_c${AGCM_IM}. Copying to scratch directory"
+  /bin/rm gwd_internal_rst
+  /bin/cp /discover/nobackup/projects/gmao/osse2/stage/BCS_FILES/GWD_RIDGE/gwd_internal_c${AGCM_IM} gwd_internal_rst
+else
+  echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+  # Now, if the user has already set an NCAR_NRDG value, we need to
+  # change it to 0. If they haven't set it, we need to add it to the
+  # AGCM.rc file.
+  if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+    echo "NCAR_NRDG: 0" >> AGCM.rc
+  else
+    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+  endif
+endif
+
+# Set OMP_NUM_THREADS
+# -------------------
+setenv OMP_NUM_THREADS &THRDS
+if ($OMP_NUM_THREADS > 1) then
+#@ OMP_STACK = 64 / $OMP_NUM_THREADS
+# setenv OMP_STACKSIZE ${OMP_STACK}M
+  setenv OMP_STACKSIZE 16M
+  setenv KMP_AFFINITY compact
+  echo OMP_STACKSIZE    $OMP_STACKSIZE
+  echo KMP_AFFINITY     $KMP_AFFINITY
+endif
+echo OMP_NUM_THREADS $OMP_NUM_THREADS
+
+~/bin/strip GWD_GridComp.rc
+if (${OMP_NUM_THREADS} > 1) then
+  sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
+endif
+
+setenv I_MPI_FABRICS shm:ofi
+setenv I_MPI_OFI_PROVIDER psm3
+setenv I_MPI_ADJUST_ALLREDUCE 11
+setenv I_MPI_ADJUST_REDUCE 9
+setenv I_MPI_ADJUST_BARRIER 8
+env | grep 'I_MPI\|FI_'
+
+# Check for MERRA2OX Consistency
+# ------------------------------
+
+# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# attempt at a check to make sure you aren't using it and are past the date
+
+# Check for MERRA2OX by looking at AGCM.rc
+set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
+
+# If it is 39, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 39 ) then
+
+   # Grab the date from cap_restart
+   set YEARMON = `cat cap_restart | cut -c1-6`
+
+   # Set a magic date
+   set MERRA2OX_END_DATE = "201706"
+
+   # String comparison seems to work here...
+   if ( $YEARMON > $MERRA2OX_END_DATE ) then
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      exit 2
+   endif
+endif
+
+##################################################################
+######
+######          Perform REPLAY Forecast of Model Run
+######
+##################################################################
+
+# Run bundleParser.py
+#---------------------
+python bundleParser.py
+
+# If REPLAY, link necessary forcing files
+# ---------------------------------------
+set  REPLAY_MODE = `grep '^\s*REPLAY_MODE:' AGCM.rc | cut -d: -f2`
+if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
+
+     set ANA_EXPID    = `grep '^\s*REPLAY_ANA_EXPID:'    AGCM.rc | cut -d: -f2`
+     set ANA_LOCATION = `grep '^\s*REPLAY_ANA_LOCATION:' AGCM.rc | cut -d: -f2`
+
+     set REPLAY_FILE        = `grep '^\s*REPLAY_FILE:'   AGCM.rc | cut -d: -f2`
+     set REPLAY_FILE09      = `grep '^\s*REPLAY_FILE09:' AGCM.rc | cut -d: -f2`
+     set REPLAY_FILE_TYPE   = `echo $REPLAY_FILE           | cut -d"/" -f1 | grep -v %`
+     set REPLAY_FILE09_TYPE = `echo $REPLAY_FILE09         | cut -d"/" -f1 | grep -v %`
+
+     # Disable GAAS and Link REPLAY files
+     # ---------------------------------------------
+     /bin/mv -f GEOS_ChemGridComp.rc GEOS_ChemGridComp.rc.tmp
+     cat GEOS_ChemGridComp.rc.tmp | sed "s?ENABLE_GAAS:.*?ENABLE_GAAS:        .FALSE.?g" > GEOS_ChemGridComp.rc
+
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
+     /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
+
+endif
+
+# Split off IO Nodes
+# ------------------------------------------
+set IOS_NODES = `grep IOSERVER_NODES: $HOMDIR/AGCM.rc | cut -d':' -f2`
+set NUM_BACKEND_PES = `grep NUM_BACKEND_PES: $HOMDIR/AGCM.rc | cut -d':' -f2`
+if ($IOS_NODES > 0) then
+   set USE_IOSERVER = 1
+else
+   set USE_IOSERVER = 0
+endif
+@     MODEL_NPES = $NX * $NY
+@ CORES_PER_NODE = $SLURM_NTASKS_PER_NODE
+set        NODES = `echo "$MODEL_NPES $CORES_PER_NODE" | awk '{print int( ($1/$2) + 0.5 )}'`
+@        IONODES = $IOS_NODES
+@           NPES = $MODEL_NPES + $IONODES * $CORES_PER_NODE
+
+# Run GEOSgcm.x
+# -------------
+set USE_SHMEM = `grep USE_SHMEM: $HOMDIR/CAP.rc  | cut -d':' -f2`
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
+#   $RUN_CMD $NPES ./GEOSgcm.x --npes_model $MODEL_NPES --nodes_output_server 1 1 2 2 --logging_config 'logging.yaml'
+echo "USE_IOSERVER: $USE_IOSERVER"
+if( $USE_IOSERVER == 1 ) then
+   set IOSERVER_OPTIONS = "--npes_model $MODEL_NPES --nodes_output_server $IOS_NODES"
+   set IOSERVER_EXTRA   = "--oserver_type multigroup --npes_backend_pernode $NUM_BACKEND_PES"
+else
+   set IOSERVER_OPTIONS = ""
+   set IOSERVER_EXTRA = ""
+endif
+echo "$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'"
+      $RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
+
+#######################################################################
+#               Move HISTORY Files to Holding Directory
+#######################################################################
+
+@ start_time = `date +%s`
+
+set collections = ''
+foreach line ("`cat HISTORY.rc`")
+   set firstword  = `echo $line | awk '{print $1}'`
+   set firstchar  = `echo $firstword | cut -c1`
+   set secondword = `echo $line | awk '{print $2}'`
+   if ( $firstword == "::" ) goto done
+   if ( $firstchar != "#" ) then
+      set collection  = `echo $firstword | sed -e "s/'//g"`
+      set collections = `echo $collections $collection`
+      if ( $secondword == :: ) goto done
+   endif
+   if ( $firstword == COLLECTIONS: ) then
+      set collections = `echo $secondword | sed -e "s/'//g"`
+   endif
+end
+done:
+foreach collection ( $collections )
+  /bin/mv `/bin/ls -1 *.${collection}.*` $FCSTDIR
+end
+
+@ end_time = `date +%s`
+@ diff = $end_time - $start_time
+echo "It took $diff seconds to mov forecast HISTORY data"
+
+if( -e EGRESS ) then
+   set rc = 0
+   echo GEOSgcm Run Status: $rc
+  # Run EIC plots
+   set dateEIC = $dateF[1]
+   set hhmmEIC = `echo $dateF[2] | cut -b1-4`
+   set   hhEIC = `echo $dateF[2] | cut -b1-2`
+   cd /discover/nobackup/projects/gmao/osse2/IDL_FP 
+   ./eic_forecasts.j $EXPID $dateEIC $hhEIC
+  # get back to scratch dir
+   cd $SCRDIR
+else
+   set rc = -1
+   echo GEOSgcm Run Status: $rc
+   cd $FCSTDIR
+   sbatch $fscript
+   exit 0
+endif 
+
+#######################################################################
+#                               Create STATS
+#######################################################################
+
+endif  # End STATS_ONLY Test
+
+
+@ nMAX = &FSEGMENT
+@ fHOURS = 24 * &FSEGMENT
+@ nSECS = -60 * 60 * ($fHOURS + 24)
+set date0  =  $dateF[1]
+set time0  =  $dateF[2]
+set date0  = `$GEOSUTIL/post/tick $date0 $time0 $nSECS`
+set nymd   =  $date0[1]
+set hhmmss =  $date0[2]
+set yyyymm = `echo $nymd | cut -b1-6`
+set year0  = `echo $nymd | cut -b1-4`
+set month0 = `echo $nymd | cut -b5-6`
+
+set statsdir = $EXPDIR/forecasts/${FCST_TYPE}_${FCST_LABL}_${ANA}.stats.$yyyymm
+mkdir -p $statsdir
+cd       $statsdir
+
+set hour  = `echo $time0 | cut -c1-2`
+set fdate = "${nymd}_${hour}z"
+setenv FCSTDIR $EXPDIR/forecasts/${FCST_TYPE}_${FCST_LABL}_$fdate
+
+set year0      = `echo $nymd | cut -b1-4`
+set month0     = `echo $nymd | cut -b5-6`
+set fcst_files = `/bin/ls -1 $FCSTDIR/${ANA}*geosgcm_fcst*nc4`
+echo "$FCSTDIR/${ANA}*geosgcm_fcst*nc4"
+
+@ nPROGS = $#fcst_files
+set anal_files = ''
+@ n = 1
+while ($n <= $nPROGS)
+set year  = `echo $nymd | cut -b1-4`
+set month = `echo $nymd | cut -b5-6`
+set hour  = `echo $hhmmss | cut -c1-2`
+# REPLAY Verification
+# ---------------------
+#if( $VERIFY == 'SELF' ) then
+     set next = `/bin/ls -1 $EXPDIR/holding/geosgcm_prog/${year}*/$EXPID.geosgcm_prog.${nymd}_${hour}*nc4`
+#endif
+#if( $VERIFY == 'GEOS-FP' ) then
+#     set next = `/bin/ls -1 /discover/nobackup/projects/gmao/geos_fp_arch/f5295_fp/ana/Y$year/M$month/f5295_fp.asm.inst3d_met_p.${nymd}_${hour}*nc4`
+#endif
+#if( $VERIFY == 'ERA5' ) then
+#     set next = `/bin/ls -1 /discover/nobackup/projects/gmao/geos_itv/sdrabenh/valdat/era5/pres_levels_daily/Y$year/M$month/era5_pl-allvar.${nymd}_${hour}*nc4`
+#endif
+set anal_files = `echo $anal_files $next`
+set date   = `$GEOSUTIL/post/tick $nymd $hhmmss 21600`
+set nymd   =  $date[1]
+set hhmmss =  $date[2]
+@ n = $n + 1
+end
+
+# Set Climatology
+# ------------
+set  CLIM_SRC = 'MERRA2'
+if ( "$CLIM_SRC" == 'ERA5' ) then
+   set clim_files = `/bin/ls -1 /discover/nobackup/projects/gmao/geos_itv/sdrabenh/valdat/era5/clim_data/era5_mnth.mrg1_avg.1440x0721.Y1985-2014.T[01][0268]z.nc4`
+   set levs_clim  = `echo 1000 975 950 925 900 875 850 825 800 775 750 700 650 600 550 500 450 400 350 300 250 225 200 175 150 125 100 70 50 30 20 10 7 5 3 2 1`
+else
+   set clim_files = `/bin/ls -1 $SHARE/gmao_ops/verification/stats/MERRA-2.inst3_3d_asm_Np.198501_201412.clim_[01][0268]z.576x361.data.nc4`
+   set levs_clim  = `echo 1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1`
+endif
+
+echo $fcst_files
+
+echo $anal_files
+
+if ( ($#anal_files >= ${nPROGS}) && ($#fcst_files > 0) ) then
+cat > stats_${CLIM_SRC}-${fdate}.j << EOF
+#!/bin/csh -f
+#SBATCH --time=03:00:00
+#SBATCH --nodes=1
+#SBATCH -p geosgms --constraint=mil --account=s1062
+#SBATCH --job-name=${ANA}.stats.${CLIM_SRC}.$fdate
+#SBATCH --output=${FCSTDIR}_STATS_${CLIM_SRC}.o%j
+#SBATCH --no-requeue
+setenv GEOSDIR  &GEOSDIR
+setenv GEOSBIN  &GEOSBIN
+setenv GEOSETC  &GEOSETC
+setenv GEOSUTIL &GEOSUTIL
+source $GEOSBIN/g5_modules
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+cd $statsdir
+$GEOSUTIL/bin/stats.x -fcst $fcst_files -ana $anal_files -cli $clim_files -rc $GEOSUTIL/post/stats.rc \
+                                 -levs $levs_clim -tag $EXPID -nfreq 060000 -fhour $fHOURS
+exit 0
+EOF
+chmod u+x stats_${CLIM_SRC}-${fdate}.j
+./stats_${CLIM_SRC}-${fdate}.j | tee stats_${CLIM_SRC}-${fdate}.log  
+
+endif
+
+echo Done >> done.txt
+/bin/rm -rf *checkpoint*.nc4 *rst
+exit 0
+
+#######################################################################
+#                         Update Forecast Counter
+#######################################################################
+
+/bin/rm  -r $SCRDIR
+chmod --recursive -w ${FCSTDIR}
+ @ NFCST  = $NFCST + 1
+set date  = `$GEOSUTIL/post/tick $date0 $time0 86400`
+end

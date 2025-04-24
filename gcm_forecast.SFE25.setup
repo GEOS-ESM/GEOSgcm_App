@@ -1,0 +1,168 @@
+#!/bin/csh -f
+
+#######################################################################
+#             Experiment Specific Environment Variables
+#######################################################################
+
+setenv  ARCH   `uname`
+setenv  SITE    NCCS
+
+set ENV_EXPID  = `grep -E 'setenv\s+EXPID'  ../gcm_run.j`
+set ENV_EXPDIR = `grep -E 'setenv\s+EXPDIR' ../gcm_run.j`
+set ENV_HOMDIR = `grep -E 'setenv\s+HOMDIR' ../gcm_run.j`
+set ENV_SSDDIR = `grep -E 'setenv\s+SSDDIR' ../gcm_run.j`
+
+setenv  EXPID   $ENV_EXPID[3]
+setenv  EXPDIR  $ENV_EXPDIR[3]
+setenv  HOMDIR  $ENV_HOMDIR[3]
+setenv  SSDDIR  $ENV_SSDDIR[3]
+
+#######################################################################
+#                       Parameters for Forecasts
+#
+#   FCST_TYPE: exact
+#              Forecast using archived 21z Restarts.
+#              Perform EXACT REPLAY for 6-hours to archived AGCM_IMPORT files.
+#
+#   FCST_TYPE: regular
+#              Forecast using archived 21z Restarts.
+#              Perform REGULAR REPLAY for 6-hours to archived ANA.ETA files
+#
+#   FCST_TYPE: cycled
+#              Identical to FCST_TYPE: regular, except that a single 21z Restart
+#              is used to generate the first forecast.  All other forecasts are
+#              created by cycling restarts in conjunction with performing a
+#              REGULAR REPLAY to archived ANA.ETA files.
+#
+#######################################################################
+
+set    BDATE = $1
+set    FHOUR = $2
+set FSEGMENT = `echo $3 | bc | xargs printf "%08i"`
+set     QSUB = $4
+set STATS_ONLY = $5
+
+if( .$QSUB == . ) set QSUB = FALSE
+if( .$STATS_ONLY == . ) set STATS_ONLY = FALSE
+
+setenv GEOSDIR  /discover/nobackup/projects/gmao/osse2/GIT/GEOS-LM_v12-rc8/GEOSgcm/install-Aggressive-SLES15
+setenv GEOSBIN  /discover/nobackup/projects/gmao/osse2/GIT/GEOS-LM_v12-rc8/GEOSgcm/install-Aggressive-SLES15/bin
+setenv GEOSETC  /discover/nobackup/projects/gmao/osse2/GIT/GEOS-LM_v12-rc8/GEOSgcm/install-Aggressive-SLES15/etc
+setenv GEOSUTIL /discover/nobackup/projects/gmao/osse2/GIT/GEOS-LM_v12-rc8/GEOSgcm/install-Aggressive-SLES15
+
+set       NX  = `grep      "^ *NX:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set       NY  = `grep      "^ *NY:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+#set       NX  = 60
+#set       NY  = 720
+set  AGCM_IM  = `grep      "AGCM_IM:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  AGCM_JM  = `grep      "AGCM_JM:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set  AGCM_LM  = `grep      "AGCM_LM:" $HOMDIR/AGCM.rc | cut -d':' -f2`
+set CORES_PER_NODE = `grep ntasks-per-node $HOMDIR/gcm_run.j | cut -d'=' -f3`
+#set CORES_PER_NODE = 120
+set OMP_THREADS = `grep 'setenv OMP_NUM_THREADS' $HOMDIR/gcm_run.j | cut -d' ' -f3`
+set IONODES = `grep IOSERVER_NODES: $HOMDIR/AGCM.rc | cut -d':' -f2`
+set HEARTBEAT = `grep HEARTBEAT_DT: $HOMDIR/CAP.rc | cut -d':' -f2`
+set       ANA = GEOS
+set     NFMAX = 1
+
+if ($STATS_ONLY == 'TRUE') then
+ set      NX = 1
+ set      NY = 1
+ set IONODES = 0
+ set EXP_TYPE = 'stats'
+else
+ set EXP_TYPE = 'forecast'
+endif
+
+set FCST_TYPE = CYCLED_REPLAY
+set PREDICTOR_DURATION = 10800
+set CORRECTOR_DURATION = 21600
+set IAU_DIGITAL_FILTER = YES
+set      REPLAY_BKGAVE = 0
+set       REPLAY_NUDGE = NO
+set             TAUANL = 21600
+
+if( $REPLAY_NUDGE == 'NO'  ) set FCST_LABL = P${PREDICTOR_DURATION}_C${CORRECTOR_DURATION}_T${TAUANL}
+if( $REPLAY_NUDGE == 'YES' ) set FCST_LABL = NUDGE_C${CORRECTOR_DURATION}_T${TAUANL}
+
+#######################################################################
+#                   Create Forecast SubScripts
+#######################################################################
+
+
+@     MODEL_NPES = $NX * $NY
+@          NODES = `echo "($MODEL_NPES + $CORES_PER_NODE - 1)/$CORES_PER_NODE" | bc`
+@          NODES = $NODES + $IONODES
+@           NPES = $MODEL_NPES + $IONODES * $CORES_PER_NODE
+echo $MODEL_NPES $CORES_PER_NODE $NODES
+
+     @ count  = 0
+set     date  = $BDATE
+while( $date <= $BDATE )
+
+@ NF = 1
+set     test  = $date
+while( $test <= $BDATE & $NF <= $NFMAX )
+echo $GEOSUTIL/post/tick $test 000000 86400
+set nymd = `$GEOSUTIL/post/tick $test 000000 86400`
+set test = $nymd[1]
+@ NF = $NF + 1
+end
+
+@ NF = $NF - 1
+@ count = $count + 1
+echo $date $NF
+/bin/rm -f gcm_${FCST_TYPE}_${EXP_TYPE}_${FCST_LABL}.j${date}_${FHOUR}z
+/bin/rm -f $EXPDIR/forecasts/sedfile
+/bin/rm -f $EXPDIR/forecasts/gcm_forecast.tmp
+/bin/cp -f $EXPDIR/forecasts/gcm_forecast.tmpl $EXPDIR/forecasts/gcm_forecast.tmp
+cat >$EXPDIR/forecasts/sedfile << EOF
+s?&EXPID?$EXPID?g
+s?&EXPDIR?$EXPDIR?g
+s?&HOMDIR?$HOMDIR?g
+s?&SSDDIR?$SSDDIR?g
+s?&GEOSDIR?$GEOSDIR?g
+s?&GEOSBIN?$GEOSBIN?g
+s?&GEOSETC?$GEOSETC?g
+s?&GEOSUTIL?$GEOSUTIL?g
+s?&NPES?$NPES?g
+s?&NODES?$NODES?g
+s?&TPNODE?$CORES_PER_NODE?g
+s?&THRDS?$OMP_THREADS?g
+s?&DATE?$date?g
+s?&HOUR?$FHOUR?g
+s?&AGCM_IM?$AGCM_IM?g
+s?&AGCM_JM?$AGCM_JM?g
+s?&AGCM_LM?$AGCM_LM?g
+s?&STATS_ONLY?$STATS_ONLY?g
+s?&NX?$NX?g
+s?&NY?$NY?g
+s?&HEARTBEAT?$HEARTBEAT?g
+s?&NFMAX?$NF?g
+s?&FCST_TYPE?$FCST_TYPE?g
+s?&FCST_LABL?$FCST_LABL?g
+s?&FSEGMENT?$FSEGMENT?g
+s?&PREDICTOR_DURATION?$PREDICTOR_DURATION?g
+s?&CORRECTOR_DURATION?$CORRECTOR_DURATION?g
+s?&IAU_DIGITAL_FILTER?$IAU_DIGITAL_FILTER?g
+s?&REPLAY_BKGAVE?$REPLAY_BKGAVE?g
+s?&REPLAY_NUDGE?$REPLAY_NUDGE?g
+s?&TAUANL?$TAUANL?g
+s?FCSTOUT?$EXPDIR/forecasts/gcm_${FCST_TYPE}_${EXP_TYPE}_${FCST_LABL}.o${date}_${FHOUR}z?g
+s?&ANA?$ANA?g
+EOF
+ sed -f $EXPDIR/forecasts/sedfile $EXPDIR/forecasts/gcm_forecast.tmp > $EXPDIR/forecasts/gcm_${FCST_TYPE}_${EXP_TYPE}_${FCST_LABL}.j${date}_${FHOUR}z
+ if( $QSUB != 'FALSE' ) then
+    if ($QSUB == 'TRUE') then
+      sbatch --export=NONE                            $EXPDIR/forecasts/gcm_${FCST_TYPE}_${EXP_TYPE}_${FCST_LABL}.j${date}_${FHOUR}z
+    else
+      sbatch --export=NONE --dependency=afterok:$QSUB $EXPDIR/forecasts/gcm_${FCST_TYPE}_${EXP_TYPE}_${FCST_LABL}.j${date}_${FHOUR}z
+    endif
+  # sbatch --begin=now+10minutes        $EXPDIR/forecasts/gcm_${FCST_TYPE}_${EXP_TYPE}_${FCST_LABL}.j${date}_${FHOUR}z
+ endif
+set   date = $test
+end
+
+/bin/rm -f $EXPDIR/forecasts/sedfile
+/bin/rm -f $EXPDIR/forecasts/gcm_forecast.tmp
+

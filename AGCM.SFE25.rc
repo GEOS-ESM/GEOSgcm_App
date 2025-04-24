@@ -10,27 +10,26 @@
 # 4) if you want fewer cores, half NX (for 0.5), then half NY for (0.25) and so on...
 # 5) when you hit an odd number we need to get more creative
 # 6) if you have questions send Bill Putman a Teams message
-NX: @NX
-NY: @NY
+NX: 80
+NY: 480
 
-IOSERVER_NODES: @NUM_OSERVER_NODES
-NUM_BACKEND_PES: @NUM_BACKEND_PES
+IOSERVER_NODES: 20
+NUM_BACKEND_PES: 1
 
-AGCM_IM: @AGCM_IM
-AGCM_JM: @AGCM_JM
-AGCM_LM: @AGCM_LM
-AGCM_GRIDNAME: @AGCM_GRIDNAME
+AGCM_IM: 2160
+AGCM_JM: 12960
+AGCM_LM: 137
+AGCM_GRIDNAME: PE2160x12960-CF
 
-AGCM.GRID_TYPE: @GRID_TYPE
-AGCM.GRIDNAME: @AGCM_GRIDNAME
-@CUBE_AGCM AGCM.NF: @AGCM_NF
-AGCM.LM: @AGCM_LM
-AGCM.IM_WORLD: @AGCM_IM
-@LATLON_AGCM AGCM.JM_WORLD: @AGCM_JM
+AGCM.GRID_TYPE: Cubed-Sphere
+AGCM.GRIDNAME: PE2160x12960-CF
+AGCM.NF: 6
+AGCM.LM: 137
+AGCM.IM_WORLD: 2160
 
-@CONUS AGCM.STRETCH_FACTOR: @STRETCH_FACTOR
-@CONUS AGCM.TARGET_LAT: 39.5
-@CONUS AGCM.TARGET_LON: -98.35
+AGCM.STRETCH_FACTOR: 2.5
+AGCM.TARGET_LAT: 39.5
+AGCM.TARGET_LON: -98.35
 
 ###########################################################
 # debug options
@@ -49,27 +48,44 @@ AGCM.IM_WORLD: @AGCM_IM
 # the defaults are most ideal
 # ----------------------------------------
 ADJUST_DT: .FALSE.
-GOCART2G_DT: @LONG_DT
-GOCART_DT: @LONG_DT
-HEMCO_DT: @LONG_DT
-ACHEM_DT: @LONG_DT
-PCHEM_DT: @LONG_DT
-GF_DT: @LONG_DT
-UW_DT: @LONG_DT
+GOCART2G_DT: 300
+GOCART_DT: 300
+HEMCO_DT: 300
+ACHEM_DT: 300
+PCHEM_DT: 300
+GF_DT: 300
+UW_DT: 300
 ###########################################################
 
 ###########################################################
 # dynamics options
 # ----------------------------------------
-DYCORE: @DYCORE
+DYCORE: FV3
+#DYCORE: FV3+ADV
+#AdvCore_Advection: 1
+#FV3_QSPLIT: 2
+#ADV_QSPLIT: 6
+###########################################################
+
+###########################################################
+# limit advected tracers in forecast
+EXCLUDE_ADVECTION_TRACERS: ALWAYS
+EXCLUDE_ADVECTION_TRACERS_LIST:
+PCHEM::OX
+PCHEM::N2O
+PCHEM::CFC11
+PCHEM::CFC12
+PCHEM::HCFC22
+PCHEM::CH4
+::
 ###########################################################
 
 ###########################################################
 # radiation options
 # ----------------------------------------
- SOLAR_DT: @SOLAR_DT
- IRRAD_DT: @IRRAD_DT
-SATSIM_DT: @IRRAD_DT
+ SOLAR_DT: 1800
+ IRRAD_DT: 1800
+SATSIM_DT: 1800
 SOLARAvrg: 0
 IRRADAvrg: 0
 EOT: .TRUE.
@@ -79,19 +95,21 @@ ORBIT_ANAL2B: .TRUE.
 ###########################################################
 # BACM_1M microphysics options
 # ----------------------------------------
-@BACM_1M_CLDMICR_OPTION: BACM_1M
+#CLDMICR_OPTION: BACM_1M
 ###########################################################
 
 ###########################################################
 # GFDL_1M microphysics options
 # ----------------------------------------
-@GFDL_1M_CLDMICR_OPTION: GFDL_1M
+CLDMICR_OPTION: GFDL_1M
+GFDL_MP3: .true.
+#USE_AEROSOL_NN: .false.
 ###########################################################
 
 ###########################################################
 # MGB2_2M microphysics options
 # ----------------------------------------
-@MGB2_2M_CLDMICR_OPTION: MGB2_2M
+#CLDMICR_OPTION: MGB2_2M
 ###########################################################
 
 ###########################################################
@@ -103,7 +121,7 @@ SHALLOW_OPTION: UW
 ###########################################################
 # convection scheme options
 # ----------------------------------------
-CONVPAR_OPTION: @CONVPAR_OPTION
+CONVPAR_OPTION: GF
 # Convective plumes to be activated (1 true, 0 false)
 DEEP: 1
 SHALLOW: 0
@@ -120,43 +138,35 @@ CLOSURE_CONGESTUS: 3
 ###########################################################
 # TRB/GWD Parameterization
 # ------------------------
-NCAR_NRDG: @NCAR_NRDG
+NCAR_NRDG: 0
 ###########################################################
 
-@HIST_GOCART###########################################################
-@HIST_GOCART# Enable wet scavenging diagnostics
-@HIST_GOCART# NOTE: this section should be commented out when running gocart.data
-@HIST_GOCARTMCHEMTRI_increments::
-@HIST_GOCARTDU::DU default
-@HIST_GOCARTSS::SS default
-@HIST_GOCARTSU::SO4 default
-@HIST_GOCARTCA.bc::CA.bcphilic default
-@HIST_GOCARTCA.br::CA.brphilic default
-@HIST_GOCARTCA.oc::CA.ocphilic default
-@HIST_GOCARTNI::NO3an1 "NI::NO3an2,NI::NO3an3"
-@HIST_GOCARTPCHEM::OX default
-@HIST_GOCART::
-@HIST_GOCART###########################################################
+###########################################################
+# Enable wet scavenging diagnostics
+# NOTE: this section should be commented out when running gocart.data
+MCHEMTRI_increments::
+DU::DU default
+SS::SS default
+SU::SO4 default
+CA.bc::CA.bcphilic default
+CA.br::CA.brphilic default
+CA.oc::CA.ocphilic default
+NI::NO3an1 "NI::NO3an2,NI::NO3an3"
+::
+###########################################################
 
 ###########################################################
 # Ocean Model Configuration Parameters
 # ------------------------------------
-OGCM.GRID_TYPE: @OGCM_GRID_TYPE
-OGCM.GRIDNAME: @OGCM_GRIDNAME
-OGCM.IM_WORLD: @OGCM_IM
-OGCM.JM_WORLD: @OGCM_JM
-OGCM.LM: @OGCM_LM
-@COUPLED OGCM.NX: @OGCM_NX
-@COUPLED OGCM.NY: @OGCM_NY
-@MOM5 OGCM.GRIDSPEC: MAPL_Tripolar.nc
-@MOM6 OGCM.GRIDSPEC: MAPL_Tripolar.nc
-@MIT  OGCM.GRIDSPEC: mit.ascii
-@MIT  OCEAN_DIR: mitocean_run
-@DATAOCEAN @LATLON_OGCM OGCM.POLE: 'PE'
-@DATAOCEAN @LATLON_OGCM OGCM.DATELINE: 'DE'
-@DATAOCEAN @CUBE_OGCM OGCM.NF: @OGCM_NF
-OGCM_RUN_DT: @OCEAN_DT
+OGCM.GRID_TYPE: Cubed-Sphere
+OGCM.GRIDNAME: OC2160x12960-CF
+OGCM.IM_WORLD: 2160
+OGCM.JM_WORLD: 12960
+OGCM.LM: 34
+OGCM.NF: 6
+OGCM_RUN_DT: 3600
 ###########################################################
+
 ##############################################################################################
 ####                                                                                      ####
 ####   SST REMAPPING                                                                      ####
@@ -183,9 +193,9 @@ PRINTRC: 1
 #---------------------------------------------------------------
 PARALLEL_READFORCING: 0
 # The num_readers should be set to multiple of 6 if READ_RESTART_BY_FACE is set to YES
-NUM_READERS: @NUM_READERS
+NUM_READERS: 10
 # The num_writers should be set to multiple of 6 if WRITE_RESTART_BY_FACE is set to YES
-NUM_WRITERS: 1
+NUM_WRITERS: 10
 
 # If is is set to YES, users should have CS based restarts files split by faces
 # The filenames *_rst should be changed to *_face_x_rst ( x is from 1 to 6)
@@ -194,23 +204,23 @@ READ_RESTART_BY_FACE: NO
 WRITE_RESTART_BY_FACE: NO
 
 # Write restarts by oserver (Default: NO)
-WRITE_RESTART_BY_OSERVER: @RESTART_BY_OSERVER
+WRITE_RESTART_BY_OSERVER: NO
 
 # Active observer when desired
 # ----------------------------
-BKG_FREQUENCY: @OBSERVER_FRQ
+BKG_FREQUENCY: 0
 
 # Resolution of state passed to atmos analysis
 # --------------------------------------------
-ANA_GRIDNAME: PC@AGCM_IMx@AGCM_JM-DC
-ANA_LM: @AGCM_LM
+ANA_GRIDNAME: PC2160x12960-DC
+ANA_LM: 137
 
 # Restart Record Parameters
 # -------------------------
-RECORD_FINAL:  >>>RECFINL<<<
-RECORD_FREQUENCY: 000000       000000
-RECORD_REF_DATE: >>>REFDATE<<< >>>FCSDATE<<<
-RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
+#RECORD_FINAL: NO
+#RECORD_FREQUENCY: 000000       000000
+#RECORD_REF_DATE: >>>REFDATE<<< >>>FCSDATE<<<
+#RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 
 ###################################################################################################
@@ -332,47 +342,21 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
 #   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
  
-# MERRA-2 Regular REPLAY Configuration
-# --------------------------------------------
-#M2 REPLAY_ANA_EXPID: MERRA-2
-#M2 REPLAY_ANA_LOCATION: @M2_REPLAY_ANA_LOCATION
-#M2 REPLAY_MODE: Regular
-#M2 REPLAY_FILE: ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4
-#M2 MKIAU_JCAP: 62
+#   ANA EXPID and LOCATION used for REPLAY
+#   --------------------------------------
+REPLAY_ANA_EXPID: f5295_fp
+REPLAY_ANA_LOCATION: @REPLAY_ANA_LOCATION
+REPLAY_MODE: Regular
+REPLAY_FILE: @REPLAY_ANA_TEMPLATE
 
-# GEOS-IT Regular REPLAY Configuration
-# --------------------------------------------
-#IT REPLAY_ANA_EXPID: GEOS-IT
-#IT REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos-it/dao_ops/archive/d5294_geosit_jan18
-#IT REPLAY_MODE: Regular
-#IT REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit_jan18.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#IT MKIAU_JCAP: 62
+MKIAU_JCAP: 382
 
-# 4dvar ANA EXPID and LOCATION used for REPLAY
-# --------------------------------------
-#X_EXP REPLAY_ANA_EXPID: @ANA_EXPID
-#X_EXP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@ANA_EXPID
-#X_EXP REPLAY_MODE: Regular
-#X_EXP REPLAY_FILE: ana/Y%y4/M%m2/@ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#X_EXP REPLAY_FILE_FREQUENCY: 7200
+#   4DIAU (recreate analysis tendency on the fly)
+#   ---------------------------------------------
 
-# Regular REPLAY to GEOS-FP
-# -------------------------
-#FP REPLAY_ANA_EXPID: f5295_fp
-#FP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos_fp_arch/f5295_fp
-#FP REPLAY_MODE: Regular
-#FP REPLAY_FILE: ana/Y%y4/M%m2/f5295_fp.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#   Exact REPLAY Mode for 4D-IAU
+#   ----------------------------
 
-# Regular REPLAY to ERA5
-# ----------------------
-#ERA5 REPLAY_MODE: Regular
-#ERA5 REPLAY_FILE_FREQUENCY: 21600
-#ERA5 REPLAY_FILE_REFERENCE_TIME: 000000
-#ERA5 REPLAY_ANA_EXPID: era5
-#ERA5 REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos_itv/sdrabenh/valdat/era5
-#ERA5 REPLAY_FILE: ana/Y%y4/M%m2/era5_eta2eta_L137.%y4%m2%d2_%h2z.nc4
-#ERA5 REPLAY_O3: NO
-#ERA5 #MKIAU_JCAP: 62
 
 ####################################################################################################
 ####                    Miscellaneous Exact/Regular REPLAY Parameters                           ####
@@ -405,22 +389,16 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   REPLAY_V:  YES or NO    #  (Default: YES)
 #   REPLAY_T:  YES or NO    #  (Default: YES)
 #   REPLAY_QV: YES or NO    #  (Default: YES)
->>>REGULAR_REPLAY_GMAO<<<   REPLAY_O3: YES or NO    #  (Default: YES)
->>>REGULAR_REPLAY_NCEP<<<   REPLAY_O3: YES or NO    #  (Default: YES)
->>>REGULAR_REPLAY_ECMWF<<<  REPLAY_O3: YES or NO    #  (Default: YES)
+#   REPLAY_O3: YES or NO    #  (Default: YES)
 #   REPLAY_TS: YES or NO    #  (Default:  NO)
 #
 #   Regular REPLAY Remapping and Blending Variables
 #   -----------------------------------------------
-#   REPLAY_REMAP:    YES    #  Default = YES,  Remap ANA Data to BKG Topography
->>>REGULAR_REPLAY_ECMWF<<<  REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_ECMWF<<<  REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_GMAO<<<   REPLAY_DAMPBEG:  100.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_GMAO<<<   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_NCEP<<<   REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY_NCEP<<<   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
->>>REGULAR_REPLAY<<<   REPLAY_SHUTOFF: 21600   #  ShutOff Replay after 6-hours of Integration
->>>REGULAR_REPLAY<<<   REPLAY_WINDFIX: YES     #  Apply windfix to force vertically-integrated analysis divergence increment to zero
+#   REPLAY_REMAP:   YES    #  Default = YES,  Remap ANA Data to BKG Topography
+#   REPLAY_DAMPBEG: 100.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+#   REPLAY_DAMPEND: 5000.0 #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
+#   REPLAY_SHUTOFF: 21600  #  ShutOff Replay after 6-hours of Integration
+    REPLAY_WINDFIX: NO     #  Apply windfix to force vertically-integrated analysis divergence increment to zero
 #
 #   REPLAY_BLEND_QV_AT_TP: .FALSE. #  Default = FALSE,  Blend QV to BKG upwards from tropopause
 #
@@ -527,8 +505,9 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 # Choice for Land Surface Model
 #      1 : Catchment
 #      2 : CatchmentCNCLM40
+#      3 : CatchmentCNCLM45
 # ------------------------------------------------------------
-LSM_CHOICE: @LSM_CHOICE
+LSM_CHOICE: 1
 
 # Apply increments from LDAS?
 #      0 : no  (default)
@@ -563,231 +542,216 @@ LSM_CHOICE: @LSM_CHOICE
 # AGCM_INTERNAL = BIAS Correction Increment: BIAS(n+1) = ALPHA*IAU(n) + BETA*BIAS(n)
 # ----------------------------------------------------------------------------------
 
->>>FORCEDAS<<<AGCM_IMPORT_RESTART_FILE:               agcm_import_rst
+#AGCM_IMPORT_RESTART_FILE:               agcm_import_rst
 
->>>FORCEGCM<<<AGCM_INTERNAL_RESTART_FILE:             agcm_internal_rst
->>>FORCEGCM<<<AGCM_INTERNAL_CHECKPOINT_FILE:          agcm_internal_checkpoint
->>>FORCEGCM<<<AGCM_INTERNAL_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+#AGCM_INTERNAL_RESTART_FILE:             agcm_internal_rst
+#AGCM_INTERNAL_CHECKPOINT_FILE:          agcm_internal_checkpoint
+#AGCM_INTERNAL_CHECKPOINT_TYPE:          default
 
->>>FORCEGCM<<<AGCM_ALPHA: 0.000
->>>FORCEGCM<<<AGCM_BETA:  1.000
+#AGCM_ALPHA: 0.000
+#AGCM_BETA:  1.000
 
-MAPL_ENABLE_BOOTSTRAP: @BOOT
+MAPL_ENABLE_BOOTSTRAP: YES
 
 # Required AGCM Model Restart Files
 # ---------------------------------
 DYN_INTERNAL_RESTART_FILE:              fvcore_internal_rst
 DYN_INTERNAL_CHECKPOINT_FILE:           fvcore_internal_checkpoint
-DYN_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+DYN_INTERNAL_CHECKPOINT_TYPE:           default
 DYN_INTERNAL_HEADER:                    1
 
 GWD_INTERNAL_RESTART_FILE:              gwd_internal_rst
 GWD_INTERNAL_CHECKPOINT_FILE:           gwd_internal_checkpoint
-GWD_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+GWD_INTERNAL_CHECKPOINT_TYPE:           default
 
 LAKE_INTERNAL_RESTART_FILE:             lake_internal_rst
 LAKE_INTERNAL_CHECKPOINT_FILE:          lake_internal_checkpoint
-LAKE_INTERNAL_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+LAKE_INTERNAL_CHECKPOINT_TYPE:          default
 
 LANDICE_INTERNAL_RESTART_FILE:          landice_internal_rst
 LANDICE_INTERNAL_CHECKPOINT_FILE:       landice_internal_checkpoint
-LANDICE_INTERNAL_CHECKPOINT_TYPE:       @CHECKPOINT_TYPE
+LANDICE_INTERNAL_CHECKPOINT_TYPE:       default
 
 CATCH_INTERNAL_RESTART_FILE:            catch_internal_rst
 CATCH_INTERNAL_CHECKPOINT_FILE:         catch_internal_checkpoint
-CATCH_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+CATCH_INTERNAL_CHECKPOINT_TYPE:         default
 
 CATCHCNCLM40_INTERNAL_RESTART_FILE:     catchcn_internal_rst
 CATCHCNCLM40_INTERNAL_CHECKPOINT_FILE:  catchcn_internal_checkpoint
-CATCHCNCLM40_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
+CATCHCNCLM40_INTERNAL_CHECKPOINT_TYPE:  default
 
 MOIST_INTERNAL_RESTART_FILE:            moist_internal_rst
 MOIST_INTERNAL_CHECKPOINT_FILE:         moist_internal_checkpoint
-MOIST_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+MOIST_INTERNAL_CHECKPOINT_TYPE:         default
 
 
 # Boot-Strapable AGCM Model Restart Files
 # ---------------------------------------
 AIAU_IMPORT_RESTART_FILE:               aiau_import_rst
 AIAU_IMPORT_CHECKPOINT_FILE:            aiau_import_checkpoint
-AIAU_IMPORT_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+AIAU_IMPORT_CHECKPOINT_TYPE:            default
 
 GWD_IMPORT_RESTART_FILE:                gwd_import_rst
 GWD_IMPORT_CHECKPOINT_FILE:             gwd_import_checkpoint
-GWD_IMPORT_CHECKPOINT_TYPE:             @CHECKPOINT_TYPE
+GWD_IMPORT_CHECKPOINT_TYPE:             default
 
 MOIST_IMPORT_RESTART_FILE:              moist_import_rst
 MOIST_IMPORT_CHECKPOINT_FILE:           moist_import_checkpoint
-MOIST_IMPORT_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+MOIST_IMPORT_CHECKPOINT_TYPE:           default
 
 SURFACE_IMPORT_RESTART_FILE:            surf_import_rst
 SURFACE_IMPORT_CHECKPOINT_FILE:         surf_import_checkpoint
-SURFACE_IMPORT_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+SURFACE_IMPORT_CHECKPOINT_TYPE:         default
 
 SOLAR_INTERNAL_RESTART_FILE:            solar_internal_rst
 SOLAR_INTERNAL_CHECKPOINT_FILE:         solar_internal_checkpoint
-SOLAR_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+SOLAR_INTERNAL_CHECKPOINT_TYPE:         default
 
 IRRAD_INTERNAL_RESTART_FILE:            irrad_internal_rst
 IRRAD_INTERNAL_CHECKPOINT_FILE:         irrad_internal_checkpoint
-IRRAD_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+IRRAD_INTERNAL_CHECKPOINT_TYPE:         default
 
 TURBULENCE_INTERNAL_RESTART_FILE:       turb_internal_rst
 TURBULENCE_INTERNAL_CHECKPOINT_FILE:    turb_internal_checkpoint
-TURBULENCE_INTERNAL_CHECKPOINT_TYPE:    @CHECKPOINT_TYPE
+TURBULENCE_INTERNAL_CHECKPOINT_TYPE:    default
 
 TURBULENCE_IMPORT_RESTART_FILE:         turb_import_rst
 TURBULENCE_IMPORT_CHECKPOINT_FILE:      turb_import_checkpoint
-TURBULENCE_IMPORT_CHECKPOINT_TYPE:      @CHECKPOINT_TYPE
+TURBULENCE_IMPORT_CHECKPOINT_TYPE:      default
 
 PCHEM_INTERNAL_RESTART_FILE:            pchem_internal_rst
 PCHEM_INTERNAL_CHECKPOINT_FILE:         pchem_internal_checkpoint
-PCHEM_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+PCHEM_INTERNAL_CHECKPOINT_TYPE:         default
 
-H2O_INTERNAL_RESTART_FILE:              h2o_internal_rst
-H2O_INTERNAL_CHECKPOINT_FILE:           h2o_internal_checkpoint
-H2O_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+#H2O_INTERNAL_RESTART_FILE:              h2o_internal_rst
+#H2O_INTERNAL_CHECKPOINT_FILE:           h2o_internal_checkpoint
+#H2O_INTERNAL_CHECKPOINT_TYPE:           default
 
 # Chemistry/AEROSOL Model Restart Files
 # -------------------------------------
 GOCART_IMPORT_RESTART_FILE:             gocart_import_rst
 GOCART_IMPORT_CHECKPOINT_FILE:          gocart_import_checkpoint
-GOCART_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
+GOCART_IMPORT_CHECKPOINT_TYPE:          default
 
 GOCART_INTERNAL_RESTART_FILE:           gocart_internal_rst
 GOCART_INTERNAL_CHECKPOINT_FILE:        gocart_internal_checkpoint
-GOCART_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
+GOCART_INTERNAL_CHECKPOINT_TYPE:        default
 
 GOCART.data_INTERNAL_RESTART_FILE:      gocartdata_internal_rst
 GOCART.data_INTERNAL_CHECKPOINT_FILE:   gocartdata_internal_checkpoint
-GOCART.data_INTERNAL_CHECKPOINT_TYPE:   @CHECKPOINT_TYPE
+GOCART.data_INTERNAL_CHECKPOINT_TYPE:   default
 
 DU_INTERNAL_RESTART_FILE:               du_internal_rst
 DU_INTERNAL_CHECKPOINT_FILE:            du_internal_checkpoint
-DU_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+DU_INTERNAL_CHECKPOINT_TYPE:            default
 
 SS_INTERNAL_RESTART_FILE:               ss_internal_rst
 SS_INTERNAL_CHECKPOINT_FILE:            ss_internal_checkpoint
-SS_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+SS_INTERNAL_CHECKPOINT_TYPE:            default
 
 CA.oc_INTERNAL_RESTART_FILE:            caoc_internal_rst
 CA.oc_INTERNAL_CHECKPOINT_FILE:         caoc_internal_checkpoint
-CA.oc_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+CA.oc_INTERNAL_CHECKPOINT_TYPE:         default
 
 CA.bc_INTERNAL_RESTART_FILE:            cabc_internal_rst
 CA.bc_INTERNAL_CHECKPOINT_FILE:         cabc_internal_checkpoint
-CA.bc_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+CA.bc_INTERNAL_CHECKPOINT_TYPE:         default
 
 CA.br_INTERNAL_RESTART_FILE:            cabr_internal_rst
 CA.br_INTERNAL_CHECKPOINT_FILE:         cabr_internal_checkpoint
-CA.br_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+CA.br_INTERNAL_CHECKPOINT_TYPE:         default
 
 NI_INTERNAL_RESTART_FILE:               ni_internal_rst
 NI_INTERNAL_CHECKPOINT_FILE:            ni_internal_checkpoint
-NI_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+NI_INTERNAL_CHECKPOINT_TYPE:            default
 
 SU_INTERNAL_RESTART_FILE:               su_internal_rst
 SU_INTERNAL_CHECKPOINT_FILE:            su_internal_checkpoint
-SU_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+SU_INTERNAL_CHECKPOINT_TYPE:            default
 
-CARMA_INTERNAL_RESTART_FILE:            carma_internal_rst
-CARMA_INTERNAL_CHECKPOINT_FILE:         carma_internal_checkpoint
-CARMA_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+#CARMA_INTERNAL_RESTART_FILE:            carma_internal_rst
+#CARMA_INTERNAL_CHECKPOINT_FILE:         carma_internal_checkpoint
+#CARMA_INTERNAL_CHECKPOINT_TYPE:         default
 
-#STRATCHEM_INTERNAL_RESTART_FILE:        stratchem_internal_rst
-#STRATCHEM_INTERNAL_CHECKPOINT_FILE:     stratchem_internal_checkpoint
-#STRATCHEM_INTERNAL_CHECKPOINT_TYPE:     @CHECKPOINT_TYPE
+##STRATCHEM_INTERNAL_RESTART_FILE:        stratchem_internal_rst
+##STRATCHEM_INTERNAL_CHECKPOINT_FILE:     stratchem_internal_checkpoint
+##STRATCHEM_INTERNAL_CHECKPOINT_TYPE:     default
 
-#STRATCHEM_IMPORT_RESTART_FILE:          stratchem_import_rst
-#STRATCHEM_IMPORT_CHECKPOINT_FILE:       stratchem_import_checkpoint
-#STRATCHEM_IMPORT_CHECKPOINT_TYPE:       @CHECKPOINT_TYPE
+##STRATCHEM_IMPORT_RESTART_FILE:          stratchem_import_rst
+##STRATCHEM_IMPORT_CHECKPOINT_FILE:       stratchem_import_checkpoint
+##STRATCHEM_IMPORT_CHECKPOINT_TYPE:       default
 
-#GMICHEM_INTERNAL_RESTART_FILE:          gmichem_internal_rst
-#GMICHEM_INTERNAL_CHECKPOINT_FILE:       gmichem_internal_checkpoint
-#GMICHEM_INTERNAL_CHECKPOINT_TYPE:       @CHECKPOINT_TYPE
+##GMICHEM_INTERNAL_RESTART_FILE:          gmichem_internal_rst
+##GMICHEM_INTERNAL_CHECKPOINT_FILE:       gmichem_internal_checkpoint
+##GMICHEM_INTERNAL_CHECKPOINT_TYPE:       default
 
-#GMICHEM_IMPORT_RESTART_FILE:            gmichem_import_rst
-#GMICHEM_IMPORT_CHECKPOINT_FILE:         gmichem_import_checkpoint
-#GMICHEM_IMPORT_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+##GMICHEM_IMPORT_RESTART_FILE:            gmichem_import_rst
+##GMICHEM_IMPORT_CHECKPOINT_FILE:         gmichem_import_checkpoint
+##GMICHEM_IMPORT_CHECKPOINT_TYPE:         default
 
 #GEOSCHEMCHEM_INTERNAL_RESTART_FILE:          geoschemchem_internal_rst
 #GEOSCHEMCHEM_INTERNAL_CHECKPOINT_FILE:       geoschemchem_internal_checkpoint
-#GEOSCHEMCHEM_INTERNAL_CHECKPOINT_TYPE:       @CHECKPOINT_TYPE
+#GEOSCHEMCHEM_INTERNAL_CHECKPOINT_TYPE:       default
 
 #GEOSCHEMCHEM_IMPORT_RESTART_FILE:            geoschemchem_import_rst
 #GEOSCHEMCHEM_IMPORT_CHECKPOINT_FILE:         geoschemchem_import_checkpoint
-#GEOSCHEMCHEM_IMPORT_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+#GEOSCHEMCHEM_IMPORT_CHECKPOINT_TYPE:         default
 
-MAM_INTERNAL_RESTART_FILE:              mam_internal_rst
-MAM_INTERNAL_CHECKPOINT_FILE:           mam_internal_checkpoint
-MAM_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+#MAM_INTERNAL_RESTART_FILE:              mam_internal_rst
+#MAM_INTERNAL_CHECKPOINT_FILE:           mam_internal_checkpoint
+#MAM_INTERNAL_CHECKPOINT_TYPE:           default
 
 ACHEM_INTERNAL_RESTART_FILE:            achem_internal_rst
 ACHEM_INTERNAL_CHECKPOINT_FILE:         achem_internal_checkpoint
-ACHEM_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+ACHEM_INTERNAL_CHECKPOINT_TYPE:         default
 
 TR_INTERNAL_RESTART_FILE:               tr_internal_rst
 TR_INTERNAL_CHECKPOINT_FILE:            tr_internal_checkpoint
-TR_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+TR_INTERNAL_CHECKPOINT_TYPE:            default
 
 TR_IMPORT_RESTART_FILE:                 tr_import_rst
 TR_IMPORT_CHECKPOINT_FILE:              tr_import_checkpoint
-TR_IMPORT_CHECKPOINT_TYPE:              @CHECKPOINT_TYPE
+TR_IMPORT_CHECKPOINT_TYPE:              default
 
 HEMCO_INTERNAL_RESTART_FILE:            hemco_internal_rst
 HEMCO_INTERNAL_CHECKPOINT_FILE:         hemco_internal_checkpoint
-HEMCO_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+HEMCO_INTERNAL_CHECKPOINT_TYPE:         default
 
 HEMCO_IMPORT_RESTART_FILE:              hemco_import_rst
 HEMCO_IMPORT_CHECKPOINT_FILE:           hemco_import_checkpoint
-HEMCO_IMPORT_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+HEMCO_IMPORT_CHECKPOINT_TYPE:           default
 
 #OH_INTERNAL_RESTART_FILE:               oh_internal_rst
 #OH_INTERNAL_CHECKPOINT_FILE:            oh_internal_checkpoint
-#OH_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
+#OH_INTERNAL_CHECKPOINT_TYPE:            default
 
 #OH_IMPORT_RESTART_FILE:                 oh_import_rst
 #OH_IMPORT_CHECKPOINT_FILE:              oh_import_checkpoint
-#OH_IMPORT_CHECKPOINT_TYPE:              @CHECKPOINT_TYPE
+#OH_IMPORT_CHECKPOINT_TYPE:              default
 
 # OCEAN Model Restart Files
 # -------------------------
 SALTWATER_IMPORT_RESTART_FILE:          saltwater_import_rst
 SALTWATER_IMPORT_CHECKPOINT_FILE:       saltwater_import_checkpoint
-SALTWATER_IMPORT_CHECKPOINT_TYPE:       @CHECKPOINT_TYPE
+SALTWATER_IMPORT_CHECKPOINT_TYPE:       default
 
 OPENWATER_INTERNAL_RESTART_FILE:        openwater_internal_rst
 OPENWATER_INTERNAL_CHECKPOINT_FILE:     openwater_internal_checkpoint
-OPENWATER_INTERNAL_CHECKPOINT_TYPE:     @CHECKPOINT_TYPE
+OPENWATER_INTERNAL_CHECKPOINT_TYPE:     default
 
-@CICE6SEAICETHERMO_IMPORT_RESTART_FILE:     seaicethermo_import_rst
-@CICE6SEAICETHERMO_IMPORT_CHECKPOINT_FILE:  seaicethermo_import_checkpoint
-@CICE6SEAICETHERMO_IMPORT_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
 SEAICETHERMO_INTERNAL_RESTART_FILE:     seaicethermo_internal_rst
 SEAICETHERMO_INTERNAL_CHECKPOINT_FILE:  seaicethermo_internal_checkpoint
-SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
+SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  default
 
-@CICE4CICE4_IMPORT_RESTART_FILE:             seaice_import_rst
-@CICE4CICE4_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
-@CICE4CICE4_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
-@CICE6CICE6_IMPORT_RESTART_FILE:             seaice_import_rst
-@CICE6CICE6_IMPORT_CHECKPOINT_FILE:          seaice_import_checkpoint
-@CICE6CICE6_IMPORT_CHECKPOINT_TYPE:          @CHECKPOINT_TYPE
 
-@CICE4CICE4_INTERNAL_RESTART_FILE:           seaice_internal_rst
-@CICE4CICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
-@CICE4CICE4_INTERNAL_CHECKPOINT_TYPE:        @CHECKPOINT_TYPE
 
-@COUPLEDOCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
-@COUPLEDOCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
-@COUPLEDOCEAN_INTERNAL_CHECKPOINT_TYPE:            @CHECKPOINT_TYPE
 
 # IGNI Restart Files
 # ------------------
 #IGNI_INTERNAL_RESTART_FILE:            igni_internal_rst
 #IGNI_INTERNAL_CHECKPOINT_FILE:         igni_internal_checkpoint
-#IGNI_INTERNAL_CHECKPOINT_TYPE:         @CHECKPOINT_TYPE
+#IGNI_INTERNAL_CHECKPOINT_TYPE:         default
 
 # Boundary Datasets
 # -----------------
@@ -802,7 +766,6 @@ TILING_FILE:                tile.bin
 VISDF_FILE:                visdf.dat
 NIRDF_FILE:                nirdf.dat
 LNFM_FILE:                 lnfm.data
-@COUPLED ROUTING_FILE:             runoff.bin
 
 VEGDYN_INTERNAL_RESTART_FILE:  vegdyn.data
 
@@ -811,7 +774,7 @@ KPAR_FILE: SEAWIFS_KPAR_mon_clim.data
 
 # AeroChem Environment
 # --------------------
-     OX_RELAXTIME: @OX_RELAXTIME    # Standard Options:  GCM: 259200., DAS: 0.000
+     OX_RELAXTIME: 0.00    # Standard Options:  GCM: 259200., DAS: 0.000
     CH4_RELAXTIME: 259200.
     N2O_RELAXTIME: 259200.
   CFC11_RELAXTIME: 259200.
@@ -826,7 +789,7 @@ KPAR_FILE: SEAWIFS_KPAR_mon_clim.data
    H2O_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
 HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
        pchem_clim: species.data
-       pchem_clim_years: @PCHEM_CLIM_YEARS
+       pchem_clim_years: 1
 
 # Age-of-Air Parameters
 # ---------------------
@@ -834,12 +797,15 @@ HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
 
 # Set RADIATION Parameterizations
 # -------------------------------
-USE_RRTMGP_IRRAD: 1.0
-USE_RRTMGP_SORAD: 1.0
-RRTMGP_GAS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-lw-g128.nc
-RRTMGP_GAS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-sw-g112.nc
-RRTMGP_CLOUD_OPTICS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-lw.nc
-RRTMGP_CLOUD_OPTICS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-sw.nc
+USE_RRTMG_IRRAD: 1.0
+USE_RRTMG_SORAD: 1.0
+
+#USE_RRTMGP_IRRAD: 1.0
+#USE_RRTMGP_SORAD: 1.0
+#RRTMGP_GAS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-lw-g128.nc
+#RRTMGP_GAS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-gas-sw-g112.nc
+#RRTMGP_CLOUD_OPTICS_LW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-lw.nc
+#RRTMGP_CLOUD_OPTICS_SW: /discover/nobackup/pnorris/RRTMGP-data.v1.8/rrtmgp-data/rrtmgp-clouds-sw.nc
 
 SOLAR_LB_MAX_PASSES: 10
 ISOLVAR: 2
@@ -855,14 +821,14 @@ NUM_BANDS: 30
 
 DIURNAL_BIOMASS_BURNING: yes
 
-       RATS_PROVIDER: @RATS_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM (Radiatively active tracers)
-       AERO_PROVIDER: @AERO_PROVIDER   # options: GOCART2G, MAM, none  (Radiatively active aerosols)
-ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOCART
+       RATS_PROVIDER: PCHEM   # options: PCHEM, GMICHEM, STRATCHEM (Radiatively active tracers)
+       AERO_PROVIDER: GOCART2G   # options: GOCART2G, MAM, none  (Radiatively active aerosols)
+ANALYSIS_OX_PROVIDER: PCHEM   # options: PCHEM, GMICHEM, STRATCHEM, GOCART
 
 
 # Flag for real-time forecasts (persisted SST) OGCM_IS_FCST: 1 (AMIP-Style Default: 0)
 # -------------------------------------------------------------------------------
-    OGCM_IS_FCST: @OGCM_IS_FCST
+    OGCM_IS_FCST: 0
 
 
 # Time step for aerosol assimilation (GAAS)
@@ -871,16 +837,16 @@ ANALYSIS_OX_PROVIDER: @OANA_PROVIDER   # options: PCHEM, GMICHEM, STRATCHEM, GOC
 
 # DATAOCEAN Parameters for AMIP-Style Run
 # ----------------------------------------
-@DATAOCEAN DATA_SST_FILE: sst.data
-@DATAOCEAN DATA_FRT_FILE: fraci.data
-@DATAOCEAN MIN_SEAICE_DEPTH: 0.07
-@DATAOCEAN MAX_SEAICE_DEPTH: 0.07
-@DATAOCEAN TAU_SIT:          86400
+ DATA_SST_FILE: sst.data
+ DATA_FRT_FILE: fraci.data
+ MIN_SEAICE_DEPTH: 0.07
+ MAX_SEAICE_DEPTH: 0.07
+ TAU_SIT:          86400
 
 # To compute skin SST over water (or to use SST Analysis Increment) set values to 1
 # ---------------------------------------------------------------------------------
-USE_SKIN_LAYER: @USE_SKIN_LAYER
-    ANALYZE_TS: @ANALYZE_TS
+USE_SKIN_LAYER: 1
+    ANALYZE_TS: 0
 
 # Model Tuning Parameters (For CMIP5 recommended SOLAR_CONSTANT and CO2 values, use -1)
 # -------------------------------------------------------------------------------------
@@ -890,30 +856,17 @@ CO2:            -1
 
 # Flags for SATSIM Output
 # -----------------------
-USE_SATSIM:       @SATSIM
-USE_SATSIM_ISCCP: @ISCCP_SATSIM
-USE_SATSIM_MODIS: @MODIS_SATSIM
-USE_SATSIM_RADAR: @RADAR_SATSIM
-USE_SATSIM_LIDAR: @LIDAR_SATSIM
-USE_SATSIM_MISR:  @MISR_SATSIM
+USE_SATSIM:       0
+USE_SATSIM_ISCCP: 1
+USE_SATSIM_MODIS: 0
+USE_SATSIM_RADAR: 0
+USE_SATSIM_LIDAR: 0
+USE_SATSIM_MISR:  0
 
 # Flags to enable wave code
 # -------------------------
 USE_WAVES: 0
-
-@COUPLED INTERPOLATE_ATMLM: 0
-@COUPLED INTERPOLATE_ATMTAU: 1
-@COUPLED INTERPOLATE_OCEAN_ICE_CURRENTS: 0
-
-@COUPLED CLDMICRO: @CLDMICRO
-
-@COUPLED # Section for ocean
-@COUPLED # ----------------
-@COUPLED USE_DATASEA:0
-@COUPLED OCEAN_NAME: @OCEAN_NAME
-@COUPLED USE_DATASEAICE:0
-@COUPLED steady_state_ocean: 0
-@COUPLED OCEAN_PICE_SCALING: 0.0
+wave_model: null
 
 # For running MOM5 coupled model in dual ocean mode, uncomment three lines below,
 # make sure that regular replay is enabled, proper PRECIP_FILE is chosen,
@@ -921,28 +874,4 @@ USE_WAVES: 0
 # the run starts at 21z/03z/09z/15z,
 # HISTORY.rc collections have proper ref_time field
 # ---------------------------------------------------------------------------
-@MOM5#DUAL_OCEAN: 1
-@MOM5#DATA_SST_FILE: sst.data
-@MOM5#DATA_FRT_FILE: fraci.data
 
-@COUPLED
-@COUPLED# Section for CICE
-@COUPLED# -----------------
-@CICE4USE_CICE_Thermo: 1
-@CICE6USE_CICE_Thermo: 2
-@CICE6SEAICE_NAME: CICE6
-@CICE4PRESCRIBED_ICE: 0
-@CICE4CICE_DT: @OCEAN_DT
-@CICE4CICE_NDTE: 300
-@CICE4CICE_GRID: grid_cice.bin
-@CICE4CICE_KMT: kmt_cice.bin
-@COUPLEDCICE_N_ICE_CATEGORIES:5
-@CICE4CICE_N_ICE_LAYERS:4
-@CICE4CICE_MU_RDG: 3.0
-@CICE4CICE_AH_MAX: 0.3
-@CICE4CICE_STRENGTH: 0
-@CICE4ALBICEV: 0.78
-@CICE4ALBICEI: 0.36
-@CICE4ALBSNOWV: 0.98
-@CICE4ALBSNOWI: 0.7
-@CICE4MIN_FREEZE_SALINITY: 5.0
