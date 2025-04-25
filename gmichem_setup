@@ -2359,6 +2359,9 @@ set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
+# NAS has a "several_tries" script but we need an empty
+# default
+set SEVERAL_TRIES = ''
 
 if( $MPI_STACK == openmpi ) then
 
@@ -2407,6 +2410,10 @@ setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else if( $MPI_STACK == mpt ) then
+
+# NAS recommends several_tries for MPT job issues
+# https://www.nas.nasa.gov/hecc/support/kb/mpt-startup-failures-workarounds_526.html
+set SEVERAL_TRIES = '/u/scicon/tools/bin/several_tries'
 
 cat > $HOMDIR/SETENV.commands << EOF
 
@@ -2470,6 +2477,9 @@ setenv I_MPI_ADJUST_GATHERV 3
 
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
+
+# This has been found to help with congestion
+setenv FI_PSM3_CONN_TIMEOUT 120
 EOF
 
 endif # if NCCS
@@ -2636,6 +2646,7 @@ s/@USE_IOSERVER/$USE_IOSERVER/g
 s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
 s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
+s/@SEVERAL_TRIES/$SEVERAL_TRIES/g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
