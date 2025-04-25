@@ -604,7 +604,6 @@ GRID_LABELS: PC1152x721-DC
                            'CLDMD'     , 'SOLAR'      , 'MCDC'              ,
                            'CLDHI'     , 'SOLAR'      , 'HCDC'              ,
                            'ZPBL'      , 'TURBULENCE' , 'HPBL'              ,
-                      'REFL10CM_MAX'   , 'MOIST'      ,
                            'DBZ_MAX'   , 'MOIST'      , 'REFC'              ,
                            'DBZ_TOP'   , 'MOIST'      , 'RETOP'             ,
                            'DBZ_1KM'   , 'MOIST'      , 'REFD_1KM'          ,
@@ -1016,7 +1015,7 @@ awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
 # Re-Create Proper CAP.rc
 # -----------------------
 set oldstring =  `grep JOB_SGMT: CAP.rc`
-set newstring =  "JOB_SGMT: $FSEGMENT 030000"
+set newstring =  "JOB_SGMT: $FSEGMENT 150000"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
@@ -1216,7 +1215,7 @@ endif #FCST Restart
 # -----------------------
 ./strip CAP.rc
 set oldstring =  `cat CAP.rc | grep JOB_SGMT:`
-set newstring =  "JOB_SGMT: $FSEGMENT 030000"
+set newstring =  "JOB_SGMT: $FSEGMENT 150000"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
