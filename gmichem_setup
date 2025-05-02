@@ -37,20 +37,17 @@ setenv ARCH `uname -s`
 setenv NODE `uname -n`
 
 if ($ARCH == Darwin) then
-   set FINDPATH = realpath
    set PRELOAD_COMMAND = 'DYLD_INSERT_LIBRARIES'
    set LD_LIBRARY_PATH_CMD = 'DYLD_LIBRARY_PATH'
    # On macOS we seem to need to call mpirun directly and not use esma_mpirun
    # For some reason SIP does not let the libraries be preloaded
    set RUN_CMD = 'mpirun -np '
 else
-   set FINDPATH = 'readlink -f'
    set PRELOAD_COMMAND = 'LD_PRELOAD'
    set LD_LIBRARY_PATH_CMD = 'LD_LIBRARY_PATH'
    set RUN_CMD = '$GEOSBIN/esma_mpirun -np '
 endif
-set GCMSETUP = `$FINDPATH $0`
-set BINDIR   = `dirname $GCMSETUP`
+set BINDIR   = `pwd -L`
 set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
 
@@ -418,49 +415,30 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
 
-   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}mil  (Milan)${CN} (default)"
+   echo "   ${C2}cas  (Cascade Lake)${CN}"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'mil'
+   endif
 
-   if ("$BUILT_ON_SLES15" == "TRUE") then
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}mil  (Milan)${CN} (default)"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'mil'
-      endif
+   if( $MODEL != 'mil' & \
+         $MODEL != 'cas' ) goto ASKPROC
 
-      if( $MODEL != 'mil' ) goto ASKPROC
-
-      if ($MODEL == 'mil') then
-         # We save a couple processes for the kernel
-         set NCPUS_PER_NODE = 126
-      endif
-   else
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}sky  (Skylake)${CN}"
-      echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'cas'
-      endif
-
-      if( $MODEL != 'sky'  & \
-          $MODEL != 'cas' ) goto ASKPROC
-
-      if ($MODEL == 'sky') then
-         set NCPUS_PER_NODE = 40
-      else if ($MODEL == 'cas') then
-         # NCCS currently recommends that users do not run with
-         # 48 cores per node on SCU16 due to OS issues and
-         # recommends that CPU-intensive works run with 46 or less
-         # cores. As 45 is a multiple of 3, it's the best value
-         # that doesn't waste too much
-         #set NCPUS_PER_NODE = 48
-         set NCPUS_PER_NODE = 45
-      endif
+   if ($MODEL == 'mil') then
+      # We save a couple processes for the kernel
+      set NCPUS_PER_NODE = 126
+   else if ($MODEL == 'cas') then
+      # NCCS currently recommends that users do not run with
+      # 48 cores per node on SCU16 due to OS issues and
+      # recommends that CPU-intensive works run with 46 or less
+      # cores. As 45 is a multiple of 3, it's the best value
+      # that doesn't waste too much
+      #set NCPUS_PER_NODE = 48
+      set NCPUS_PER_NODE = 45
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -468,9 +446,9 @@ else if ( $SITE == 'NAS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}has (Haswell)${CN}"
    echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}sky (Skylake)${CN}"
    echo "   ${C2}cas (Cascade Lake)${CN}"
-   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo "   ${C2}rom (AMD Rome) (default)${CN}"
    echo "   ${C2}mil (AMD Milan)${CN}"
    echo " "
    echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
@@ -479,7 +457,7 @@ else if ( $SITE == 'NAS' ) then
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      set MODEL = 'rom'
    endif
 
    if( $MODEL != 'has' & \
@@ -632,7 +610,7 @@ if( $OGCM == TRUE ) then
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
 
-       set mom5_warning=">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+       set mom5_warning="######################################################\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n######################################################"
        echo "\033[31;5m"${mom5_warning}"\033[0m"
        set MIT  = "#DELETE"
     else if ( "$OCNMODEL" == "MOM6" ) then
@@ -1053,6 +1031,44 @@ else
     set OGCM_NX       = ""
     set OGCM_NY       = ""
     set OGCM_NPROCS   = ""
+endif
+
+# Check for Data Atmosphere
+#--------------------------
+set DATA_ATMOS = FALSE
+set MODELATM = ""
+set USE_DATA_ATM4OCN = .FALSE.
+
+if( $OGCM == "TRUE" ) then
+
+DATATMOS:
+   echo "Do you wish to run ${C1}Data Atmosphere${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+   set DATA_ATMOS = $<
+   if (.$DATA_ATMOS == .) then
+      set DATA_ATMOS = FALSE
+   else
+      set DATA_ATMOS = `echo $DATA_ATMOS | tr "[:lower:]" "[:upper:]"`
+      if ($DATA_ATMOS == "Y"    | \
+          $DATA_ATMOS == "YES"  | \
+          $DATA_ATMOS == "T"    | \
+          $DATA_ATMOS == "TRUE" ) set DATA_ATMOS = TRUE
+      if ($DATA_ATMOS == "N"    | \
+          $DATA_ATMOS == "NO"   | \
+          $DATA_ATMOS == "F"    | \
+          $DATA_ATMOS == "FALSE") set DATA_ATMOS = FALSE
+      if ($DATA_ATMOS != TRUE & $DATA_ATMOS != FALSE) then
+         echo
+         echo "Please answer ${C2}YES${CN} or ${C2}NO${CN}!"
+         goto DATATMOS
+      endif
+   endif
+
+   if ($DATA_ATMOS == TRUE) then
+      set MODELATM = "#DELETE"
+      set USE_DATA_ATM4OCN = .TRUE.
+
+      set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
+   endif
 endif
 
 # Set DEFAULT SHMEM Parameter
@@ -1525,6 +1541,23 @@ endif
 # Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
+
+# If we are running DATA_ATMOS, we can skip the Land bits, but we must still fill
+# things out with something. So we use the default Land settings.
+
+if ($DATA_ATMOS == TRUE) then
+  set LSM_BCS = "NL3"
+  set LSM_CHOICE  = 1
+  set LSM_BCS      = "NL3"
+  set LSM_PARMS    = ""
+  set EMIP_BCS_IN  = "NL3"
+  set EMIP_OLDLAND = "#DELETE"
+  set EMIP_NEWLAND = ""
+  set EMIP_MERRA2  = "MERRA2_NewLand"
+  set HIST_CATCHCN   = "#DELETE"
+  set GCMRUN_CATCHCN = "#DELETE"
+else
+
 echo "Enter the choice of ${C1} Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Default: Icarus-NLv3), or ${C2}v12${CN}"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = "NL3"
@@ -1568,13 +1601,16 @@ if(  $LSM_CHOICE != 1 & $LSM_CHOICE != 2 ) then
 else
     echo
 endif
-if( $LSM_CHOICE == 1 ) then 
+if( $LSM_CHOICE == 1 ) then
     set HIST_CATCHCN   = "#DELETE"
     set GCMRUN_CATCHCN = "#DELETE"
-else if( $LSM_CHOICE == 2 ) then 
+else if( $LSM_CHOICE == 2 ) then
     set HIST_CATCHCN   = ""
     set GCMRUN_CATCHCN = ""
 endif
+
+endif # DATA_ATMOS
+
 #######################################################################
 #                   Check for AEROSOL/Chemistry Models
 #######################################################################
@@ -1582,6 +1618,24 @@ endif
 # Check for GOCART
 # ----------------
 GOCART:
+
+# If we are running DATA_ATMOS, we can skip the GOCART bits, but we must still fill
+# things out with something. So we use the climatological aerosols settings so
+# the sed scripts don't get confused.
+if ($DATA_ATMOS == TRUE) then
+   set GOKART           = FALSE
+   set DATA_DRIVEN      = FALSE
+   set AERO_PROVIDER    = GOCART2G
+   set EMISSIONS        = ""
+   set GOCART           = "#"
+   set HIST_GOCART      = ""
+   set OPS_SPECIES      = "#"
+   set CMIP_SPECIES     = "#"
+   set MERRA2OX_SPECIES = "#"
+   set PCHEM_CLIM_YEARS = ""
+   set OX_RELAXTIME     = 0.0
+else
+
 echo
 echo "------------------------------------"
 echo "Specify the AERO_PROVIDER by number:"
@@ -1730,10 +1784,16 @@ else
   echo
 endif
 
+endif # DATA_ATMOS
+
 # RATS Provider
 # -------------
 set  RATS_PROVIDER = GMICHEM
 
+# Additional RATS settings for specific GHGs
+# ------------------------------------------
+set CH4_PROVIDER     = none
+set CO2_PROVIDER     = none
 
 #######################################################################
 #                  Confirm HEARTBEAT time for the model
@@ -1888,7 +1948,7 @@ if( $SITE == 'NAS' ) then
               setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
               setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
               setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
-              setenv BATCH_JOINOUTERR "PBS -j oe -k oed"    # PBS Syntax for joining output and error
+              setenv BATCH_JOINOUTERR "PBS -j oe -k oed"  # PBS Syntax for joining output and error
               setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
               setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
               setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
@@ -1928,7 +1988,7 @@ if( $SITE == 'NAS' ) then
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
-	      setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
+              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
 
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
@@ -2004,13 +2064,13 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                      # location of Boundary Conditions
-	            setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
+              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                          # user work directory
+              setenv WRKDIR     $HOME                                                   # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean        # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                               # Location of GWD_RIDGE files
 
@@ -2048,7 +2108,7 @@ else
 
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
-              setenv WRKDIR     /home/$LOGNAME                                         # user work directory
+              setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
               set NX = 1
@@ -2389,9 +2449,6 @@ endif
 else if( $MPI_STACK == intelmpi ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
-
 # This flag prints out the Intel MPI state. Uncomment if needed
 #setenv I_MPI_DEBUG 9
 EOF
@@ -2401,51 +2458,19 @@ EOF
 # specific compared to the above adjustments
 if ( $SITE == 'NCCS' ) then
 
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_SHM_HEAP_VSIZE 512
-setenv PSM2_MEMORY large
-EOF
-
-# Testing at NCCS showed these caused a crash at higher resolutions at
-# restart read
-if ( $USING_SINGULARITY == FALSE ) then
+# Some flags we know work on SLES15 and Milan (see below)
+# For safety, we keep the old SLES12 flags for that system
+#
+# NOTE: When Cascade Lake is on SLES15, the following flags
+# might need to be Milan only
 
 cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_EXTRA_FILESYSTEM 1
-setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-EOF
-
-endif # if NOT Singularity
-
-# Testing by Bill Putman found these to be
-# useful flags with Intel MPI on SLES15 on the
-# Milan nodes.
-# Note 1: Testing by NCCS shows the PSM3 provider
-# runs on the Infiniband fabric. Tests show it runs
-# up to C720.
-# Note 2: When the Cascade Lakes are moved to
-# SLES15, these will need to be Milan-only flags
-# as Intel MPI will probably work just fine with
-# Intel chips.
-if ("$BUILT_ON_SLES15" == "TRUE") then
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_FALLBACK 0
-setenv I_MPI_FABRICS ofi
-setenv I_MPI_OFI_PROVIDER psm3
-setenv I_MPI_ADJUST_SCATTER 2
-setenv I_MPI_ADJUST_SCATTERV 2
-setenv I_MPI_ADJUST_GATHER 2
-setenv I_MPI_ADJUST_GATHERV 3
-setenv I_MPI_ADJUST_ALLGATHER 3
-setenv I_MPI_ADJUST_ALLGATHERV 3
 setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_REDUCE 10
-setenv I_MPI_ADJUST_BCAST 11
-setenv I_MPI_ADJUST_REDUCE_SCATTER 4
-setenv I_MPI_ADJUST_BARRIER 9
-EOF
+setenv I_MPI_ADJUST_GATHERV 3
 
-endif # if SLES15
+setenv I_MPI_FABRICS shm:ofi
+setenv I_MPI_OFI_PROVIDER psm3
+EOF
 
 endif # if NCCS
 
@@ -2539,8 +2564,8 @@ s?^[ \t]*RECORD_?#RECORD_?g
 
 s?@DASTUNING?#?g
 
-s?>>>FORCEDAS<<<?$FORCEDAS?g
-s?>>>FORCEGCM<<<?$FORCEGCM?g
+s?@FORCEDAS?$FORCEDAS?g
+s?@FORCEGCM?$FORCEGCM?g
 s?@COUPLED?$COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
 s?@MOM5?$MOM5?g
@@ -2548,29 +2573,27 @@ s?@MOM6?$MOM6?g
 s?@OCNMODEL?$OCNMODEL?g
 s?@CICE4?$CICE4?g
 s?@CICE6?$CICE6?g
-s?>>>HIST_CICE4<<<?$HIST_CICE4?g
+s?@HIST_CICE4?$HIST_CICE4?g
 s?@MIT?$MIT?g
 s?@DATAOCEAN?$DATAOCEAN?g
-s?>>>GOCART<<<?$GOCART?g
 s?@OPS_SPECIES?$OPS_SPECIES?g
 s?@CMIP_SPECIES?$CMIP_SPECIES?g
 s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
-s?>>>FVCUBED<<<?$FVCUBED?g
+s?@FVCUBED?$FVCUBED?g
 s?@HIST_GOCART?$HIST_GOCART?g
-s?>>>OSTIA<<<?$OSTIA?g
-s?>>>HIST_CATCHCN<<<?$HIST_CATCHCN?g
-s?>>>GCMRUN_CATCHCN<<<?$GCMRUN_CATCHCN?g
-s?>>>EMIP_OLDLAND<<<?$EMIP_OLDLAND?g
-s?>>>EMIP_NEWLAND<<<?$EMIP_NEWLAND?g
+s?@HIST_CATCHCN?$HIST_CATCHCN?g
+s?@GCMRUN_CATCHCN?$GCMRUN_CATCHCN?g
+s?@EMIP_OLDLAND?$EMIP_OLDLAND?g
+s?@EMIP_NEWLAND?$EMIP_NEWLAND?g
 s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
-s?>>>4DIAUDAS<<<?#DELETE?g
-s?>>>REGULAR_REPLAY<<<?#?g
-s?>>>REGULAR_REPLAY_GMAO<<<?#?g
-s?>>>REGULAR_REPLAY_NCEP<<<?#DELETE?g
-s?>>>REGULAR_REPLAY_ECMWF<<<?#DELETE?g
+s?@4DIAUDAS?#DELETE?g
+s?@REGULAR_REPLAY?#?g
+s?@REGULAR_REPLAY_GMAO?#?g
+s?@REGULAR_REPLAY_NCEP?#DELETE?g
+s?@REGULAR_REPLAY_ECMWF?#DELETE?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
@@ -2585,6 +2608,9 @@ s?@AERO_PROVIDER?$AERO_PROVIDER?g
 
 s?@OANA_PROVIDER?GMICHEM?g
 s?@EMISSIONS?$EMISSIONS?g
+
+s?@CH4_PROVIDER?$CH4_PROVIDER?g
+s?@CO2_PROVIDER?$CO2_PROVIDER?g
 
 s^@DYCORE^$DYCORE^g
 s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
@@ -2662,6 +2688,9 @@ s?@MGB2_2M_?$MGB2_2M_?g
 s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
+
+s?@MODELATM?$MODELATM?g
+s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 EOF
 

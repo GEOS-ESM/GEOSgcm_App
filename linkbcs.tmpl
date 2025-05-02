@@ -13,6 +13,7 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
+@COUPLED/bin/ln -sf @COUPLEDIR/dataatm/* ExtData
 @COUPLED/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/SEAWIFS_KPAR_mon_clim.@OGCM_IMx@OGCM_JM SEAWIFS_KPAR_mon_clim.data
 @COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
 @COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
@@ -55,8 +56,8 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 /bin/ln -sf $BCSDIR/land/$BCRSLV/green_clim_@AGCM_IMx@AGCM_JM.data green.data
 /bin/ln -sf $BCSDIR/land/$BCRSLV/ndvi_clim_@AGCM_IMx@AGCM_JM.data ndvi.data
 
->>>GCMRUN_CATCHCN<<<if ( -f $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data lnfm.data
->>>GCMRUN_CATCHCN<<</bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
+@GCMRUN_CATCHCNif ( -f $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data lnfm.data
+@GCMRUN_CATCHCN/bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
 
 
 set MERRA2OX_SPECIES = "#"

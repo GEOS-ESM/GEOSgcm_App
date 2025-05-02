@@ -233,9 +233,13 @@ then
       SED="$(command -v sed) "
       ISED="$SED -i.macbak "
    fi
+   PRELOAD_COMMAND='DYLD_INSERT_LIBRARIES'
+   LD_LIBRARY_PATH_CMD='DYLD_LIBRARY_PATH'
 else
    SED="$(command -v sed) "
    ISED="$SED -i "
+   PRELOAD_COMMAND='LD_PRELOAD'
+   LD_LIBRARY_PATH_CMD='LD_LIBRARY_PATH'
 fi
 
 case $selected_case in
@@ -454,6 +458,9 @@ cat $expdir/WSUB_ExtData.tmp | sed '/collection:/ s#WSUB_SWclim.*#/dev/null#' > 
 /bin/cp $SOURCEDIR/sedfile.CASE $expdir
 /bin/cp $SOURCEDIR/AGCM.CASE.txt $expdir
 
+# These are the weights files
+/bin/cp $SOURCEDIR/rh_* $expdir
+
 # MAT These sed commands have to be done in the experiment directory.
 #     This should probably be fixed at some point
 
@@ -513,6 +520,8 @@ s?@BATCH_TASKS?$BATCH_TASKS?g
 s?@BATCH_TIME?$BATCH_TIME?g
 s?@BATCH_GROUP?$BATCH_GROUP?g
 s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
+s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
+s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 EOF
 
 $ISED -f $expdir/sedfile $expdir/scm_run.j
