@@ -24,6 +24,9 @@
   clock_flags='DETAILED',
 /
 
+&gfdl_mp_nml
+/
+
 &gfdl_cloud_microphysics_nml
 /
 
