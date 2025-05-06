@@ -443,8 +443,8 @@ set OGCM_NY0 = `grep "^ *OGCM.NY:" AGCM.rc.orig | cut -d':' -f2`
 # We can generically set the lengths of startstop and layout tests
 # and use those values to set the test durations for the various steps
 
-set length_of_startstop_test = 240000
-set length_of_layout_test    = 060000
+set length_of_startstop_test = 120000
+set length_of_layout_test    = 030000
 
 # Now for safety, we need to make sure that the test durations
 # are divisible by 3 hours due to a limitation in GOCART. We'll use modulo
@@ -475,7 +475,7 @@ set test_duration_step5 = $test_duration_step2
 ##################################################################
 ######
 ######               Perform Regression Test # 1
-######                (1-Day Using NX:NY Layout)
+######               (12-Hour Using NX:NY Layout)
 ######
 ##################################################################
 
@@ -530,7 +530,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 2
-######               (6-Hour Using NX:NY Layout)
+######               (3-Hour Using NX:NY Layout)
 ######
 ##################################################################
 
@@ -634,7 +634,7 @@ end
 ##################################################################
 ######
 ######               Perform Regression Test # 3
-######               (18-Hour Using NX:NY Layout)
+######               (9-Hour Using NX:NY Layout)
 ######
 ##################################################################
 
@@ -710,7 +710,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 4
-######               (6-Hour Using 1:6 Layout)
+######               (3-Hour Using NX:NY/2 Layout)
 ######
 ##################################################################
 
@@ -718,8 +718,12 @@ endif
 
 if ( $RUN_LAYOUT == TRUE) then
 
-   set test_NX = 1
-   set test_NY = 6
+   set test_NX = ${NX0}
+   @ test_NY = ${NY0} / 2
+
+   if ($test_NY < 6) then
+      set test_NY = 6
+   endif
 
    # Copy Original Restarts to Regress directory
    # -------------------------------------------
@@ -759,15 +763,20 @@ if ( $RUN_LAYOUT == TRUE) then
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
-   # Set the new number of writers and readers
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`
-   set newstring = "NUM_WRITERS: 6"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`
-   set newstring = "NUM_READERS: 6"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   # MAT: Turning this off for now as it seems to cause
+   #      crazy slowness at times. Will re-enable if cause
+   #      is found and fixed.
+   ###############################################################
+   # # Set the new number of writers and readers                 #
+   # set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`      #
+   # set newstring = "NUM_WRITERS: 6"                            #
+   # /bin/mv AGCM.rc AGCM.tmp                                    #
+   # cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc #
+   # set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`      #
+   # set newstring = "NUM_READERS: 6"                            #
+   # /bin/mv AGCM.rc AGCM.tmp                                    #
+   # cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc #
+   ###############################################################
 
    @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
    @COUPLED set newstring = "OGCM.NX: ${test_NY}"
@@ -833,7 +842,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 5
-######               (6-Hour OpenMP:2)
+######               (3-Hour OpenMP:2)
 ######
 ##################################################################
 
@@ -889,16 +898,6 @@ if ( $RUN_OPENMP == TRUE) then
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
    set oldstring = `cat AGCM.rc | grep "^ *NY:"`
    set newstring = "NY: ${NY0}"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-
-   # Set the new number of writers and readers
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`
-   set newstring = "NUM_WRITERS: 6"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`
-   set newstring = "NUM_READERS: 6"
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
