@@ -763,15 +763,20 @@ if ( $RUN_LAYOUT == TRUE) then
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
-   # Set the new number of writers and readers
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`
-   set newstring = "NUM_WRITERS: 6"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`
-   set newstring = "NUM_READERS: 6"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   # MAT: Turning this off for now as it seems to cause
+   #      crazy slowness at times. Will re-enable if cause
+   #      is found and fixed.
+   ###############################################################
+   # # Set the new number of writers and readers                 #
+   # set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`      #
+   # set newstring = "NUM_WRITERS: 6"                            #
+   # /bin/mv AGCM.rc AGCM.tmp                                    #
+   # cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc #
+   # set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`      #
+   # set newstring = "NUM_READERS: 6"                            #
+   # /bin/mv AGCM.rc AGCM.tmp                                    #
+   # cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc #
+   ###############################################################
 
    @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
    @COUPLED set newstring = "OGCM.NX: ${test_NY}"
@@ -893,16 +898,6 @@ if ( $RUN_OPENMP == TRUE) then
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
    set oldstring = `cat AGCM.rc | grep "^ *NY:"`
    set newstring = "NY: ${NY0}"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-
-   # Set the new number of writers and readers
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_WRITERS:"`
-   set newstring = "NUM_WRITERS: 6"
-   /bin/mv AGCM.rc AGCM.tmp
-   cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-   set oldstring = `cat AGCM.rc | grep "^ *NUM_READERS:"`
-   set newstring = "NUM_READERS: 6"
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
