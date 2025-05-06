@@ -1109,6 +1109,8 @@ if ($OMP_NUM_THREADS > 1) then
   setenv KMP_AFFINITY compact
   echo OMP_STACKSIZE    $OMP_STACKSIZE
   echo KMP_AFFINITY     $KMP_AFFINITY
+  ./strip GWD_GridComp.rc
+  sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
 endif
 echo OMP_NUM_THREADS $OMP_NUM_THREADS
 
@@ -1135,6 +1137,11 @@ else
    set rc = -1
 endif
 echo GEOSgcm Run Status: $rc
+
+# Reset OpenMP Threads to 1
+setenv OMP_NUM_THREADS 1
+./strip GWD_GridComp.rc
+sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
 
 @MIT # ---------------------------------------------------
 @MIT # For MITgcm restarts - after running GEOSgcm.x
