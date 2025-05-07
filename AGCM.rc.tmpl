@@ -804,7 +804,7 @@ SURFACE_IMPORT_CHECKPOINT_TYPE:         {{ CHECKPOINT_TYPE }}
 
 #RRG_INTERNAL_RESTART_FILE:              rrg_internal_rst
 #RRG_INTERNAL_CHECKPOINT_FILE:           rrg_internal_checkpoint
-#RRG_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+#RRG_INTERNAL_CHECKPOINT_TYPE:           {{ CHECKPOINT_TYPE }}
 
 # OCEAN Model Restart Files
 # -------------------------
@@ -869,7 +869,7 @@ GIGATRAJ_EXTRA_FIELDS:       DYN%TH|Theta;DYN%ZL|PAlt
 # -------------------------
 #GIGATRAJ_INTERNAL_RESTART_FILE:         gigatraj_internal_rst
 #GIGATRAJ_INTERNAL_CHECKPOINT_FILE:      gigatraj_internal_checkpoint
-#GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      @CHECKPOINT_TYPE
+#GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      {{ CHECKPOINT_TYPE }}
 GIGATRAJ_REGRID_TO_LATLON:              NO
 #GIGATRAJ_PARCELS_FILE:                  parcels.nc4
 # time interval (minutes) for integration. Default is heart beat and it must be a multiple of heart beat.
