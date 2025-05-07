@@ -3,7 +3,7 @@ from generate_question import generateQuestion
 from utility import envdict, pathdict, color
 
 """
-This class handles special cases where a question"s properties need to be checked/dynamically 
+This class handles special cases where a question"s properties need to be checked/dynamically
 changed at runtime based on certain conditions (e.g. input validation)
 """
 class handle:
@@ -11,7 +11,7 @@ class handle:
     @staticmethod
     def select_type(answerdict, i):
         if answerdict[i].q_type == "select" and answerdict[i].q_answer != None:
-            # as of right now, we only want the first word of every select-type question. 
+            # as of right now, we only want the first word of every select-type question.
             # If that changes it's probably best to delete this function.
             answerdict[i].q_answer = answerdict[i].q_answer.split(None, 1)[0]
 
@@ -39,14 +39,14 @@ class handle:
             return
 
         if envdict["site"] == "NCCS":
-            answerdict[i].q_choices = ["cas"]
+            answerdict[i].q_choices = ["mil", "cas"]
         elif envdict["site"] == "NAS":
-            answerdict[i].q_choices = ["rom", "sky", "has", "bro", "cas", "mil"]
+            print(color.GREEN + "NOTE Due to how FV3 is compiled by default, Sandy Bridge\n" + \
+                                "and Ivy Bridge are not supported by current GEOS" + color.RESET)
+
+            answerdict[i].q_choices = ["rom", "mil", "sky", "cas", "bro", "has"]
         else:
             exit(1)
-
-        print(color.GREEN + "NOTE Due to how FV3 is compiled by default, Sandy Bridge\n" + \
-                            "and Ivy Bridge are not supported by current GEOS" + color.RESET)
 
     @staticmethod
     def OM_horizontal_res_default(answerdict, i):
@@ -83,8 +83,8 @@ class handle:
            answerdict[i].q_default = "72 36"
 
     '''
-    THIS METHOD IS BUGGED FOR NOW 
-    @staticmethod 
+    THIS METHOD IS BUGGED FOR NOW
+    @staticmethod
     def OM_hres_valid(answerdict, i):
         if i != "OM_MOM_horizontal_res":
             return
@@ -107,15 +107,15 @@ class handle:
             return
         '''
         Default heartbeat is determined by atmospheric resolution.
-        Of course, this just the recommended value. The user can 
+        Of course, this just the recommended value. The user can
         enter whatever value they like
         '''
         heartbeat = ""
         match answerdict["AM_horizontal_res"].q_answer:
             case 'c12':
-                heartbeat = 3600
-            case 'c24':
                 heartbeat = 1800
+            case 'c24':
+                heartbeat = 1200
             case 'c48':
                 heartbeat = 1200
             case 'c90':
@@ -157,7 +157,7 @@ class handle:
     def history_template_default(answerdict, i):
         if i != "history_template":
             return
-            
+
         if answerdict['OM_name'].q_answer == 'MOM5':
             answerdict[i].q_default = 'HISTORY.AOGCM-MOM5.rc.tmpl'
         elif answerdict['OM_name'].q_answer == "MOM6":
@@ -173,7 +173,7 @@ class handle:
     def exp_dir_default(answerdict, i):
         if i != "exp_dir":
             return
-        
+
         root = f"{os.environ.get('HOME')}/.EXPDIRroot"
         if os.path.exists(root):
             try:
@@ -185,7 +185,7 @@ class handle:
             answerdict[i].q_default = f"/{'discover/' if envdict['site'] == 'NCCS' else ''}nobackup/{os.environ.get('LOGNAME')}/{answerdict['experiment_id'].q_answer}"
         else:
             answerdict[i].q_default = f"{os.environ.get('HOME')}/{answerdict['experiment_id']}"
-            
+
 
     @staticmethod
     def exp_dir_valid(answerdict, i):
@@ -196,7 +196,7 @@ class handle:
             answerdict[i].load_question(answerdict)
 
 
-    @staticmethod 
+    @staticmethod
     def group_root_default(answerdict, i):
         if i != "group_root":
             return
@@ -242,8 +242,8 @@ def process():
                                    yaml_questions[i]["choices"],       \
                                    yaml_questions[i]["default_answer"],\
                                    yaml_questions[i]["follows_up"])
-        
-        answerdict[i] = temp   
+
+        answerdict[i] = temp
 
 
         # if the question properties need to dynamically change at
@@ -251,7 +251,7 @@ def process():
         handle.io_server_defualt(answerdict, i)
         handle.processor_choices(answerdict, i)
         handle.OM_horizontal_res_default(answerdict, i)
-        handle.MIT_hres_choices(answerdict, i)        
+        handle.MIT_hres_choices(answerdict, i)
         handle.MOM_hres_default(answerdict, i)
         handle.seaice_choices(answerdict, i)
         handle.heartbeat_default(answerdict, i)
@@ -267,7 +267,7 @@ def process():
         # handle.OM_hres_valid(answerdict, i)
         handle.heartbeat_valid(answerdict, i)
         handle.exp_dir_valid(answerdict, i)
-        
+
         # strips the first word from every select type question
         handle.select_type(answerdict, i)
 

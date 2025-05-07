@@ -41,16 +41,6 @@ AGCM.IM_WORLD: {{ AGCM_IM }}
 ###########################################################
 # debug options
 # ----------------------------------------
-#DEBUG_DYN: .TRUE.
-#DEBUG_GWD: .TRUE.
-#DEBUG_MST: .TRUE.
-#DEBUG_TRB: .TRUE.
-#DEBUG_SYNCTQ: .TRUE.
-###########################################################
-
-###########################################################
-# debug options
-# ----------------------------------------
 #DEBUG_ADV: .TRUE.
 #DEBUG_DYN: .TRUE.
 #DEBUG_GWD: .TRUE.
@@ -838,32 +828,6 @@ SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  {{ CHECKPOINT_TYPE }}
 {{ COUPLED }}OCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
 {{ COUPLED }}OCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
 {{ COUPLED }}OCEAN_INTERNAL_CHECKPOINT_TYPE:            {{ CHECKPOINT_TYPE }}
-
-# GIGATRAJ RUN CONFIG
-# -------------------------
-#GIGATRAJ_INTERNAL_RESTART_FILE:         gigatraj_internal_rst
-#GIGATRAJ_INTERNAL_CHECKPOINT_FILE:      gigatraj_internal_checkpoint
-#GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      {{ CHECKPOINT_TYPE }}
-GIGATRAJ_REGRID_TO_LATLON:              NO
-#GIGATRAJ_PARCELS_FILE:                  parcels.nc4
-# time interval (minutes) for integration. Default is heart beat and it must be a multiple of heart beat.
-# format hhmmss
-# GIGATRAJ_INTEGRATE_DT:
-# time interval to rebalance the parcels, i.e, the process keeps its own parcels
-# format hhmmss
-GIGATRAJ_REBALANCE_DT:      001500
-# time interval to write output
-# format hhmmss
-GIGATRAJ_OUTPUT_DT:         003000
-# format :: comp[%%bundle]%field[|alias], [] is optional
-GIGATRAJ_VERTICAL_COORD: DYN%PL|P
-#GIGATRAJ_VERTICAL_COORD: DYN%TH|Theta
-#GIGATRAJ_VERTICAL_COORD: DYN%ZL|PAlt
-# using ";" to separate fields. NO blank space between chars
-# format :: comp[%%bundle]%field[|alias], [] is optional
-GIGATRAJ_EXTRA_FIELDS:       DYN%TH|Theta;DYN%ZL|PAlt
-#GIGATRAJ_EXTRA_FIELDS:       DYN%PL|P;DYN%ZL|PAlt
-#GIGATRAJ_EXTRA_FIELDS:       DYN%PL|P;DYN%TH|Theta
 
 # GIGATRAJ RUN CONFIG
 # -------------------------

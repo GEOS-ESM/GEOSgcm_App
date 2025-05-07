@@ -81,7 +81,10 @@ if envdict['site'] == 'NCCS':
     cores. As 45 is a multiple of 3, it's the best value
     that doesn't waste too much
     '''
-    envdict['n_CPUs'] = 40
+    if answerdict['processor'].q_answer == 'cas':
+        envdict['n_CPUs'] = 40
+    elif answerdict['processor'].q_answer == 'mil':
+        envdict['n_CPUs'] = 120
 
 elif envdict['site'] == 'NAS':
     if answerdict['processor'].q_answer == 'has':
@@ -142,5 +145,5 @@ else:
     envdict['preload_command'] = 'LD_PRELOAD'
     envdict['ld_library_path_command'] = 'LD_LIBRARY_PATH'
     envdict['run_command'] = '$GEOSBIN/esma_mpirun -np '
- 
+
 

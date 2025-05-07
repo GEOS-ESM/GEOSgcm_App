@@ -5,7 +5,7 @@
 #######################################################################
 
 #{{ BATCH_TIME }}{{ RUN_T }}
-#{{ RUN_P }}
+#{{ REGRESS_P }}
 #{{ BATCH_JOBNAME }}{{ REGRESS_N }}
 #{{ RUN_Q }}
 #{{ BATCH_GROUP }}
@@ -870,12 +870,12 @@ if ( $RUN_OPENMP == TRUE) then
       cp $EXPDIR/$rst $EXPDIR/regress
    end
 
-   @COUPLED /bin/rm -rf INPUT
-   @COUPLED /bin/mkdir INPUT
-   @COUPLED cp $EXPDIR/RESTART/* INPUT
+   {{ COUPLED }} /bin/rm -rf INPUT
+   {{ COUPLED }} /bin/mkdir INPUT
+   {{ COUPLED }} cp $EXPDIR/RESTART/* INPUT
 
-   @COUPLED # restore original input.nml
-   @COUPLED /bin/mv input.nml.orig input.nml
+   {{ COUPLED }} # restore original input.nml
+   {{ COUPLED }} /bin/mv input.nml.orig input.nml
 
    /bin/rm              cap_restart
    echo $nymd0 $nhms0 > cap_restart
@@ -901,17 +901,17 @@ if ( $RUN_OPENMP == TRUE) then
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
-   @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
-   @COUPLED set newstring = "OGCM.NX: ${OGCM_NX0}"
-   @COUPLED /bin/mv AGCM.rc AGCM.tmp
-   @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-   @COUPLED set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
-   @COUPLED set newstring = "OGCM.NY: ${OGCM_NY0}"
-   @COUPLED /bin/mv AGCM.rc AGCM.tmp
-   @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   {{ COUPLED }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
+   {{ COUPLED }} set newstring = "OGCM.NX: ${OGCM_NX0}"
+   {{ COUPLED }} /bin/mv AGCM.rc AGCM.tmp
+   {{ COUPLED }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   {{ COUPLED }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
+   {{ COUPLED }} set newstring = "OGCM.NY: ${OGCM_NY0}"
+   {{ COUPLED }} /bin/mv AGCM.rc AGCM.tmp
+   {{ COUPLED }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
-   @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${OGCM_NX0},${OGCM_NY0}#" input.nml
-   @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
+   {{ MOM5 }}sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${OGCM_NX0},${OGCM_NY0}#" input.nml
+   {{ MOM6 }}sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
 
    setenv YEAR `cat cap_restart | cut -c1-4`
    ./linkbcs
@@ -934,7 +934,7 @@ if ( $RUN_OPENMP == TRUE) then
 
    echo "=== Running OpenMP test of duration ${test_duration_step5} with NX = $NX0 and NY = $NY0 starting at $nymd0 $nhms0 ==="
 
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ OCEAN_PRELOAD }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
@@ -951,7 +951,7 @@ if ( $RUN_OPENMP == TRUE) then
       /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.5
    end
 
-   @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.5
+   {{ MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.5
 
    # Move history as well
    set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
@@ -1268,24 +1268,24 @@ if ($RUN_OPENMP == TRUE) then
    endif
    end
 
-   @MOM6# check MOM.res.nc (MOM6 restart)
-   @MOM6set file1 = MOM.res.nc.2
-   @MOM6set file2 = MOM.res.nc.5
-   @MOM6if( -e $file1 && -e $file2 ) then
-   @MOM6      set check = true
-   @MOM6      if( $check == true ) then
-   @MOM6         echo Comparing "MOM6 restarts"
-   @MOM6         cmp $file1 $file2
-   @MOM6         if( $status == 0 ) then
-   @MOM6             echo OpenMP Success!
-   @MOM6             echo " "
-   @MOM6         else
-   @MOM6             echo OpenMP Failed!
-   @MOM6             echo " "
-   @MOM6             set openmp_pass = false
-   @MOM6         endif
-   @MOM6      endif
-   @MOM6endif
+   {{ MOM6 }}# check MOM.res.nc (MOM6 restart)
+   {{ MOM6 }}set file1 = MOM.res.nc.2
+   {{ MOM6 }}set file2 = MOM.res.nc.5
+   {{ MOM6 }}if( -e $file1 && -e $file2 ) then
+   {{ MOM6 }}      set check = true
+   {{ MOM6 }}      if( $check == true ) then
+   {{ MOM6 }}         echo Comparing "MOM6 restarts"
+   {{ MOM6 }}         cmp $file1 $file2
+   {{ MOM6 }}         if( $status == 0 ) then
+   {{ MOM6 }}             echo OpenMP Success!
+   {{ MOM6 }}             echo " "
+   {{ MOM6 }}         else
+   {{ MOM6 }}             echo OpenMP Failed!
+   {{ MOM6 }}             echo " "
+   {{ MOM6 }}             set openmp_pass = false
+   {{ MOM6 }}         endif
+   {{ MOM6 }}      endif
+   {{ MOM6 }}endif
 
    echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
 

@@ -1138,6 +1138,11 @@ else
 endif
 echo GEOSgcm Run Status: $rc
 
+# Reset OpenMP Threads to 1
+setenv OMP_NUM_THREADS 1
+./strip GWD_GridComp.rc
+sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
+
 {{ MIT }} # ---------------------------------------------------
 {{ MIT }} # For MITgcm restarts - after running GEOSgcm.x
 {{ MIT }} # ---------------------------------------------------

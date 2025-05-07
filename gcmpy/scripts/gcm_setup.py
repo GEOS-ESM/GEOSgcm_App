@@ -28,22 +28,22 @@ class setup:
         self.n_oserver_nodes    = None
         self.n_backend_pes      = None
         self.n_nodes            = None
-        self.exp_dir            = answerdict['exp_dir'].q_answer   
+        self.exp_dir            = answerdict['exp_dir'].q_answer
         self.restart_by_oserver = 'NO'
-        self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text() 
+        self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text()
         self.file_list          = ['gcm_run.j',
-                                   'gcm_post.j',        
-                                   'gcm_archive.j',     
-                                   'gcm_regress.j',     
-                                   'gcm_plot.tmpl',     
-                                   'gcm_quickplot.csh', 
-                                   'gcm_moveplot.j',    
-                                   'gcm_forecast.tmpl', 
+                                   'gcm_post.j',
+                                   'gcm_archive.j',
+                                   'gcm_regress.j',
+                                   'gcm_plot.tmpl',
+                                   'gcm_quickplot.csh',
+                                   'gcm_moveplot.j',
+                                   'gcm_forecast.tmpl',
                                    'gcm_forecast.setup',
-                                   'gcm_emip.setup',    
-                                   'CAP.rc.tmpl',       
-                                   'AGCM.rc.tmpl',      
-                                   'logging.yaml',      
+                                   'gcm_emip.setup',
+                                   'CAP.rc.tmpl',
+                                   'AGCM.rc.tmpl',
+                                   'logging.yaml',
                                    'fvcore_layout.rc',
                                    'linkbcs.tmpl']
 
@@ -64,7 +64,7 @@ class setup:
         self.bcs_res    = f"{self.atmos.res}_{self.ocean.res}"
         self.tile_data  = f"{self.atmos.res}_{self.ocean.res}_Pfafstetter.til"
         self.tile_bin   = f"{self.atmos.res}_{self.ocean.res}_Pfafstetter.TIL"
-        self.job_sgmt   = f"{self.atmos.job_sgmt} 000000" 
+        self.job_sgmt   = f"{self.atmos.job_sgmt} 000000"
 
 
     # setup experiment nodes
@@ -80,10 +80,10 @@ class setup:
             # Next the number of frontend PEs is 10% of the model PEs
             n_frontend_pes = math.ceil(model_npes * 0.1)
 
-            # Now we roughly figure out the number of collections in the HISTORY.rc 
+            # Now we roughly figure out the number of collections in the HISTORY.rc
             n_hist_collections = 0
             with open(f"{pathdict['etc']}/{answerdict['history_template'].q_answer}", 'r') as file:
-                in_collections = False 
+                in_collections = False
                 for line in file:
                     if line.split(' ', 1)[0] == "COLLECTIONS:":
                         in_collections = True
@@ -101,7 +101,7 @@ class setup:
 
             # The number of backend PEs is the number of history collections divided by the number of oserver nodes
             n_backend_pes = math.ceil(n_hist_collections / n_oserver_nodes)
-            
+
             # multigroup requires at least two backend pes
             if (n_backend_pes < 2): n_backend_pes = 2
 
@@ -113,8 +113,6 @@ class setup:
             self.n_oserver_nodes = 0
             self.n_backend_pes   = 0
 
-
-    
     def set_stuff(self):
         self.set_nodes()
         # Longer job names are now supported with SLURM and PBS. Limits seem to be 1024 characters with SLURM
@@ -123,7 +121,7 @@ class setup:
         self.run_fn    = f"{answerdict['experiment_id'].q_answer[:200]}_FCST"   # Forecast Job Name
         self.post_n    = f"{answerdict['experiment_id'].q_answer[:200]}_POST"   # POST     Job Name
         self.plot_n    = f"{answerdict['experiment_id'].q_answer[:200]}_PLT"    # PLOT     Job Name
-        self.move_n    = f"{answerdict['experiment_id'].q_answer[:200]}_PLT"    # MOVE     Job Name
+        self.move_n    = f"{answerdict['experiment_id'].q_answer[:200]}_MOVE"   # MOVE     Job Name
         self.archive_n = f"{answerdict['experiment_id'].q_answer[:200]}_ARCH"   # ARCHIVE  Job Name
         self.regress_n = f"{answerdict['experiment_id'].q_answer[:200]}_RGRS"   # REGRESS  Job Name
 
@@ -170,29 +168,29 @@ class setup:
         '''
 
         if envdict['site'] == "NAS":
-            self.batch_cmd        = "qsub"                               
-            self.batch_group      = "PBS -W group_list="                 
-            self.batch_time       = "PBS -l walltime="                   
-            self.batch_jobname    = "PBS -N"                             
-            self.batch_outputname = "PBS -o "                            
-            self.batch_joinouterr = "PBS -j oe -k oed"                   
-            self.run_ft           = "6:00:00"                            
-            self.run_t            = "8:00:00"                            
-            self.post_t           = "8:00:00"                            
-            self.plot_t           = "8:00:00"                            
-            self.archive_t        = "8:00:00"                                                      
-            self.run_q            = f"PBS -q normal"                    
-            self.run_p            = f"PBS -l select={self.nodes}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}" 
-            self.run_fp           = f"PBS -l select=24:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"          
-            self.regress_p        = f"PBS -l select={self.nodes * 2}:ncpus=${NCPUS_PER_NODE_HALF}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer / 2}"
-            self.post_q           = "PBS -q normal"                      
-            self.plot_q           = "PBS -q normal"                     
+            self.batch_cmd        = "qsub"
+            self.batch_group      = "PBS -W group_list="
+            self.batch_time       = "PBS -l walltime="
+            self.batch_jobname    = "PBS -N"
+            self.batch_outputname = "PBS -o "
+            self.batch_joinouterr = "PBS -j oe -k oed"
+            self.run_ft           = "6:00:00"
+            self.run_t            = "8:00:00"
+            self.post_t           = "8:00:00"
+            self.plot_t           = "8:00:00"
+            self.archive_t        = "8:00:00"
+            self.run_q            = f"PBS -q normal"
+            self.run_p            = f"PBS -l select={self.nodes}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
+            self.run_fp           = f"PBS -l select=24:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
+            self.regress_p        = f"PBS -l select={self.nodes * 2}:ncpus={envdict['n_CPUSs'] // 2}:mpiprocs={envdict['n_CPUs'] // 2}:model={answerdict['processor'].q_answer}"
+            self.post_q           = "PBS -q normal"
+            self.plot_q           = "PBS -q normal"
             self.move_q           = "PBS -q normal"
             self.archive_q        = "PBS -q normal"
             self.post_p           = f"PBS -l select={NPCUS}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
             self.plot_p           = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs=1:model={answerdict['processor'].q_answer}"
             self.archive_p        = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
-            self.move_p           = "PBS -l select=1:ncpus=1"   
+            self.move_p           = "PBS -l select=1:ncpus=1"
             self.boundary_path    = "/nobackup/gmao_SIteam/ModelData"
             self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs}/{self.land.bcs}_{self.ocean.tag}"
             self.replay_ana_expID        = "ONLY_MERRA2_SUPPORTED"
@@ -209,15 +207,15 @@ class setup:
                 self.sst_dir = "/nobackupp2/estrobac/geos5/SSTDIR"
 
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
-            self.work_dir         = f"/nobackup/{os.environ.get('LOGNAME')}"       
+            self.work_dir         = f"/nobackup/{os.environ.get('LOGNAME')}"
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
 
             # Coupled Ocean/Atmos Forcing
             if self.ocean.model == "MIT":
                 self.coupled_dir  = "/nobackupp2/estrobac/geos5/GRIDDIR"
             else:
-                self.coupled_dir  = f"{boundary_path}/aogcm"
-            
+                self.coupled_dir  = f"{self.boundary_path}/aogcm"
+
 
         elif envdict['site'] == "NCCS":
             self.batch_cmd        = "sbatch"
@@ -227,14 +225,14 @@ class setup:
             self.batch_outputname = "SBATCH --output="
             self.batch_joinouterr = "DELETE"
             self.run_ft           = "06:00:00"
-            self.run_t            = "12:00:00" 
-            self.post_t           = "8:00:00" 
-            self.plot_t           = "12:00:00" 
+            self.run_t            = "12:00:00"
+            self.post_t           = "8:00:00"
+            self.plot_t           = "12:00:00"
             self.archive_t        = "2:00:00"
             self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
-            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] / 2}"
+            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] // 2}"
             self.post_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.plot_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
             self.move_q           = "SBATCH --partition=datamove"
@@ -270,8 +268,8 @@ class setup:
                 self.coupled_dir  = f"{self.boundary_path}/bcs_shared/make_bcs_inputs/ocean"
 
 
-        elif envdict['site'] == "AWS" or envdict['SITE'] == "Azure":
-            self.batch_cmd        = "sbatch" 
+        elif envdict['site'] == "AWS" or envdict['site'] == "Azure":
+            self.batch_cmd        = "sbatch"
             self.batch_group      = "#DELETE"
             self.batch_time       = "SBATCH --time="
             self.batch_jobname    = "SBATCH --job-name="
@@ -283,9 +281,9 @@ class setup:
             self.plot_t           = "12:00:00"
             self.archive_t        = "1:00:00"
             self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
-            self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}" 
+            self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
-            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] / 2}"
+            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] // 2}"
             self.post_q           = "NULL"
             self.plot_q           = "NULL"
             self.move_q           = "NULL"
@@ -308,8 +306,8 @@ class setup:
         else:
             # These are defaults for the desktop
             self.batch_cmd        = "sbatch"
-            self.batch_group      = "SBATCH --account=" 
-            self.batch_time       = "SBATCH --time=" 
+            self.batch_group      = "SBATCH --account="
+            self.batch_time       = "SBATCH --time="
             self.batch_jobname    = "SBATCH --job-name="
             self.batch_outputname = "SBATCH --output="
             self.batch_joinouterr = "DELETE"
@@ -337,10 +335,11 @@ class setup:
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
             self.sst_dir          = f"{self.boundary_path}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
             self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
-            self.work_dir         = os.environ.get('HOME') 
+            self.work_dir         = os.environ.get('HOME')
             self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
             self.coupled_dir      = f"{self.boundary_path}/aogcm"
 
+        if envdict['site'] == 'GMAO.desktop':
             # By default on desktop, just ignore IOSERVER for now
             self.atmos.NX = 1
             self.atmos.NY = 6
@@ -354,7 +353,7 @@ class setup:
         self.NCAR_NRDG = 16
         if self.land.gwd_in_bcs == False and not os.path.exists(f"{self.gwdrs_dir}/gwd_internal_c{self.atmos.im}"):
             self.NCAR_NRDG = 0
-            
+
 
 
 
@@ -378,7 +377,7 @@ class setup:
 
         # Make the experiment directory and the RC directory inside of it
         RC_dir = os.path.join(self.exp_dir, 'RC')
-        
+
         # Delete the destination directory if it exists
         if os.path.exists(RC_dir):
             shutil.rmtree(RC_dir)
@@ -410,34 +409,23 @@ class setup:
         # retrieve config from correlating mpi setting being used
         self.mpi_config = mpidict.get(envdict['mpi'])
 
-        # These are options determined to be useful at NCCS
-        # Not setting generally as they are more fabric/cluster
-        # specific compared to the above adjustments
-        if envdict['site'] == 'NCCS':
-            self.mpi_config += "\nsetenv I_MPI_SHM_HEAP_VSIZE 512 \
-                                \nsetenv PSM2_MEMORY large"
-        
-        # as of right now, sigularity is not an option so this will always be added
-        self.mpi_config += "\nsetenv I_MPI_EXTRA_FILESYSTEM 1 \
-                            \nsetenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs"
-
-
-
 
     #######################################################################
-    #            Create directories and copy files over 
+    #            Create directories and copy files over
     #######################################################################
     # A little helper function for copying files and displaying the info to the user
     def copy_helper(self, src, destination, filename):
-        shutil.copy(src, destination)
-        print(f"Creating {color.RED}{filename}{color.RESET} for Experiment: {answerdict['experiment_id'].q_answer}")
+        if os.path.exists(src):
+            shutil.copy(src, destination)
+            print(f"Creating {color.RED}{filename}{color.RESET} for Experiment: {answerdict['experiment_id'].q_answer}")
 
     def copy_files_into_exp(self):
         print("\n\n\n")
 
         for file in self.file_list:
-            self.copy_helper(f"{pathdict['GEOSgcm_App']}/{file}", f"{self.exp_dir}/{file}", file)
-       
+            self.copy_helper(f"{pathdict['install']}/bin/{file}", f"{self.exp_dir}/{file}", file)
+            self.copy_helper(f"{pathdict['install']}/etc/{file}", f"{self.exp_dir}/{file}", file)
+
         self.copy_helper(f"{pathdict['install']}/post/plot.rc", f"{self.exp_dir}/plot.rc", "plot.rc")
         self.copy_helper(f"{pathdict['install']}/post/post.rc", f"{self.exp_dir}/post.rc", "post.rc")
 
@@ -452,7 +440,7 @@ class setup:
             self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/INPUT/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
             MOM5_path = os.path.join(pathdict['etc'], 'MOM5', 'geos5', f"{self.ocean.IM}x{self.ocean.JM}", 'INPUT', '*table')
             files = glob.glob(MOM5_path)
-            for file in files: 
+            for file in files:
                 file_name = os.path.basename(file)
                 self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
         elif self.ocean.model == 'MOM6':
@@ -463,12 +451,12 @@ class setup:
             self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
             MOM6_path = os.path.join(pathdict['etc'], 'MOM6', 'mom6_app', f"{self.ocean.IM}x{self.ocean.JM}", '*table')
             files = glob.glob(MOM6_path)
-            for file in files: 
+            for file in files:
                 file_name = os.path.basename(file)
                 self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
 
         if self.ocean.seaice_model == 'CICE6':
-            self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in") 
+            self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in")
             self.file_list.append('ice_in')
 
         print(f"{color.GREEN}Done!{color.RESET}\n")
@@ -478,18 +466,18 @@ class setup:
     #                 Produce Final script and .rc files
     #######################################################################
 
-    # THIS WHOLE SECTION IS WILDLY OUT OF DATE, HOWEVER I KEPT IT AS IT WAS 
+    # THIS WHOLE SECTION IS WILDLY OUT OF DATE, HOWEVER I KEPT IT AS IT WAS
     # IN THE ORIGINAL SCRIPT FOR NOW
     def restarts(self):
         # comment or un-comment restarts based on exp configuration
         # ---------------------------------------------------------
-        rsnames = {'H2O': False, 
+        rsnames = {'H2O': False,
                    'MAM': False,
                    'CARMA': False,
                    'GMICHEM': False,
                    'STRATCHEM': False}
         rstypes = ['INTERNAL','IMPORT']
-        
+
         with open(f"{answerdict['exp_dir'].q_answer}/AGCM.rc.tmpl", 'r') as file:
             file_content = file.read()
 
@@ -509,10 +497,10 @@ class setup:
     def mod_RC_dir_for_pchem(self):
         if self.atmos.lm == 72:
             return
-        
+
         rc_dir = f"{answerdict['exp_dir'].q_answer}/RC"
- 
-        # if atmospheric vertical resolution != 72, we loop through every 
+
+        # if atmospheric vertical resolution != 72, we loop through every
         # file in the RC dir and modify the atmos.lm values
         for file_name in os.listdir(rc_dir):
             file_path = os.path.join(rc_dir, file_name)
@@ -527,10 +515,10 @@ class setup:
             file_content = file_content.replace("/L72/", f"/L{self.atmos.lm}/")
             file_content = file_content.replace("z72", f"z{self.atmos.lm}")
             file_content = file_content.replace("_72_", f"_{self.atmos.lm}_")
-            
+
             with open(file_path, 'w') as file:
                 file.write(file_content)
-    
+
     # configure pchem and TR in GEOS_ChemGridComp.rc
     def config_chemGridComp(self):
         if self.gocart.rats_provider == 'PCHEM':
@@ -545,7 +533,7 @@ class setup:
         # we always enable TR and gocart
         file_content = re.sub(r'(ENABLE_PCHEM:\s*\.).*(\.)', r'\1'+pchem+r'\2', file_content)
         file_content = re.sub(r'(ENABLE_TR:\s*\.).*(\.)', r'\1TRUE\2', file_content)
-        file_content = re.sub(r'(ENABLE_GOCART_DATA:\s*\.).*(\.)', r'\1TRUE\2', file_content)
+        file_content = re.sub(r'(ENABLE_GOCART_DATA:\s*\.).*(\.)', r'\1FALSE\2', file_content)
 
         with open(chemgridcomp, 'w') as file:
             file.write(file_content)
@@ -556,6 +544,7 @@ class setup:
         with open(surfacegridcomp, 'r') as file:
             file_content = file.read()
 
+        file_content = re.sub(r'# GEOSagcm=>', r'            ', file_content)
         if self.land.model == 'CatchmentCN-CLM4.0':
             file_content = re.sub(r'(LAND_PARAMS:\s*).*', r'\1CN_CLM40', file_content)
 
@@ -580,7 +569,7 @@ class setup:
             file_content = re.sub(r'(ACTIVE_INSTANCES_CA:\s*)CA.oc', r'\1CA.oc.data', file_content)
             file_content = re.sub(r'(ACTIVE_INSTANCES_CA:\s*)CA.bc', r'\1CA.bc.data', file_content)
             file_content = re.sub(r'(ACTIVE_INSTANCES_CA:\s*)CA.br', r'\1CA.br.data', file_content)
-        
+
         with open(gocartgridcomp, 'w') as file:
             file.write(file_content)
 
@@ -590,16 +579,16 @@ class setup:
         # With MOM5 we need to change dt lines in input.nml to
         # use $OCEAN_DT instead. NOTE: This regex assumes integer followed by comma
         if self.ocean.model == 'MOM5':
-            
+
             with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'r') as file:
                 file_content = file.read()
-            
+
             file_content = re.sub(r'dt_cpld\s*=\s*.*(,)', rf"dt_cpld = {self.atmos.dt_ocean}\1", file_content)
             file_content = re.sub(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.dt_ocean}\1", file_content)
-            
+
             with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'w') as file:
                 file.write(file_content)
-            
+
 
         # We also must change the MOM_override file to
         # have consistent DTs with the AGCM. So we use OCEAN_DT
@@ -628,7 +617,7 @@ class setup:
 
 
 
-    def template(self):  
+    def template(self):
         # this dictionary holds template values for the default jinja2 delimiter "{{ val }}"
         jinja_dict = {
             'SETENVS': self.mpi_config,
@@ -654,12 +643,12 @@ class setup:
             'PLOT_Q': self.plot_q,
             'MOVE_Q': self.move_q,
             'MOVE_P': self.move_p,
-            'ARCHIVE_N': self.archive_n, 
+            'ARCHIVE_N': self.archive_n,
             'ARCHIVE_T': self.archive_t,
             'ARCHIVE_P': self.archive_p,
             'ARCHIVE_Q': self.archive_q,
             'REGRESS_N': self.regress_n,
-            'BCSDIR': self.bcs_dir, 
+            'BCSDIR': self.bcs_dir,
             'SSTDIR': self.sst_dir,
             'SSTNAME': self.ocean.sst_name,
             'OCEANOUT': self.ocean.out,
@@ -667,18 +656,18 @@ class setup:
             'EMIP_BCS_IN': self.land.emip_bcs_in,
             'EMIP_MERRA2': self.land.emip_MERRA2,
             'BCSTAG': self.ocean.tag,
-            'SSTFILE': self.ocean.sst_file, 
-            'ICEFILE': self.ocean.ice_file, 
+            'SSTFILE': self.ocean.sst_file,
+            'ICEFILE': self.ocean.ice_file,
             'KPARFILE': self.ocean.kpar_file,
-            'CHMDIR': self.chem_dir, 
+            'CHMDIR': self.chem_dir,
             'COUPLEDIR': self.coupled_dir,
             'GWDRSDIR': self.gwdrs_dir,
             'NCAR_NRDG': self.NCAR_NRDG,
             'EXPDIR': self.exp_dir,
             'EXPDSC': answerdict['experiment_description'].q_answer,
             'HOMDIR': self.exp_dir,
-            'BATCH_GROUP': self.batch_group,
-            'BATCH_TIME': self.batch_time, 
+            'BATCH_GROUP': self.batch_group+answerdict['group_root'].q_answer,
+            'BATCH_TIME': self.batch_time,
             'BATCH_CMD': self.batch_cmd,
             'BATCH_JOBNAME': self.batch_jobname,
             'BATCH_OUTPUTNAME': self.batch_outputname,
@@ -691,7 +680,7 @@ class setup:
             'GEOSUTIL': pathdict['install'],
             'SINGULARITY_BUILD': '#DELETE',
             'NATIVE_BUILD': '',
-            'MPT_SHEPHERD': self.ocean.mpt_shepherd, 
+            'MPT_SHEPHERD': self.ocean.mpt_shepherd,
             'SINGULARITY_SANDBOX': '',
             'REAL_BIND_PATH': '',
             'BASE_BIND_PATH': '',
@@ -699,18 +688,18 @@ class setup:
             'CHECKPOINT_TYPE': 'default',
             'OGCM_NX': self.ocean.NX,
             'OGCM_NY': self.ocean.NY,
-            'OGCM_NPROCS': self.ocean.nprocs, 
+            'OGCM_NPROCS': self.ocean.nprocs,
             'OBSERVER_FRQ': 0,
             'DASTUNING': '#',
-            'COUPLED': self.ocean.coupled, 
+            'COUPLED': self.ocean.coupled,
             'CLDMICRO': self.atmos.microphysics,
             'MOM5': self.ocean.MOM5,
             'MOM6': self.ocean.MOM6,
-            'OCNMODEL': self.ocean.model, 
+            'OCNMODEL': self.ocean.model,
             'CICE4': self.ocean.CICE4,
             'CICE6': self.ocean.CICE6,
             'HIST_CICE4': self.ocean.hist_CICE4,
-            'MIT': self.ocean.MIT, 
+            'MIT': self.ocean.MIT,
             'DATAOCEAN': self.ocean.data,
             'OPS_SPECIES': self.gocart.ops_species,
             'CMIP_SPECIES': self.gocart.cmip_species,
@@ -732,12 +721,12 @@ class setup:
             'CH4_PROVIDER': self.gocart.ch4_provider,
             'CO2_PROVIDER': self.gocart.c02_provider,
             'DYCORE': 'FV3',
-            'AGCM_GRIDNAME': self.atmos.gridname, 
+            'AGCM_GRIDNAME': self.atmos.gridname,
             'OGCM_GRIDNAME': self.ocean.gridname,
             'OGCM_IS_FCST': '0',
             'BOOT': 'YES',
             'BCSRES': self.bcs_res,
-            'OCEANtag': self.ocean.res, 
+            'OCEANtag': self.ocean.res,
             'ATMOStag': self.atmos.res,
             'RES_DATELINE': self.atmos.res_dateline,
             'TILEDATA': self.tile_data,
@@ -754,7 +743,7 @@ class setup:
             'NUM_OSERVER_NODES': self.n_oserver_nodes,
             'NUM_BACKEND_PES': self.n_backend_pes,
             'RESTART_BY_OSERVER': self.restart_by_oserver,
-            'NCPUS_PER_NODE': envdict['n_CPUs'], 
+            'NCPUS_PER_NODE': envdict['n_CPUs'],
             'NUM_READERS': self.atmos.num_readers,
             'NUM_WRITERS': self.atmos.num_writers,
             'LATLON_AGCM': self.atmos.latlon,
@@ -778,7 +767,7 @@ class setup:
             'CONUS': self.atmos.conus,
             'CONVPAR_OPTION': self.atmos.convpar_option,
             'STRETCH_FACTOR': self.atmos.stretch_factor,
-            'INTERPOLATE_SST': self.interpolate_sst, 
+            'INTERPOLATE_SST': self.interpolate_sst,
             'HIST_IM': self.atmos.hist_im,
             'HIST_JM': self.atmos.hist_jm,
             'ISCCP_SATSIM': 1,
@@ -804,7 +793,7 @@ class setup:
             'FV_TARGET_LON': self.atmos.target_lon,
             'FV_TARGET_LAT': self.atmos.target_lat,
             'FORCEDAS': self.atmos.force_das,
-            'FORCEGCM': self.atmos.force_gcm, 
+            'FORCEGCM': self.atmos.force_gcm,
             'HIST_CICE4': '#DELETE',
             'FVCUBED': '',
             'HIST_CATCHCN': self.land.HIST_catchment,
@@ -817,11 +806,11 @@ class setup:
             'REGULAR_REPLAY_NCEP': '#DELETE',
             'REGULAR_REPLAY_ECMWF': '#DELETE'
         }
-        
+
 
         exp_dir = answerdict['exp_dir'].q_answer
 
-        # this is an edge-case that can't be handled with jinja2  
+        # this is an edge-case that can't be handled with jinja2
         for file in self.file_list:
             with open(f"{exp_dir}/{file}", 'r') as tmpl:
                 file_content = tmpl.read()
@@ -829,12 +818,12 @@ class setup:
             file_content = re.sub(r'[ \t]*RECORD_', r'#RECORD_', file_content)
 
             with open(f"{exp_dir}/{file}", 'w') as tmpl:
-                tmpl.write(file_content) 
+                tmpl.write(file_content)
 
         # this block handles the default case for jinja templating
         default_env = Environment(
             loader=FileSystemLoader(exp_dir)
-        )    
+        )
         for file in self.file_list:
             template = default_env.get_template(file)
             content = template.render(jinja_dict)
@@ -855,7 +844,7 @@ class setup:
         sub_dirs = ['archive', 'forecasts', 'plot', 'post' , 'regress']
         for i in sub_dirs:
             os.makedirs(os.path.join(exp_dir, i), exist_ok=True)
-        
+
         # archive dir
         shutil.move(f"{exp_dir}/gcm_archive.j", f"{exp_dir}/archive/gcm_archive.j")
 

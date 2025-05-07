@@ -19,7 +19,6 @@ class atmosphere:
         self.nx                 = None
         self.ny                 = None
         self.nf                 = 6
-        self.use_hydrostatic    = answerdict["use_hydrostatic"].q_answer
         self.microphysics       = answerdict["AM_microphysics"].q_answer
         self.hist_im            = self.im * 4
         self.hist_jm            = self.im * 2 + 1
@@ -385,7 +384,7 @@ class atmosphere:
         else:
             self.mp_turn_off_wsub_extdata = '#DELETE#'
 
-      
+
     def config(self, ocean_nx, ocean_ny):
         self.hres(ocean_nx, ocean_ny)
         self.set_microphysics()

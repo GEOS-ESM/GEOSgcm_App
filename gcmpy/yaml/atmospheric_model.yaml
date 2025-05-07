@@ -27,13 +27,6 @@ heartbeat:
   default_answer: ''
   follows_up:     ''
 
-use_hydrostatic:
-  type:           'confirm'
-  prompt:         'Use Hydrostatic Amtosphere?'
-  choices:        ''
-  default_answer: True
-  follows_up:     ''
-
 io_server:
   type:           'confirm'
   prompt:         'Would you like to IOSERVER?'
