@@ -444,7 +444,10 @@ set OGCM_NY0 = `grep "^ *OGCM.NY:" AGCM.rc.orig | cut -d':' -f2`
 # and use those values to set the test durations for the various steps
 
 set length_of_startstop_test = 120000
-set length_of_layout_test    = 030000
+
+# NOTE: The "smaller" test needs to be a multiple of 6 hours if
+# you are testing a replay run
+set length_of_layout_test    = 060000
 
 # Now for safety, we need to make sure that the test durations
 # are divisible by 3 hours due to a limitation in GOCART. We'll use modulo
@@ -530,7 +533,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 2
-######               (3-Hour Using NX:NY Layout)
+######               (6-Hour Using NX:NY Layout)
 ######
 ##################################################################
 
@@ -710,7 +713,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 4
-######               (3-Hour Using NX:NY/2 Layout)
+######               (6-Hour Using NX:NY/2 Layout)
 ######
 ##################################################################
 
@@ -842,7 +845,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 5
-######               (3-Hour OpenMP:2)
+######               (6-Hour OpenMP:2)
 ######
 ##################################################################
 
