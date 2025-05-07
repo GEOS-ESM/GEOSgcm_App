@@ -93,7 +93,7 @@ usage ()
    echo "    --account: account under which to run the job"
    echo
    echo "  Optional argument: "
-   echo "    --num_levels: number of levels (72, 71, 91, 132, 137, and 181 allowed)."
+   echo "    --num_levels: number of levels (default: 181; 72, 71, 91, 132, 137, and 181 allowed)."
    echo
    echo
 }
@@ -104,7 +104,7 @@ usage ()
 selected_case=NULL
 expdir=NULL
 account=NULL
-nlev=72
+nlev=181
 
 while [ "${1+defined}" ]
 do
@@ -233,9 +233,13 @@ then
       SED="$(command -v sed) "
       ISED="$SED -i.macbak "
    fi
+   PRELOAD_COMMAND='DYLD_INSERT_LIBRARIES'
+   LD_LIBRARY_PATH_CMD='DYLD_LIBRARY_PATH'
 else
    SED="$(command -v sed) "
    ISED="$SED -i "
+   PRELOAD_COMMAND='LD_PRELOAD'
+   LD_LIBRARY_PATH_CMD='LD_LIBRARY_PATH'
 fi
 
 case $selected_case in
@@ -372,17 +376,17 @@ BCSTAG="Icarus_Reynolds"
 
 case $SITE in
    NCCS)
-   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v11.1/"
+   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v12.0/"
    BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput_nc3"
    ;;
    NAS)
-   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
+   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
    BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
-   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
+   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
    BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
@@ -454,6 +458,9 @@ cat $expdir/WSUB_ExtData.tmp | sed '/collection:/ s#WSUB_SWclim.*#/dev/null#' > 
 /bin/cp $SOURCEDIR/sedfile.CASE $expdir
 /bin/cp $SOURCEDIR/AGCM.CASE.txt $expdir
 
+# These are the weights files
+/bin/cp $SOURCEDIR/rh_* $expdir
+
 # MAT These sed commands have to be done in the experiment directory.
 #     This should probably be fixed at some point
 
@@ -513,6 +520,8 @@ s?@BATCH_TASKS?$BATCH_TASKS?g
 s?@BATCH_TIME?$BATCH_TIME?g
 s?@BATCH_GROUP?$BATCH_GROUP?g
 s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
+s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
+s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 EOF
 
 $ISED -f $expdir/sedfile $expdir/scm_run.j

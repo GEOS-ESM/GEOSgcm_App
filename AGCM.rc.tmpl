@@ -1,6 +1,7 @@
 
 # Atmospheric Model Configuration Parameters
 # ------------------------------------------
+
 # Some rules of thumb when changing processor counts:
 #
 # 1) Start from the NX/NY that come from gcm_setup
@@ -48,6 +49,17 @@ AGCM.IM_WORLD: {{ AGCM_IM }}
 ###########################################################
 
 ###########################################################
+# debug options
+# ----------------------------------------
+#DEBUG_ADV: .TRUE.
+#DEBUG_DYN: .TRUE.
+#DEBUG_GWD: .TRUE.
+#DEBUG_MST: .TRUE.
+#DEBUG_TRB: .TRUE.
+#DEBUG_SYNCTQ: .TRUE.
+###########################################################
+
+###########################################################
 # long physics DT options
 # use extreme caution when adjusing these
 # the defaults are most ideal
@@ -57,8 +69,9 @@ GOCART2G_DT: {{ LONG_DT }}
 GOCART_DT: {{ LONG_DT }}
 HEMCO_DT: {{ LONG_DT }}
 ACHEM_DT: {{ LONG_DT }}
+PCHEM_DT: {{ LONG_DT }}
 GF_DT: {{ LONG_DT }}
-UW_DT: {{ LONG_DT }}	
+UW_DT: {{ LONG_DT }}
 ###########################################################
 
 ###########################################################
@@ -127,7 +140,7 @@ NCAR_NRDG: {{ NCAR_NRDG }}
 ###########################################################
 
 {{ HIST_GOCART }}###########################################################
-{{ HIST_GOCART }}# Enable wet scavenging
+{{ HIST_GOCART }}# Enable wet scavenging diagnostics
 {{ HIST_GOCART }}# NOTE: this section should be commented out when running gocart.data
 {{ HIST_GOCART }}MCHEMTRI_increments::
 {{ HIST_GOCART }}DU::DU default
@@ -350,7 +363,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   REPLAY_FILE09: ana/Y%y4/M%m2/{{ REPLAY_ANA_EXPID }}.ana09.eta.%y4%m2%d2_%h2z.nc4
 #   REPLAY_FILE_FREQUENCY:       10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
- 
+
 # MERRA-2 Regular REPLAY Configuration
 # --------------------------------------------
 #M2 REPLAY_ANA_EXPID: MERRA-2
@@ -573,7 +586,7 @@ LSM_CHOICE: {{ LSM_CHOICE }}
 #      0 : no  (default)
 #      1 : yes
 # ------------------------------------------------------------
-#LDAS_INCR: 0
+#LDAS_INCR: @LDAS_INCR
 
 # Name of file containing Surface GridComp resource parameters
 # ------------------------------------------------------------
@@ -789,6 +802,10 @@ SURFACE_IMPORT_CHECKPOINT_TYPE:         {{ CHECKPOINT_TYPE }}
 #OH_IMPORT_CHECKPOINT_FILE:              oh_import_checkpoint
 #OH_IMPORT_CHECKPOINT_TYPE:              {{ CHECKPOINT_TYPE }}
 
+#RRG_INTERNAL_RESTART_FILE:              rrg_internal_rst
+#RRG_INTERNAL_CHECKPOINT_FILE:           rrg_internal_checkpoint
+#RRG_INTERNAL_CHECKPOINT_TYPE:           @CHECKPOINT_TYPE
+
 # OCEAN Model Restart Files
 # -------------------------
 SALTWATER_IMPORT_RESTART_FILE:          saltwater_import_rst
@@ -827,6 +844,32 @@ SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  {{ CHECKPOINT_TYPE }}
 #GIGATRAJ_INTERNAL_RESTART_FILE:         gigatraj_internal_rst
 #GIGATRAJ_INTERNAL_CHECKPOINT_FILE:      gigatraj_internal_checkpoint
 #GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      {{ CHECKPOINT_TYPE }}
+GIGATRAJ_REGRID_TO_LATLON:              NO
+#GIGATRAJ_PARCELS_FILE:                  parcels.nc4
+# time interval (minutes) for integration. Default is heart beat and it must be a multiple of heart beat.
+# format hhmmss
+# GIGATRAJ_INTEGRATE_DT:
+# time interval to rebalance the parcels, i.e, the process keeps its own parcels
+# format hhmmss
+GIGATRAJ_REBALANCE_DT:      001500
+# time interval to write output
+# format hhmmss
+GIGATRAJ_OUTPUT_DT:         003000
+# format :: comp[%%bundle]%field[|alias], [] is optional
+GIGATRAJ_VERTICAL_COORD: DYN%PL|P
+#GIGATRAJ_VERTICAL_COORD: DYN%TH|Theta
+#GIGATRAJ_VERTICAL_COORD: DYN%ZL|PAlt
+# using ";" to separate fields. NO blank space between chars
+# format :: comp[%%bundle]%field[|alias], [] is optional
+GIGATRAJ_EXTRA_FIELDS:       DYN%TH|Theta;DYN%ZL|PAlt
+#GIGATRAJ_EXTRA_FIELDS:       DYN%PL|P;DYN%ZL|PAlt
+#GIGATRAJ_EXTRA_FIELDS:       DYN%PL|P;DYN%TH|Theta
+
+# GIGATRAJ RUN CONFIG
+# -------------------------
+#GIGATRAJ_INTERNAL_RESTART_FILE:         gigatraj_internal_rst
+#GIGATRAJ_INTERNAL_CHECKPOINT_FILE:      gigatraj_internal_checkpoint
+#GIGATRAJ_INTERNAL_CHECKPOINT_TYPE:      @CHECKPOINT_TYPE
 GIGATRAJ_REGRID_TO_LATLON:              NO
 #GIGATRAJ_PARCELS_FILE:                  parcels.nc4
 # time interval (minutes) for integration. Default is heart beat and it must be a multiple of heart beat.
@@ -923,6 +966,8 @@ DIURNAL_BIOMASS_BURNING: yes
        RATS_PROVIDER: {{ RATS_PROVIDER }}   # options: PCHEM, GMICHEM, STRATCHEM (Radiatively active tracers)
        AERO_PROVIDER: {{ AERO_PROVIDER }}   # options: GOCART2G, MAM, none  (Radiatively active aerosols)
 ANALYSIS_OX_PROVIDER: {{ OANA_PROVIDER }}   # options: PCHEM, GMICHEM, STRATCHEM, GOCART
+        CH4_PROVIDER: {{ CH4_PROVIDER }}   # options: GOCART, RRG, none
+        CO2_PROVIDER: {{ CO2_PROVIDER }}   # options: GOCART, RRG, none
 
 
 # Flag for real-time forecasts (persisted SST) OGCM_IS_FCST: 1 (AMIP-Style Default: 0)
@@ -950,7 +995,8 @@ USE_SKIN_LAYER: {{ USE_SKIN_LAYER }}
 # Model Tuning Parameters (For CMIP5 recommended SOLAR_CONSTANT and CO2 values, use -1)
 # -------------------------------------------------------------------------------------
 SOLAR_CONSTANT: -1
-CO2:            -1
+CO2:            -1 # CO2 conc to use in RRTMG. -2 will use 3D CO2 imported from CO2_PROVIDER set above. -1 will read from a table. >=0 sets ppmv
+RATS_DIAGNOSTICS:  # Set one or more LW diagnostic analysis for specific RATS in RRTMG (options: O3 CO2 CH4 N2O CFC11 CFC12 CFC22 CCl4)
 
 
 # Flags for SATSIM Output

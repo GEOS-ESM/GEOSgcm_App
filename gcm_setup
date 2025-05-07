@@ -387,45 +387,25 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
 
-   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}mil  (Milan)${CN} (default)"
+   echo "   ${C2}cas  (Cascade Lake)${CN}"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'mil'
+   endif
 
-   if ("$BUILT_ON_SLES15" == "TRUE") then
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}mil  (Milan)${CN} (default)"
-      echo "   ${C2}cas  (Cascade Lake)${CN}"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'mil'
-      endif
+   if( $MODEL != 'mil' & \
+       $MODEL != 'cas' ) goto ASKPROC
 
-      if( $MODEL != 'mil' & \
-          $MODEL != 'cas' ) goto ASKPROC
-
-      if ($MODEL == 'mil') then
-         # For even division, use 120 cores per node
-         set NCPUS_PER_NODE = 120
-      else if ($MODEL == 'cas') then
-         # For even division, use  40 cores per node
-         set NCPUS_PER_NODE = 40
-      endif
-   else
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'cas'
-      endif
-
-      if( $MODEL != 'cas' ) goto ASKPROC
-
-      if ($MODEL == 'cas') then
-         # We use 40 of 46 cores per node for even division
-         set NCPUS_PER_NODE = 40
-      endif
+   if ($MODEL == 'mil') then
+      # For even division, use 120 cores per node
+      set NCPUS_PER_NODE = 120
+   else if ($MODEL == 'cas') then
+      # For even division, use  40 cores per node
+      set NCPUS_PER_NODE = 40
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -435,7 +415,7 @@ else if ( $SITE == 'NAS' ) then
    echo "   ${C2}bro (Broadwell)${CN}"
    echo "   ${C2}sky (Skylake)${CN}"
    echo "   ${C2}cas (Cascade Lake)${CN}"
-   echo "   ${C2}rom (AMD Rome)${CN} (Default)"
+   echo "   ${C2}rom (AMD Rome) (default)${CN}"
    echo "   ${C2}mil (AMD Milan)${CN}"
    echo " "
    echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
@@ -1004,7 +984,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 3600
+     set       DT = 1800
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -1026,7 +1006,7 @@ if( $AGCM_IM ==  "c12" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 1800
+     set       DT = 1200
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -1613,6 +1593,10 @@ endif # DATA_ATMOS
 # -------------
 set  RATS_PROVIDER   = PCHEM
 
+# Additional RATS settings for specific GHGs
+# ------------------------------------------
+set CH4_PROVIDER     = none
+set CO2_PROVIDER     = none
 
 #######################################################################
 #                  Confirm HEARTBEAT time for the model
@@ -1911,8 +1895,8 @@ else
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
-              setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
+              setenv  RUN_Q     "DELETE"                                               # batch queue name for gcm_run.j
+              setenv  RUN_P   "SBATCH --ntasks=${MODEL_NPES}"                          # PE Configuration for gcm_run.j
               setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
               setenv  REGRESS_P NULL                                                   # PE Configuration for gcm_regress.j
               setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
@@ -1936,12 +1920,15 @@ else
               setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
-              set NX = 1
-              set NY = 6
-              # By default on desktop, just ignore IOSERVER for now
-              set USE_IOSERVER = 0
-              set NUM_OSERVER_NODES = 0
-              set NUM_BACKEND_PES = 0
+endif
+
+if( $SITE == 'GMAO.desktop' ) then
+   # By default on desktop, just ignore IOSERVER for now
+   set USE_IOSERVER = 0
+   set NUM_OSERVER_NODES = 0
+   set NUM_BACKEND_PES = 0
+   set NX = 1
+   set NY = 6
 endif
 
 #######################################################################
@@ -2292,29 +2279,6 @@ setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
 EOF
 
-else
-
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
-
-setenv I_MPI_SHM_HEAP_VSIZE 512
-setenv PSM2_MEMORY large
-EOF
-
-# Testing at NCCS showed these caused a crash at higher resolutions at
-# restart read
-if ( $USING_SINGULARITY == FALSE ) then
-
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_EXTRA_FILESYSTEM 1
-setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-EOF
-
-endif # if NOT Singularity
-
-endif # if SLES15
-
 endif # if NCCS
 
 endif # if mpi
@@ -2540,6 +2504,9 @@ s?{{ RUN_CMD }}?$RUN_CMD?g
 
 s?{{ MODELATM }}?$MODELATM?g
 s?{{ USE_DATA_ATM4OCN }}?$USE_DATA_ATM4OCN?g
+
+s?@MODELATM?$MODELATM?g
+s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 EOF
 

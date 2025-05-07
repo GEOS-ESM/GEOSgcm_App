@@ -243,7 +243,7 @@ tar -xvf restarts.e${year}${month}10_21z.tar --wildcards "*_internal_rst*"
 # ------------------------------------------------
 set RSTID = `/bin/ls *catch* | /bin/grep -Po '^.*(?=\.\w+_rst\.)'`
 set day   = `/bin/ls *catch* | /bin/grep -Po '(?<=\d{6})\d{2}(?=_21z)'`
-$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nobkg -nolcv -bcvout {{ LSMBCS }} -rs 3 -oceanout {{ OCEANOUT }} -out_bc_base @BC_BASE
+$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nobkg -nolcv -bcvout {{ LSMBCS }} -rs 3 -oceanout {{ OCEANOUT }} -out_bc_base {{ BC_BASE }}
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -812,7 +812,7 @@ if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAc
 set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
 if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
 set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $ACHEM_TRUE == 0 && -e GEOSachem_ExtData.rc          ) /bin/mv          GEOSachem_ExtData.rc          GEOSachem_ExtData.rc.NOT_USED
+if (       $ACHEM_TRUE == 0 && -e ACHEM_ExtData.rc              ) /bin/mv              ACHEM_ExtData.rc              ACHEM_ExtData.rc.NOT_USED
 
 {{ MP_TURN_OFF_WSUB_EXTDATA }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
 {{ MP_TURN_OFF_WSUB_EXTDATA }}# -------------------------------------------------
@@ -1109,6 +1109,8 @@ if ($OMP_NUM_THREADS > 1) then
   setenv KMP_AFFINITY compact
   echo OMP_STACKSIZE    $OMP_STACKSIZE
   echo KMP_AFFINITY     $KMP_AFFINITY
+  ./strip GWD_GridComp.rc
+  sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
 endif
 echo OMP_NUM_THREADS $OMP_NUM_THREADS
 

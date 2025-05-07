@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import yaml
 import argparse
-import os
 
 def parse_args():
     p = argparse.ArgumentParser(description='create extdata master file')
@@ -44,11 +43,13 @@ if __name__ == '__main__':
    MAM:
    - MAM7_ExtData.yaml
    ACHEM:
-   - GEOSachem_ExtData.yaml
+   - ACHEM_ExtData.yaml
    TR:
    - TR_ExtData.yaml
    DNA:
    - DNA_ExtData.yaml
+   RRG:
+   - RRG_GridComp_ExtData.yaml
    HEMCO:
    - HEMCOgmi_ExtData.yaml
    - HEMCOgocart2g_ExtData.yaml
@@ -57,6 +58,7 @@ if __name__ == '__main__':
    - WSUB_ExtData.yaml
    - DataSea_ExtData.yaml
    - UMWM_ExtData.yaml
+   - JRA55-DO_DataAtm_Forcings_ExtData.yaml
    """)
    components = {}
    for line in temp_text:
@@ -87,5 +89,4 @@ if __name__ == '__main__':
    for single_file in files_to_use:
        f.write(" - "+single_file+"\n")
    f.close()
-       
 

@@ -1,0 +1,286 @@
+VERSION: 1
+EXPID:  @EXPID
+EXPDSC: @EXPDSC
+EXPSRC: @EXPSRC
+
+
+CONTACT: 'http://gmao.gsfc.nasa.gov'
+
+COLLECTIONS: 'geosgcm_surf'
+#             'geosgcm_ocn2d'
+             'geosgcm_ocn2dT'
+             'geosgcm_seaice'
+@HIST_CICE4              'geosgcm_icethm'
+#             'geosgcm_aoflux'
+#             'geosgcm_icecat'
+#             'geosgcm_icesig'
+#             'geosgcm_iceflxn'
+#             'geosgcm_iceflx'
+             ::
+
+##################################################
+# The GRID_LABELS section must be after the main #
+#  list of COLLECTIONS for scripting purposes.   #
+##################################################
+
+GRID_LABELS: PC@HIST_IMx@HIST_JM-DC
+::
+
+PC@HIST_IMx@HIST_JM-DC.GRID_TYPE: LatLon
+PC@HIST_IMx@HIST_JM-DC.IM_WORLD: @HIST_IM
+PC@HIST_IMx@HIST_JM-DC.JM_WORLD: @HIST_JM
+PC@HIST_IMx@HIST_JM-DC.POLE: PC
+PC@HIST_IMx@HIST_JM-DC.DATELINE: DC
+PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
+
+  geosgcm_surf.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  geosgcm_surf.archive:          '%c/Y%y4' ,
+  geosgcm_surf.format:           'CFIO' ,
+  geosgcm_surf.deflate:           1 ,
+  geosgcm_surf.grid_label:        PC720x361-DC ,
+  geosgcm_surf.regrid_method:    'BILINEAR',
+  geosgcm_surf.mode:             'time-averaged' ,
+#  geosgcm_surf.monthly:           1 ,
+  geosgcm_surf.frequency:         060000 ,
+#  geosgcm_surf.ref_time:          210000 ,
+  geosgcm_surf.fields:    'TA'       , 'SURFACE'       ,
+                          'TS'       , 'SURFACE'       ,
+                          'FRLAND'   , 'SURFACE'       ,
+                          'FRLANDICE', 'SURFACE'       ,
+                          'FROCEAN'  , 'SURFACE'       ,
+                          'FRACI'    , 'SURFACE'       , 'FRSEAICE' ,
+                          'HLATWTR'  , 'SURFACE'       ,
+                          'SHWTR'    , 'SURFACE'       ,
+                          'LWNDWTR'  , 'SURFACE'       ,
+                          'SWNDWTR'  , 'SURFACE'       ,
+                          'TSKINW'   , 'SURFACE'       ,
+                          'EVAPOUT'  , 'SURFACE'       ,
+                          'SH'       , 'SURFACE'       ,
+                          'QS'       , 'SURFACE'       ,
+#                          'DRPARN'   , 'SURFACE'       ,
+#                          'DFPARN'   , 'SURFACE'       ,
+#                          'DRNIRN'   , 'SURFACE'       ,
+#                          'DFNIRN'   , 'SURFACE'       ,
+#                          'DRUVRN'   , 'SURFACE'       ,
+#                          'DFUVRN'   , 'SURFACE'       ,
+                                  ::
+
+   geosgcm_seaice.template:       '%y4%m2%d2_%h2%n2z.nc4',
+   geosgcm_seaice.archive:        '%c/Y%y4',
+   geosgcm_seaice.format:         'CFIO',
+   geosgcm_seaice.deflate:        1 ,
+#  geosgcm_seaice.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+#  geosgcm_seaice.regrid_method:  'BILINEAR',
+   geosgcm_seaice.mode:              'time-averaged' ,
+   geosgcm_seaice.monthly:            1 ,
+#  geosgcm_seaice.frequency:  240000,
+   geosgcm_seaice.fields:    'UI'          , 'SEAICE',
+                             'VI'          , 'SEAICE',
+@HIST_CICE4                             'VEL'         , 'SEAICE',
+@HIST_CICE4                             'STRENGTH'    , 'SEAICE',
+@HIST_CICE4                             'SHEAR'       , 'SEAICE',
+@HIST_CICE4                             'DIVU'        , 'SEAICE',
+                             'HICE'        , 'SEAICE',
+@HIST_CICE4                             'HICE0'       , 'SEAICE',
+                             'HSNO'        , 'SEAICE',
+@HIST_CICE4                             'HSNO0'       , 'SEAICE',
+@HIST_CICE4                             'DRAFT'       , 'SEAICE',
+@HIST_CICE4                             'DRAFT0'      , 'SEAICE',
+                             'AICE'        , 'SEAICE',
+@HIST_CICE4                             'DVIDTD'      , 'SEAICE',
+@HIST_CICE4                             'DAIDTD'      , 'SEAICE',
+@HIST_CICE4                             'DVIRDGDT'    , 'SEAICE',
+@HIST_CICE4                             'STRCORX'     , 'SEAICE',
+@HIST_CICE4                             'STRCORY'     , 'SEAICE',
+@HIST_CICE4                             'STRTLTX'     , 'SEAICE',
+@HIST_CICE4                             'STRTLTY'     , 'SEAICE',
+@HIST_CICE4                             'STRINTX'     , 'SEAICE',
+@HIST_CICE4                             'STRINTY'     , 'SEAICE',
+@HIST_CICE4                             'TAUXOCNB'    , 'SEAICE',
+@HIST_CICE4                             'TAUYOCNB'    , 'SEAICE',
+@HIST_CICE4                             'TAUXI'       , 'SEAICE',
+@HIST_CICE4                             'TAUYI'       , 'SEAICE',
+@HIST_CICE4                             'TAUXIB'      , 'SEAICE',
+@HIST_CICE4                             'TAUYIB'      , 'SEAICE',
+                             'TAUXBOT'     , 'SEAICE',
+                             'TAUYBOT'     , 'SEAICE',
+@HIST_CICE4                             'UOCN'        , 'SEAICE',
+@HIST_CICE4                             'VOCN'        , 'SEAICE',
+@HIST_CICE4                             'SSH'         , 'SEAICE',
+@HIST_CICE4                             'SLV'         , 'SEAICE',
+@HIST_CICE4                             'AREA'        , 'SEAICE',
+@HIST_CICE4                             'FROCEAN'     , 'SEAICE',
+@HIST_CICE4                             'TMASK'       , 'SEAICE',
+                              ::
+
+  geosgcm_icethm.template:      '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_icethm.archive:       '%c/Y%y4',
+  geosgcm_icethm.format:        'CFIO',
+  geosgcm_icethm.deflate:       1 ,
+# geosgcm_icethm.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
+# geosgcm_icethm.regrid_method: 'BILINEAR',
+  geosgcm_icethm.mode:          'time-averaged' ,
+  geosgcm_icethm.monthly:        1 ,
+# geosgcm_icethm.frequency:   240000,
+  geosgcm_icethm.regrid_exch:'tile.bin',
+  geosgcm_icethm.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_icethm.fields:   'DVIDTT'              , 'SEAICETHERMO',  'dvidtt',
+                           'DAIDTT'              , 'SEAICETHERMO',  'daidtt',
+                           'FBOT'                , 'SEAICETHERMO',  'fbot',
+                           'FSWTHRU'             , 'SEAICETHERMO',  'fswthru',
+                           'USTARI'              , 'SEAICETHERMO',  'ustari',
+                           'GHTSKIN'             , 'SEAICETHERMO',  'ghtskin',
+                           'FCONDTOP'            , 'SEAICETHERMO',  'fcondtop',
+                           'FCONDBOT'            , 'SEAICETHERMO',  'fcondbot',
+                           'MELTT'               , 'SEAICETHERMO',
+                           'MELTB'               , 'SEAICETHERMO',
+                           'MELTL'               , 'SEAICETHERMO',
+                           'MELTS'               , 'SEAICETHERMO',
+                           'CONGEL'              , 'SEAICETHERMO',
+                           'FRAZIL'              , 'SEAICETHERMO',
+                           'SNOICE'              , 'SEAICETHERMO',
+                           'SUBLIM'              , 'SEAICETHERMO',
+                           'SNOONICE'            , 'SEAICETHERMO',
+                           'SUBLIMFLX'           , 'SEAICETHERMO',
+                           ::
+
+  geosgcm_ocn2dT.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_ocn2dT.archive:   '%c/Y%y4',
+  geosgcm_ocn2dT.format:    'CFIO',
+  geosgcm_ocn2dT.deflate:   1 ,
+  geosgcm_ocn2dT.monthly:   1 ,
+  geosgcm_ocn2dT.mode:      'time-averaged',
+# geosgcm_ocn2dT.frequency:  240000,
+  geosgcm_ocn2dT.fields:    'UW'    , 'MOM6', 'US'
+                            'VW'    , 'MOM6', 'VS'
+                            'TW'    , 'MOM6', 'TS'
+                            'SW'    , 'MOM6', 'SS'
+                            'SLV'    ,'MOM6',
+                            'QFLUX' , 'OCEAN',
+                            'LWFLX' , 'OCEAN',
+                            'SWFLX' , 'OCEAN',
+                            'SHFLX' , 'OCEAN',
+                            'RAIN' ,  'OCEAN',
+                            'SNOW' ,  'OCEAN',
+                            'SFLX' ,  'OCEAN',
+                            'RFLUX' , 'OCEAN',
+                            'TAUX'  , 'OCEAN',
+                            'TAUY'  , 'OCEAN',
+                            'FROCEAN','OCEAN',
+                            'AREA'   ,'MOM6',
+                            'DISCHARGE',    'OCEAN',
+                            'TS_FOUND' ,    'OCEAN',
+                            'SS_FOUND' ,    'OCEAN',
+                            'FRZMLT'   ,    'MOM6',
+                            'FRAZIL'   ,    'MOM6',
+                            'MELT_POT' ,    'MOM6',
+                            'MOM_2D_MASK',  'MOM6',
+                            ::
+
+  geosgcm_aoflux.template:   '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_aoflux.archive:   '%c/Y%y4',
+  geosgcm_aoflux.format:     'CFIO',
+  geosgcm_aoflux.deflate:            1 ,
+# geosgcm_aoflux.grid_label:         PC@HIST_IMx@HIST_JM-DC ,
+# geosgcm_aoflux.regrid_method:     'BILINEAR',
+  geosgcm_aoflux.mode:              'time-averaged' ,
+  geosgcm_aoflux.monthly:            1 ,
+  geosgcm_aoflux.frequency:    240000,
+# geosgcm_aoflux.regrid_exch:'tile.bin',
+  geosgcm_aoflux.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_aoflux.fields:     'TS_FOUND'    , 'OPENWATER',
+                            'SS_FOUND'    , 'OPENWATER',
+                            'AO_DRNIR'    , 'OPENWATER',
+                            'AO_DFNIR'    , 'OPENWATER',
+                            'PENUVR'      , 'SALTWATER',
+                            'PENUVF'      , 'SALTWATER',
+                            'PENPAR'      , 'SALTWATER',
+                            'PENPAF'      , 'SALTWATER',
+                            'FSURF'       , 'SALTWATER',
+                            'SHOUT'       , 'OPENWATER',
+                            'AO_SHFLX'    , 'OPENWATER',
+                            'EVAPOUT'     , 'OPENWATER',
+                            'AO_QFLUX'    , 'OPENWATER',
+                            'LWNDSRF'     , 'OPENWATER',
+                            'AO_LWFLX'    , 'OPENWATER',
+                            'SWNDWTR'     , 'OPENWATER',
+                            'RAINOCN'     , 'OPENWATER',
+                            'AO_RAIN'     , 'OPENWATER',
+                            'SNOWOCN'     , 'OPENWATER',
+                            'AO_SNOW'     , 'OPENWATER',
+                            'FRACI'       , 'SEAICETHERMO',
+                            'FRZMLT'      , 'SEAICETHERMO',
+                            'FRESH'       , 'SEAICETHERMO',
+                            'FHOCN'       , 'SEAICETHERMO',
+                            'FSALT'       , 'SEAICETHERMO',
+             ::
+
+   geosgcm_icecat.template:  '%y4%m2%d2_%h2%n2z.nc4',
+   geosgcm_icecat.archive:   '%c/Y%y4',
+   geosgcm_icecat.format: 'CFIO',
+   geosgcm_icecat.deflate: 1 ,
+   geosgcm_icecat.mode: 'time-averaged',
+   geosgcm_icecat.monthly: 1 ,
+#  geosgcm_icecat.frequency:  240000,
+   geosgcm_icecat.fields:    'AICEN'          , 'SEAICE',
+                             'VICEN'          , 'SEAICE',
+                             'HIFLXE'         , 'SEAICE',
+                             'HIFLXN'         , 'SEAICE',
+                           ::
+
+   geosgcm_icesig.template:  '%y4%m2%d2_%h2%n2z.nc4',
+   geosgcm_icesig.archive:   '%c/Y%y4',
+   geosgcm_icesig.format:    'CFIO',
+   geosgcm_icesig.deflate:   1 ,
+   geosgcm_icesig.monthly:   1 ,
+#  geosgcm_icesig.frequency: 120000,
+#  geosgcm_icesig.duration:  240000,
+   geosgcm_icesig.fields:    'SIG1'          , 'SEAICE',
+                             'SIG2'          , 'SEAICE',
+                             'SHEAR'         , 'SEAICE',
+                             'DIVU'          , 'SEAICE',
+                           ::
+
+  goesgcm_iceflxn.template:   '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_iceflxn.archive:   '%c/Y%y4',
+  geosgcm_iceflxn.format:     'CFIO',
+  geosgcm_iceflxn.deflate:    1 ,
+  geosgcm_iceflxn.monthly:    1 ,
+  geosgcm_iceflxn.mode:       'time-averaged',
+# geosgcm_iceflxn.frequency:   240000,
+  geosgcm_iceflxn.regrid_exch:'tile.bin',
+  geosgcm_iceflxn.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_iceflxn.fields:     'FCONDBOTN'      , 'SEAICETHERMO', 'fcondbotn',
+                              'SHICEN'         , 'SEAICETHERMO',
+                              'FSWSFCN'      , 'SEAICETHERMO',
+                              'ALBIN'          , 'SEAICETHERMO',
+                              'ALBSN'          , 'SEAICETHERMO',
+                              'FCONDTOPN'         , 'SEAICETHERMO',
+                              'FSURFN'      , 'SEAICETHERMO',
+                              'HLWUPN'          , 'SEAICETHERMO',
+                              'LWNDSRFN'          , 'SEAICETHERMO',
+                              'TSURFN'          , 'SEAICETHERMO',
+                           ::
+
+  geosgcm_iceflx.template:   '%y4%m2%d2_%h2%n2z.nc4',
+  geosgcm_iceflx.archive:   '%c/Y%y4',
+  geosgcm_iceflx.format:     'CFIO',
+  geosgcm_iceflx.deflate:    1, 
+  geosgcm_iceflx.monthly:    1, 
+  geosgcm_iceflx.mode: 'time-averaged',
+# geosgcm_iceflx.frequency:   240000,
+  geosgcm_iceflx.regrid_exch:'tile.bin',
+  geosgcm_iceflx.regrid_name:'@OGCM_GRIDNAME',
+  geosgcm_iceflx.fields:   'LWDNSRF'             , 'SEAICETHERMO',
+                           'SWDNSRF'             , 'SEAICETHERMO',
+                           'HLWUPICE'            , 'SEAICETHERMO',
+                           'HLATICE'             , 'SEAICETHERMO',
+                           'SHICE'               , 'SEAICETHERMO',
+                           'SWNDICE'             , 'SEAICETHERMO',
+                           'FCONDTOP'            , 'SEAICETHERMO',
+                           'SIALB'               , 'SEAICETHERMO',
+                           'FSURFICE'            , 'SEAICETHERMO',
+                           'LWNDICE'             , 'SEAICETHERMO',
+                             ::
+
+
