@@ -192,6 +192,7 @@ class setup:
             self.archive_p        = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
             self.move_p           = "PBS -l select=1:ncpus=1"
             self.boundary_path    = "/nobackup/gmao_SIteam/ModelData"
+            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs}/{self.land.bcs}_{self.ocean.tag}"
             self.replay_ana_expID        = "ONLY_MERRA2_SUPPORTED"
             self.replay_ana_location     = "ONLY_MERRA2_SUPPORTED"
@@ -242,7 +243,8 @@ class setup:
             self.archive_p        = "SBATCH --ntasks=1"
             self.move_p           = "SBATCH --ntasks=1"
             self.boundary_path    = "/discover/nobackup/projects/gmao"
-            self.bcs_dir          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles/{self.land.bcs}"
+            self.bc_base          = f"{boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
+            self.bcs_dir          = f"{self.bc_base}/{self.land.bcs}"
             self.replay_ana_expID       = "x0039"
             self.replay_ana_location    = f"{self.boundary_path}/g6dev/ltakacs/x0039"
             self.M2_replay_ana_location = f"{self.boundary_path}/merra2/data"
@@ -293,6 +295,7 @@ class setup:
             self.archive_p        = "SBATCH --ntasks=1"
             self.move_p           = "SBATCH --ntasks=1"
             self.boundary_path    = "/ford1/share/gmao_SIteam/ModelData"
+            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs}_{self.ocean.tag}"
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
@@ -329,6 +332,7 @@ class setup:
             self.archive_p        = "NULL"
             self.move_p           = "NULL"
             self.boundary_path    = "/ford1/share/gmao_SIteam/ModelData"
+            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs} /{self.land.bcs}_{self.ocean.tag}"
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
@@ -684,6 +688,7 @@ class setup:
             'SINGULARITY_SANDBOX': '',
             'REAL_BIND_PATH': '',
             'BASE_BIND_PATH': '',
+            'BC_BASE': self.bc_base,
             'BOUNDARY_DIR': self.boundary_path,
             'CHECKPOINT_TYPE': 'default',
             'OGCM_NX': self.ocean.NX,
