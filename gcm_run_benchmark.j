@@ -313,8 +313,6 @@ setenv CHMDIR    @CHMDIR
 setenv DATELINE  DC
 setenv EMISSIONS @EMISSIONS
 
-@MOM5setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM5/@ATMOStag_@OCEANtag
-@MOM5setenv OBCSDIR  @shared_COUPLED/ocean/MOM5/${OGCM_IM}x${OGCM_JM}
 @MOM6setenv ABCSDIR  @COUPLEDIR/atmosphere_bcs/@LSMBCS/MOM6/@ATMOStag_@OCEANtag
 @MOM6setenv OBCSDIR  @shared_COUPLED/ocean/MOM6/${OGCM_IM}x${OGCM_JM}
 @COUPLEDsetenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}
@@ -335,7 +333,6 @@ cat << _EOF_ > $FILE
 @COUPLED/bin/ln -sf $ABCSDIR/@ATMOStag_@OCEANtag-Pfafstetter.TRN   runoff.bin
 @COUPLED/bin/ln -sf $OBCSDIR/MAPL_Tripolar.nc .
 @COUPLED/bin/ln -sf $OBCSDIR/vgrid${OGCM_LM}.ascii ./vgrid.ascii
-@MOM5#/bin/ln -s @COUPLEDIR/a@HIST_IMx@HIST_JM_o${OGCM_IM}x${OGCM_JM}/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 @MOM6#/bin/ln -s @COUPLEDIR/MOM6/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag/DC0@HIST_IMxPC0@HIST_JM_@OCEANtag-Pfafstetter.til tile_hist.data
 
 # Precip correction
@@ -725,7 +722,6 @@ endif
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -1080,7 +1076,6 @@ end
 
 @COUPLED # MOM-Specific Output Files
 @COUPLED # -------------------------
-@MOM5 set dsets="ocean_month"
 @MOM6 set dsets="ocean_state prog_z sfc_ave forcing"
 @COUPLED  foreach dset ( $dsets )
 @COUPLED  set num = `/bin/ls -1 $dset.nc | wc -l`

@@ -251,12 +251,6 @@ COLLECTIONS: test_collection
 @DATAOCEAN                                    'T'   , 'DYN'  ,
 @DATAOCEAN                                    'U;V' , 'DYN'  ,
 @DATAOCEAN                                    'Q'   , 'MOIST', 'QV',
-@MOM5  test_collection.fields:           'UW'   ,'MOM'  , 'US',
-@MOM5                                    'VW'   ,'MOM'  , 'VS',
-@MOM5                                    'TW'   ,'MOM'  , 'TS',
-@MOM5                                    'SW'   ,'MOM'  , 'SS',
-@MOM5                                    'SLV'  ,'MOM'  ,
-@MOM5                                    'QFLUX','OCEAN' ,
 @MOM6  test_collection.fields:           'UW'   ,'MOM6'  , 'US',
 @MOM6                                    'VW'   ,'MOM6'  , 'VS',
 @MOM6                                    'TW'   ,'MOM6'  , 'TS',
@@ -790,7 +784,6 @@ if ( $RUN_LAYOUT == TRUE) then
    @COUPLED /bin/mv AGCM.rc AGCM.tmp
    @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
-   @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
 
    setenv YEAR `cat cap_restart | cut -c1-4`
@@ -913,7 +906,6 @@ if ( $RUN_OPENMP == TRUE) then
    @COUPLED /bin/mv AGCM.rc AGCM.tmp
    @COUPLED cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
-   @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${OGCM_NX0},${OGCM_NY0}#" input.nml
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
 
    setenv YEAR `cat cap_restart | cut -c1-4`
