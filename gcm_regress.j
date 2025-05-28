@@ -444,7 +444,10 @@ set OGCM_NY0 = `grep "^ *OGCM.NY:" AGCM.rc.orig | cut -d':' -f2`
 # and use those values to set the test durations for the various steps
 
 set length_of_startstop_test = 120000
-set length_of_layout_test    = 030000
+
+# NOTE: The "smaller" test needs to be a multiple of 6 hours if
+# you are testing a replay run
+set length_of_layout_test    = 060000
 
 # Now for safety, we need to make sure that the test durations
 # are divisible by 3 hours due to a limitation in GOCART. We'll use modulo
@@ -495,7 +498,7 @@ if( $RUN_STARTSTOP == TRUE ) then
 
    echo "=== Running test of duration ${test_duration_step1} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-   {{ OCEAN_PRELOAD }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde1 = $date[1]
@@ -530,7 +533,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 2
-######               (3-Hour Using NX:NY Layout)
+######               (6-Hour Using NX:NY Layout)
 ######
 ##################################################################
 
@@ -561,7 +564,7 @@ set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 
 echo "=== Running test of duration ${test_duration_step2} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-{{ OCEAN_PRELOAD }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+{{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 set date = `cat cap_restart`
 set nymde2 = $date[1]
@@ -680,7 +683,7 @@ if ($RUN_STARTSTOP == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step3} with NX = $NX and NY = $NY starting at $nymdb $nhmsb ==="
 
-   {{ OCEAN_PRELOAD }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde3 = $date[1]
@@ -710,7 +713,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 4
-######               (3-Hour Using NX:NY/2 Layout)
+######               (6-Hour Using NX:NY/2 Layout)
 ######
 ##################################################################
 
@@ -811,7 +814,7 @@ if ( $RUN_LAYOUT == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step4} with NX = $test_NX and NY = $test_NY starting at $nymd0 $nhms0 ==="
 
-   {{ OCEAN_PRELOAD }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
@@ -842,7 +845,7 @@ endif
 ##################################################################
 ######
 ######               Perform Regression Test # 5
-######               (3-Hour OpenMP:2)
+######               (6-Hour OpenMP:2)
 ######
 ##################################################################
 
