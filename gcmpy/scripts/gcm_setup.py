@@ -30,6 +30,7 @@ class setup:
         self.n_nodes            = None
         self.exp_dir            = answerdict['exp_dir'].q_answer
         self.restart_by_oserver = 'NO'
+        self.several_tries      = ''
         self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text()
         self.file_list          = ['gcm_run.j',
                                    'gcm_post.j',
@@ -409,6 +410,11 @@ class setup:
         # restart by oserver if using openmpi or mvapich
         if envdict['mpi'] == 'openmpi' or envdict['mpi'] == 'mvapich':
             self.restart_by_oserver = 'YES'
+
+        # NAS recommends several_tries for MPT job issues
+        # https://www.nas.nasa.gov/hecc/support/kb/mpt-startup-failures-workarounds_526.html
+        if envdict['site'] == "NAS" and envdict['mpi'] == 'mpt':
+            self.several_tries = '/u/scicon/tools/bin/several_tries'
 
         # retrieve config from correlating mpi setting being used
         self.mpi_config = mpidict.get(envdict['mpi'])
@@ -799,13 +805,13 @@ class setup:
             'FV_TARGET_LAT': self.atmos.target_lat,
             'FORCEDAS': self.atmos.force_das,
             'FORCEGCM': self.atmos.force_gcm,
-            'HIST_CICE4': '#DELETE',
             'FVCUBED': '',
             'HIST_CATCHCN': self.land.HIST_catchment,
             'GCMRUN_CATCHCN': self.land.GCMRUN_catchment,
             'EMIP_OLDLAND': self.land.emip_oldland,
             'EMIP_NEWLAND': self.land.emip_newland,
             '_4DIAUDAS': '#DELETE',
+            'SEVERAL_TRIES': self.several_tries,
             'REGULAR_REPLAY': '#',
             'REGULAR_REPLAY_GMAO': '#',
             'REGULAR_REPLAY_NCEP': '#DELETE',

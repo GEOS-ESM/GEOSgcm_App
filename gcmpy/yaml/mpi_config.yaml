@@ -57,3 +57,4 @@ NCCS: |
   # specific compared to the above adjustments
   setenv I_MPI_FABRICS shm:ofi
   setenv I_MPI_OFI_PROVIDER psm3
+  setenv FI_PSM3_CONN_TIMEOUT 120
