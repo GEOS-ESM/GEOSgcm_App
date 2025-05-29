@@ -1,4 +1,5 @@
-# GEOSgcm_app
+# GEOSgcm_App
+
 Applications for GEOSgcm fixture
 
 ## Contributing
