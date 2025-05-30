@@ -31,8 +31,8 @@ endif
 #                     Build Directory Locations
 #######################################################################
 
-# Set Current Working Path to gcm_setup
-# -------------------------------------
+# Set Current Working Path to stratchem_setup
+# -------------------------------------------
 setenv ARCH `uname -s`
 setenv NODE `uname -n`
 
@@ -415,59 +415,30 @@ ASKPROC:
 
 if ( $SITE == 'NCCS' ) then
 
-   set BUILT_ON_SLES15 = @BUILT_ON_SLES15@
+   echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
+   echo "   ${C2}mil  (Milan)${CN} (default)"
+   echo "   ${C2}cas  (Cascade Lake)${CN}"
+   echo " "
+   set MODEL = `echo $<`
+   set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
+   if ( .$MODEL == .) then
+      set MODEL = 'mil'
+   endif
 
-   if ("$BUILT_ON_SLES15" == "TRUE") then
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}mil  (Milan)${CN} (default)"
-      echo "   ${C2}cas  (Cascade Lake)${CN}"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'mil'
-      endif
+   if( $MODEL != 'mil' & \
+         $MODEL != 'cas' ) goto ASKPROC
 
-      if( $MODEL != 'mil' & \
-          $MODEL != 'cas' ) goto ASKPROC
-
-      if ($MODEL == 'mil') then
-         # We save a couple processes for the kernel
-         set NCPUS_PER_NODE = 126
-      else if ($MODEL == 'cas') then
-         # NCCS currently recommends that users do not run with
-         # 48 cores per node on SCU16 due to OS issues and
-         # recommends that CPU-intensive works run with 46 or less
-         # cores. As 45 is a multiple of 3, it's the best value
-         # that doesn't waste too much
-         #set NCPUS_PER_NODE = 48
-         set NCPUS_PER_NODE = 45
-      endif
-   else
-      echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-      echo "   ${C2}sky  (Skylake)${CN}"
-      echo "   ${C2}cas  (Cascade Lake) (default)${CN}"
-      echo " "
-      set MODEL = `echo $<`
-      set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
-      if ( .$MODEL == .) then
-         set MODEL = 'cas'
-      endif
-
-      if( $MODEL != 'sky'  & \
-          $MODEL != 'cas' ) goto ASKPROC
-
-      if ($MODEL == 'sky') then
-         set NCPUS_PER_NODE = 40
-      else if ($MODEL == 'cas') then
-         # NCCS currently recommends that users do not run with
-         # 48 cores per node on SCU16 due to OS issues and
-         # recommends that CPU-intensive works run with 46 or less
-         # cores. As 45 is a multiple of 3, it's the best value
-         # that doesn't waste too much
-         #set NCPUS_PER_NODE = 48
-         set NCPUS_PER_NODE = 45
-      endif
+   if ($MODEL == 'mil') then
+      # We save a couple processes for the kernel
+      set NCPUS_PER_NODE = 126
+   else if ($MODEL == 'cas') then
+      # NCCS currently recommends that users do not run with
+      # 48 cores per node on SCU16 due to OS issues and
+      # recommends that CPU-intensive works run with 46 or less
+      # cores. As 45 is a multiple of 3, it's the best value
+      # that doesn't waste too much
+      #set NCPUS_PER_NODE = 48
+      set NCPUS_PER_NODE = 45
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -475,9 +446,9 @@ else if ( $SITE == 'NAS' ) then
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}has (Haswell)${CN}"
    echo "   ${C2}bro (Broadwell)${CN}"
-   echo "   ${C2}sky (Skylake)${CN} (default)"
+   echo "   ${C2}sky (Skylake)${CN}"
    echo "   ${C2}cas (Cascade Lake)${CN}"
-   echo "   ${C2}rom (AMD Rome)${CN}"
+   echo "   ${C2}rom (AMD Rome) (default)${CN}"
    echo "   ${C2}mil (AMD Milan)${CN}"
    echo " "
    echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
@@ -486,7 +457,7 @@ else if ( $SITE == 'NAS' ) then
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
    if ( .$MODEL == .) then
-      set MODEL = 'sky'
+      set MODEL = 'rom'
    endif
 
    if( $MODEL != 'has' & \
@@ -1642,6 +1613,10 @@ endif # DATA_ATMOS
 # -------------
 set  RATS_PROVIDER   = STRATCHEM
 
+# Additional RATS settings for specific GHGs
+# ------------------------------------------
+set CH4_PROVIDER     = none
+set CO2_PROVIDER     = none
 
 #######################################################################
 #                  Confirm HEARTBEAT time for the model
@@ -2197,6 +2172,9 @@ set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
+# NAS has a "several_tries" script but we need an empty
+# default
+set SEVERAL_TRIES = ''
 
 if( $MPI_STACK == openmpi ) then
 
@@ -2245,6 +2223,10 @@ setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else if( $MPI_STACK == mpt ) then
+
+# NAS recommends several_tries for MPT job issues
+# https://www.nas.nasa.gov/hecc/support/kb/mpt-startup-failures-workarounds_526.html
+set SEVERAL_TRIES = '/u/scicon/tools/bin/several_tries'
 
 cat > $HOMDIR/SETENV.commands << EOF
 
@@ -2302,37 +2284,16 @@ if ( $SITE == 'NCCS' ) then
 # NOTE: When Cascade Lake is on SLES15, the following flags
 # might need to be Milan only
 
-if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
 
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
+
+# This has been found to help with congestion
+setenv FI_PSM3_CONN_TIMEOUT 120
 EOF
-
-else
-
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_ADJUST_ALLREDUCE 12
-setenv I_MPI_ADJUST_GATHERV 3
-
-setenv I_MPI_SHM_HEAP_VSIZE 512
-setenv PSM2_MEMORY large
-EOF
-
-# Testing at NCCS showed these caused a crash at higher resolutions at
-# restart read
-if ( $USING_SINGULARITY == FALSE ) then
-
-cat >> $HOMDIR/SETENV.commands << EOF
-setenv I_MPI_EXTRA_FILESYSTEM 1
-setenv I_MPI_EXTRA_FILESYSTEM_FORCE gpfs
-EOF
-
-endif # if NOT Singularity
-
-endif # if SLES15
 
 endif # if NCCS
 
@@ -2470,6 +2431,9 @@ s?@AERO_PROVIDER?$AERO_PROVIDER?g
 s?@OANA_PROVIDER?STRATCHEM?g
 s?@EMISSIONS?$EMISSIONS?g
 
+s?@CH4_PROVIDER?$CH4_PROVIDER?g
+s?@CO2_PROVIDER?$CO2_PROVIDER?g
+
 s^@DYCORE^$DYCORE^g
 s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
 s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
@@ -2495,6 +2459,7 @@ s/@USE_IOSERVER/$USE_IOSERVER/g
 s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
 s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
+s#@SEVERAL_TRIES#$SEVERAL_TRIES#g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
