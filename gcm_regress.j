@@ -451,7 +451,7 @@ if( $RUN_STARTSTOP == TRUE ) then
 
    echo "=== Running test of duration ${test_duration_step1} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde1 = $date[1]
@@ -517,7 +517,7 @@ set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 
 echo "=== Running test of duration ${test_duration_step2} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-@OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+@OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 set date = `cat cap_restart`
 set nymde2 = $date[1]
@@ -623,7 +623,7 @@ if ($RUN_STARTSTOP == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step3} with NX = $NX and NY = $NY starting at $nymdb $nhmsb ==="
 
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde3 = $date[1]
@@ -737,7 +737,7 @@ if ( $RUN_LAYOUT == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step4} with NX = $test_NX and NY = $test_NY starting at $nymd0 $nhms0 ==="
 
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
