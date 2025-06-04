@@ -694,13 +694,13 @@ if( $OGCM == TRUE ) then
     # Seaice Model
     # -----------
     SEAICEMODEL:
-    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE4${CN})"
+    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE6${CN})"
     echo "   ${C2}CICE4${CN}"
     echo "   ${C2}CICE6${CN}"
 
     set SEAICEMODEL  = $<
     if ( .$SEAICEMODEL == . ) then
-       set SEAICEMODEL  = "CICE4"
+       set SEAICEMODEL  = "CICE6"
     else
        set SEAICEMODEL = `echo $SEAICEMODEL | tr "[:lower:]" "[:upper:]"`
 
@@ -1453,6 +1453,7 @@ if ($DATA_ATMOS == TRUE) then
   set EMIP_MERRA2  = "MERRA2_NewLand"
   set HIST_CATCHCN   = "#DELETE"
   set GCMRUN_CATCHCN = "#DELETE"
+  set GWD_IN_BCS   = "FALSE"
 else
 
 echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v13${CN} (Default)"
