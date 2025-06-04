@@ -63,6 +63,7 @@ allowed_cases+=("merra2_ascos2008")
 allowed_cases+=("merra2_barrow2013")
 allowed_cases+=("LASIC_aug2016")
 allowed_cases+=("bomex")
+allowed_cases+=("rico")
 allowed_cases+=("dycoms_rf01")
 allowed_cases+=("arm_97jun")
 allowed_cases+=("dry_cbl")
@@ -293,6 +294,9 @@ case $selected_case in
       ;;
    "merra_armsgp")
       DATFILE="merra_armsgp.dat"
+      ;;
+   "rico")
+      DATFILE="rico.dat"
       ;;
    "scm_cfmip-p6")
       DATFILE="cfmip_p6.bin"
