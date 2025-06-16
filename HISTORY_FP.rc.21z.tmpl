@@ -7,6 +7,7 @@ EXPID:  f5421_fpp
 EXPDSC: f5421_fpp__GEOSadas-5_42_8__agrid_C720__ogrid_C
 EXPSRC: GEOSadas-5_42_8
 Allow_Overwrite: .true.
+IntegerTime: .true.
 
 GRID_LABELS: PC1152x721-DC
              PC576x361-DC
@@ -759,7 +760,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Nv-.end_time:              >>>IOETIME<<< ,
   tavg3_3d_odt_Nv-.fields:               'PS'                , 'DYN'         ,
                                          'DELP'              , 'DYN'         ,
-                                         'MCHEMTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
+#                                        'MCHEMTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
+                                         'MTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
                                          'TRI%PCHEM::OXIT'   , 'TURBULENCE'  , 'DOXDTTRB'  ,
                                          'OX_TEND'           , 'CHEMISTRY'   , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN                 'TRADVI%PCHEM::OXID', 'AGCM'        , 'DOXDTDYN'  ,
@@ -783,7 +785,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_odt_Cp-.vunit:                'hPa' ,
   tavg3_3d_odt_Cp-.vvars:                'log(PLE)' , 'DYN' ,
   tavg3_3d_odt_Cp-.levels:                1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1 ,
-  tavg3_3d_odt_Cp-.fields:               'MCHEMTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
+# tavg3_3d_odt_Cp-.fields:               'MCHEMTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
+  tavg3_3d_odt_Cp-.fields:               'MTRI%PCHEM::OXIM'  , 'PHYSICS'     , 'DOXDTMST'  ,
                                          'TRI%PCHEM::OXIT'   , 'TURBULENCE'  , 'DOXDTTRB'  ,
                                          'OX_TEND'           , 'CHEMISTRY'   , 'DOXDTCHM'  ,
 # equivalent to DOXDTDYN                 'TRADVI%PCHEM::OXID', 'AGCM'        , 'DOXDTDYN'  ,
@@ -1763,9 +1766,10 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'AIRDENS'      , 'CHEMENV'  ,
                                          'ZL'           , 'DYN'      , 'H'      ,
 # Dust
-                                         'DU'           , 'DU'       ,
+                                         'DU'           , 'DU'        , 'DU001';'DU002';'DU003';'DU004';'DU005' ,
 # Sea-salt
-                                         'SS'           , 'SS'       ,
+                                         'SS'           , 'SS'        , 'SS001';'SS002';'SS003';'SS004';'SS005' ,
+
 # Sulfates
                                          'DMS'          , 'SU'       ,
                                          'SO2'          , 'SU'       ,
@@ -1806,9 +1810,9 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'AIRDENS'      , 'CHEMENV'  ,
                                          'ZL'           , 'DYN'      , 'H'      ,
 # Dust
-                                         'DU'           , 'DU'       ,
+                                         'DU'           , 'DU'        , 'DU001';'DU002';'DU003';'DU004';'DU005' ,
 # Sea-salt
-                                         'SS'           , 'SS'       ,
+                                         'SS'           , 'SS'        , 'SS001';'SS002';'SS003';'SS004';'SS005' ,
 # Sulfates
                                          'DMS'          , 'SU'       ,
                                          'SO2'          , 'SU'       ,
@@ -2282,6 +2286,11 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'TPREC'          , 'MOIST'       , 'PRECTOT'   ,
                                          'PGENTOT'        , 'MOIST'       ,
                                          'PREVTOT'        , 'MOIST'       ,
+                                         'LS_ARF'         , 'MOIST'       , 'FRCLS'     ,
+                                         'AN_ARF'         , 'MOIST'       , 'FRCAN'     ,
+                                         'CN_ARF'         , 'MOIST'       , 'FRCCN'     ,
+                                         'DFNIR'          , 'SOLAR'       , 'NIRDF'     ,
+                                         'DRNIR'          , 'SOLAR'       , 'NIRDR'     ,
                                          'ICE'            , 'MOIST'       ,
                                          'FRZR'           , 'MOIST'       ,
                                          'RAIN'           , 'MOIST'       ,
