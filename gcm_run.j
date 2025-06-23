@@ -416,9 +416,14 @@ chmod +x linkbcs
 @SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
 @SINGULARITY_BUILD endif
 
-@NATIVE_BUILD echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-@NATIVE_BUILD echo ""
-@NATIVE_BUILD /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD if (-e $EXPDIR/GEOSgcm.x) then
+@NATIVE_BUILD    echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+@NATIVE_BUILD    echo ""
+@NATIVE_BUILD    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD else
+@NATIVE_BUILD    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
+@NATIVE_BUILD    exit 1
+@NATIVE_BUILD endif
 @NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
 #######################################################################
