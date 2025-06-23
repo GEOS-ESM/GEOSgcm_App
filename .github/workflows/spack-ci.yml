@@ -50,11 +50,12 @@ jobs:
           mepo clone --partial blobless
           mepo status
 
-      - name: Mepo develop usual suspects
-        run: |
-          ls
-          mepo develop GEOSgcm_GridComp GEOSgcm_App GMAO_Shared GEOS_Util
-          mepo status
+      # DO NOT DO THIS FOR v12
+      #- name: Mepo develop usual suspects
+        #run: |
+          #ls
+          #mepo develop GEOSgcm_GridComp GEOSgcm_App GMAO_Shared GEOS_Util
+          #mepo status
 
       - name: Debug PR branch
         run: echo "PR is coming from ${{ github.event.pull_request.head.ref }}"
@@ -81,7 +82,6 @@ jobs:
       - name: Set default compiler and target
         shell: spack-bash {0}
         run: |
-          spack config add 'packages:all:compiler:[gcc@14.2.0]'
           spack config add 'packages:all:require:target=x86_64_v3'
 
       - name: Create Spack environment
@@ -102,6 +102,7 @@ jobs:
       - name: Concretize
         shell: spack-bash {0}
         run: |
+          spack clean -m
           spack -e spack-env concretize
 
       - name: Install
