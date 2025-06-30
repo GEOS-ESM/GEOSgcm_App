@@ -37,6 +37,7 @@ setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
 # We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+    setenv PATH ${PATH}:${BASEDIR}/${ARCH}/bin
 endif
 
 setenv RUN_CMD "@RUN_CMD"
@@ -416,9 +417,14 @@ chmod +x linkbcs
 @SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
 @SINGULARITY_BUILD endif
 
-@NATIVE_BUILD echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-@NATIVE_BUILD echo ""
-@NATIVE_BUILD /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD if (-e $EXPDIR/GEOSgcm.x) then
+@NATIVE_BUILD    echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+@NATIVE_BUILD    echo ""
+@NATIVE_BUILD    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD else
+@NATIVE_BUILD    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
+@NATIVE_BUILD    exit 1
+@NATIVE_BUILD endif
 @NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
 #######################################################################
@@ -836,6 +842,16 @@ endif
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
+@CICE6 #detect exisistence of certain fields in CICE6 restart
+@CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
+@CICE6 if( $status == 0 ) then
+@CICE6    echo 'pond state in restart, turn on restart flag if not already'
+@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
+@CICE6 else
+@CICE6    echo 'pond state NOT in restart, turn off restart flag if already on'
+@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
+@CICE6 endif
+
 #######################################################################
 #                Split Saltwater Restart if detected
 #######################################################################
@@ -1059,7 +1075,7 @@ else
 endif
 
 @SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
-@NATIVE_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+@NATIVE_BUILD @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
