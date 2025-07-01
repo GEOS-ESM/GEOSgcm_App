@@ -661,13 +661,13 @@ if( $OGCM == TRUE ) then
     # Seaice Model
     # -----------
     SEAICEMODEL:
-    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE4${CN})"
+    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE6${CN})"
     echo "   ${C2}CICE4${CN}"
     echo "   ${C2}CICE6${CN}"
 
     set SEAICEMODEL  = $<
     if ( .$SEAICEMODEL == . ) then
-       set SEAICEMODEL  = "CICE4"
+       set SEAICEMODEL  = "CICE6"
     else
        set SEAICEMODEL = `echo $SEAICEMODEL | tr "[:lower:]" "[:upper:]"`
 
@@ -1402,11 +1402,12 @@ if ($DATA_ATMOS == TRUE) then
   set EMIP_MERRA2  = "MERRA2_NewLand"
   set HIST_CATCHCN   = "#DELETE"
   set GCMRUN_CATCHCN = "#DELETE"
+  set GWD_IN_BCS   = "FALSE"
 else
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v13${CN} (Default)"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v12${CN} (Default)"
 set   LSM_BCS  = $<
-if( .$LSM_BCS == . ) set LSM_BCS = "v13"
+if( .$LSM_BCS == . ) set LSM_BCS = "v12"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set LSM_BCS      = "ICA"
     set LSM_PARMS    = "#DELETE"
@@ -1423,8 +1424,8 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
     set GWD_IN_BCS   = "FALSE"
-else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
-    set LSM_BCS      = "v13"
+else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
+    set LSM_BCS      = "v12"
     set LSM_PARMS    = ""
     set EMIP_BCS_IN  = "NL3"
     set EMIP_OLDLAND = "#DELETE"
@@ -1433,7 +1434,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v13" ) then
     set GWD_IN_BCS   = "TRUE"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v13${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v12${CN}!"
     goto LSM_BCS
 endif
 
@@ -2131,6 +2132,9 @@ set RESTART_BY_OSERVER = NO
 
 /bin/rm -f $HOMDIR/SETENV.commands
 
+# NAS has a "several_tries" script but we need an empty
+# default
+set SEVERAL_TRIES = ''
 
 if( $MPI_STACK == openmpi ) then
 
@@ -2179,6 +2183,10 @@ setenv MV2_GATHERV_SSEND_THRESHOLD 256
 EOF
 
 else if( $MPI_STACK == mpt ) then
+
+# NAS recommends several_tries for MPT job issues
+# https://www.nas.nasa.gov/hecc/support/kb/mpt-startup-failures-workarounds_526.html
+set SEVERAL_TRIES = '/u/scicon/tools/bin/several_tries'
 
 cat > $HOMDIR/SETENV.commands << EOF
 
@@ -2236,6 +2244,9 @@ setenv I_MPI_ADJUST_GATHERV 3
 
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
+
+# This has been found to help with congestion
+setenv FI_PSM3_CONN_TIMEOUT 120
 EOF
 
 endif # if NCCS
@@ -2410,6 +2421,7 @@ s/@USE_IOSERVER/$USE_IOSERVER/g
 s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
 s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
 s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
+s#@SEVERAL_TRIES#$SEVERAL_TRIES#g
 s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
 s/@NUM_READERS/$NUM_READERS/g
 s/@NUM_WRITERS/$NUM_WRITERS/g
