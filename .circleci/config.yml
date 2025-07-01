@@ -5,8 +5,7 @@ version: 2.1
 #bcs_version: &bcs_version v12.0.0
 
 orbs:
-  # Temp orb to test updates
-  ci: geos-esm/circleci-tools@dev:e9b85c5c62943dd051b4bf337e9644627e5a9c43
+  ci: geos-esm/circleci-tools@5
 
 workflows:
   build-test:
