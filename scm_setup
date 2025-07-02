@@ -66,6 +66,8 @@ allowed_cases+=("bomex")
 allowed_cases+=("dycoms_rf01")
 allowed_cases+=("arm_97jun")
 allowed_cases+=("dry_cbl")
+allowed_cases+=("rico")
+allowed_cases+=("gabls1")
 
 sorted_cases=($(for each in ${allowed_cases[@]}; do echo $each; done | sort))
 
@@ -362,6 +364,12 @@ case $selected_case in
       ;;
    "LASIC_aug2016")
       DATFILE="merra2_lasic_aug2016.dat"
+      ;;
+   "rico")
+      DATFILE="rico.dat"
+      ;;
+   "gabls1")
+      DATFILE="gabls1.dat"
       ;;
    *)
       echo "You should not be here!"
