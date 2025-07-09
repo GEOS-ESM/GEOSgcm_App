@@ -58,6 +58,7 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 
 @GCMRUN_CATCHCNif ( -f $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data lnfm.data
 @GCMRUN_CATCHCN/bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
+@GCMRUN_CATCHCN/bin/ln -s $BCSDIR/land/shared/ctsm51_params.c210923_forCNCLM.nc
 
 
 set MERRA2OX_SPECIES = "#"
