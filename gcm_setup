@@ -2812,6 +2812,11 @@ if( $OGCM == TRUE ) then
 
    endif
 
+   # We also need to change the dt in ice_in as well for CICE6
+   if ( $SEAICE_NAME == "CICE6" ) then
+      sed -i -e "s/dt = [0-9]*\.[0-9]*/dt = $OCEAN_DT/g" $HOMDIR/ice_in
+   endif
+
 endif
 
 #######################################################################
