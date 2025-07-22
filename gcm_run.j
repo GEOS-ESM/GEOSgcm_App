@@ -760,28 +760,19 @@ if( $wavewatch ) then
     /bin/rm ww3_multi.nml.tmp
 endif
 
-######################################################################
-#                   Update Ocean DT based on CAP.rc
-######################################################################
+@COUPLED# gcm_setup will make sure AGCM.rc, MOM_override and CICE6 use a Ocean DT
+@COUPLED# consistent with CAP.rc HEARTBEAT_DT. But a user might change the
+@COUPLED# HEARTBEAT_DT in CAP.rc at run time, so we need to update the dt in
+@COUPLED# the other files
 
-# gcm_setup will make sure AGCM.rc, MOM_override and CICE6 use a Ocean DT
-# consistent with CAP.rc HEARTBEAT_DT. But a user might change the
-# HEARTBEAT_DT in CAP.rc at run time, so we need to update the dt in
-# the other files
-#
-# * AGCM.rc: OGCM_RUN_DT (only if coupled)
-# * input.nml: dt_cpld and dt_atmos (only if MOM5)
-# * MOM_override: DT and DT_THERM (only if MOM6)
-# * ice_in: dt (only if CICE6)
+@COUPLEDset HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
 
-set HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
-
-@COUPLED sed -i -e "s/OGCM_RUN_DT: [0-9]*\.[0-9]*/OGCM_RUN_DT: $HEARTBEAT_DT/g" \
-@MOM5 sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $HEARTBEAT_DT,/g" \
-@MOM5        -e "s/dt_atmos = [0-9]*,/dt_atmos = $HEARTBEAT_DT,/g" input.nml
-@MOM6 sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $HEARTBEAT_DT/g" \
-@MOM6        -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $HEARTBEAT_DT/g" MOM_override
-@CICE6 sed -i -e "s/dt = [0-9]*\.[0-9]*/dt = $HEARTBEAT_DT/g" ice_in
+@COUPLED sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
+@MOM5 sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
+@MOM5        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
+@MOM6 sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
+@MOM6        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
+@CICE6 sed -i -e "s/\([[:space:]]*dt[[:space:]]*=[[:space:]]*\)[0-9]*\(\.[0-9]*\)\?/\1${HEARTBEAT_DT}/g" ice_in
 
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -1295,7 +1286,7 @@ end
 @MOM5     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
 @MOM5     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
 @MOM5  endif
-@MOM5  end 
+@MOM5  end
 @MOM6  foreach dset ( $dsets )
 @MOM6  set num = `/bin/ls -1 $dset.nc | wc -l`
 @MOM6  if($num != 0) then
