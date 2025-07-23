@@ -1,4 +1,4 @@
-set (programs
+set (files
   atmospheric_model.yaml
   directory_setup.yaml
   exp_setup.yaml
@@ -9,14 +9,8 @@ set (programs
   )
 
 install (
-   PROGRAMS ${programs}
+   FILES ${files}
    DESTINATION bin/gcmpy/yaml
    )
 
-# processed files
-set (setup_scripts)
 
-foreach (file ${setup_scripts})
-   configure_file(${file} ${file} @ONLY)
-   install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${file} DESTINATION bin/gcmpy)
-endforeach ()

@@ -244,7 +244,7 @@ class setup:
             self.archive_p        = "SBATCH --ntasks=1"
             self.move_p           = "SBATCH --ntasks=1"
             self.boundary_path    = "/discover/nobackup/projects/gmao"
-            self.bc_base          = f"{boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
+            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.bc_base}/{self.land.bcs}"
             self.replay_ana_expID       = "x0039"
             self.replay_ana_location    = f"{self.boundary_path}/g6dev/ltakacs/x0039"
@@ -353,14 +353,6 @@ class setup:
             self.n_backend_pes = 0
 
 
-        # For ICA and NL3 the gwd files are in a non-bcs location
-        # and may or may not exist. If they don't we set NCAR_NRDG to 0
-        self.NCAR_NRDG = 16
-        if self.land.gwd_in_bcs == False and not os.path.exists(f"{self.gwdrs_dir}/gwd_internal_c{self.atmos.im}"):
-            self.NCAR_NRDG = 0
-
-
-
 
     # mainly used to create .{*}root files and/or populate them
     def create_dotfile(self, path, content):
@@ -383,7 +375,7 @@ class setup:
         # Make the experiment directory and the RC directory inside of it
         RC_dir = os.path.join(self.exp_dir, 'RC')
 
-        # Delete the destination directory if it exists
+        # Delete the directory if it exists already
         if os.path.exists(RC_dir):
             shutil.rmtree(RC_dir)
 
@@ -407,17 +399,34 @@ class setup:
         with open('../yaml/mpi_config.yaml') as file:
             mpidict = yaml.load(file, Loader=yaml.FullLoader)
 
+        # retrieve config from correlating mpi setting being used
+        self.mpi_config = mpidict.get(envdict['mpi'])
+
         # restart by oserver if using openmpi or mvapich
         if envdict['mpi'] == 'openmpi' or envdict['mpi'] == 'mvapich':
             self.restart_by_oserver = 'YES'
 
         # NAS recommends several_tries for MPT job issues
         # https://www.nas.nasa.gov/hecc/support/kb/mpt-startup-failures-workarounds_526.html
-        if envdict['site'] == "NAS" and envdict['mpi'] == 'mpt':
+        if envdict['mpi'] == 'mpt':
             self.several_tries = '/u/scicon/tools/bin/several_tries'
+            # Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
+            # to run. We believe this is due to LD_PRELOAD. For now we only set
+            # this for coupled runs.
+            if self.ocean.running_ocean == True:
+                self.ocean.mpt_shepherd = "setenv MPI_SHEPHERD true"
 
-        # retrieve config from correlating mpi setting being used
-        self.mpi_config = mpidict.get(envdict['mpi'])
+        if envdict['site'] == 'NCCS':
+            self.mpi_config += f"\n{mpidict.get('NCCS')}"
+
+        # Check for gwd_internal for Ridge Scheme
+        # For ICA and NL3 the gwd files are in a non-bcs location
+        # and may or may not exist. If they don't we set NCAR_NRDG to 0
+        self.NCAR_NRDG = 16
+        if self.land.gwd_in_bcs == False and \
+           not os.path.exists(f"{self.gwdrs_dir}/gwd_internal_c{self.atmos.im}"):
+            self.NCAR_NRDG = 0
+
 
 
     #######################################################################
@@ -466,7 +475,7 @@ class setup:
                 self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
 
         if self.ocean.seaice_model == 'CICE6':
-            self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in")
+            self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in", "ice_in")
             self.file_list.append('ice_in')
 
         print(f"{color.GREEN}Done!{color.RESET}\n")
@@ -602,17 +611,49 @@ class setup:
 
         # We also must change the MOM_override file to
         # have consistent DTs with the AGCM. So we use OCEAN_DT
-        # and change MOM_override to match. NOTE: This sed
-        # assumes floating point number with a decimal
+        # and change MOM_override to match. NOTE: This assumes
+        # floating point number with a decimal
         if self.ocean.model == 'MOM6':
             with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'r') as file:
                 file_content = file.read()
 
-            file_content = re.sub(r'DT\s*=\s*.*(,)', rf"DT = {self.atmos.dt_ocean}\1", file_content)
-            file_content = re.sub(r'DT_THERM\s*=\s*.*(,)', rf"DT_THERM = {self.atmos.dt_ocean}\1", file_content)
+            file_content = re.sub(r'DT\s*=\s*.*', rf"DT = {self.atmos.dt_ocean}", file_content)
+            file_content = re.sub(r'DT_THERM\s*=\s*.*', rf"DT_THERM = {self.atmos.dt_ocean}", file_content)
 
             with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'w') as file:
                 file.write(file_content)
+
+
+    #######################################################################
+    #                     Copy over Source Tarfile
+    #######################################################################
+    def copy_src_tarfile(self):
+        bool_install_tarfile = '@CFG_INSTALL_SOURCE_TARFILE@'
+        tarfile_name = '@CMAKE_PROJECT_NAME@.tar.gz'
+
+        if bool_install_tarfile != 'TRUE':
+            return
+
+        src_dir = f"{self.exp_dir}/src"
+        tarfile_path = f"{pathdict['install']}/src/{tarfile_name}"
+
+        # remove and recreate src directory
+        if src_dir.exists():
+            shutil.rmtree(src_dir)
+        src_dir.mkdir(parents=True)
+        print(f"Copying build source code into {color.GREEN}{src_dir}{color.RESET}")
+        
+        if os.path.exists(tarfile_path):
+            shutil.copy(tarfile_path, src_dir)
+        else:
+            print(f"{tarfile_path} not found, yet CMake was asked to make and install a tarfile")
+            print("Something went wrong.")
+
+
+    # We create a RESTART dir if running ocean
+    def make_RESTART_dir(self):
+        if self.ocean.running_ocean == True:
+            os.makedirs(f"{self.exp_dir}/RESTART", exist_ok=True)
 
 
     # Templating helper function -- Removes lines marked with "#DELETE"
@@ -620,11 +661,10 @@ class setup:
         with open(file_path, 'r') as file:
             content = file.read()
 
-        content = re.sub(r'.*#DELETE.*\n?', r'', content)
+        filtered_content = re.sub(r'(?m)^\s*#+DELETE\w*.*\n?', '', content)
 
         with open(file_path, 'w') as file:
-            file.write(content)
-
+            file.write(filtered_content)
 
 
     def template(self):
@@ -818,32 +858,29 @@ class setup:
             'REGULAR_REPLAY_ECMWF': '#DELETE'
         }
 
-
-        exp_dir = answerdict['exp_dir'].q_answer
-
         # this is an edge-case that can't be handled with jinja2
         for file in self.file_list:
-            with open(f"{exp_dir}/{file}", 'r') as tmpl:
+            with open(f"{self.exp_dir}/{file}", 'r') as tmpl:
                 file_content = tmpl.read()
 
             file_content = re.sub(r'[ \t]*RECORD_', r'#RECORD_', file_content)
 
-            with open(f"{exp_dir}/{file}", 'w') as tmpl:
+            with open(f"{self.exp_dir}/{file}", 'w') as tmpl:
                 tmpl.write(file_content)
 
         # this block handles the default case for jinja templating
         default_env = Environment(
-            loader=FileSystemLoader(exp_dir)
+            loader=FileSystemLoader(self.exp_dir)
         )
         for file in self.file_list:
             template = default_env.get_template(file)
             content = template.render(jinja_dict)
-            with open(f"{exp_dir}/{file}", 'w') as tmpl:
+            with open(f"{self.exp_dir}/{file}", 'w') as tmpl:
                 tmpl.write(content)
 
         # remove #DELETE lines
         for file in self.file_list:
-            file_path = f"{exp_dir}/{file}"
+            file_path = f"{self.exp_dir}/{file}"
             self.cleanup(file_path)
 
 
@@ -855,6 +892,8 @@ class setup:
         sub_dirs = ['archive', 'forecasts', 'plot', 'post' , 'regress']
         for i in sub_dirs:
             os.makedirs(os.path.join(exp_dir, i), exist_ok=True)
+        self.copy_src_tarfile()
+        self.make_RESTART_dir()
 
         # archive dir
         shutil.move(f"{exp_dir}/gcm_archive.j", f"{exp_dir}/archive/gcm_archive.j")
@@ -868,6 +907,10 @@ class setup:
         shutil.move(f"{exp_dir}/gcm_plot.tmpl", f"{exp_dir}/plot/gcm_plot.tmpl")
         shutil.move(f"{exp_dir}/gcm_quickplot.csh", f"{exp_dir}/plot/gcm_quickplot.csh")
         shutil.move(f"{exp_dir}/plot.rc", f"{exp_dir}/plot/plot.rc")
+        try: #only if using MOM ocean
+            shutil.move(f"{exp_dir}/plotocn.j", f"{exp_dir}/plot/plotocn.j")
+        except FileNotFoundError:
+            pass 
 
         # post dir
         shutil.move(f"{exp_dir}/gcm_post.j", f"{exp_dir}/post/gcm_post.j")

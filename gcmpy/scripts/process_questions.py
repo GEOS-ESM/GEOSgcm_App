@@ -1,4 +1,4 @@
-import yaml, re, os
+import yaml, re, os, subprocess
 from generate_question import generateQuestion
 from utility import envdict, pathdict, color
 
@@ -81,19 +81,6 @@ class handle:
             return
         if answerdict["OM_name"].q_answer == "MOM6" and answerdict["AM_horizontal_res"].q_answer == "c12":
            answerdict[i].q_default = "72 36"
-
-    '''
-    THIS METHOD IS BUGGED FOR NOW
-    @staticmethod
-    def OM_hres_valid(answerdict, i):
-        if i != "OM_MOM_horizontal_res":
-            return
-
-        #input validation using regex
-        while not re.match(r"^\d+\s\d+$", answerdict[i].q_answer):
-            print(color.RED + "please enter exactly 2 numbers separated by a space! (int int)\n")
-            answerdict[i].load_question(answerdict)
-    '''
 
     @staticmethod
     def seaice_choices(answerdict, i):
@@ -200,8 +187,9 @@ class handle:
     def group_root_default(answerdict, i):
         if i != "group_root":
             return
-        groups = subprocess.check_output('groups', shell=True).decode('utf-8').strip()
-        answerdict[i].q_default = groups.split()[0]
+        groups_output = subprocess.check_output(["groups"], text=True)
+        group_root = groups_output.strip().split()[0]
+        answerdict[i].q_default = group_root
 
 
 
@@ -257,6 +245,7 @@ def process():
         handle.heartbeat_default(answerdict, i)
         handle.history_template_default(answerdict, i)
         handle.exp_dir_default(answerdict, i)
+        handle.group_root_default(answerdict, i)
 
         # prompts the user with the question
         answerdict[i].load_question(answerdict)

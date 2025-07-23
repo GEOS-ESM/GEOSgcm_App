@@ -44,31 +44,15 @@ for arg in enumerate(sys.argv[1:]):
 #######################################################################
 envdict['node'] = platform.node()
 envdict['arch'] = platform.system()
-#print(f"{color.RED}{pathdict['bin']}{color.RESET}")
 envdict['site'] = open(os.path.join(pathdict['etc'], 'SITE.rc'), 'r').read().split()[-1]
 
 #######################################################################
 #                 Test for Compiler and MPI Setup
 #######################################################################
 # Extract BASEDIR tail
-basedir = open(os.path.join(pathdict['etc'], 'BASEDIR.rc'), 'r').read().split()[-1]
-mpi = os.path.split(basedir)[-1]
-
-# Map MPI dirname to correct MPI implementation
-if any(tag in mpi for tag in ['openmpi','hpcx']): mpi = 'openmpi'
-elif any(tag in mpi for tag in ['impi', 'intelmpi']): mpi = 'intelmpi'
-elif 'mvapich2' in mpi: mpi = 'mvapich2'
-elif 'mpich' in mpi: mpi = 'mpich'
-elif 'mpt' in mpi: mpi = 'mpt'
-else: mpi = 'intelmpi'
-envdict['mpi'] = mpi
-#print("MPI implementation is: " + color.GREEN + MPI)
-
+envdict['mpi'] = '@MPI_STACK@'
 
 answerdict = pq.process()
-#for i in answerdict:
-#    print(answerdict[i].q_answer)
-
 
 #######################################################################
 #                    Set Number of CPUs per Node

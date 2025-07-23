@@ -581,7 +581,7 @@ if( $OGCM == TRUE ) then
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OGRIDTYP  = "M6TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -694,13 +694,13 @@ if( $OGCM == TRUE ) then
     # Seaice Model
     # -----------
     SEAICEMODEL:
-    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE4${CN})"
+    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE6${CN})"
     echo "   ${C2}CICE4${CN}"
     echo "   ${C2}CICE6${CN}"
 
     set SEAICEMODEL  = $<
     if ( .$SEAICEMODEL == . ) then
-       set SEAICEMODEL  = "CICE4"
+       set SEAICEMODEL  = "CICE6"
     else
        set SEAICEMODEL = `echo $SEAICEMODEL | tr "[:lower:]" "[:upper:]"`
 
@@ -1436,6 +1436,7 @@ if ($DATA_ATMOS == TRUE) then
   set EMIP_MERRA2  = "MERRA2_NewLand"
   set HIST_CATCHCN   = "#DELETE"
   set GCMRUN_CATCHCN = "#DELETE"
+  set GWD_IN_BCS   = "FALSE"
 else
 
 echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v13${CN} (Default)"
@@ -1786,7 +1787,7 @@ if( $SITE == 'NAS' ) then
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
-                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/realtime/${SSTNAME}/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               endif
               if (${OGRIDTYP} == "MITLLC") then
                 setenv SSTDIR /nobackupp2/estrobac/geos5/SSTDIR
@@ -1834,7 +1835,7 @@ else if( $SITE == 'NCCS' ) then
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
-                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/${SSTNAME}/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               endif
               setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
@@ -1876,7 +1877,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
+              setenv SSTDIR     ${BOUNDARY_DIR}/${SSTNAME}/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                   # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean        # Coupled Ocean/Atmos Forcing
@@ -1915,7 +1916,7 @@ else
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
 
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
+              setenv SSTDIR     ${BOUNDARY_DIR}/${SSTNAME}/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
@@ -2271,13 +2272,6 @@ EOF
 # specific compared to the above adjustments
 if ( $SITE == 'NCCS' ) then
 
-# Some flags we know work on SLES15 and Milan (see below)
-# For safety, we keep the old SLES12 flags for that system
-#
-# NOTE: When Cascade Lake is on SLES15, the following flags
-# might need to be Milan only
-
-if ("$BUILT_ON_SLES15" == "TRUE") then
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
@@ -2435,6 +2429,9 @@ s?{{ AERO_PROVIDER }}?$AERO_PROVIDER?g
 s?{{ OANA_PROVIDER }}?PCHEM?g
 s?{{ EMISSIONS }}?$EMISSIONS?g
 
+s?{{ CH4_PROVIDER }}?$CH4_PROVIDER?g
+s?{{ CO2_PROVIDER }}?$CO2_PROVIDER?g
+
 s^{{ DYCORE }}^$DYCORE^g
 s^{{ AGCM_GRIDNAME }}^$AGCM_GRIDNAME^g
 s^{{ OGCM_GRIDNAME }}^$OGCM_GRIDNAME^g
@@ -2459,7 +2456,7 @@ s/{{ USE_IOSERVER }}/$USE_IOSERVER/g
 s/{{ NUM_OSERVER_NODES }}/$NUM_OSERVER_NODES/g
 s/{{ NUM_BACKEND_PES }}/$NUM_BACKEND_PES/g
 s/{{ RESTART_BY_OSERVER }}/$RESTART_BY_OSERVER/g
-s^{{ SEVERAL_TRIES }}^$SEVERAL_TRIES^g
+s#{{ SEVERAL_TRIES }}#$SEVERAL_TRIES#g
 s/{{ NCPUS_PER_NODE }}/$NCPUS_PER_NODE/g
 s/{{ NUM_READERS }}/$NUM_READERS/g
 s/{{ NUM_WRITERS }}/$NUM_WRITERS/g
@@ -2510,14 +2507,11 @@ s?{{ MGB2_2M_ }}?$MGB2_2M_?g
 
 s?{{ PRELOAD_COMMAND }}?$PRELOAD_COMMAND?g
 s?{{ LD_LIBRARY_PATH_CMD }}?$LD_LIBRARY_PATH_CMD?g
-s?{{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}?${LD_LIBRARY_PATH_CMD}?g
+s?{{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}?\{$LD_LIBRARY_PATH_CMD\}?g
 s?{{ RUN_CMD }}?$RUN_CMD?g
 
 s?{{ MODELATM }}?$MODELATM?g
 s?{{ USE_DATA_ATM4OCN }}?$USE_DATA_ATM4OCN?g
-
-s?@MODELATM?$MODELATM?g
-s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 EOF
 
@@ -3350,3 +3344,4 @@ gcm_setup, a setup script for the GEOS GCM
 
 EOF
 exit 1
+

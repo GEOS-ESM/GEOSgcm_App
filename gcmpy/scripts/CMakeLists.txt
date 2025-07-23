@@ -10,15 +10,7 @@ set (programs
   utility.py
   )
 
-install (
-   PROGRAMS ${programs}
-   DESTINATION bin/gcmpy/scripts
-   )
-
-# processed files
-set (setup_scripts)
-
-foreach (file ${setup_scripts})
+foreach (file ${programs})
    configure_file(${file} ${file} @ONLY)
-   install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${file} DESTINATION bin/gcmpy)
+   install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${file} DESTINATION bin/gcmpy/scripts)
 endforeach ()

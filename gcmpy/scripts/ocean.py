@@ -15,6 +15,7 @@ class ocean:
         ocean.seaice_name = ''
         ocean.seaice_preload = ''
         ocean.gridtyp = ''
+        ocean.mpt_shepherd = ''
 
 
     def config(ocean):
@@ -58,7 +59,7 @@ class ocean:
             ocean.name = 'MOM6'
             ocean.gridtyp = 'M6TP'
             ocean.grid_type = 'Tripolar'
-            ocean.preload = 'env @PRELOAD_COMMAND=\\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+            ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
             ocean.MOM5 = '#DELETE'
             ocean.MOM6 = ''
             ocean.MIT = '#DELETE'
@@ -74,7 +75,7 @@ class ocean:
             ocean.IM = ocean.jm * 360
             ocean.NX = 360
             ocean.NY = 1
-            #ocean.gridspec = 'mit.ascii' <-- dead code
+            #ocean.gridspec = 'mit.ascii' <-- dead code(?)
 
         ocean.coupled = ''
         IMO = '%04d' % ocean.IM
@@ -90,7 +91,6 @@ class ocean:
         ocean.latlon = ''
         ocean.cube = '#DELETE'
         ocean.data = '#DELETE'
-        ocean.mpt_shepherd = 'setenv MPI_SHEPHERD true'
         ocean.NF = 1
 
         ocean.nprocs = ocean.NX * ocean.NY # This might be bugged(!)
@@ -189,7 +189,6 @@ class ocean:
         ocean.NX = ''
         ocean.NY = ''
         ocean.nprocs = ''
-        ocean.mpt_shepherd = ''
         ocean.set_gridname()
 
 
