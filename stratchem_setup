@@ -984,7 +984,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 1800
+     set       DT = 1200
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
