@@ -41,7 +41,7 @@ class land:
             self.gwd_in_bcs         = False
         elif self.bcs == "v12":
             self.parameters         = ""
-            self.emip_bcs_in        = "v12"
+            self.emip_bcs_in        = "NL3"
             self.emip_oldland       = "#DELETE"
             self.emip_newland       = ""
             self.emip_MERRA2        = "MERRA2_NewLand"
