@@ -370,7 +370,6 @@ done:
 setenv BCSDIR    {{ BCSDIR }}
 {{ DATAOCEAN }}setenv SSTDIR    {{ SSTDIR }}
 setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
-{{ MOM5 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 {{ MOM6 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
@@ -1338,15 +1337,7 @@ end
 
 {{ COUPLED }} # MOM-Specific Output Files
 {{ COUPLED }} # -------------------------
-{{ MOM5 }} set dsets="ocean_month"
 {{ MOM6 }} set dsets="ocean_state prog_z sfc_ave forcing"
-{{ MOM5 }} foreach dset ( $dsets )
-{{ MOM5 }} set num = `/bin/ls -1 $dset.nc | wc -l`
-{{ MOM5 }} if($num != 0) then
-{{ MOM5 }}    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-{{ MOM5 }}    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-{{ MOM5 }} endif
-{{ MOM5 }} end
 {{ MOM6 }} foreach dset ( $dsets )
 {{ MOM6 }} set num = `/bin/ls -1 $dset.nc | wc -l`
 {{ MOM6 }} if($num != 0) then

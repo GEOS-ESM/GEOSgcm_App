@@ -6,7 +6,6 @@ setenv BCSDIR    {{ BCSDIR }}
 setenv CHMDIR    {{ CHMDIR }}
 setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
 
-{{ MOM5 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/{{ OGCM_IM }}x{{ OGCM_JM }}/v1
 {{ MOM6 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/{{ OGCM_IM }}x{{ OGCM_JM }}/v1
 
 {{ COUPLED }} /bin/mkdir -p RESTART
@@ -16,10 +15,8 @@ setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
 {{ COUPLED }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/SEAWIFS_KPAR_mon_clim.{{ OGCM_IM }}x{{ OGCM_JM }} SEAWIFS_KPAR_mon_clim.data
 {{ COUPLED }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
 {{ COUPLED }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
-{{ MOM5 }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
 {{ MOM6 }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
 {{ MIT }}/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/mit.ascii
-{{ MOM5 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/vgrid{{ OGCM_LM }}.ascii ./vgrid.ascii
 {{ MOM6 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/vgrid{{ OGCM_LM }}.ascii ./vgrid.ascii
 {{ MIT }}/bin/ln  -sf $CPLDIR/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 

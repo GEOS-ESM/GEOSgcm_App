@@ -414,7 +414,6 @@ done:
 setenv BCSDIR    {{ BCSDIR }}
 {{ DATAOCEAN }}setenv SSTDIR    {{ SSTDIR }}
 setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
-{{ MOM5 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 {{ MOM6 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
@@ -690,7 +689,6 @@ endif
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
-{{ MOM5 }} $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
