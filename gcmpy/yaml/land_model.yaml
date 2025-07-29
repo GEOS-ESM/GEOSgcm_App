@@ -1,9 +1,9 @@
 LS_boundary_conditions:
   type:           'select'
   prompt:         'Select the Land Surface Boundary Conditions:'
-  choices:        ['v13', 'NL3', 'ICA']
+  choices:        ['v12', 'NL3', 'ICA']
   default_answer: ''
-  follows_up:     
+  follows_up:
     - ['OM_data_atmos', [False]]
     - ['OM_data_atmos', ['was_not_asked']]
 
@@ -12,6 +12,6 @@ LS_model:
   prompt:         'Select the Land Surface Model:'
   choices:        ['Catchment', 'CatchmentCN-CLM4.0 (CN_CLM40)']
   default_answer: ''
-  follows_up:     
+  follows_up:
     - ['OM_data_atmos', [False]]
     - ['OM_data_atmos', ['was_not_asked']]

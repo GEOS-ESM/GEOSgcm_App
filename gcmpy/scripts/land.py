@@ -10,11 +10,11 @@ class land:
         else:
             self.model              = answerdict["LS_model"].q_answer
             self.bcs                = answerdict["LS_boundary_conditions"].q_answer
-        self.parameters         = '' 
+        self.parameters         = ''
         self.emip_bcs_in        = ''
         self.emip_oldland       = ''
         self.emip_newland       = ''
-        self.emip_MERRA2        = ''  
+        self.emip_MERRA2        = ''
         self.HIST_catchment     = ''
         self.GCMRUN_catchment   = ''
 
@@ -25,12 +25,12 @@ class land:
             print(f"{color.CYAN}{var_name}: {var_value}{color.RESET}")
 
     def set_bcs(self):
-        if self.bcs == "ICA": 
+        if self.bcs == "ICA":
             self.parameters         = "#DELETE"
             self.emip_bcs_in        = "GM4"
             self.emip_oldland       = ""
             self.emip_newland       = "#DELETE"
-            self.emip_MERRA2        = "MERRA2" 
+            self.emip_MERRA2        = "MERRA2"
             self.gwd_in_bcs         = False
         elif self.bcs == "NL3":
             self.parameters         = ""
@@ -39,12 +39,12 @@ class land:
             self.emip_newland       = ""
             self.emip_MERRA2        = "MERRA2_NewLand"
             self.gwd_in_bcs         = False
-        elif self.bcs == "v13":
+        elif self.bcs == "v12":
             self.parameters         = ""
-            self.emip_bcs_in        = "NL3"
+            self.emip_bcs_in        = "v12"
             self.emip_oldland       = "#DELETE"
             self.emip_newland       = ""
-            self.emip_MERRA2        = "MERRA2_NewLand"   
+            self.emip_MERRA2        = "MERRA2_NewLand"
             self.gwd_in_bcs         = True
 
 
