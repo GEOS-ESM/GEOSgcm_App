@@ -24,7 +24,7 @@ clone_experiment_path:
   prompt:         'Enter the location of the experiment you wish to clone (where gcm_run.j is located):'
   choices:        ''
   default_answer: ''
-  follows_up:     
+  follows_up:
     - ['clone_experiment', [True]]
 
 

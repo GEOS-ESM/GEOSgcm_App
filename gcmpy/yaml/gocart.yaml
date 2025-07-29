@@ -3,15 +3,15 @@ gocart_aerosols:
   prompt:         'Do you wish to run GOCART with Actual or Climatological Aersols?'
   choices:        ['Actual', 'Climatological']
   default_answer: ''
-  follows_up:     
+  follows_up:
     - ['OM_data_atmos', [False]]
     - ['OM_data_atmos', ['was_not_asked']]
 
 gocart_emission:
   type:           'select'
-  prompt:         'Select the GOCART Emission Files to use:'  
+  prompt:         'Select the GOCART Emission Files to use:'
   choices:        ['AMIP', 'OPS']
   default_answer: ''
-  follows_up: 
+  follows_up:
     - ['OM_data_atmos', [False]]
     - ['OM_data_atmos', ['was_not_asked']]
