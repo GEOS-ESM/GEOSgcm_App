@@ -145,9 +145,7 @@ class handle:
         if i != "history_template":
             return
 
-        if answerdict['OM_name'].q_answer == 'MOM5':
-            answerdict[i].q_default = 'HISTORY.AOGCM-MOM5.rc.tmpl'
-        elif answerdict['OM_name'].q_answer == "MOM6":
+        if answerdict['OM_name'].q_answer == "MOM6":
             answerdict[i].q_default = 'HISTORY.AOGCM.rc.tmpl'
         elif answerdict['OM_name'].q_answer == 'MIT':
             answerdict[i].q_default = 'HISTORY.AOGCM_MITgcm.rc.tmpl'

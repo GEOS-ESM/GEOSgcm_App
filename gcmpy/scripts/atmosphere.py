@@ -119,9 +119,6 @@ class atmosphere:
                 if answerdict['OM_name'].q_answer == 'MIT':
                     self.nx     = 10
                     self.ny     = 36
-                elif answerdict['OM_name'].q_answer == 'MOM5':
-                    self.nx     = ocean_nx
-                    self.ny     = ocean_ny
                 elif answerdict['OM_name'].q_answer == 'MOM6':
                     self.nx     = 5
                     self.ny     = 36
@@ -142,7 +139,7 @@ class atmosphere:
                 if answerdict['OM_name'].q_answer == 'MOM6':
                     self.nx         = 30
                     self.ny         = 36
-                elif answerdict['OM_name'].q_answer == 'MOM5' or answerdict['OM_name'].q_answer == 'MIT':
+                elif answerdict['OM_name'].q_answer == 'MIT':
                     self.nx         = ocean_nx
                     self.ny         = ocean_ny
                 else:

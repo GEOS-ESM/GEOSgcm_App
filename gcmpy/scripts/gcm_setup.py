@@ -454,15 +454,7 @@ class setup:
             self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/confocn.py", f"{self.exp_dir}/__init__.py", "confocn.py")
             self.file_list.extend(['input.nml', 'diag_table','plotocn.j', '__init__.py'])
 
-        if self.ocean.model == 'MOM5':
-            self.file_list.append('field_table')
-            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/INPUT/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
-            MOM5_path = os.path.join(pathdict['etc'], 'MOM5', 'geos5', f"{self.ocean.IM}x{self.ocean.JM}", 'INPUT', '*table')
-            files = glob.glob(MOM5_path)
-            for file in files:
-                file_name = os.path.basename(file)
-                self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
-        elif self.ocean.model == 'MOM6':
+        if self.ocean.model == 'MOM6':
             self.file_list.extend(['MOM_input', 'MOM_override', 'data_table'])
 
             self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
@@ -595,20 +587,6 @@ class setup:
 
     def config_heartbeat(self):
 
-        # With MOM5 we need to change dt lines in input.nml to
-        # use $OCEAN_DT instead. NOTE: This regex assumes integer followed by comma
-        if self.ocean.model == 'MOM5':
-
-            with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'r') as file:
-                file_content = file.read()
-
-            file_content = re.sub(r'dt_cpld\s*=\s*.*(,)', rf"dt_cpld = {self.atmos.dt_ocean}\1", file_content)
-            file_content = re.sub(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.dt_ocean}\1", file_content)
-
-            with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'w') as file:
-                file.write(file_content)
-
-
         # We also must change the MOM_override file to
         # have consistent DTs with the AGCM. So we use OCEAN_DT
         # and change MOM_override to match. NOTE: This assumes
@@ -642,7 +620,7 @@ class setup:
             shutil.rmtree(src_dir)
         src_dir.mkdir(parents=True)
         print(f"Copying build source code into {color.GREEN}{src_dir}{color.RESET}")
-        
+
         if os.path.exists(tarfile_path):
             shutil.copy(tarfile_path, src_dir)
         else:
@@ -744,7 +722,6 @@ class setup:
             'DASTUNING': '#',
             'COUPLED': self.ocean.coupled,
             'CLDMICRO': self.atmos.microphysics,
-            'MOM5': self.ocean.MOM5,
             'MOM6': self.ocean.MOM6,
             'OCNMODEL': self.ocean.model,
             'CICE4': self.ocean.CICE4,
@@ -907,10 +884,10 @@ class setup:
         shutil.move(f"{exp_dir}/gcm_plot.tmpl", f"{exp_dir}/plot/gcm_plot.tmpl")
         shutil.move(f"{exp_dir}/gcm_quickplot.csh", f"{exp_dir}/plot/gcm_quickplot.csh")
         shutil.move(f"{exp_dir}/plot.rc", f"{exp_dir}/plot/plot.rc")
-        try: #only if using MOM ocean
+        try: #only if using MOM6 ocean
             shutil.move(f"{exp_dir}/plotocn.j", f"{exp_dir}/plot/plotocn.j")
         except FileNotFoundError:
-            pass 
+            pass
 
         # post dir
         shutil.move(f"{exp_dir}/gcm_post.j", f"{exp_dir}/post/gcm_post.j")

@@ -1,4 +1,4 @@
-from env import answerdict 
+from env import answerdict
 from utility import color
 from datetime import date
 
@@ -7,7 +7,7 @@ class ocean:
         ocean.running_ocean = answerdict['OM_coupled'].q_answer
         ocean.model = answerdict['OM_name'].q_answer
         ocean.seaice_model = answerdict['OM_seaice_model'].q_answer
-        ocean.history_template = answerdict['history_template'].q_answer 
+        ocean.history_template = answerdict['history_template'].q_answer
         ocean.LM = answerdict['OM_vertical_res'].q_answer
         ocean.data_atmos = answerdict['OM_data_atmos'].q_answer
         ocean.name = ''
@@ -28,39 +28,15 @@ class ocean:
             ocean.set_uncoupled()
             ocean.set_data_atmosphere()
 
-    
+
     def set_coupled(ocean):
         # NOTE: We use a CMake variable here because the shared library
         # suffix is different on Linux and macOS. This is set by configure_file()
-        if ocean.model == 'MOM5':
-            ocean.name = 'MOM'
-            ocean.gridtyp = 'M5TP'
-            ocean.grid_type = 'Tripolar'
-            ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.MOM5 = ''
-            ocean.MOM6 = '#DELETE'
-            ocean.MIT = '#DELETE'
-            MOM5_warning = (
-                "######################################################\n"
-                "You have chosen to set up a coupled model experiment with MOM5.\n"
-                "Be aware that such a set up is _known_ to have problems. See following for more details:\n"
-                "https://github.com/GEOS-ESM/MOM5/issues/19\n"
-                "If your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\n"
-                "Otherwise, until this above issue is _fixed_ you are on your own with above choice.\n"
-                "######################################################"
-            )
-            print(color.GREEN + MOM5_warning + color.RESET)
-            ocean.NX = 36
-            ocean.NY = 10
-            resolution = answerdict['OM_MOM_horizontal_res'].q_answer.split()
-            ocean.IM = int(resolution[0])
-            ocean.JM = int(resolution[1])
-        elif ocean.model == 'MOM6':
+        if ocean.model == 'MOM6':
             ocean.name = 'MOM6'
             ocean.gridtyp = 'M6TP'
             ocean.grid_type = 'Tripolar'
             ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.MOM5 = '#DELETE'
             ocean.MOM6 = ''
             ocean.MIT = '#DELETE'
             ocean.set_MOM6_resolution()
@@ -68,7 +44,6 @@ class ocean:
             ocean.name = 'MIT'
             ocean.grid_type = 'llc'
             ocean.gridtyp = 'MITLLC'
-            ocean.MOM5 = '#DELETE'
             ocean.MOM6 = '#DELETE'
             ocean.MIT = ''
             ocean.JM = 15
@@ -159,7 +134,7 @@ class ocean:
             ocean.tag = 'Ostia'
             ocean.sst_name = 'OSTIA_REYNOLDS'
             ocean.out = 'CS'
-            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data" 
+            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
             ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
             ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
             ocean.gridtyp = 'CF'
@@ -167,7 +142,7 @@ class ocean:
             ocean.cube = ''
             ocean.ostia = ''
             ocean.data = '#DELETE'
-        
+
         IMO = '%04d' % ocean.IM
         JMO = '%04d' % ocean.JM
         if hr_code == 'cs':
@@ -179,7 +154,6 @@ class ocean:
         ocean.preload = ''
         ocean.LM = 34
         ocean.coupled = '#DELETE'
-        ocean.MOM5 = '#DELETE'
         ocean.MOM6 = '#DELETE'
         ocean.MIT = '#DELETE'
         ocean.CICE4 = '#DELETE'
