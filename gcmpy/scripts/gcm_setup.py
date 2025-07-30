@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from ocean import ocean
 from atmosphere import atmosphere as atmos
 from land import land
@@ -642,7 +644,7 @@ class setup:
             shutil.rmtree(src_dir)
         src_dir.mkdir(parents=True)
         print(f"Copying build source code into {color.GREEN}{src_dir}{color.RESET}")
-        
+
         if os.path.exists(tarfile_path):
             shutil.copy(tarfile_path, src_dir)
         else:
@@ -910,7 +912,7 @@ class setup:
         try: #only if using MOM ocean
             shutil.move(f"{exp_dir}/plotocn.j", f"{exp_dir}/plot/plotocn.j")
         except FileNotFoundError:
-            pass 
+            pass
 
         # post dir
         shutil.move(f"{exp_dir}/gcm_post.j", f"{exp_dir}/post/gcm_post.j")
