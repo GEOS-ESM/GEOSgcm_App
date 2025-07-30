@@ -15,12 +15,16 @@ class handle:
             # If that changes it's probably best to delete this function.
             answerdict[i].q_answer = answerdict[i].q_answer.split(None, 1)[0]
 
+    # Commenting this out for now until we know if we want to make sure
+    # the experiment description is different from the experiment ID.
+    '''
     @staticmethod
     def experiment_desc(answerdict, i):
         if i == "experiment_description" and answerdict[i].q_answer != None:
             while answerdict["experiment_description"].q_answer == answerdict["experiment_id"].q_answer:
                 print(color.RED + "The experiment description must be different from the ID!")
                 answerdict[i].load_question(answerdict)
+    '''
 
     @staticmethod
     def io_server_defualt(answerdict, i):
@@ -252,7 +256,7 @@ def process():
 
         # input validation and other post processing goes here,
         # AFTER load_question() call
-        handle.experiment_desc(answerdict, i)
+        # handle.experiment_desc(answerdict, i)
         # handle.OM_hres_valid(answerdict, i)
         handle.heartbeat_valid(answerdict, i)
         handle.exp_dir_valid(answerdict, i)
