@@ -1434,14 +1434,14 @@ LSM_BCS:
 # things out with something. So we use the default Land settings.
 
 if ($DATA_ATMOS == TRUE) then
-  set LSM_BCS = "NL3"
-  set LSM_CHOICE  = 1
-  set LSM_BCS      = "NL3"
-  set LSM_PARMS    = ""
-  set EMIP_BCS_IN  = "NL3"
-  set EMIP_OLDLAND = "#DELETE"
-  set EMIP_NEWLAND = ""
-  set EMIP_MERRA2  = "MERRA2_NewLand"
+  set LSM_BCS        = "NL3"
+  set LSM_CHOICE     = 1
+  set LSM_BCS        = "NL3"
+  set LSM_PARMS      = ""
+  set EMIP_BCS_IN    = "NL3"
+  set EMIP_OLDLAND   = "#DELETE"
+  set EMIP_NEWLAND   = ""
+  set EMIP_MERRA2    = "MERRA2_NewLand"
   set HIST_CATCHCN   = "#DELETE"
   set GCMRUN_CATCHCN = "#DELETE"
 else
@@ -1479,12 +1479,12 @@ endif
 # Enter Catch-Carbon
 # ----------------------
 LSM_CHOICE:
-echo "Enter the choice of ${C1} Land Surface Model${CN} using: ${C2}1${CN} (Default: Catchment) or ${C2}2${CN} (CatchmentCN-CLM4.0 (CN_CLM40))"
+echo "Enter the choice of ${C1} land surface model${CN} using: ${C2}1${CN} (Default: Catchment), ${C2}2${CN} (Catchment-CN4.0), or ${C2}4${CN} (Catchment-CN5.1)"
 set   LSM_CHOICE = $<
 if( .$LSM_CHOICE == . ) set LSM_CHOICE  = 1
-if(  $LSM_CHOICE != 1 & $LSM_CHOICE != 2 ) then
+if(  $LSM_CHOICE != 1 & $LSM_CHOICE != 2 & $LSM_CHOICE != 4 ) then
     echo
-    echo "${C1} Catchment Model${CN} must be set equal to ${C2}1${CN} or ${C2}2${CN}!"
+    echo "${C1} Land surface model${CN} must be set equal to ${C2}1${CN}, ${C2}2${CN}, or ${C2}4${CN}!"
     goto LSM_CHOICE
 else
     echo
@@ -1492,7 +1492,7 @@ endif
 if( $LSM_CHOICE == 1 ) then
     set HIST_CATCHCN   = "#DELETE"
     set GCMRUN_CATCHCN = "#DELETE"
-else if( $LSM_CHOICE == 2 ) then
+else if( $LSM_CHOICE == 2 || $LSM_CHOICE == 4 ) then
     set HIST_CATCHCN   = ""
     set GCMRUN_CATCHCN = ""
 endif
@@ -2739,9 +2739,13 @@ endif
 /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
 cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e 's?# GEOSagcm=>?            ?g' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 
-if( $LSM_CHOICE == 2 ) then
+if( $LSM_CHOICE == 2 || $LSM_CHOICE == 4 ) then
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
-    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *LAND_PARAMS:/ s/NRv7.2/CN_CLM40/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    if(     $LSM_CHOICE == 2 ) then
+	cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *LAND_PARAMS:/ s/NRv7.2/CN_CLM40/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    elseif( $LSM_CHOICE == 4 ) then
+	cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *LAND_PARAMS:/ s/NRv7.2/CN_CLM51/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+    endif
 endif
 
 if( $LSM_BCS == "ICA" ) then

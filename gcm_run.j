@@ -334,7 +334,7 @@ chmod +x linkbcs
 
 @GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
 @GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
-@GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+@GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc | grep -v "'CNAR'" | grep -v "'CNHR'" > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
 @GCMRUN_CATCHCNendif
 #######################################################################
 #                  Setup executable
