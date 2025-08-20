@@ -353,7 +353,7 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #   REPLAY_FILE09: ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana09.eta.%y4%m2%d2_%h2z.nc4
 #   REPLAY_FILE_FREQUENCY:       10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
- 
+
 # MERRA-2 Regular REPLAY Configuration
 # --------------------------------------------
 #M2 REPLAY_ANA_EXPID: MERRA-2
@@ -908,10 +908,21 @@ HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
 # -------------------------------
 USE_RRTMGP_IRRAD: 1.0
 USE_RRTMGP_SORAD: 1.0
-RRTMGP_GAS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-lw-g128.nc
-RRTMGP_GAS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-sw-g112.nc
-RRTMGP_CLOUD_OPTICS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-lw.nc
-RRTMGP_CLOUD_OPTICS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-sw.nc
+#RRTMGP_GAS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-lw-g128.nc
+#RRTMGP_GAS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-sw-g112.nc
+#RRTMGP_CLOUD_OPTICS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-lw.nc
+#RRTMGP_CLOUD_OPTICS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-sw.nc
+
+RRTMGP_GAS_LW: /discover/nobackup/projects/gmao/SIteam/RRTMGP-Data/RRTMGP-data.v1.9/rrtmgp-data/rrtmgp-gas-lw-g128.nc
+RRTMGP_GAS_SW: /discover/nobackup/projects/gmao/SIteam/RRTMGP-Data/RRTMGP-data.v1.9/rrtmgp-data/rrtmgp-gas-sw-g112.nc
+
+# Clouds defined by band
+RRTMGP_CLOUD_OPTICS_LW: /discover/nobackup/projects/gmao/SIteam/RRTMGP-Data/RRTMGP-data.v1.9/rrtmgp-data/rrtmgp-clouds-lw-bnd.nc
+RRTMGP_CLOUD_OPTICS_SW: /discover/nobackup/projects/gmao/SIteam/RRTMGP-Data/RRTMGP-data.v1.9/rrtmgp-data/rrtmgp-clouds-sw-bnd.nc
+
+# Clouds defined by g-point
+#RRTMGP_CLOUD_OPTICS_LW: /discover/nobackup/projects/gmao/SIteam/RRTMGP-Data/RRTMGP-data.v1.9/rrtmgp-data/rrtmgp-clouds-lw-g128.nc
+#RRTMGP_CLOUD_OPTICS_SW: /discover/nobackup/projects/gmao/SIteam/RRTMGP-Data/RRTMGP-data.v1.9/rrtmgp-data/rrtmgp-clouds-sw-g112.nc
 
 SOLAR_LB_MAX_PASSES: 10
 ISOLVAR: 2
