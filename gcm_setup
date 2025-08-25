@@ -1429,7 +1429,6 @@ if ($DATA_ATMOS == TRUE) then
   set LSM_BCS = "NL3"
   set LSM_CHOICE  = 1
   set LSM_BCS      = "NL3"
-  set LSM_PARMS    = ""
   set EMIP_BCS_IN  = "NL3"
   set EMIP_OLDLAND = "#DELETE"
   set EMIP_NEWLAND = ""
@@ -1439,12 +1438,11 @@ if ($DATA_ATMOS == TRUE) then
   set GWD_IN_BCS   = "FALSE"
 else
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v12${CN} (Default)"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), ${C2}v12${CN} (Default), or ${C2}v14-beta${CN} (BETA -- For testing only)"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = "v12"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set LSM_BCS      = "ICA"
-    set LSM_PARMS    = "#DELETE"
     set EMIP_BCS_IN  = "GM4"
     set EMIP_OLDLAND = ""
     set EMIP_NEWLAND = "#DELETE"
@@ -1452,7 +1450,6 @@ if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set GWD_IN_BCS   = "FALSE"
 else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set LSM_BCS      = "NL3"
-    set LSM_PARMS    = ""
     set EMIP_BCS_IN  = "NL3"
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
@@ -1460,7 +1457,13 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "nl3" ) then
     set GWD_IN_BCS   = "FALSE"
 else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
     set LSM_BCS      = "v12"
-    set LSM_PARMS    = ""
+    set EMIP_BCS_IN  = "NL3"
+    set EMIP_OLDLAND = "#DELETE"
+    set EMIP_NEWLAND = ""
+    set EMIP_MERRA2  = "MERRA2_NewLand"
+    set GWD_IN_BCS   = "TRUE"
+else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v14-beta" ) then
+    set LSM_BCS      = "v14_BETA"
     set EMIP_BCS_IN  = "NL3"
     set EMIP_OLDLAND = "#DELETE"
     set EMIP_NEWLAND = ""
@@ -1468,7 +1471,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
     set GWD_IN_BCS   = "TRUE"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v12${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, ${C2}v12${CN}, or ${C2}v14-beta${CN}!"
     goto LSM_BCS
 endif
 
@@ -2406,7 +2409,6 @@ s?@HIST_CATCHCN?$HIST_CATCHCN?g
 s?@GCMRUN_CATCHCN?$GCMRUN_CATCHCN?g
 s?@EMIP_OLDLAND?$EMIP_OLDLAND?g
 s?@EMIP_NEWLAND?$EMIP_NEWLAND?g
-s?@LSM_PARMS?$LSM_PARMS?g
 s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
