@@ -724,13 +724,13 @@ if( $OGCM == TRUE ) then
     # Seaice Model
     # -----------
     SEAICEMODEL:
-    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE4${CN})"
+    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE6${CN})"
     echo "   ${C2}CICE4${CN}"
     echo "   ${C2}CICE6${CN}"
 
     set SEAICEMODEL  = $<
     if ( .$SEAICEMODEL == . ) then
-       set SEAICEMODEL  = "CICE4"
+       set SEAICEMODEL  = "CICE6"
     else
        set SEAICEMODEL = `echo $SEAICEMODEL | tr "[:lower:]" "[:upper:]"`
 
@@ -2812,6 +2812,11 @@ if( $OGCM == TRUE ) then
 
    endif
 
+   # We also need to change the dt in ice_in as well for CICE6
+   if ( $SEAICE_NAME == "CICE6" ) then
+      sed -i -e "s/\([[:space:]]*dt[[:space:]]*=[[:space:]]*\)[0-9]*\(\.[0-9]*\)\?/\1${OCEAN_DT}/g" $HOMDIR/ice_in
+   endif
+
 endif
 
 #######################################################################
@@ -2999,6 +3004,7 @@ if ( $OGCM == 1 ) then
    # Now we need to find out if we are running MOM or MOM6 by looking
    # at OCEAN_NAME: val and checking if it is MOM or MOM6
    set OCNMODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+   set SEAICEMODEL = `grep "SEAICE_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
 else if ( $OGCM == 0 ) then
    set OGCM = FALSE
 else
@@ -3089,6 +3095,12 @@ cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/MOM_override
 HOMDIR/MOM_input
 HOMDIR/data_table
+EOF
+endif
+
+if ( "$SEAICEMODEL" == "CICE6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/ice_in
 EOF
 endif
 
