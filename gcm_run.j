@@ -37,6 +37,7 @@ setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
 # We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+    setenv PATH ${PATH}:${BASEDIR}/${ARCH}/bin
 endif
 
 setenv RUN_CMD "@RUN_CMD"
@@ -899,6 +900,16 @@ endif
 #echo $yy
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
+
+@CICE6 #detect exisistence of certain fields in CICE6 restart
+@CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
+@CICE6 if( $status == 0 ) then
+@CICE6    echo 'pond state in restart, turn on restart flag if not already'
+@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
+@CICE6 else
+@CICE6    echo 'pond state NOT in restart, turn off restart flag if already on'
+@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
+@CICE6 endif
 
 #######################################################################
 #                Split Saltwater Restart if detected
