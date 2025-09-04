@@ -1178,7 +1178,7 @@ if( $AGCM_IM == "c1440" ) then
 endif
 if( $AGCM_IM == "c2880" ) then
      set       DT = 150
-     set  LONG_DT = 300
+     set  LONG_DT = 450
      set SOLAR_DT = 900
      set IRRAD_DT = 900
      set OCEAN_DT = 900
@@ -1199,7 +1199,7 @@ if( $AGCM_IM == "c2880" ) then
 endif
 if( $AGCM_IM == "c5760" ) then
      set       DT = 75
-     set  LONG_DT = 300
+     set  LONG_DT = 450
      set SOLAR_DT = 600
      set IRRAD_DT = 600
      set OCEAN_DT = 600
