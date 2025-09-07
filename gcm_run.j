@@ -53,15 +53,15 @@ echo   VERSION: $GCMVER
 setenv  EXPID   @EXPID
 setenv  EXPDIR  @EXPDIR
 setenv  HOMDIR  @HOMDIR
-setenv  SSDDIR  /discover/nobackup/projects/gmao/osse2/TSE_staging/$EXPID
+setenv  SSDDIR  /discover/nobackup/projects/gmao/osse2/TSE_staging/@EXPID
 if ( -d "$SSDDIR" && -w "$SSDDIR" ) then
     set USE_SSDDIR = TRUE
     set USE_TSE_TMPDIR = FALSE
     echo "Directory $SSDDIR exists and is writable"
 else
     set USE_SSDDIR = FALSE
-    set USE_TSE_TMPDIR = TRUE
-    if ( $?TSE_TMPDIR && USE_TSE_TMPDIR ) then
+    set USE_TSE_TMPDIR = FALSE
+    if ( $?TSE_TMPDIR && ( $USE_TSE_TMPDIR == TRUE ) ) then
       echo "Using $TSE_TMPDIR"
     else
       echo "Using spinning disc"
