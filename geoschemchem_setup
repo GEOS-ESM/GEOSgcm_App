@@ -1007,11 +1007,9 @@ else
    set INTERPOLATE_SST = 0
 endif
 
-
 set BEG_DATE =  '18910301 000000'
 set END_DATE =  '29990302 210000'
 set JOB_SGMT = "$JOB_SGMT 000000"
-
 
 #######################################################################
 #           Setting for Microphysics                                  #
@@ -1046,6 +1044,7 @@ endif
 # Enter Land Surface Model Boundary Conditions
 # -----------------------------------------------------------
 LSM_BCS:
+
 # If we are running DATA_ATMOS, we can skip the Land bits, but we must still fill
 # things out with something. So we use the default Land settings.
 
@@ -1529,8 +1528,8 @@ else
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
-              setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
+              setenv  RUN_Q     "DELETE"                                               # batch queue name for gcm_run.j
+              setenv  RUN_P     "SBATCH --ntasks=${MODEL_NPES}"                        # PE Configuration for gcm_run.j
               setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
               setenv  REGRESS_P NULL                                                   # PE Configuration for gcm_regress.j
               setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
@@ -1554,12 +1553,15 @@ else
               setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
-              set NX = 1
-              set NY = 6
-              # By default on desktop, just ignore IOSERVER for now
-              set USE_IOSERVER = 0
-              set NUM_OSERVER_NODES = 0
-              set NUM_BACKEND_PES = 0
+endif
+
+if( $SITE == 'GMAO.desktop' ) then
+   # By default on desktop, just ignore IOSERVER for now
+   set USE_IOSERVER = 0
+   set NUM_OSERVER_NODES = 0
+   set NUM_BACKEND_PES = 0
+   set NX = 1
+   set NY = 6
 endif
 
 #######################################################################
@@ -2041,10 +2043,10 @@ s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?@4DIAUDAS?#DELETE?g
-s?@REGULAR_REPLAY?#?g
 s?@REGULAR_REPLAY_GMAO?#?g
 s?@REGULAR_REPLAY_NCEP?#DELETE?g
 s?@REGULAR_REPLAY_ECMWF?#DELETE?g
+s?@REGULAR_REPLAY?#?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
