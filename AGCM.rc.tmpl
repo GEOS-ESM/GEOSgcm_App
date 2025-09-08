@@ -41,6 +41,7 @@ AGCM.IM_WORLD: @AGCM_IM
 ###########################################################
 # debug options
 # ----------------------------------------
+#DEBUG_TQ_ERRORS: .TRUE.
 #DEBUG_ADV: .TRUE.
 #DEBUG_DYN: .TRUE.
 #DEBUG_GWD: .TRUE.
@@ -55,13 +56,13 @@ AGCM.IM_WORLD: @AGCM_IM
 # the defaults are most ideal
 # ----------------------------------------
 ADJUST_DT: .FALSE.
-GOCART2G_DT: @LONG_DT
-GOCART_DT: @LONG_DT
-HEMCO_DT: @LONG_DT
-ACHEM_DT: @LONG_DT
-PCHEM_DT: @LONG_DT
-GF_DT: @LONG_DT
-UW_DT: @LONG_DT
+GOCART2G_DT: @CHEM_DT
+GOCART_DT: @CHEM_DT
+HEMCO_DT: @CHEM_DT
+ACHEM_DT: @CHEM_DT
+PCHEM_DT: @CHEM_DT
+GF_DT: @CONV_DT
+UW_DT: @CONV_DT
 ###########################################################
 
 ###########################################################
