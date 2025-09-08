@@ -51,11 +51,12 @@ jobs:
           mepo clone --partial blobless
           mepo status
 
-      - name: Mepo develop usual suspects
-        run: |
-          ls
-          mepo develop GEOSgcm_GridComp GEOSgcm_App GMAO_Shared GEOS_Util
-          mepo status
+      # DO NOT DO THIS FOR v12
+      #- name: Mepo develop usual suspects
+        #run: |
+          #ls
+          #mepo develop GEOSgcm_GridComp GEOSgcm_App GMAO_Shared GEOS_Util
+          #mepo status
 
       - name: Debug PR branch
         run: echo "PR is coming from ${{ github.event.pull_request.head.ref }}"
@@ -102,6 +103,7 @@ jobs:
       - name: Concretize
         shell: spack-bash {0}
         run: |
+          spack clean -m
           spack -e spack-env concretize
 
       - name: Install
