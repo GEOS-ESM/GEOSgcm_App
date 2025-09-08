@@ -26,8 +26,8 @@ set LOCAL_OCNMODEL = $argv[4]
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 3600
-     set  CONV_DT = 3600
+     set       DT = 1200
+     set  CONV_DT = 1200
      set  CHEM_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
