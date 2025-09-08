@@ -129,9 +129,10 @@ CLOSURE_CONGESTUS: 3
 NCAR_NRDG: @NCAR_NRDG
 ###########################################################
 
-@HIST_GOCART###########################################################
-@HIST_GOCART# Enable wet scavenging diagnostics
-@HIST_GOCART# NOTE: this section should be commented out when running gocart.data
+###########################################################
+# Enable wet scavenging diagnostics
+# NOTE: this section should be commented out when running gocart.data
+# 2D mass weighted vertical integrated moist scavenging increments
 @HIST_GOCARTMCHEMTRI_increments::
 @HIST_GOCARTDU::DU default
 @HIST_GOCARTSS::SS default
@@ -141,8 +142,21 @@ NCAR_NRDG: @NCAR_NRDG
 @HIST_GOCARTCA.oc::CA.ocphilic default
 @HIST_GOCARTNI::NO3an1 "NI::NO3an2,NI::NO3an3"
 @HIST_GOCARTPCHEM::OX default
+@HIST_GOCARTNI::NH3 default
+@HIST_GOCARTNI::NH4a default
 @HIST_GOCART::
-@HIST_GOCART###########################################################
+# 3D moist scavenging increments
+@HIST_GOCARTMTRI_increments::
+@HIST_GOCARTDU::DU default
+@HIST_GOCARTSS::SS default
+@HIST_GOCARTSU::SO4 default
+@HIST_GOCARTCA.bc::CA.bcphilic default
+@HIST_GOCARTCA.br::CA.brphilic default
+@HIST_GOCARTCA.oc::CA.ocphilic default
+@HIST_GOCARTNI::NO3an1 "NI::NO3an2,NI::NO3an3"
+@HIST_GOCARTPCHEM::OX default
+@HIST_GOCART::
+###########################################################
 
 ###########################################################
 # Ocean Model Configuration Parameters

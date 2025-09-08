@@ -950,7 +950,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 1800
+     set       DT = 1200
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -2900,6 +2900,11 @@ if( $OGCM == TRUE ) then
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
    endif
 
+   # We also need to change the dt in ice_in as well for CICE6
+   if ( $SEAICE_NAME == "CICE6" ) then
+      sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
+   endif
+
 endif
 
 #######################################################################
@@ -3091,6 +3096,7 @@ if ( $OGCM == 1 ) then
    # Now we need to find out if we are running MOM or MOM6 by looking
    # at OCEAN_NAME: val and checking if it is MOM or MOM6
    set OCNMODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+   set SEAICEMODEL = `grep "SEAICE_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
 else if ( $OGCM == 0 ) then
    set OGCM = FALSE
 else
@@ -3167,6 +3173,12 @@ EXPDIR/plot/plotocn.j
 HOMDIR/MOM_override
 HOMDIR/MOM_input
 HOMDIR/data_table
+EOF
+endif
+
+if ( "$SEAICEMODEL" == "CICE6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/ice_in
 EOF
 endif
 

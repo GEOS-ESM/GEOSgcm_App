@@ -950,7 +950,7 @@ endif
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 1800
+     set       DT = 3600
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -972,7 +972,7 @@ if( $AGCM_IM ==  "c12" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 1200
+     set       DT = 1800
      set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -1007,7 +1007,7 @@ if( $AGCM_IM ==  "c48" ) then
 endif
 if( $AGCM_IM ==  "c90" ) then
      set       DT = 900
-     set  LONG_DT = 1800
+     set  LONG_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
@@ -1039,7 +1039,7 @@ if( $AGCM_IM ==  "c90" ) then
 endif
 if( $AGCM_IM ==  "c180" ) then
      set       DT = 600
-     set  LONG_DT = 1200
+     set  LONG_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 180
@@ -1144,10 +1144,10 @@ if( $AGCM_IM == "c1440" ) then
 endif
 if( $AGCM_IM == "c2880" ) then
      set       DT = 150
-     set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set  LONG_DT = 450
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -1165,10 +1165,10 @@ if( $AGCM_IM == "c2880" ) then
 endif
 if( $AGCM_IM == "c5760" ) then
      set       DT = 75
-     set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set  LONG_DT = 450
+     set SOLAR_DT = 600
+     set IRRAD_DT = 600
+     set OCEAN_DT = 600
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -1189,7 +1189,7 @@ set CONUS = '#'
 set STRETCH_FACTOR = ""
 if( $AGCM_IM == "c270" ) then
      set       DT = 600
-     set  LONG_DT = 1200
+     set  LONG_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -1210,7 +1210,7 @@ if( $AGCM_IM == "c270" ) then
 endif
 if( $AGCM_IM == "c540" ) then
      set       DT = 300
-     set  LONG_DT = 600
+     set  LONG_DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -1231,7 +1231,7 @@ if( $AGCM_IM == "c540" ) then
 endif
 if( $AGCM_IM == "c1080" ) then
      set       DT = 150
-     set  LONG_DT = 300
+     set  LONG_DT = 600
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
      set OCEAN_DT = 1800
@@ -1253,9 +1253,9 @@ endif
 if( $AGCM_IM == "c1536" ) then
      set       DT = 75
      set  LONG_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set AGCM_IM  = 1536
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 60
@@ -1274,9 +1274,9 @@ endif
 if( $AGCM_IM == "c2160" ) then
      set       DT = 75
      set  LONG_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -1295,9 +1295,9 @@ endif
 if( $AGCM_IM == "c4320" ) then
      set       DT = 30
      set  LONG_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
+     set SOLAR_DT = 450
+     set IRRAD_DT = 450
+     set OCEAN_DT = 450
      set AGCM_IM  = 4320
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -1312,6 +1312,15 @@ if( $AGCM_IM == "c4320" ) then
      set USE_SHMEM = 1
      set CONUS = ''
      set STRETCH_FACTOR = 2.5
+endif
+
+# Set coarse resolution CLIM output
+# ---------------------------------
+set   CLIM_IM = 576
+set   CLIM_JM = 361
+if ( $CLIM_IM > $HIST_IM ) then
+  set CLIM_IM = $HIST_IM
+  set CLIM_JM = $HIST_JM
 endif
 
 set OGCM_IS_FCST = 0
@@ -2451,6 +2460,8 @@ s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
 s/@HIST_JM/$HIST_JM/g
+s/@CLIM_IM/$CLIM_IM/g
+s/@CLIM_JM/$CLIM_JM/g
 
 s/@ISCCP_SATSIM/1/g
 s/@MODIS_SATSIM/0/g
@@ -2772,6 +2783,11 @@ if( $OGCM == TRUE ) then
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
    endif
 
+   # We also need to change the dt in ice_in as well for CICE6
+   if ( $SEAICE_NAME == "CICE6" ) then
+      sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
+   endif
+
 endif
 
 #######################################################################
@@ -2959,6 +2975,7 @@ if ( $OGCM == 1 ) then
    # Now we need to find out if we are running MOM or MOM6 by looking
    # at OCEAN_NAME: val and checking if it is MOM or MOM6
    set OCNMODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+   set SEAICEMODEL = `grep "SEAICE_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
 else if ( $OGCM == 0 ) then
    set OGCM = FALSE
 else
@@ -3035,6 +3052,12 @@ EXPDIR/plot/plotocn.j
 HOMDIR/MOM_override
 HOMDIR/MOM_input
 HOMDIR/data_table
+EOF
+endif
+
+if ( "$SEAICEMODEL" == "CICE6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/ice_in
 EOF
 endif
 
