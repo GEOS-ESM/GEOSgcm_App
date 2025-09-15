@@ -238,12 +238,23 @@ cat << _EOF_ > $FILE
 EXPID:  ${EXPID}
 EXPDSC: ${EXPID}_Regression_Test
 
+GRID_LABELS: PC180x91-DC
+::
+
+PC180x91-DC.GRID_TYPE: LatLon
+PC180x91-DC.IM_WORLD: 180
+PC180x91-DC.JM_WORLD: 91
+PC180x91-DC.POLE: PC
+PC180x91-DC.DATELINE: DC
+PC180x91-DC.LM: 181
+
 COLLECTIONS: test_collection
            ::
 
   test_collection.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
   test_collection.archive:          '%c/Y%y4' ,
   test_collection.format:           'CFIO' ,
+  test_collection.grid_label:        PC180x91-DC ,
   test_collection.deflate:           1 ,
   test_collection.frequency:         060000 ,
 @DATAOCEAN  test_collection.fields:           'PHIS', 'AGCM' ,
