@@ -104,9 +104,9 @@ class handle:
         heartbeat = ""
         match answerdict["AM_horizontal_res"].q_answer:
             case 'c12':
-                heartbeat = 1800
+                heartbeat = 3600
             case 'c24':
-                heartbeat = 1200
+                heartbeat = 1800
             case 'c48':
                 heartbeat = 1200
             case 'c90':
@@ -124,7 +124,7 @@ class handle:
             case 'c5760' | 'c1536' | 'c2160':
                 heartbeat = 75
             case 'c4320':
-                heartbeat = 30
+                heartbeat = 60
 
 
         # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected

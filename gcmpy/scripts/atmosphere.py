@@ -12,7 +12,6 @@ class atmosphere:
         self.dt_solar           = None
         self.dt_irrad           = None
         self.dt_ocean           = answerdict['heartbeat'].q_answer
-        self.dt_long            = None
         self.lm                 = int(answerdict['AM_vertical_res'].q_answer)
         self.im                 = int(answerdict['AM_horizontal_res'].q_answer[1:])
         self.jm                 = self.im * 6
@@ -64,9 +63,10 @@ class atmosphere:
     def hres(self, ocean_nx, ocean_ny):
         match answerdict["AM_horizontal_res"].q_answer:
             case "c12":
+                self.conv_dt        = 3600
+                self.chem_dt        = 3600
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 3600
                 self.dt_ocean       = 3600
                 if answerdict["OM_name"].q_answer == "MOM6":
                     self.nx         = 1
@@ -82,9 +82,10 @@ class atmosphere:
 
 
             case "c24":
+                self.conv_dt        = 1800
+                self.chem_dt        = 3600
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 3600
                 self.dt_ocean       = 3600
                 self.nx             = 4
                 self.ny             = self.nx * 6
@@ -96,9 +97,10 @@ class atmosphere:
                 self.res            = 'CF0024x6C'
 
             case "c48":
+                self.conv_dt        = 1200
+                self.chem_dt        = 3600
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 3600
                 self.dt_ocean       = 3600
                 self.nx             = 6
                 self.ny             = self.nx * 6
@@ -112,9 +114,10 @@ class atmosphere:
                 self.hist_jm        = 91
 
             case "c90":
+                self.conv_dt        = 900
+                self.chem_dt        = 1800
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 1800
                 self.dt_ocean       = self.dt
                 if answerdict['OM_name'].q_answer == 'MIT':
                     self.nx     = 10
@@ -135,9 +138,10 @@ class atmosphere:
                 self.res            = 'CF0090x6C'
 
             case "c180":
+                self.conv_dt        = 600
+                self.chem_dt        = 1200
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 1200
                 self.dt_ocean       = self.dt
                 if answerdict['OM_name'].q_answer == 'MOM6':
                     self.nx         = 30
@@ -156,9 +160,10 @@ class atmosphere:
                 self.res            = 'CF0180x6C'
 
             case "c360":
+                self.conv_dt        = 450
+                self.chem_dt        = 900
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 900
                 self.dt_ocean       = 4600
                 self.nx             = 30
                 self.ny             = self.nx * 6
@@ -170,9 +175,10 @@ class atmosphere:
                 self.res            = 'CF0360x6C'
 
             case "c720":
+                self.conv_dt        = 300
+                self.chem_dt        = 900
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 600
                 self.dt_ocean       = 3600
                 self.nx             = 40
                 self.ny             = self.nx * 6
@@ -185,9 +191,10 @@ class atmosphere:
                 self.res            = 'CF0720x6C'
 
             case "1120":
+                self.conv_dt        = 300
+                self.chem_dt        = 900
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 600
                 self.dt_ocean       = 3600
                 self.nx             = 60
                 self.ny             = self.nx * 6
@@ -200,9 +207,10 @@ class atmosphere:
                 self.res            = 'CF1120x6C'
 
             case "c1440":
+                self.conv_dt        = 225
+                self.chem_dt        = 900
                 self.dt_solar       = 1800
                 self.dt_irrad       = 1800
-                self.dt_long        = 450
                 self.dt_ocean       = 1800
                 self.nx             = 80
                 self.ny             = self.nx * 6
@@ -215,9 +223,10 @@ class atmosphere:
                 self.res            = 'CF1440x6C'
 
             case "c2880":
+                self.conv_dt        = 150
+                self.chem_dt        = 900
                 self.dt_solar       = 1800
                 self.dt_irrad       = 1800
-                self.dt_long        = 300
                 self.dt_ocean       = 1800
                 self.nx             = 80
                 self.ny             = self.nx * 6
@@ -231,9 +240,10 @@ class atmosphere:
                 self.res            = 'CF2880x6C'
 
             case "c5760":
+                self.conv_dt        = 75
+                self.chem_dt        = 900
                 self.dt_solar       = 1800
                 self.dt_irrad       = 1800
-                self.dt_long        = 300
                 self.dt_ocean       = 1800
                 self.nx             = 80
                 self.ny             = self.nx * 6
@@ -247,9 +257,10 @@ class atmosphere:
                 self.res            = 'CF5760x6C'
 
             case "c270":
+                self.conv_dt        = 600
+                self.chem_dt        = 1800
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 1200
                 self.dt_ocean       = 3600
                 self.nx             = 20
                 self.ny             = self.nx * 6 * 2
@@ -264,9 +275,10 @@ class atmosphere:
                 self.res            = 'CF0270x6C-SG001'
 
             case "c540":
+                self.conv_dt        = 300
+                self.chem_dt        = 900
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
-                self.dt_long        = 600
                 self.dt_ocean       = 3600
                 self.nx             = 30
                 self.ny             = self.nx * 6 * 2
@@ -281,9 +293,10 @@ class atmosphere:
                 self.res            = 'CF0540x6C-SG001'
 
             case "c1080":
+                self.conv_dt        = 300
+                self.chem_dt        = 600
                 self.dt_solar       = 1800
                 self.dt_irrad       = 1800
-                self.dt_long        = 300
                 self.dt_ocean       = 1800
                 self.nx             = 40
                 self.ny             = self.nx * 6 * 2
@@ -298,9 +311,10 @@ class atmosphere:
                 self.res            = 'CF1080x6C-SG001'
 
             case "c1536":
+                self.conv_dt        = 300
+                self.chem_dt        = 900
                 self.dt_solar       = 900
                 self.dt_irrad       = 900
-                self.dt_long        = 300
                 self.dt_ocean       = 900
                 self.nx             = 60
                 self.ny             = self.nx * 6
@@ -315,9 +329,10 @@ class atmosphere:
                 self.res            = 'CF1536x6C-SG002'
 
             case "c2160":
+                self.conv_dt        = 300
+                self.chem_dt        = 300
                 self.dt_solar       = 900
                 self.dt_irrad       = 900
-                self.dt_long        = 300
                 self.dt_ocean       = 900
                 self.nx             = 80
                 self.ny             = self.nx * 6 * 2
@@ -332,9 +347,10 @@ class atmosphere:
                 self.res            = 'CF2160x6C-SG001'
 
             case 'c4320':
+                self.conv_dt        = 300
+                self.chem_dt        = 300
                 self.dt_solar       = 900
                 self.dt_irrad       = 900
-                self.dt_long        = 300
                 self.dt_ocean       = 900
                 self.nx             = 80
                 self.ny             = self.nx * 6 * 2
@@ -351,13 +367,14 @@ class atmosphere:
 
 
     def set_microphysics(self):
-        match self.microphysics:
-            case "BACM_1M":
-                self.BACM_1M = ""
-            case "GFDL_1M":
-                self.GFDL_1M = ""
-            case "MGB2_2M":
-                self.MGB2_2M = ""
+        if self.microphysics == "BACM_1M":
+            self.BACM_1M = ""
+            self.conv_dt = 450
+            self.chem_dt = 3600
+        elif self.microphysics == "GFDL_1M":
+            self.GFDL_1M = ""
+        elif self.microphysics == "MGB2_2M":
+            self.MGB2_2M = ""
 
     def set_turnoff_wsub(self):
         if self.microphysics == "MGB2_2M":
@@ -384,9 +401,17 @@ class atmosphere:
         else:
             self.mp_turn_off_wsub_extdata = '#DELETE#'
 
+    # Set coarse resolution CLIM output
+    def set_CLIM(self):
+        self.CLIM_IM = 576
+        self.CLIM_JM = 361
+        if (self.CLIM_IM > self.im_hist):
+            self.CLIM_IM = im_hist
+            self.CLIM_JM = jm_hist
 
     def config(self, ocean_nx, ocean_ny):
         self.hres(ocean_nx, ocean_ny)
         self.set_microphysics()
         self.set_conus()
         self.set_wsub_extdata()
+        self.set_CLIM()

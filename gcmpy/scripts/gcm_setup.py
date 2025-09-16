@@ -595,8 +595,8 @@ class setup:
             file.write(file_content)
 
 
+    # Modify MOM input files to match HEARTBEAT
     def config_heartbeat(self):
-
         # With MOM5 we need to change dt lines in input.nml to
         # use $OCEAN_DT instead. NOTE: This regex assumes integer followed by comma
         if self.ocean.model == 'MOM5':
@@ -608,6 +608,17 @@ class setup:
             file_content = re.sub(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.dt_ocean}\1", file_content)
 
             with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'w') as file:
+                file.write(file_content)
+
+        # We also need to change the dt in ice_in as well for CICE6
+        if self.ocean.seaice_model == 'CICE6':
+            file_path = f"{answerdict['exp_dir'].q_answer}/icein"
+            with open(file_path, 'r') as file:
+                content = file.read()
+
+            file_content = re.sub(r"^(\s*dt\s*=\s*)[0-9]+(\.[0-9]+)?", r"\1" + self.atmos.dt_ocean, content)
+
+            with open(file_path, 'w') as file:
                 file.write(file_content)
 
 
@@ -785,10 +796,11 @@ class setup:
             'TILEDATA': self.tile_data,
             'TILEBIN': self.tile_bin,
             'DT': self.atmos.dt,
+            'CONV_DT': self.atmos.conv_dt,
+            'CHEM_DT': self.atmos.chem_dt,
             'SOLAR_DT': self.atmos.dt_solar,
             'IRRAD_DT': self.atmos.dt_irrad,
             'OCEAN_DT': self.atmos.dt_ocean,
-            'LONG_DT': self.atmos.dt_long,
             'NX': self.atmos.nx,
             'NY': self.atmos.ny,
             'USE_SHMEM': int(self.atmos.use_SHMEM),
@@ -823,6 +835,8 @@ class setup:
             'INTERPOLATE_SST': self.interpolate_sst,
             'HIST_IM': self.atmos.hist_im,
             'HIST_JM': self.atmos.hist_jm,
+            'CLIM_IM': self.atmos.CLIM_IM,
+            'CLIM_JM': self.atmos.CLIM_JM,
             'ISCCP_SATSIM': 1,
             'MODIS_SATSIM': 0,
             'RADAR_SATSIM': 0,
