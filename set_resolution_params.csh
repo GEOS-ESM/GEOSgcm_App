@@ -167,7 +167,7 @@ endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 300
      set  CONV_DT = 300
-     set  CHEM_DT = 900
+     set  CHEM_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -187,7 +187,7 @@ endif
 if( $AGCM_IM == "c1120" ) then
      set       DT = 300
      set  CONV_DT = 300
-     set  CHEM_DT = 900
+     set  CHEM_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -205,12 +205,12 @@ if( $AGCM_IM == "c1120" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 225
-     set  CONV_DT = 225
-     set  CHEM_DT = 900
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set       DT = 150
+     set  CONV_DT = 300
+     set  CHEM_DT = 600
+     set SOLAR_DT = 1200
+     set IRRAD_DT = 1200
+     set OCEAN_DT = 1200
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -225,12 +225,12 @@ if( $AGCM_IM == "c1440" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c2880" ) then
-     set       DT = 150
-     set  CONV_DT = 150
-     set  CHEM_DT = 900
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set       DT = 75
+     set  CONV_DT = 300
+     set  CHEM_DT = 300
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -248,11 +248,11 @@ if( $AGCM_IM == "c2880" ) then
 endif
 if( $AGCM_IM == "c5760" ) then
      set       DT = 75
-     set  CONV_DT = 75
-     set  CHEM_DT = 900
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set  CONV_DT = 300
+     set  CHEM_DT = 300
+     set SOLAR_DT = 600
+     set IRRAD_DT = 600
+     set OCEAN_DT = 600
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -363,9 +363,9 @@ if( $AGCM_IM == "c2160" ) then
      set       DT = 75
      set  CONV_DT = 300
      set  CHEM_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -382,7 +382,7 @@ if( $AGCM_IM == "c2160" ) then
      set STRETCH_FACTOR = 2.5
 endif
 if( $AGCM_IM == "c4320" ) then
-     set       DT = 60
+     set       DT = 75
      set  CONV_DT = 300
      set  CHEM_DT = 300
      set SOLAR_DT = 900
