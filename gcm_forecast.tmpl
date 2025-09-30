@@ -290,13 +290,13 @@ endif
 #                 Create Forecast History RC Files
 #######################################################################
 
-set HIST_IM  = `expr $AGCM_IM \* 4`
-set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-set CLIM_IM  = 576
-set CLIM_JM  = 361
-if ($HIST_IM < CLIM_IM) then
- set HIST_IM = $CLIM_IM
- set HIST_JM = $CLIM_JM
+set HIST_IM = `expr $AGCM_IM \* 4`
+set HIST_JM = `expr $AGCM_IM \* 2 + 1`
+set CLIM_IM = 576
+set CLIM_JM = 361
+if ( $HIST_IM < $CLIM_IM ) then
+  set HIST_IM = $CLIM_IM
+  set HIST_JM = $CLIM_JM
 endif
 
 set         FILE = HISTORY.rc

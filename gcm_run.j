@@ -53,21 +53,6 @@ echo   VERSION: $GCMVER
 setenv  EXPID   @EXPID
 setenv  EXPDIR  @EXPDIR
 setenv  HOMDIR  @HOMDIR
-setenv  SSDDIR  /discover/nobackup/projects/gmao/osse2/TSE_staging/@EXPID
-if ( -d "$SSDDIR" && -w "$SSDDIR" ) then
-    set USE_SSDDIR = TRUE
-    set USE_TSE_TMPDIR = FALSE
-    echo "Directory $SSDDIR exists and is writable"
-else
-    set USE_SSDDIR = FALSE
-    set USE_TSE_TMPDIR = FALSE
-    if ( $?TSE_TMPDIR && ( $USE_TSE_TMPDIR == TRUE ) ) then
-      echo "Using $TSE_TMPDIR"
-    else
-      echo "Using spinning disc"
-      set USE_TSE_TMPDIR = FALSE
-    endif
-endif
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
@@ -82,57 +67,70 @@ if (! -e $EXPDIR/archive    ) mkdir -p $EXPDIR/archive
 if (! -e $EXPDIR/post       ) mkdir -p $EXPDIR/post
 if (! -e $EXPDIR/plot       ) mkdir -p $EXPDIR/plot
 
-if ( $USE_TSE_TMPDIR == TRUE ) then
-   # we should be careful as there is a possibility we
-   # could collide if two runs use the same TSE_TMPDIR (for example
-   # a packable job). So we use $SLURM_JOB_ID and, if defined,
-   # $SLURM_ARRAY_TASK_ID to create a unique scratch directory
-   set TSE_TMPDIR_NAME = $SLURM_JOB_ID
-   if ( $?SLURM_ARRAY_TASK_ID ) then
-      set TSE_TMPDIR_NAME = ${TSE_TMPDIR_NAME}_${SLURM_ARRAY_TASK_ID}
-   endif
+if( $GCMEMIP == TRUE ) then
+    if (! -e $EXPDIR/restarts/$RSTDATE ) mkdir -p $EXPDIR/restarts/$RSTDATE
+    set SCRDIR_NAME = scratch.$RSTDATE
+else
+    set SCRDIR_NAME = scratch
 endif
 
-if( $GCMEMIP == TRUE ) then
-    setenv RSTDIR $EXPDIR/restarts/$RSTDATE
-    if (! -e $RSTDIR) mkdir -p $RSTDIR
-    set SCRDIR_NAME = scratch.$RSTDATE
-    if ( $USE_TSE_TMPDIR == TRUE ) then
+# Handling of TSE_TMPDIR
+# ----------------------
+#
+# TSE_TMPDIR only exists at NCCS so first we check if it is defined
+
+if ( $?TSE_TMPDIR ) then
+
+   # Next, we might not want to always use TSE_TMPDIR as the scratch
+   # if we need a permanent scratch directory for debugging or other
+   # purposes. So we can set a flag USE_TSE_TMPDIR to TRUE if we want
+   # and we default to TRUE
+
+   set USE_TSE_TMPDIR = TRUE
+
+   # If we want to use TSE_TMPDIR as the scratch, we create a scratch
+   # directory under TSE_TMPDIR and link it to SCRDIR
+
+   if ( $USE_TSE_TMPDIR == TRUE ) then
+
+      # Finally, we should be careful as there is a possibility we
+      # could collide if two runs use the same TSE_TMPDIR (for example
+      # a packable job). So we use $SLURM_JOB_ID and, if defined,
+      # $SLURM_ARRAY_TASK_ID to create a unique scratch directory
+
+      set TSE_TMPDIR_NAME = $SLURM_JOB_ID
+      if ( $?SLURM_ARRAY_TASK_ID ) then
+         set TSE_TMPDIR_NAME = ${TSE_TMPDIR_NAME}_${SLURM_ARRAY_TASK_ID}
+      endif
+
       setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/$SCRDIR_NAME
+
       if ( -e $EXPDIR/$SCRDIR_NAME || -l $EXPDIR/$SCRDIR_NAME ) /bin/rm -rf $EXPDIR/$SCRDIR_NAME
       if ( -e $SCRDIR ) /bin/rm -rf $SCRDIR
       mkdir -p $SCRDIR
       ln -s $SCRDIR $EXPDIR/$SCRDIR_NAME
+
    else
+
+      # If USE_TSE_TMPDIR is FALSE, we create a scratch directory
+      # as we did before under the experiment directory
+
       setenv SCRDIR $EXPDIR/$SCRDIR_NAME
       if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
       mkdir -p $SCRDIR
-   endif
-else
-    set SCRDIR_NAME = scratch
-    if ( $USE_SSDDIR == TRUE ) then
-       setenv RSTDIR $SSDDIR/restarts
-       if (! -e $RSTDIR) mkdir -p $RSTDIR
-       setenv SCRDIR $SSDDIR/scratch
-       if (! -e $SCRDIR) mkdir -p $SCRDIR
-       ln -s $SCRDIR $EXPDIR/scratch
-    else
-       setenv RSTDIR $EXPDIR/restarts
-       if ( $USE_TSE_TMPDIR == TRUE ) then
-         setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/$SCRDIR_NAME
-         if ( -e $EXPDIR/$SCRDIR_NAME || -l $EXPDIR/$SCRDIR_NAME ) /bin/rm -rf $EXPDIR/$SCRDIR_NAME
-         if ( -e $SCRDIR ) /bin/rm -rf $SCRDIR
-         mkdir -p $SCRDIR
-         ln -s $SCRDIR $EXPDIR/$SCRDIR_NAME
-       else
-         setenv SCRDIR $EXPDIR/$SCRDIR_NAME
-         if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
-         mkdir -p $SCRDIR
-       endif 
-    endif
-endif
+   endif # USE_TSE_TMPDIR
 
-echo "RSTDIR: $RSTDIR"
+else
+
+   # If TSE_TMPDIR is not defined, we are not at NCCS and we have to
+   # act as we did before and create a scratch directory under the
+   # experiment directory
+
+   setenv SCRDIR $EXPDIR/$SCRDIR_NAME
+   if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+   mkdir -p $SCRDIR
+
+endif # is TSE_TMPDIR defined
 
 cd $SCRDIR
 
@@ -171,18 +169,7 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
-if ($?SLURM_NTASKS_PER_NODE) then
-    set NCPUS_PER_NODE = $SLURM_NTASKS_PER_NODE
-else if ($?SLURM_CPUS_ON_NODE) then
-    set NCPUS_PER_NODE = $SLURM_CPUS_ON_NODE
-else if ($?PBS_NODEFILE) then
-    # Get CPU count for the first node (assuming homogeneous cluster)
-    set NCPUS_PER_NODE = `sort $PBS_NODEFILE | uniq -c | head -1 | awk '{print $1}'`
-else
-    echo "NCPUS_PER_NODE is Not Defined!!"
-    exit 0
-endif
-
+set NCPUS_PER_NODE = @NCPUS_PER_NODE
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
 if ( $NCPUS != NULL ) then
@@ -238,9 +225,9 @@ endif
 #                       GCMEMIP Setup
 #######################################################################
 
-if( $GCMEMIP == TRUE & ! -e $RSTDIR/cap_restart ) then
+if( $GCMEMIP == TRUE & ! -e $EXPDIR/restarts/$RSTDATE/cap_restart ) then
 
-cd $RSTDIR
+cd $EXPDIR/restarts/$RSTDATE
 
 cp $HOMDIR/CAP.rc CAP.rc.orig
 awk '{$1=$1};1' < CAP.rc.orig > CAP.rc
@@ -339,8 +326,8 @@ endif
 @CICE6cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
-    cp -f  $RSTDIR/cap_restart .
-    cp -f  $RSTDIR/CAP.rc .
+    cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
+    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
 endif
 
 set END_DATE  = `grep '^\s*END_DATE:'     CAP.rc | cut -d: -f2`
@@ -503,6 +490,62 @@ set dummy = `echo $rst_file_names`
 set rst_file_names = ''
 set tile_rsts = (catch catchcn route lake landice openwater saltwater seaicethermo)
 
+# check if it resarts by face
+# ----------------------------------
+set rst_by_face = NO
+if( $GCMEMIP == TRUE ) then
+   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_rst & -e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
+     echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
+     echo "please remove all *internal_rst except these tile-based restarts :"
+     foreach rst ( $tile_rsts )
+        echo ${rst}_internal_rst
+     end
+     exit
+   endif
+   if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
+     set rst_by_face = YES
+   endif
+else
+   if(-e $EXPDIR/fvcore_internal_rst & -e $EXPDIR/fvcore_internal_face_1_rst) then
+     echo "grid-based internal_rst and internal_face_x_rst should not co-exist"
+     echo "please remove all *internal_rst except these tile-based restarts :"
+     foreach rst ( $tile_rsts )
+        echo ${rst}_internal_rst
+     end
+     exit
+   endif
+   if(-e $EXPDIR/fvcore_internal_face_1_rst) then
+     set rst_by_face = YES
+   endif
+endif
+
+set Rbyface = `grep READ_RESTART_BY_FACE: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+if ($rst_by_face == NO) then
+  if ($Rbyface == YES)  then
+     sed -i '/READ_RESTART_BY_FACE:/c\READ_RESTART_BY_FACE: NO' AGCM.rc
+  endif
+else
+  # make sure num_readers is multiple of 6
+  @ num_readers = `grep NUM_READERS: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+  @ remainer = $num_readers % 6
+  if ($remainer != 0) then
+     sed -i '/NUM_READERS:/c\NUM_READERS: 6' AGCM.rc
+  endif
+
+  if ($Rbyface != YES)  then
+     sed -i '/READ_RESTART_BY_FACE:/c\READ_RESTART_BY_FACE: YES' AGCM.rc
+  endif
+endif
+
+set Wbyface = `grep WRITE_RESTART_BY_FACE: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+if ($Wbyface == YES)  then
+  # make sure num_readers is multiple of 6
+  @ num_writers = `grep NUM_WRITERS: AGCM.rc | grep -v "#" |  cut -d ":" -f2`
+  @ remainer = $num_writers % 6
+  if ($remainer != 0) then
+     sed -i '/NUM_WRITERS:/c\NUM_WRITERS: 6' AGCM.rc
+  endif
+endif
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
 foreach rst ( $dummy )
@@ -510,7 +553,24 @@ foreach rst ( $dummy )
   set    bit  = `echo $rst | cut -c1`
   if(  "$bit" == "+" | \
        "$bit" == "-" ) set rst = `echo $rst | cut -c2-$length`
-  set rst_file_names = `echo $rst_file_names $rst`
+  set is_tile_rst = FALSE
+  if ($rst_by_face == YES) then
+     foreach tile_rst ($tile_rsts)
+       if ( $rst =~ *$tile_rst* ) then
+         set is_tile_rst = TRUE
+         break
+       endif
+     end
+  endif
+  if ($is_tile_rst == FALSE & $rst_by_face == YES) then
+    set part1 = `echo $rst:q | sed 's/_rst/ /g'`
+      foreach n (1 2 3 4 5 6)
+         set rst = ${part1}_face_${n}_rst
+         set rst_file_names = `echo $rst_file_names $rst`
+      end
+  else
+    set rst_file_names = `echo $rst_file_names $rst`
+  endif
 end
 
 # WGCM runtime parameters
@@ -524,26 +584,18 @@ if (($USE_WAVES != 0) && ($wavemodel == "WW3") ) set wavewatch = 1
 # ----------------------------------
 if( $GCMEMIP == TRUE ) then
     foreach rst ( $rst_file_names $monthly_chk_names )
-      if(-e $RSTDIR/$rst ) cp $RSTDIR/$rst . &
+      if(-e $EXPDIR/restarts/$RSTDATE/$rst ) cp $EXPDIR/restarts/$RSTDATE/$rst . &
     end
 else
-    set edate = e`cat cap_restart | cut -c1-8`_`cat cap_restart | cut -c10-11`z
-    if( $USE_SSDDIR == TRUE ) then
-      foreach rst ( $rst_file_names $monthly_chk_names )
-          if(-e $RSTDIR/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4 ) /bin/ln -s $RSTDIR/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4 $rst
-      end
-    else
-      foreach rst ( $rst_file_names $monthly_chk_names )
-          echo  $RSTDIR/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4
-          if(-e $RSTDIR/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4 ) /bin/cp $RSTDIR/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4 $rst &
-      end
-      wait
+    foreach rst ( $rst_file_names $monthly_chk_names )
+      if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
+    end
+
+    # WW3 restart file
+    if( $wavewatch ) then
+        set rst_ww3 = "restart.ww3"
+        if(-e $EXPDIR/${rst_ww3} ) /bin/cp $EXPDIR/${rst_ww3} . &
     endif
-endif
-# WW3 restart file
-if( $wavewatch ) then
-  set rst_ww3 = "restart.ww3"
-  if(-e $RSTDIR/${rst_ww3} ) /bin/cp $RSTDIR/${rst_ww3} . &
 endif
 wait
 
@@ -552,14 +604,12 @@ wait
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
-if (0) then
-if( $USE_SSDDIR == FALSE ) then
 set edate = e`cat cap_restart | cut -c1-8`_`cat cap_restart | cut -c10-11`z
-set numrs = `/bin/ls -1 ${RSTDIR}/*${edate}* | wc -l`
+set numrs = `/bin/ls -1 ${EXPDIR}/restarts/*${edate}* | wc -l`
 if($numrs == 0) then
    foreach rst ( $rst_file_names )
-      if( -e $rst & ! -e ${RSTDIR}/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} ) then
-            cp $rst ${RSTDIR}/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} &
+      if( -e $rst & ! -e ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} ) then
+            cp $rst ${EXPDIR}/restarts/$EXPID.${rst}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} &
       endif
    end
    wait
@@ -567,15 +617,14 @@ if($numrs == 0) then
    # WW3 restart file
    if( $wavewatch ) then
        set rst_ww3 = "restart.ww3"
-       if( -e ${rst_ww3} ) cp ${rst_ww3} ${RSTDIR}/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+       if( -e ${rst_ww3} ) cp ${rst_ww3}  ${EXPDIR}/restarts/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
    endif
-   cd $RSTDIR
-       tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cd $EXPDIR/restarts
+      @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+      @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
      @COUPLED /bin/rm -rf RESTART.${edate}
    cd $SCRDIR
-endif
-endif
 endif
 
 # If any restart is binary, set NUM_READERS to 1 so that
@@ -612,7 +661,7 @@ while ( $counter <= ${NUM_SGMT} )
 /bin/rm -f  EGRESS
 
 if( $GCMEMIP == TRUE ) then
-    cp -f  $RSTDIR/CAP.rc .
+    cp -f  $EXPDIR/restarts/$RSTDATE/CAP.rc .
 else
     cp -f $HOMDIR/CAP.rc .
 endif
@@ -747,6 +796,20 @@ if( $wavewatch ) then
     /bin/rm ww3_multi.nml.tmp
 endif
 
+@COUPLED# gcm_setup will make sure AGCM.rc, MOM_override and CICE6 use a Ocean DT
+@COUPLED# consistent with CAP.rc HEARTBEAT_DT. But a user might change the
+@COUPLED# HEARTBEAT_DT in CAP.rc at run time, so we need to update the dt in
+@COUPLED# the other files
+
+@COUPLEDset HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
+
+@COUPLED sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
+@MOM5 sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
+@MOM5        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
+@MOM6 sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
+@MOM6        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
+@CICE6 sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
+
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
     foreach file ($files)
@@ -822,7 +885,14 @@ setenv YEAR $yearc
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
-if (! -e gwd_internal_rst) then
+if ( $rst_by_face == YES ) then
+  echo "WARNING: The generated gwd_internal_face_x_rst are used"
+  #foreach n (1 2 3 4 5 6)
+    #/bin/rm gwd_internal_face_${n}_rst
+    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+  #end
+else
+  if (! -e gwd_internal_rst) then
     echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
     # Now, if the user has already set an NCAR_NRDG value, we need to
     # change it to 0. If they haven't set it, we need to add it to the
@@ -832,6 +902,7 @@ if (! -e gwd_internal_rst) then
     else
       sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
     endif
+  endif
 endif
 
 if (! -e tile.bin) then
@@ -886,20 +957,18 @@ else
    # --------------
    /bin/rmdir OutData
 
-   if (-e $EXPDIR/restarts/restarts.${edate}.tar ) then
-     # Make decorated copies for restarts tarball
-     # ------------------------------------------
-     cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-     cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   # Make decorated copies for restarts tarball
+   # ------------------------------------------
+   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
-     # Inject decorated copies into restarts tarball
-     # ---------------------------------------------
-     tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+   # Inject decorated copies into restarts tarball
+   # ---------------------------------------------
+   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
-     # Remove the decorated restarts
-     # -----------------------------
-     /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   endif
+   # Remove the decorated restarts
+   # -----------------------------
+   /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
 
    # Remove the saltwater internal restart
    # -------------------------------------
@@ -1199,7 +1268,8 @@ set edate  = e`awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut
 # Move Intermediate Checkpoints to RESTARTS directory
 # ---------------------------------------------------
 set   checkpoints  =    `/bin/ls -1 *_checkpoint.*`
-if( $#checkpoints != 0 ) /bin/mv -f *_checkpoint.* ${RSTDIR}
+if( $#checkpoints != 0 ) /bin/mv -f *_checkpoint.* ${EXPDIR}/restarts
+
 
 # Rename Final Checkpoints for Archive
 # ------------------------------------
@@ -1215,16 +1285,18 @@ foreach checkpoint ($checkpoints)
        $GEOSBIN/stripname _checkpoint _rst $EXPID.${checkpoint}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.$ext
 end
 
+
 # Remove Initial RESTARTS
 # -----------------------
 set restarts = `/bin/ls -1 *_rst`
 /bin/rm -f $restarts
 
+
 # Copy Renamed Final Checkpoints to RESTARTS directory
 # ----------------------------------------------------
     set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
 foreach  restart ($restarts)
-/bin/mv $restart ${RSTDIR}&
+cp $restart ${EXPDIR}/restarts &
 end
 wait
 
@@ -1245,25 +1317,27 @@ end
 # WW3 restarts - assumes that there is at least one NEW restart file
 # ------------------------------------------------------------------
 if( $wavewatch ) then
+
     set ww3checkpoint  = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1`
     set rst_ww3 = "restart.ww3"
     if ( $#ww3checkpoint != 0 ) /bin/mv -f $ww3checkpoint $rst_ww3
-    /bin/mv $rst_ww3 ${RSTDIR}/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.bin
+    cp $rst_ww3 ${EXPDIR}/restarts/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.bin
 
     # remove intermediate restarts
     set ww3checkpoint  = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1`
     if ( $#ww3checkpoint != 0 ) /bin/rm  ./restart[0-9][0-9][0-9].ww3
 endif
 
-## TAR ARCHIVED RESTARTS
-## ---------------------
-#if( $USE_SSDDIR == FALSE ) then
-#cd $RSTDIR
-#if( $FSEGMENT == 00000000 ) then
-#         tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-#     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-#endif
-#endif
+# TAR ARCHIVED RESTARTS
+# ---------------------
+cd $EXPDIR/restarts
+if( $FSEGMENT == 00000000 ) then
+        @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
+        @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
+     /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
+        @COUPLED /bin/rm -rf RESTART.${edate}
+endif
+
 
 #######################################################################
 #               Move HISTORY Files to Holding Directory
@@ -1311,8 +1385,10 @@ end
 #######################################################################
 
 if ($rc == 0) then
-  $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
-  if( $FSEGMENT != 00000000 ) then
+
+$GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
+
+if( $FSEGMENT != 00000000 ) then
      set REPLAY_BEG_DATE = `grep '^\s*BEG_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
      set REPLAY_END_DATE = `grep '^\s*END_REPDATE:' $HOMDIR/CAP.rc | cut -d: -f2`
      set nday            = `echo $FSEGMENT | bc`
@@ -1326,7 +1402,8 @@ if ($rc == 0) then
          setenv CYCLED .TRUE.
          $EXPDIR/forecasts/gcm_forecast.setup $nymdz $nymdz $nday TRUE
      endif
-  endif
+endif
+
 endif
 
 #######################################################################
@@ -1353,18 +1430,35 @@ end   # end of segment loop; remain in $SCRDIR
 #######################################################################
 
 if( $GCMEMIP == TRUE ) then
-     /bin/rm -f $RSTDIR/cap_restart
-     cp cap_restart $RSTDIR/cap_restart
+     foreach rst ( `/bin/ls -1 *_rst` )
+        /bin/rm -f $EXPDIR/restarts/$RSTDATE/$rst
+     end
+        /bin/rm -f $EXPDIR/restarts/$RSTDATE/cap_restart
+     foreach rst ( `/bin/ls -1 *_rst` )
+       cp $rst $EXPDIR/restarts/$RSTDATE/$rst &
+     end
+     wait
+     cp cap_restart $EXPDIR/restarts/$RSTDATE/cap_restart
 else
-     /bin/rm -f $EXPDIR/cap_restart
+     foreach rst ( `/bin/ls -1 *_rst` )
+        /bin/rm -f $EXPDIR/$rst
+     end
+        /bin/rm -f $EXPDIR/cap_restart
+     foreach rst ( `/bin/ls -1 *_rst` )
+       cp $rst $EXPDIR/$rst &
+     end
+     wait
      cp cap_restart $EXPDIR/cap_restart
+
      if( $wavewatch ) then
         set rst_ww3 = "restart.ww3"
-        /bin/rm -f $RSTDIR/$rst_ww3
-        cp $rst_ww3 $RSTDIR/$rst_ww3 &
+        /bin/rm -f $EXPDIR/$rst_ww3
+        cp $rst_ww3 $EXPDIR/$rst_ww3 &
         wait
      endif
 endif
+
+@COUPLED cp -rf RESTART $EXPDIR
 
 if ( $rc == 0 ) then
       cd  $HOMDIR
@@ -1373,5 +1467,4 @@ if ( $rc == 0 ) then
           else
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
-      if ( $USE_SSDDIR == TRUE ) @BATCH_CMD $HOMDIR/restarts_ssd_to_exp.j
 endif

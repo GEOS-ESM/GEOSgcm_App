@@ -1072,7 +1072,7 @@ endif
 
 # Default Run Parameters
 # ----------------------
-source set_resolution_params.csh $AGCM_IM $OCNMODEL $CLDMICRO
+source $BINDIR/set_resolution_params.csh $AGCM_IM $CLDMICRO $OGCM $OCNMODEL
 
 set OGCM_IS_FCST = 0
 set FVCUBED         = ""
@@ -1096,11 +1096,9 @@ else
    set INTERPOLATE_SST = 0
 endif
 
-
 set BEG_DATE =  '18910301 000000'
 set END_DATE =  '29990302 210000'
 set JOB_SGMT = "$JOB_SGMT 000000"
-
 
 #######################################################################
 #           Setting for Microphysics                                  #
@@ -1684,8 +1682,8 @@ else
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
-              setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
+              setenv  RUN_Q     "DELETE"                                               # batch queue name for gcm_run.j
+              setenv  RUN_P     "SBATCH --ntasks=${MODEL_NPES}"                        # PE Configuration for gcm_run.j
               setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
               setenv  REGRESS_P NULL                                                   # PE Configuration for gcm_regress.j
               setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
@@ -1709,12 +1707,15 @@ else
               setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
-              set NX = 1
-              set NY = 6
-              # By default on desktop, just ignore IOSERVER for now
-              set USE_IOSERVER = 0
-              set NUM_OSERVER_NODES = 0
-              set NUM_BACKEND_PES = 0
+endif
+
+if( $SITE == 'GMAO.desktop' ) then
+   # By default on desktop, just ignore IOSERVER for now
+   set USE_IOSERVER = 0
+   set NUM_OSERVER_NODES = 0
+   set NUM_BACKEND_PES = 0
+   set NX = 1
+   set NY = 6
 endif
 
 # If SST and SEAICE files are not in the standard location:
@@ -2202,10 +2203,10 @@ s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?@4DIAUDAS?#DELETE?g
-s?@REGULAR_REPLAY?#?g
 s?@REGULAR_REPLAY_GMAO?#?g
 s?@REGULAR_REPLAY_NCEP?#DELETE?g
 s?@REGULAR_REPLAY_ECMWF?#DELETE?g
+s?@REGULAR_REPLAY?#?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
@@ -2279,6 +2280,8 @@ s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
 s/@HIST_JM/$HIST_JM/g
+s/@CLIM_IM/$CLIM_IM/g
+s/@CLIM_JM/$CLIM_JM/g
 
 s/@ISCCP_SATSIM/1/g
 s/@MODIS_SATSIM/0/g
@@ -2833,7 +2836,11 @@ if( $OGCM == TRUE ) then
 
       sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
              -e "s/dt_atmos = [0-9]*,/dt_atmos = $OCEAN_DT,/g" $HOMDIR/input.nml
+   endif
 
+   # We also need to change the dt in ice_in as well for CICE6
+   if ( $SEAICE_NAME == "CICE6" ) then
+      sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
    endif
 
 endif
@@ -3023,6 +3030,7 @@ if ( $OGCM == 1 ) then
    # Now we need to find out if we are running MOM or MOM6 by looking
    # at OCEAN_NAME: val and checking if it is MOM or MOM6
    set OCNMODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+   set SEAICEMODEL = `grep "SEAICE_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
 else if ( $OGCM == 0 ) then
    set OGCM = FALSE
 else
@@ -3113,6 +3121,12 @@ cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/MOM_override
 HOMDIR/MOM_input
 HOMDIR/data_table
+EOF
+endif
+
+if ( "$SEAICEMODEL" == "CICE6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/ice_in
 EOF
 endif
 
