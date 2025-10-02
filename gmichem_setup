@@ -1072,7 +1072,7 @@ endif
 
 # Default Run Parameters
 # ----------------------
-source $BINDIR/set_resolution_params.csh $AGCM_IM $OCNMODEL $CLDMICRO
+source $BINDIR/set_resolution_params.csh $AGCM_IM $CLDMICRO $OGCM $OCNMODEL
 
 set OGCM_IS_FCST = 0
 set FVCUBED         = ""

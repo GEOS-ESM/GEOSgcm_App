@@ -2,26 +2,32 @@
 #
 # set_resolution_params.csh
 #
-# Usage: source set_resolution_params.csh <AGCM_IM> <OCNMODEL> <CLDMICRO>
-# Example: source set_resolution_params.csh c180 MOM6 GFDL_1M
+# Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>
+# Example: source set_resolution_params.csh c180 GFDL_1M FALSE MOM6
+#
+# NOTE: If OGCM is FALSE, the OCNMODEL doesn't matter
 #
 
-# Require at least one argument (resolution)
-if ( $#argv < 3 ) then
-    echo "Usage: source set_resolution_params.csh <AGCM_IM> <OCNMODEL> <CLDMICRO>"
+# Require all four arguments
+if ( $#argv < 4 ) then
+    echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>"
     exit 1
 endif
 
 # Input from argument
-set AGCM_IM  = $argv[1]
-set OCNMODEL = $argv[2]
-set CLDMICRO = $argv[3]
+# NOTE: We use LOCALs for OCNMODEL and CLDMICRO to avoid
+#       overwriting any global variables.
+#       We actually *want* to overwrite AGCM_IM globally.
+set AGCM_IM        = $argv[1]
+set LOCAL_CLDMICRO = $argv[2]
+set LOCAL_OGCM     = $argv[3]
+set LOCAL_OCNMODEL = $argv[4]
 
 # Default Run Parameters
 # ----------------------
 if( $AGCM_IM ==  "c12" ) then
-     set       DT = 3600
-     set  CONV_DT = 3600
+     set       DT = 1200
+     set  CONV_DT = 1200
      set  CHEM_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -29,7 +35,7 @@ if( $AGCM_IM ==  "c12" ) then
      set AGCM_IM  = 12
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
-     if ( "$OCNMODEL" == "MOM6") then
+     if ( "$LOCAL_OCNMODEL" == "MOM6") then
         set    NX = 1
      else
         set    NX = 2
@@ -43,8 +49,8 @@ if( $AGCM_IM ==  "c12" ) then
      set POST_NDS = 4
 endif
 if( $AGCM_IM ==  "c24" ) then
-     set       DT = 1800
-     set  CONV_DT = 1800
+     set       DT = 1200
+     set  CONV_DT = 1200
      set  CHEM_DT = 3600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
@@ -86,11 +92,11 @@ if( $AGCM_IM ==  "c90" ) then
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     if( $OGCM == TRUE ) then
-        if( "$OCNMODEL" == "MIT" ) then
+     if( $LOCAL_OGCM == TRUE ) then
+        if( "$LOCAL_OCNMODEL" == "MIT" ) then
            set  NX = 10
            set  NY = 36
-        else if ( "$OCNMODEL" == "MOM6") then
+        else if ( "$LOCAL_OCNMODEL" == "MOM6") then
            # For MOM6 c90 means atm NXxNY = 5x36
            set  NX = 5
            set  NY = 36
@@ -119,8 +125,8 @@ if( $AGCM_IM ==  "c180" ) then
      set IRRAD_DT = 3600
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     if( $OGCM == TRUE ) then
-        if ( "$OCNMODEL" == "MOM6") then
+     if( $LOCAL_OGCM == TRUE ) then
+        if ( "$LOCAL_OCNMODEL" == "MOM6") then
            # For MOM6 c180 means atm NXxNY = 30x36
            set  NX = 30
            set  NY = 36
@@ -164,7 +170,7 @@ endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 300
      set  CONV_DT = 300
-     set  CHEM_DT = 900
+     set  CHEM_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -184,7 +190,7 @@ endif
 if( $AGCM_IM == "c1120" ) then
      set       DT = 300
      set  CONV_DT = 300
-     set  CHEM_DT = 900
+     set  CHEM_DT = 600
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -202,12 +208,12 @@ if( $AGCM_IM == "c1120" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c1440" ) then
-     set       DT = 225
-     set  CONV_DT = 225
-     set  CHEM_DT = 900
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set       DT = 150
+     set  CONV_DT = 300
+     set  CHEM_DT = 600
+     set SOLAR_DT = 1200
+     set IRRAD_DT = 1200
+     set OCEAN_DT = 1200
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -222,12 +228,12 @@ if( $AGCM_IM == "c1440" ) then
      set USE_SHMEM = 1
 endif
 if( $AGCM_IM == "c2880" ) then
-     set       DT = 150
-     set  CONV_DT = 150
-     set  CHEM_DT = 900
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set       DT = 75
+     set  CONV_DT = 300
+     set  CHEM_DT = 300
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -245,11 +251,11 @@ if( $AGCM_IM == "c2880" ) then
 endif
 if( $AGCM_IM == "c5760" ) then
      set       DT = 75
-     set  CONV_DT = 75
-     set  CHEM_DT = 900
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set  CONV_DT = 300
+     set  CHEM_DT = 300
+     set SOLAR_DT = 600
+     set IRRAD_DT = 600
+     set OCEAN_DT = 600
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -360,9 +366,9 @@ if( $AGCM_IM == "c2160" ) then
      set       DT = 75
      set  CONV_DT = 300
      set  CHEM_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
+     set SOLAR_DT = 900
+     set IRRAD_DT = 900
+     set OCEAN_DT = 900
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -379,7 +385,7 @@ if( $AGCM_IM == "c2160" ) then
      set STRETCH_FACTOR = 2.5
 endif
 if( $AGCM_IM == "c4320" ) then
-     set       DT = 60
+     set       DT = 75
      set  CONV_DT = 300
      set  CHEM_DT = 300
      set SOLAR_DT = 900
@@ -406,7 +412,7 @@ if ($CONUS == '#') then
   set STRETCH_FAC = "stretch_fac = 1.0"
   set TARGET_LON  = "target_lon  = 0.0"
   set TARGET_LAT  = "target_lat  = -90.0"
-else  
+else
   set SCHMIDT     = "do_schmidt  = .true."
   set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
   set TARGET_LON  = "target_lon  = -98.35"
@@ -421,8 +427,8 @@ if ($CLIM_IM > $HIST_IM) then
     set CLIM_JM = $HIST_JM
 endif
 
-if( "$CLDMICRO" == "BACM_1M" ) then
-   set DT = 450
+if( "$LOCAL_CLDMICRO" == "BACM_1M" ) then
+   set DT      = 450
    set CONV_DT = 450
    set CHEM_DT = 3600
 endif
