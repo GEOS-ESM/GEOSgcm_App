@@ -176,7 +176,7 @@ class atmosphere:
 
             case "c720":
                 self.conv_dt        = 300
-                self.chem_dt        = 900
+                self.chem_dt        = 600
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
                 self.dt_ocean       = 3600
@@ -192,7 +192,7 @@ class atmosphere:
 
             case "c1120":
                 self.conv_dt        = 300
-                self.chem_dt        = 900
+                self.chem_dt        = 600
                 self.dt_solar       = 3600
                 self.dt_irrad       = 3600
                 self.dt_ocean       = 3600
@@ -207,11 +207,11 @@ class atmosphere:
                 self.res            = 'CF1120x6C'
 
             case "c1440":
-                self.conv_dt        = 225
-                self.chem_dt        = 900
-                self.dt_solar       = 1800
-                self.dt_irrad       = 1800
-                self.dt_ocean       = 1800
+                self.conv_dt        = 300
+                self.chem_dt        = 600
+                self.dt_solar       = 1200
+                self.dt_irrad       = 1200
+                self.dt_ocean       = 1200
                 self.nx             = 80
                 self.ny             = self.nx * 6
                 self.num_readers    = 6
@@ -223,11 +223,11 @@ class atmosphere:
                 self.res            = 'CF1440x6C'
 
             case "c2880":
-                self.conv_dt        = 150
-                self.chem_dt        = 900
-                self.dt_solar       = 1800
-                self.dt_irrad       = 1800
-                self.dt_ocean       = 1800
+                self.conv_dt        = 300
+                self.chem_dt        = 300
+                self.dt_solar       = 900
+                self.dt_irrad       = 900
+                self.dt_ocean       = 900
                 self.nx             = 80
                 self.ny             = self.nx * 6
                 self.num_readers    = 6
@@ -240,11 +240,11 @@ class atmosphere:
                 self.res            = 'CF2880x6C'
 
             case "c5760":
-                self.conv_dt        = 75
-                self.chem_dt        = 900
-                self.dt_solar       = 1800
-                self.dt_irrad       = 1800
-                self.dt_ocean       = 1800
+                self.conv_dt        = 300
+                self.chem_dt        = 300
+                self.dt_solar       = 600
+                self.dt_irrad       = 600
+                self.dt_ocean       = 600
                 self.nx             = 80
                 self.ny             = self.nx * 6
                 self.num_readers    = 6

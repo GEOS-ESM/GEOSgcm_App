@@ -117,14 +117,10 @@ class handle:
                 heartbeat = 450
             case 'c720' | 'c1120' | 'c540':
                 heartbeat = 300
-            case 'c1440':
-                heartbeat = 225
-            case 'c2880' | 'c1080':
+            case 'c1440' | 'c1080':
                 heartbeat = 150
-            case 'c5760' | 'c1536' | 'c2160':
+            case 'c2880' | 'c5760' | 'c1536' | 'c2160' | 'c4320':
                 heartbeat = 75
-            case 'c4320':
-                heartbeat = 60
 
 
         # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
