@@ -190,7 +190,7 @@ class atmosphere:
                 self.use_SHMEM      = 1
                 self.res            = 'CF0720x6C'
 
-            case "1120":
+            case "c1120":
                 self.conv_dt        = 300
                 self.chem_dt        = 900
                 self.dt_solar       = 3600
