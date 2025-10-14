@@ -234,7 +234,6 @@ endif
 set         FILE = HISTORY.rc0
 /bin/rm -f $FILE
 cat << _EOF_ > $FILE
-
 VERSION: 1
 EXPID:  ${EXPID}
 EXPDSC: ${EXPID}_Regression_Test
