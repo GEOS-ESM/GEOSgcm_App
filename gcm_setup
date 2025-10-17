@@ -1882,9 +1882,19 @@ else if( $MPI_STACK == intelmpi ) then
 cat > $HOMDIR/SETENV.commands << EOF
 # This flag prints out the Intel MPI state. Uncomment if needed
 #setenv I_MPI_DEBUG 9
+EOF
 
+# These are options determined to be useful at NCCS and NAS
+# Not setting generally as they are more fabric/cluster
+# specific compared to the above adjustments. We protect
+# like this because these settings do *not* work on systems like
+# CI runners
+if ( $SITE == 'NCCS' | $SITE == 'NAS' ) then
+
+cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
 setenv I_MPI_ADJUST_GATHERV 3
+
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
 
@@ -1900,6 +1910,8 @@ setenv FI_PSM3_CONN_TIMEOUT 120
 # This is usually needed when running interactively
 # as SLURM/PBS in batch mode is usually fine with process placement
 EOF
+
+endif # if NCCS or NAS
 
 endif # if mpi
 
