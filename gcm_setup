@@ -1884,10 +1884,12 @@ cat > $HOMDIR/SETENV.commands << EOF
 #setenv I_MPI_DEBUG 9
 EOF
 
-# These are options determined to be useful at NCCS
+# These are options determined to be useful at NCCS and NAS
 # Not setting generally as they are more fabric/cluster
-# specific compared to the above adjustments
-if ( $SITE == 'NCCS' ) then
+# specific compared to the above adjustments. We protect
+# like this because these settings do *not* work on systems like
+# CI runners
+if ( $SITE == 'NCCS' | $SITE == 'NAS' ) then
 
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
@@ -1898,9 +1900,18 @@ setenv I_MPI_OFI_PROVIDER psm3
 
 # This has been found to help with congestion
 setenv FI_PSM3_CONN_TIMEOUT 120
+
+# NOTE: If you are seeing oddities with Intel MPI
+# and a -perhost/-ppn use, you might need to
+# uncomment the below line
+#
+#setenv I_MPI_JOB_RESPECT_PROCESS_PLACEMENT disable
+#
+# This is usually needed when running interactively
+# as SLURM/PBS in batch mode is usually fine with process placement
 EOF
 
-endif # if NCCS
+endif # if NCCS or NAS
 
 endif # if mpi
 
