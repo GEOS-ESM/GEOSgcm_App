@@ -96,6 +96,8 @@ endif
 # Optional internal restart
 if ( -e ${topo_src_dir}/gwd_internal_rst ) then
   /bin/cp -vf ${topo_src_dir}/gwd_internal_rst gwd_internal_rst
+else if (-e @GWDRSDIR/gwd_internal_c@AGCM_IM) then
+  /bin/cp -vf @GWDRSDIR/gwd_internal_c@AGCM_IM gwd_internal_rst
 endif
 # ----- end topo gwd linking -----
 
