@@ -64,10 +64,6 @@ set MERRA2OX_SPECIES = "#"
 
 # ----- Topography linking ( GM4 | v1 | v2) -----
 
-if ( ! $?BCS_INPUT_BASE ) then
-  setenv BCS_INPUT_BASE /discover/nobackup/projects/gmao/bcs_shared/make_bcs_inputs/atmosphere
-endif 
-
 set bc_is_gm4 = 0
 if ( "$BCSDIR" =~ */GM4* ) then
   set bc_is_gm4 = 1
@@ -81,7 +77,7 @@ if ( $bc_is_gm4 ) then
 else
   set stream = v1
   if ( $bc_ver_num >= 14 ) set stream = v2
-  set topo_src_dir = "${BCS_INPUT_BASE}/TOPO/${stream}/@ATMOStag/smoothed"
+  set topo_src_dir = "@BCS_INPUT_BASE/TOPO/${stream}/@ATMOStag/smoothed"
 endif
 
 set fn_dyn = topo_DYN_ave_@AGCM_IMx@AGCM_JM.data
