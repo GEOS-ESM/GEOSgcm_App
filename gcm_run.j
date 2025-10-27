@@ -1159,9 +1159,13 @@ endif
 @SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 @NATIVE_BUILD @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
-if ($status != 0) then
-   echo "GEOSgcm.x failed with return code $status"
-   exit $status
+# Capture the return code from GEOSgcm.x
+# --------------------------------------
+set run_status = $status
+
+if ($run_status != 0) then
+   echo "GEOSgcm.x failed with return code $run_status"
+   exit $run_status
 endif
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
