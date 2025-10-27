@@ -915,7 +915,7 @@ endif
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
-@CICE6 #detect exisistence of certain fields in CICE6 restart
+@CICE6 #detect existence of certain fields in CICE6 restart
 @CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
 @CICE6 if( $status == 0 ) then
 @CICE6    echo 'pond state in restart, turn on restart flag if not already'
@@ -1159,12 +1159,18 @@ endif
 @SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 @NATIVE_BUILD @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
+if ($status != 0) then
+   echo "GEOSgcm.x failed with return code $status"
+   exit $status
+endif
+
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( -e EGRESS ) then
    set rc = 0
 else
-   set rc = -1
+   echo "EGRESS file not found, GEOSgcm.x likely failed"
+   exit 9
 endif
 echo GEOSgcm Run Status: $rc
 
