@@ -1151,7 +1151,7 @@ if ($DATA_ATMOS == TRUE) then
   set GWD_IN_BCS   = "FALSE"
 else
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v12${CN} (Default)"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), ${C2}v14${CN} (v14_BETA) or ${C2}v12${CN} (Default)"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = "v12"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
@@ -1178,9 +1178,17 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
     set GWD_IN_BCS   = "TRUE"
+else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v14" ) then
+    set LSM_BCS      = "v14"
+    set LSM_PARMS    = ""
+    set EMIP_BCS_IN  = "NL3"
+    set EMIP_OLDLAND = "#DELETE"
+    set EMIP_NEWLAND = ""
+    set EMIP_MERRA2  = "MERRA2_NewLand"
+    set GWD_IN_BCS   = "TRUE"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v12${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, ${C2}v14${CN} (v14_BETA) or ${C2}v12${CN}!"
     goto LSM_BCS
 endif
 
@@ -1570,6 +1578,8 @@ if( $SITE == 'NAS' ) then
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                                                    # Default Analysis Location   for M2 REPLAY
 
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
+
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
@@ -1618,6 +1628,8 @@ else if( $SITE == 'NCCS' ) then
               setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
 
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
+
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
@@ -1663,6 +1675,8 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
+
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                   # user work directory
@@ -1701,6 +1715,8 @@ else
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                            # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
+
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
 
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
@@ -2176,6 +2192,7 @@ s?@REAL_BIND_PATH?$REAL_BIND_PATH?g
 s?@BASE_BIND_PATH?$BASE_BIND_PATH?g
 s?@BC_BASE?$BC_BASE?g
 s?@BOUNDARY_DIR?$BOUNDARY_DIR?g
+s?@BCS_INPUT_BASE?$BCS_INPUT_BASE?g
 
 s?@CHECKPOINT_TYPE?default?g
 
