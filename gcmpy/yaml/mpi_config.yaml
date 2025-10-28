@@ -70,3 +70,13 @@ NCCS: |
 
   # This has been found to help with congestion
   setenv FI_PSM3_CONN_TIMEOUT 120
+
+  # NOTE: If you are seeing oddities with Intel MPI
+  # and a -perhost/-ppn use, you might need to
+  # uncomment the below line
+  #
+  #setenv I_MPI_JOB_RESPECT_PROCESS_PLACEMENT disable
+  #
+  # This is usually needed when running interactively
+  # as SLURM/PBS in batch mode is usually fine with process placement
+
