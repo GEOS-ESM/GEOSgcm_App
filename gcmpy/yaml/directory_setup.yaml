@@ -5,13 +5,6 @@ history_template:
   default_answer: ''
   follows_up:     ''
 
-exp_dir:
-  type:           'path'
-  prompt:         'Enter Desired Location for the EXPERIMENT Directory (to contain model output and restart files):'
-  choices:        ''
-  default_answer: ''
-  follows_up:     ''
-
 group_root:
   type:           'text'
   prompt:         'Enter your GROUP ID for Current EXP:'

@@ -1,4 +1,4 @@
-import os, sys, platform
+import os, platform, yaml
 
 # pretty font
 class color:
@@ -48,13 +48,34 @@ class exceptions:
         pass
 
 
+# open yaml file and create dictionary from it's contents
+def load_yamls():
+
+    # list of question files (*MAKE SURE THEY ARE IN THE ORDER YOU WANT THEM TO BE ASKED*)
+    file_list = ["../yaml/exp_setup.yaml",          \
+                 "../yaml/atmospheric_model.yaml",  \
+                 "../yaml/ocean_model.yaml",        \
+                 "../yaml/land_model.yaml",         \
+                 "../yaml/gocart.yaml",             \
+                 "../yaml/directory_setup.yaml"]
+    all_yaml_questions = {}
+
+    for filename in file_list:
+        try:
+            with open(filename, "r") as file:
+                yaml_questions = yaml.safe_load(file)
+                all_yaml_questions.update(yaml_questions)
+        except IOError:
+            print(f"{color.RED}YAML file '{filename}' could not be located. Exiting.")
+            exit(1)
+
+    return all_yaml_questions
+
 
 #######################################################################
 #      Directory and Environment Variable Locations Dictionaries
 #######################################################################
-# set up envirnoment dictionary for later
-envdict = {}
-pathdict = {}  # Start empty - cannot reference self before initialization (<--what are you yapping about??)
+pathdict = {}
 pathdict['scripts']     = os.getcwd()
 pathdict['gcmpy']       = os.path.dirname(pathdict['scripts'])
 pathdict['yaml']        = os.path.join(pathdict['gcmpy'], 'yaml')
@@ -64,4 +85,23 @@ pathdict['etc']         = os.path.join(pathdict['install'], 'etc')
 pathdict['GEOSgcm']     = os.path.dirname(pathdict['install'])
 pathdict['build']       = os.path.join(pathdict['GEOSgcm'], 'build')
 pathdict['GEOSgcm_App'] = os.path.join(pathdict['GEOSgcm'], 'src/Applications/@GEOSgcm_App')
-pathdict['GEOS_Util']   = os.path.join(pathdict['GEOSgcm'], 'src/Shared/@GMAO_Shared/@GEOS_Util')
+pathdict['GEOS_Util']   = os.path.join(pathdict['GEOSgcm'], 'src/Shared/GEOS_Util')
+
+
+envdict = {}
+envdict['node'] = platform.node()
+envdict['arch'] = platform.system()
+envdict['mpi'] = '@MPI_STACK@'
+if envdict['arch'] == 'Darwin':
+    envdict['preload_command'] = 'DYLD_INSERT_LIBRARIES'
+    envdict['ld_library_path_command'] = 'DYLD_LIBRARY_PATH'
+    # On macOS we seem to need to call mpirun directly and not use esma_mpirun
+    # For some reason SIP does not let the libraries be preloaded
+    envdict['run_command'] = 'mpirun -np '
+else:
+    envdict['preload_command'] = 'LD_PRELOAD'
+    envdict['ld_library_path_command'] = 'LD_LIBRARY_PATH'
+    envdict['run_command'] = '$GEOSBIN/esma_mpirun -np '
+
+envdict['site'] = open(os.path.join(pathdict['etc'], 'SITE.rc'), 'r').read().split()[-1]
+

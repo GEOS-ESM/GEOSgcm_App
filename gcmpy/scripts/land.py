@@ -1,66 +1,60 @@
-from env import answerdict
 from utility import color
 
 class land:
-    def __init__(self):
+    def __init__(land, expConfig):
+        land.expConfig = expConfig
         # If data atmosphere is enabled, land questions are skipped. Use default values.
-        if answerdict['OM_data_atmos'].q_answer == True:
-            self.model = "Catchment"
-            self.bcs = "NL3"
+        if land.expConfig['OM_data_atmos'] == True:
+            land.model = "Catchment"
+            land.bcs = "NL3"
         else:
-            self.model              = answerdict["LS_model"].q_answer
-            self.bcs                = answerdict["LS_boundary_conditions"].q_answer
-        self.parameters         = ''
-        self.emip_bcs_in        = ''
-        self.emip_oldland       = ''
-        self.emip_newland       = ''
-        self.emip_MERRA2        = ''
-        self.HIST_catchment     = ''
-        self.GCMRUN_catchment   = ''
+            land.model              = land.expConfig["LS_model"]
+            land.bcs                = land.expConfig["LS_boundary_conditions"]
+        land.parameters         = ''
+        land.emip_bcs_in        = ''
+        land.emip_oldland       = ''
+        land.emip_newland       = ''
+        land.emip_MERRA2        = ''
+        land.HIST_catchment     = ''
+        land.GCMRUN_catchment   = ''
 
-    # for debugging purposes
-    def print_vars(self):
-        all_vars = vars(self)
-        for var_name, var_value in all_vars.items():
-            print(f"{color.CYAN}{var_name}: {var_value}{color.RESET}")
-
-    def set_bcs(self):
-        if self.bcs == "ICA":
-            self.parameters         = "#DELETE"
-            self.emip_bcs_in        = "GM4"
-            self.emip_oldland       = ""
-            self.emip_newland       = "#DELETE"
-            self.emip_MERRA2        = "MERRA2"
-            self.gwd_in_bcs         = False
-        elif self.bcs == "NL3":
-            self.parameters         = ""
-            self.emip_bcs_in        = "NL3"
-            self.emip_oldland       = "#DELETE"
-            self.emip_newland       = ""
-            self.emip_MERRA2        = "MERRA2_NewLand"
-            self.gwd_in_bcs         = False
-        elif self.bcs == "v12":
-            self.parameters         = ""
-            self.emip_bcs_in        = "NL3"
-            self.emip_oldland       = "#DELETE"
-            self.emip_newland       = ""
-            self.emip_MERRA2        = "MERRA2_NewLand"
-            self.gwd_in_bcs         = True
+    def set_bcs(land):
+        if land.bcs == "ICA":
+            land.parameters         = "#DELETE"
+            land.emip_bcs_in        = "GM4"
+            land.emip_oldland       = ""
+            land.emip_newland       = "#DELETE"
+            land.emip_MERRA2        = "MERRA2"
+            land.gwd_in_bcs         = False
+        elif land.bcs == "NL3":
+            land.parameters         = ""
+            land.emip_bcs_in        = "NL3"
+            land.emip_oldland       = "#DELETE"
+            land.emip_newland       = ""
+            land.emip_MERRA2        = "MERRA2_NewLand"
+            land.gwd_in_bcs         = False
+        elif land.bcs == "v12":
+            land.parameters         = ""
+            land.emip_bcs_in        = "NL3"
+            land.emip_oldland       = "#DELETE"
+            land.emip_newland       = ""
+            land.emip_MERRA2        = "MERRA2_NewLand"
+            land.gwd_in_bcs         = True
 
 
-    def set_catchment(self):
-        if self.model == "Catchment":
-            self.model              = 1
-            self.HIST_catchment     = "#DELETE"
-            self.GCMRUN_catchment   = "#DELETE"
-        elif self.model == "CatchmentCN-CLM4.0":
-            self.model              = 2
-            self.HIST_catchment     = ""
-            self.GCMRUN_catchment   = ""
+    def set_catchment(land):
+        if land.model == "Catchment":
+            land.model              = 1
+            land.HIST_catchment     = "#DELETE"
+            land.GCMRUN_catchment   = "#DELETE"
+        elif land.model == "CatchmentCN-CLM4.0":
+            land.model              = 2
+            land.HIST_catchment     = ""
+            land.GCMRUN_catchment   = ""
 
-    def config(self):
-        self.set_bcs()
-        self.set_catchment()
+    def config(land):
+        land.set_bcs()
+        land.set_catchment()
 
 
 

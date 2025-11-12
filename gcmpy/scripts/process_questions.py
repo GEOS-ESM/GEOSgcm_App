@@ -1,99 +1,90 @@
 import yaml, re, os, subprocess
-from generate_question import generateQuestion
-from utility import envdict, pathdict, color
+from clone import clone_exp
+from generate_question import question
+from utility import envdict, pathdict, color, load_yamls
 
-"""
+'''
 This class handles special cases where a question"s properties need to be checked/dynamically
 changed at runtime based on certain conditions (e.g. input validation)
-"""
+'''
 class handle:
 
     @staticmethod
-    def select_type(answerdict, i):
-        if answerdict[i].q_type == "select" and answerdict[i].q_answer != None:
+    def select_type(questionDict, i):
+        if questionDict[i].q_type == "select" and questionDict[i].answer != None:
             # as of right now, we only want the first word of every select-type question.
             # If that changes it's probably best to delete this function.
-            answerdict[i].q_answer = answerdict[i].q_answer.split(None, 1)[0]
+            questionDict[i].answer = questionDict[i].answer.split(None, 1)[0]
 
-    # Commenting this out for now until we know if we want to make sure
-    # the experiment description is different from the experiment ID.
-    '''
-    @staticmethod
-    def experiment_desc(answerdict, i):
-        if i == "experiment_description" and answerdict[i].q_answer != None:
-            while answerdict["experiment_description"].q_answer == answerdict["experiment_id"].q_answer:
-                print(color.RED + "The experiment description must be different from the ID!")
-                answerdict[i].load_question(answerdict)
-    '''
 
     @staticmethod
-    def io_server_defualt(answerdict, i):
+    def io_server_defualt(questionDict, i):
         if i != 'io_server':
             return
-        match answerdict['AM_horizontal_res'].q_answer:
+        match questionDict['AM_horizontal_res'].answer:
             case 'c180' | 'c360' | 'c720' | 'c1120' | 'c1440' | 'c2880' | 'c5760' | 'c270' | 'c540' | 'c1080' | 'c1536' | 'c2160':
-                answerdict[i].q_default = True
+                questionDict[i].default = True
             case _:
-                answerdict[i].q_default = False
+                questionDict[i].default = False
 
 
     @staticmethod
-    def processor_choices(answerdict, i):
+    def processor_choices(questionDict, i):
         if i != "processor":
             return
 
-        if envdict["site"] == "NCCS":
-            answerdict[i].q_choices = ["mil", "cas"]
-        elif envdict["site"] == "NAS":
+        if envdict['site'] == 'NCCS':
+            questionDict[i].choices = ['mil', 'cas']
+        elif envdict['site'] == 'NAS':
             print(color.GREEN + "NOTE Due to how FV3 is compiled by default, Sandy Bridge\n" + \
                                 "and Ivy Bridge are not supported by current GEOS" + color.RESET)
 
-            answerdict[i].q_choices = ["rom", "mil", "sky", "cas", "bro", "has"]
+            questionDict[i].choices = ["rom", "mil", "sky", "cas", "bro", "has"]
         else:
             exit(1)
 
     @staticmethod
-    def OM_horizontal_res_default(answerdict, i):
+    def OM_horizontal_res_default(questionDict, i):
         if i != 'OM_horizontal_res':
             return
 
         # The default ocean resolution is based on the atmospheric resolution
-        match answerdict['AM_horizontal_res'].q_answer:
+        match questionDict['AM_horizontal_res'].answer:
             case 'c12' | 'c24' | 'c48':
-                answerdict[i].q_choices = ['o1 (1  -deg,  360x180  Reynolds)', \
+                questionDict[i].choices = ['o1 (1  -deg,  360x180  Reynolds)', \
                                            'o2 (1/4-deg, 1440x720  MERRA-2)',  \
                                            'o3 (1/8-deg, 2880x1440 OSTIA)']
             case _:
-                answerdict[i].q_choices = ['CS (Cubed-Sphere OSTIA)', \
+                questionDict[i].choices = ['CS (Cubed-Sphere OSTIA)', \
                                            'o1 (1  -deg,  360x180  Reynolds)', \
                                            'o2 (1/4-deg, 1440x720  MERRA-2)', \
                                            'o3 (1/8-deg, 2880x1440 OSTIA)']
 
 
     @staticmethod
-    def MIT_hres_choices(answerdict, i):
+    def MIT_hres_choices(questionDict, i):
         if i != "OM_MIT_horizontal_res":
             return
-        if answerdict["AM_horizontal_res"].q_answer == "c720":
-            answerdict[i].q_choices = ["llc1080 (1/12-deg, Lat-Lon-Cube)"]
-        elif answerdict["AM_horizontal_res"].q_answer == "c1440":
-            answerdict[i].q_choices = ["llc2160 (1/24-deg, Lat-Lon-Cube)"]
+        if questionDict["AM_horizontal_res"].answer == "c720":
+            questionDict[i].choices = ["llc1080 (1/12-deg, Lat-Lon-Cube)"]
+        elif questionDict["AM_horizontal_res"].answer == "c1440":
+            questionDict[i].choices = ["llc2160 (1/24-deg, Lat-Lon-Cube)"]
 
     @staticmethod
-    def MOM_hres_default(answerdict, i):
+    def MOM_hres_default(questionDict, i):
         if i != "OM_MOM_horizontal_res":
             return
-        if answerdict["OM_name"].q_answer == "MOM6" and answerdict["AM_horizontal_res"].q_answer == "c12":
-           answerdict[i].q_default = "72 36"
+        if questionDict["OM_name"].answer == "MOM6" and questionDict["AM_horizontal_res"].answer == "c12":
+           questionDict[i].default = "72 36"
 
     @staticmethod
-    def seaice_choices(answerdict, i):
-        if i == 'OM_seaice_model' and answerdict['OM_name'] == 'MOM6':
-            answerdict[i].q_choices = ['CICE6']
+    def seaice_choices(questionDict, i):
+        if i == 'OM_seaice_model' and questionDict['OM_name'] == 'MOM6':
+            questionDict[i].choices = ['CICE6']
 
 
     @staticmethod
-    def heartbeat_default(answerdict, i):
+    def heartbeat_default(questionDict, i):
         if i != "heartbeat":
             return
         '''
@@ -102,7 +93,7 @@ class handle:
         enter whatever value they like
         '''
         heartbeat = ""
-        match answerdict["AM_horizontal_res"].q_answer:
+        match questionDict["AM_horizontal_res"].answer:
             case 'c12':
                 heartbeat = 3600
             case 'c24':
@@ -124,40 +115,40 @@ class handle:
 
 
         # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
-        if answerdict["AM_microphysics"].q_answer == "BACM_1M":
+        if questionDict["AM_microphysics"].answer == "BACM_1M":
             heartbeat = 450
 
         # ((IMPORTANT: default must be type string due to some limitation in questionary))
-        answerdict[i].q_default = str(heartbeat)
+        questionDict[i].default = str(heartbeat)
 
 
     @staticmethod
-    def heartbeat_valid(answerdict, i):
+    def heartbeat_valid(questionDict, i):
         if i != "heartbeat":
             return
         # input validation using regex
-        while not re.match(r"^\d+$", answerdict[i].q_answer):
+        while not re.match(r"^\d+$", questionDict[i].answer):
             print(f"{color.RED}please enter exactly 1 number!{color.RESET}")
-            answerdict[i].load_question(answerdict)
+            questionDict[i].load_question(questionDict)
 
     @staticmethod
-    def history_template_default(answerdict, i):
+    def history_template_default(questionDict, i):
         if i != "history_template":
             return
 
-        if answerdict['OM_name'].q_answer == 'MOM5':
-            answerdict[i].q_default = 'HISTORY.AOGCM-MOM5.rc.tmpl'
-        elif answerdict['OM_name'].q_answer == "MOM6":
-            answerdict[i].q_default = 'HISTORY.AOGCM.rc.tmpl'
-        elif answerdict['OM_name'].q_answer == 'MIT':
-            answerdict[i].q_default = 'HISTORY.AOGCM_MITgcm.rc.tmpl'
-        elif answerdict['OM_data_atmos'].q_answer == True:
-            answerdict[i].q_default == 'HISTORY.DATAATM.rc.tmpl'
+        if questionDict['OM_name'].answer == 'MOM5':
+            questionDict[i].default = 'HISTORY.AOGCM-MOM5.rc.tmpl'
+        elif questionDict['OM_name'].answer == "MOM6":
+            questionDict[i].default = 'HISTORY.AOGCM.rc.tmpl'
+        elif questionDict['OM_name'].answer == 'MIT':
+            questionDict[i].default = 'HISTORY.AOGCM_MITgcm.rc.tmpl'
+        elif questionDict['OM_data_atmos'].answer == True:
+            questionDict[i].default == 'HISTORY.DATAATM.rc.tmpl'
         else:
-            answerdict[i].q_default = 'HISTORY.AGCM.rc.tmpl'
+            questionDict[i].default = 'HISTORY.AGCM.rc.tmpl'
 
     @staticmethod
-    def exp_dir_default(answerdict, i):
+    def exp_dir_default(questionDict, i):
         if i != "exp_dir":
             return
 
@@ -165,100 +156,92 @@ class handle:
         if os.path.exists(root):
             try:
                 with open(root, "r") as file:
-                    answerdict[i].q_default = f"{file.read().strip()}/{answerdict['experiment_id'].q_answer}"
+                    questionDict[i].default = f"{file.read().strip()}/{questionDict['experiment_id'].answer}"
             except Exception as e:
                 print(f"An error occurred while reading {color.BLUE}.EXPDIRroot{color.RESET}: {str(e)}")
         elif envdict['site'] in ['NAS','NCCS']:
-            answerdict[i].q_default = f"/{'discover/' if envdict['site'] == 'NCCS' else ''}nobackup/{os.environ.get('LOGNAME')}/{answerdict['experiment_id'].q_answer}"
+            questionDict[i].default = f"/{'discover/' if envdict['site'] == 'NCCS' else ''}nobackup/{os.environ.get('LOGNAME')}/{questionDict['experiment_id'].answer}"
         else:
-            answerdict[i].q_default = f"{os.environ.get('HOME')}/{answerdict['experiment_id']}"
+            questionDict[i].default = f"{os.environ.get('HOME')}/{questionDict['experiment_id']}"
 
 
     @staticmethod
-    def exp_dir_valid(answerdict, i):
-        if i != "home_dir" or i != "exp_dir":
+    def exp_dir_valid(questionDict, i):
+        if i != "exp_dir":
             return
-        while os.path.basename(answerdict[i].q_answer) != answerdict['experiment_id'].q_answer:
-            print(f"{color.RED}This directory MUST point to the experiment ID: {color.BLUE}{answerdict['experiment_id'].q_answer}{color.RED}!{color.RESET}")
-            answerdict[i].load_question(answerdict)
+        while os.path.basename(questionDict[i].answer) != questionDict['experiment_id'].answer:
+            print(f"{color.RED}This directory MUST point to the experiment ID: {color.BLUE}{questionDict['experiment_id'].answer}{color.RED}!{color.RESET}")
+            questionDict[i].load_question(questionDict)
 
 
     @staticmethod
-    def group_root_default(answerdict, i):
+    def group_root_default(questionDict, i):
         if i != "group_root":
             return
         groups_output = subprocess.check_output(["groups"], text=True)
         group_root = groups_output.strip().split()[0]
-        answerdict[i].q_default = group_root
+        questionDict[i].default = group_root
 
 
 
 
-
-# open yaml file and create dictionary from it's contents
-def load_yamls():
-
-    # list of question files (*MAKE SURE THEY ARE IN THE ORDER YOU WANT THEM TO BE ASKED*)
-    file_list = ["../yaml/exp_setup.yaml",          \
-                 "../yaml/atmospheric_model.yaml",  \
-                 "../yaml/ocean_model.yaml",        \
-                 "../yaml/land_model.yaml",         \
-                 "../yaml/gocart.yaml",             \
-                 "../yaml/directory_setup.yaml"]
-    all_yaml_questions = {}
-
-    for filename in file_list:
-        try:
-            with open(filename, "r") as file:
-                yaml_questions = yaml.safe_load(file)
-                all_yaml_questions.update(yaml_questions)
-        except IOError:
-            print(f"{color.RED}YAML file '{filename}' could not be located. Exiting.")
-            exit(1)
-
-    return all_yaml_questions
-
-# actual driver for questionary questions
-def process():
-    answerdict = {}
+def ask_questions():
+    # actual driver for questionary questions
+    questionDict = {}
     yaml_questions = load_yamls()
 
     # creates a dictionary of question:answer pairs
     for i in yaml_questions:
-        temp = generateQuestion(i, yaml_questions[i]["type"],          \
-                                   yaml_questions[i]["prompt"],        \
-                                   yaml_questions[i]["choices"],       \
-                                   yaml_questions[i]["default_answer"],\
-                                   yaml_questions[i]["follows_up"])
+        temp = question(i, yaml_questions[i]["type"],          \
+                           yaml_questions[i]["prompt"],        \
+                           yaml_questions[i]["choices"],       \
+                           yaml_questions[i]["default_answer"],\
+                           yaml_questions[i]["follows_up"])
 
-        answerdict[i] = temp
+        questionDict[i] = temp
 
 
         # if the question properties need to dynamically change at
         # runtime call handle function BEFORE load_question()
-        handle.io_server_defualt(answerdict, i)
-        handle.processor_choices(answerdict, i)
-        handle.OM_horizontal_res_default(answerdict, i)
-        handle.MIT_hres_choices(answerdict, i)
-        handle.MOM_hres_default(answerdict, i)
-        handle.seaice_choices(answerdict, i)
-        handle.heartbeat_default(answerdict, i)
-        handle.history_template_default(answerdict, i)
-        handle.exp_dir_default(answerdict, i)
-        handle.group_root_default(answerdict, i)
+        handle.io_server_defualt(questionDict, i)
+        handle.processor_choices(questionDict, i)
+        handle.OM_horizontal_res_default(questionDict, i)
+        handle.MIT_hres_choices(questionDict, i)
+        handle.MOM_hres_default(questionDict, i)
+        handle.seaice_choices(questionDict, i)
+        handle.heartbeat_default(questionDict, i)
+        handle.history_template_default(questionDict, i)
+        handle.exp_dir_default(questionDict, i)
+        handle.group_root_default(questionDict, i)
 
         # prompts the user with the question
-        answerdict[i].load_question(answerdict)
+        questionDict[i].load_question(questionDict)
 
         # input validation and other post processing goes here,
         # AFTER load_question() call
-        # handle.experiment_desc(answerdict, i)
-        # handle.OM_hres_valid(answerdict, i)
-        handle.heartbeat_valid(answerdict, i)
-        handle.exp_dir_valid(answerdict, i)
+        # handle.experiment_desc(questionDict, i)
+        handle.heartbeat_valid(questionDict, i)
+        handle.exp_dir_valid(questionDict, i)
 
         # strips the first word from every select type question
-        handle.select_type(answerdict, i)
+        handle.select_type(questionDict, i)
 
-    return answerdict
+        try:
+            if questionDict['clone_experiment'].answer == True and i == 'yaml_clone_path':
+                # The rest is handled in clone.py
+                break
+        except KeyError:
+            pass
+
+            
+
+    # creates a dictionary that only contains user answers (only thing that
+    # matters from the question class at this point)
+    expConfig = {key: questionDict.answer for key, questionDict in questionDict.items()}
+    del questionDict
+
+    if expConfig['clone_experiment'] == True:
+        expConfig = clone_exp(expConfig, expConfig['yaml_clone_path'])
+
+    return expConfig
 

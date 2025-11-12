@@ -1,417 +1,408 @@
-from env import answerdict
 from utility import color
 
 class atmosphere:
-    def __init__(self):
-        self.use_SHMEM          = 0
-        self.force_das          = "#"
-        self.force_gcm          = "#"
-        self.num_readers        = 1
-        self.num_writers        = 1
-        self.dt                 = answerdict['heartbeat'].q_answer
-        self.dt_solar           = None
-        self.dt_irrad           = None
-        self.dt_ocean           = answerdict['heartbeat'].q_answer
-        self.lm                 = int(answerdict['AM_vertical_res'].q_answer)
-        self.im                 = int(answerdict['AM_horizontal_res'].q_answer[1:])
-        self.jm                 = self.im * 6
-        self.nx                 = None
-        self.ny                 = None
-        self.nf                 = 6
-        self.microphysics       = answerdict["AM_microphysics"].q_answer
-        self.hist_im            = self.im * 4
-        self.hist_jm            = self.im * 2 + 1
-        self.gridfile           = f"Gnomonic_c{self.im}.dat"
-        self.job_sgmt           = None
-        self.num_sgmt           = None
-        self.res                = f"CF{self.im:04}x6C"
-        self.post_NDS           = None
-        self.nx_convert         = 2
-        self.ny_convert         = 24
-        self.conus              = '#'
-        self.stretch_factor     = ''
-        self.FV_stretch_fac     = ''
-        self.gridname           = f"PE{self.im}x{self.jm}-CF"
-        self.res_dateline       = f"{self.im}x{self.jm}"
-        self.BACM_1M            = "#"
-        self.GFDL_1M            = "#"
-        self.MGB2_2M            = "#"
-        self.GFDL_hydro         = ".TRUE."
-        self.GFDL_prog_ccn      = "prog_ccn = .true."
-        self.GFDL_use_ccn       = "use_ccn = .true."
-        self.MP_turnoff_wsub    = None
-        self.FV_make_NH         = None
-        self.FV_hydro           = None
-        self.FV_hwt             = None
-        self.schmidt            = None
-        self.target_lon         = None
-        self.target_lat         = None
-        self.convpar_option     = 'GF'
-        self.mp_turn_off_wsub_extdata = None
+    def __init__(atmos, expConfig):
+        atmos.expConfig          = expConfig
+        atmos.use_SHMEM          = 0
+        atmos.force_das          = "#"
+        atmos.force_gcm          = "#"
+        atmos.num_readers        = 1
+        atmos.num_writers        = 1
+        atmos.dt                 = atmos.expConfig['heartbeat']
+        atmos.dt_solar           = None
+        atmos.dt_irrad           = None
+        atmos.dt_ocean           = atmos.expConfig['heartbeat']
+        atmos.lm                 = int(atmos.expConfig['AM_vertical_res'])
+        atmos.im                 = int(atmos.expConfig['AM_horizontal_res'][1:])
+        atmos.jm                 = atmos.im * 6
+        atmos.nx                 = None
+        atmos.ny                 = None
+        atmos.nf                 = 6
+        atmos.microphysics       = atmos.expConfig["AM_microphysics"]
+        atmos.hist_im            = atmos.im * 4
+        atmos.hist_jm            = atmos.im * 2 + 1
+        atmos.gridfile           = f"Gnomonic_c{atmos.im}.dat"
+        atmos.job_sgmt           = None
+        atmos.num_sgmt           = None
+        atmos.res                = f"CF{atmos.im:04}x6C"
+        atmos.post_NDS           = None
+        atmos.nx_convert         = 2
+        atmos.ny_convert         = 24
+        atmos.conus              = '#'
+        atmos.stretch_factor     = ''
+        atmos.FV_stretch_fac     = ''
+        atmos.gridname           = f"PE{atmos.im}x{atmos.jm}-CF"
+        atmos.res_dateline       = f"{atmos.im}x{atmos.jm}"
+        atmos.BACM_1M            = "#"
+        atmos.GFDL_1M            =     atmos.MGB2_2M            = "#"
+        atmos.GFDL_hydro         = ".TRUE."
+        atmos.GFDL_prog_ccn      = "prog_ccn = .true."
+        atmos.GFDL_use_ccn       = "use_ccn = .true."
+        atmos.MP_turnoff_wsub    = None
+        atmos.FV_make_NH         = None
+        atmos.FV_hydro           = None
+        atmos.FV_hwt             = None
+        atmos.schmidt            = None
+        atmos.target_lon         = None
+        atmos.target_lat         = None
+        atmos.convpar_option     = 'GF'
+        atmos.mp_turn_off_wsub_extdata = None
 
         # These are superfluous for GCM, but are needed SCM (considered latlon)
-        self.latlon             = '#DELETE'
-        self.cube               = ''
+        atmos.latlon             = '#DELETE'
+        atmos.cube               = ''
 
 
-    # for debugging purposes
-    def print_vars(self):
-        all_vars = vars(self)
-        for var_name, var_value in all_vars.items():
-            print(f"{color.BLUE}{var_name}: {var_value}{color.RESET}")
-
-    def hres(self, ocean_nx, ocean_ny):
-        match answerdict["AM_horizontal_res"].q_answer:
+    def hres(atmos, ocean_nx, ocean_ny):
+        match atmos.expConfig["AM_horizontal_res"]:
             case "c12":
-                self.conv_dt        = 3600
-                self.chem_dt        = 3600
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 3600
-                if answerdict["OM_name"].q_answer == "MOM6":
-                    self.nx         = 1
+                atmos.conv_dt        = 3600
+                atmos.chem_dt        = 3600
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 3600
+                if atmos.expConfig["OM_name"] == "MOM6":
+                    atmos.nx         = 1
                 else:
-                    self.nx         = 2
-                self.ny             = self.nx * 6
-                self.job_sgmt       = f"{15:08}"
-                self.num_sgmt       = 20
-                self.post_NDS       = 4
-                self.nx_convert     = 1
-                self.ny_convert     = 6
-                self.res            = 'CF0012x6C'
+                    atmos.nx         = 2
+                atmos.ny             = atmos.nx * 6
+                atmos.job_sgmt       = f"{15:08}"
+                atmos.num_sgmt       = 20
+                atmos.post_NDS       = 4
+                atmos.nx_convert     = 1
+                atmos.ny_convert     = 6
+                atmos.res            = 'CF0012x6C'
 
 
             case "c24":
-                self.conv_dt        = 1800
-                self.chem_dt        = 3600
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 3600
-                self.nx             = 4
-                self.ny             = self.nx * 6
-                self.job_sgmt       = f"{15:08}"
-                self.num_sgmt       = 20
-                self.post_NDS       = 4
-                self.nx_convert     = 1
-                self.ny_convert     = 6
-                self.res            = 'CF0024x6C'
+                atmos.conv_dt        = 1800
+                atmos.chem_dt        = 3600
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 3600
+                atmos.nx             = 4
+                atmos.ny             = atmos.nx * 6
+                atmos.job_sgmt       = f"{15:08}"
+                atmos.num_sgmt       = 20
+                atmos.post_NDS       = 4
+                atmos.nx_convert     = 1
+                atmos.ny_convert     = 6
+                atmos.res            = 'CF0024x6C'
 
             case "c48":
-                self.conv_dt        = 1200
-                self.chem_dt        = 3600
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 3600
-                self.nx             = 6
-                self.ny             = self.nx * 6
-                self.im_hist        = 180
-                self.jm_hist        = 91
-                self.job_sgmt       = f"{15:08}"
-                self.num_sgmt       = 20
-                self.post_NDS       = 4
-                self.res            = 'CF0048x6C'
-                self.hist_im        = 180
-                self.hist_jm        = 91
+                atmos.conv_dt        = 1200
+                atmos.chem_dt        = 3600
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 3600
+                atmos.nx             = 6
+                atmos.ny             = atmos.nx * 6
+                atmos.job_sgmt       = f"{15:08}"
+                atmos.num_sgmt       = 20
+                atmos.post_NDS       = 4
+                atmos.res            = 'CF0048x6C'
+                atmos.hist_im        = 180
+                atmos.hist_jm        = 91
 
             case "c90":
-                self.conv_dt        = 900
-                self.chem_dt        = 1800
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt
-                if answerdict['OM_name'].q_answer == 'MIT':
-                    self.nx     = 10
-                    self.ny     = 36
-                elif answerdict['OM_name'].q_answer == 'MOM5':
-                    self.nx     = ocean_nx
-                    self.ny     = ocean_ny
-                elif answerdict['OM_name'].q_answer == 'MOM6':
-                    self.nx     = 5
-                    self.ny     = 36
+                atmos.conv_dt        = 900
+                atmos.chem_dt        = 1800
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = atmos.dt
+                if atmos.expConfig['OM_name'] == 'MIT':
+                    atmos.nx     = 10
+                    atmos.ny     = 36
+                elif atmos.expConfig['OM_name'] == 'MOM5':
+                    atmos.nx     = ocean_nx
+                    atmos.ny     = ocean_ny
+                elif atmos.expConfig['OM_name'] == 'MOM6':
+                    atmos.nx     = 5
+                    atmos.ny     = 36
                 else:
-                    self.nx     = 10
-                    self.ny     = self.nx * 6
-                    self.dt_ocean = 3600
-                self.job_sgmt       = f"{32:08}"
-                self.num_sgmt       = 4
-                self.post_NDS       = 8
-                self.res            = 'CF0090x6C'
+                    atmos.nx     = 10
+                    atmos.ny     = atmos.nx * 6
+                    atmos.dt_ocean = 3600
+                atmos.job_sgmt       = f"{32:08}"
+                atmos.num_sgmt       = 4
+                atmos.post_NDS       = 8
+                atmos.res            = 'CF0090x6C'
 
             case "c180":
-                self.conv_dt        = 600
-                self.chem_dt        = 1200
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = self.dt
-                if answerdict['OM_name'].q_answer == 'MOM6':
-                    self.nx         = 30
-                    self.ny         = 36
-                elif answerdict['OM_name'].q_answer == 'MOM5' or answerdict['OM_name'].q_answer == 'MIT':
-                    self.nx         = ocean_nx
-                    self.ny         = ocean_ny
+                atmos.conv_dt        = 600
+                atmos.chem_dt        = 1200
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = atmos.dt
+                if atmos.expConfig['OM_name'] == 'MOM6':
+                    atmos.nx         = 30
+                    atmos.ny         = 36
+                elif atmos.expConfig['OM_name'] == 'MOM5' or atmos.expConfig['OM_name'] == 'MIT':
+                    atmos.nx         = ocean_nx
+                    atmos.ny         = ocean_ny
                 else:
-                    self.nx         = 20
-                    self.ny         = self.nx * 6
-                    self.dt_ocean   = 3600
-                self.job_sgmt       = f"{16:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 8
-                self.num_readers    = 2
-                self.res            = 'CF0180x6C'
+                    atmos.nx         = 20
+                    atmos.ny         = atmos.nx * 6
+                    atmos.dt_ocean   = 3600
+                atmos.job_sgmt       = f"{16:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 8
+                atmos.num_readers    = 2
+                atmos.res            = 'CF0180x6C'
 
             case "c360":
-                self.conv_dt        = 450
-                self.chem_dt        = 900
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 4600
-                self.nx             = 30
-                self.ny             = self.nx * 6
-                self.num_readers    = 4
-                self.job_sgmt       = f"{5:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 12
-                self.nx_convert     = 4
-                self.res            = 'CF0360x6C'
+                atmos.conv_dt        = 450
+                atmos.chem_dt        = 900
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 4600
+                atmos.nx             = 30
+                atmos.ny             = atmos.nx * 6
+                atmos.num_readers    = 4
+                atmos.job_sgmt       = f"{5:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 12
+                atmos.nx_convert     = 4
+                atmos.res            = 'CF0360x6C'
 
             case "c720":
-                self.conv_dt        = 300
-                self.chem_dt        = 600
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 3600
-                self.nx             = 40
-                self.ny             = self.nx * 6
-                self.num_readers    = 6
-                self.job_sgmt       = f"{5:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 16
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.res            = 'CF0720x6C'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 600
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 3600
+                atmos.nx             = 40
+                atmos.ny             = atmos.nx * 6
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{5:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 16
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.res            = 'CF0720x6C'
 
             case "c1120":
-                self.conv_dt        = 300
-                self.chem_dt        = 600
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 3600
-                self.nx             = 60
-                self.ny             = self.nx * 6
-                self.num_readers    = 6
-                self.job_sgmt       = f"{5:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 16
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.res            = 'CF1120x6C'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 600
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 3600
+                atmos.nx             = 60
+                atmos.ny             = atmos.nx * 6
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{5:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 16
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.res            = 'CF1120x6C'
 
             case "c1440":
-                self.conv_dt        = 300
-                self.chem_dt        = 600
-                self.dt_solar       = 1200
-                self.dt_irrad       = 1200
-                self.dt_ocean       = 1200
-                self.nx             = 80
-                self.ny             = self.nx * 6
-                self.num_readers    = 6
-                self.job_sgmt       = f"{1:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.res            = 'CF1440x6C'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 600
+                atmos.dt_solar       = 1200
+                atmos.dt_irrad       = 1200
+                atmos.dt_ocean       = 1200
+                atmos.nx             = 80
+                atmos.ny             = atmos.nx * 6
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{1:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.res            = 'CF1440x6C'
 
             case "c2880":
-                self.conv_dt        = 300
-                self.chem_dt        = 300
-                self.dt_solar       = 900
-                self.dt_irrad       = 900
-                self.dt_ocean       = 900
-                self.nx             = 80
-                self.ny             = self.nx * 6
-                self.num_readers    = 6
-                self.job_sgmt       = f"{1:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = True
-                self.convpar_option = 'NONE'
-                self.res            = 'CF2880x6C'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 300
+                atmos.dt_solar       = 900
+                atmos.dt_irrad       = 900
+                atmos.dt_ocean       = 900
+                atmos.nx             = 80
+                atmos.ny             = atmos.nx * 6
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{1:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = True
+                atmos.convpar_option = 'NONE'
+                atmos.res            = 'CF2880x6C'
 
             case "c5760":
-                self.conv_dt        = 300
-                self.chem_dt        = 300
-                self.dt_solar       = 600
-                self.dt_irrad       = 600
-                self.dt_ocean       = 600
-                self.nx             = 80
-                self.ny             = self.nx * 6
-                self.num_readers    = 6
-                self.job_sgmt       = f"{1:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = True
-                self.convpar_option = 'NONE'
-                self.res            = 'CF5760x6C'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 300
+                atmos.dt_solar       = 600
+                atmos.dt_irrad       = 600
+                atmos.dt_ocean       = 600
+                atmos.nx             = 80
+                atmos.ny             = atmos.nx * 6
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{1:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = True
+                atmos.convpar_option = 'NONE'
+                atmos.res            = 'CF5760x6C'
 
             case "c270":
-                self.conv_dt        = 600
-                self.chem_dt        = 1800
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 3600
-                self.nx             = 20
-                self.ny             = self.nx * 6 * 2
-                self.num_readers    = 6
-                self.job_sgmt       = f"{1:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.conus          = ""
-                self.stretch_factor = 2.5
-                self.res            = 'CF0270x6C-SG001'
+                atmos.conv_dt        = 600
+                atmos.chem_dt        = 1800
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 3600
+                atmos.nx             = 20
+                atmos.ny             = atmos.nx * 6 * 2
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{1:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.conus          = ""
+                atmos.stretch_factor = 2.5
+                atmos.res            = 'CF0270x6C-SG001'
 
             case "c540":
-                self.conv_dt        = 300
-                self.chem_dt        = 900
-                self.dt_solar       = 3600
-                self.dt_irrad       = 3600
-                self.dt_ocean       = 3600
-                self.nx             = 30
-                self.ny             = self.nx * 6 * 2
-                self.num_readers    = 6
-                self.job_sgmt       = f"{1:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.conus          = ""
-                self.stretch_factor = 2.5
-                self.res            = 'CF0540x6C-SG001'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 900
+                atmos.dt_solar       = 3600
+                atmos.dt_irrad       = 3600
+                atmos.dt_ocean       = 3600
+                atmos.nx             = 30
+                atmos.ny             = atmos.nx * 6 * 2
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{1:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.conus          = ""
+                atmos.stretch_factor = 2.5
+                atmos.res            = 'CF0540x6C-SG001'
 
             case "c1080":
-                self.conv_dt        = 300
-                self.chem_dt        = 600
-                self.dt_solar       = 1800
-                self.dt_irrad       = 1800
-                self.dt_ocean       = 1800
-                self.nx             = 40
-                self.ny             = self.nx * 6 * 2
-                self.num_readers    = 6
-                self.job_sgmt       = f"{1:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.conus          = ""
-                self.stretch_factor = 2.5
-                self.res            = 'CF1080x6C-SG001'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 600
+                atmos.dt_solar       = 1800
+                atmos.dt_irrad       = 1800
+                atmos.dt_ocean       = 1800
+                atmos.nx             = 40
+                atmos.ny             = atmos.nx * 6 * 2
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{1:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.conus          = ""
+                atmos.stretch_factor = 2.5
+                atmos.res            = 'CF1080x6C-SG001'
 
             case "c1536":
-                self.conv_dt        = 300
-                self.chem_dt        = 900
-                self.dt_solar       = 900
-                self.dt_irrad       = 900
-                self.dt_ocean       = 900
-                self.nx             = 60
-                self.ny             = self.nx * 6
-                self.num_readers    = 6
-                self.job_sgmt       = f"{5:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 16
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.conus          = ""
-                self.stretch_factor = 3.0
-                self.res            = 'CF1536x6C-SG002'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 900
+                atmos.dt_solar       = 900
+                atmos.dt_irrad       = 900
+                atmos.dt_ocean       = 900
+                atmos.nx             = 60
+                atmos.ny             = atmos.nx * 6
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{5:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 16
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.conus          = ""
+                atmos.stretch_factor = 3.0
+                atmos.res            = 'CF1536x6C-SG002'
 
             case "c2160":
-                self.conv_dt        = 300
-                self.chem_dt        = 300
-                self.dt_solar       = 900
-                self.dt_irrad       = 900
-                self.dt_ocean       = 900
-                self.nx             = 80
-                self.ny             = self.nx * 6 * 2
-                self.num_readers    = 6
-                self.job_sgmt       = f"{5:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.conus          = ""
-                self.stretch_factor = 2.5
-                self.res            = 'CF2160x6C-SG001'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 300
+                atmos.dt_solar       = 900
+                atmos.dt_irrad       = 900
+                atmos.dt_ocean       = 900
+                atmos.nx             = 80
+                atmos.ny             = atmos.nx * 6 * 2
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{5:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.conus          = ""
+                atmos.stretch_factor = 2.5
+                atmos.res            = 'CF2160x6C-SG001'
 
             case 'c4320':
-                self.conv_dt        = 300
-                self.chem_dt        = 300
-                self.dt_solar       = 900
-                self.dt_irrad       = 900
-                self.dt_ocean       = 900
-                self.nx             = 80
-                self.ny             = self.nx * 6 * 2
-                self.num_readers    = 6
-                self.job_sgmt       = f"{5:08}"
-                self.num_sgmt       = 1
-                self.post_NDS       = 32
-                self.nx_convert     = 8
-                self.use_SHMEM      = 1
-                self.conus          = ""
-                self.stretch_factor = 2.5
-                self.res            = 'CF4320x6C'
+                atmos.conv_dt        = 300
+                atmos.chem_dt        = 300
+                atmos.dt_solar       = 900
+                atmos.dt_irrad       = 900
+                atmos.dt_ocean       = 900
+                atmos.nx             = 80
+                atmos.ny             = atmos.nx * 6 * 2
+                atmos.num_readers    = 6
+                atmos.job_sgmt       = f"{5:08}"
+                atmos.num_sgmt       = 1
+                atmos.post_NDS       = 32
+                atmos.nx_convert     = 8
+                atmos.use_SHMEM      = 1
+                atmos.conus          = ""
+                atmos.stretch_factor = 2.5
+                atmos.res            = 'CF4320x6C'
 
 
 
-    def set_microphysics(self):
-        if self.microphysics == "BACM_1M":
-            self.BACM_1M = ""
-            self.conv_dt = 450
-            self.chem_dt = 3600
-        elif self.microphysics == "GFDL_1M":
-            self.GFDL_1M = ""
-        elif self.microphysics == "MGB2_2M":
-            self.MGB2_2M = ""
+    def set_microphysics(atmos):
+        if atmos.microphysics == "BACM_1M":
+            atmos.BACM_1M = ""
+            atmos.conv_dt = 450
+            atmos.chem_dt = 3600
+        elif atmos.microphysics == "GFDL_1M":
+            atmos.GFDL_1M = ""
+        elif atmos.microphysics == "MGB2_2M":
+            atmos.MGB2_2M = ""
 
-    def set_turnoff_wsub(self):
-        if self.microphysics == "MGB2_2M":
-            self.MP_turnoff_wsub = "#DELETE"
+    def set_turnoff_wsub(atmos):
+        if atmos.microphysics == "MGB2_2M":
+            atmos.MP_turnoff_wsub = "#DELETE"
         else:
-            self.MP_turnoff_wsub = ""
+            atmos.MP_turnoff_wsub = ""
 
-    def set_conus(self):
-        if self.conus == "#":
-            self.schmidt        = "do_schmidt  = .false."
-            self.FV_stretch_fac = "stretch_fac = 1.0"
-            self.target_lon     = "target_lon  = 0.0"
-            self.target_lat     = "target_lat  = -90.0"
+    def set_conus(atmos):
+        if atmos.conus == "#":
+            atmos.schmidt        = "do_schmidt  = .false."
+            atmos.FV_stretch_fac = "stretch_fac = 1.0"
+            atmos.target_lon     = "target_lon  = 0.0"
+            atmos.target_lat     = "target_lat  = -90.0"
         else:
-            self.schmidt        = "do_schmidt  = .true."
-            self.FV_stretch_fac = f"stretch_fac = {self.stretch_factor}"
-            self.target_lon     = "target_lon  = -98.35"
-            self.target_lat     = "target_lat  = 39.5"
-            self.FV_hwt         = ''
+            atmos.schmidt        = "do_schmidt  = .true."
+            atmos.FV_stretch_fac = f"stretch_fac = {atmos.stretch_factor}"
+            atmos.target_lon     = "target_lon  = -98.35"
+            atmos.target_lat     = "target_lat  = 39.5"
+            atmos.FV_hwt         = ''
 
-    def set_wsub_extdata(self):
-        if self.microphysics == 'BACM_1M' or self.microphysics == 'GFDL_1M':
-            self.mp_turn_off_wsub_extdata = ''
+    def set_wsub_extdata(atmos):
+        if atmos.microphysics == 'BACM_1M' or atmos.microphysics == 'GFDL_1M':
+            atmos.mp_turn_off_wsub_extdata = ''
         else:
-            self.mp_turn_off_wsub_extdata = '#DELETE#'
+            atmos.mp_turn_off_wsub_extdata = '#DELETE#'
 
     # Set coarse resolution CLIM output
-    def set_CLIM(self):
-        self.CLIM_IM = 576
-        self.CLIM_JM = 361
-        if (self.CLIM_IM > self.im_hist):
-            self.CLIM_IM = im_hist
-            self.CLIM_JM = jm_hist
+    def set_CLIM(atmos):
+        atmos.CLIM_IM = 576
+        atmos.CLIM_JM = 361
+        if (atmos.CLIM_IM > atmos.hist_im):
+            atmos.CLIM_IM = atmos.hist_im
+            atmos.CLIM_JM = atmos.hist_jm
 
-    def config(self, ocean_nx, ocean_ny):
-        self.hres(ocean_nx, ocean_ny)
-        self.set_microphysics()
-        self.set_conus()
-        self.set_wsub_extdata()
-        self.set_CLIM()
+    def config(atmos, ocean_nx, ocean_ny):
+        atmos.hres(ocean_nx, ocean_ny)
+        atmos.set_microphysics()
+        atmos.set_conus()
+        atmos.set_wsub_extdata()
+        atmos.set_CLIM()

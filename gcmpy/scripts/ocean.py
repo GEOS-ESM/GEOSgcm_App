@@ -1,15 +1,15 @@
-from env import answerdict 
 from utility import color
 from datetime import date
 
 class ocean:
-    def __init__(ocean):
-        ocean.running_ocean = answerdict['OM_coupled'].q_answer
-        ocean.model = answerdict['OM_name'].q_answer
-        ocean.seaice_model = answerdict['OM_seaice_model'].q_answer
-        ocean.history_template = answerdict['history_template'].q_answer 
-        ocean.LM = answerdict['OM_vertical_res'].q_answer
-        ocean.data_atmos = answerdict['OM_data_atmos'].q_answer
+    def __init__(ocean, expConfig):
+        ocean.expConfig = expConfig
+        ocean.running_ocean = ocean.expConfig['OM_coupled']
+        ocean.model = ocean.expConfig['OM_name']
+        ocean.seaice_model = ocean.expConfig['OM_seaice_model']
+        ocean.history_template = ocean.expConfig['history_template'] 
+        ocean.LM = ocean.expConfig['OM_vertical_res']
+        ocean.data_atmos = ocean.expConfig['OM_data_atmos']
         ocean.name = ''
         ocean.preload = ''
         ocean.seaice_name = ''
@@ -52,7 +52,7 @@ class ocean:
             print(color.GREEN + MOM5_warning + color.RESET)
             ocean.NX = 36
             ocean.NY = 10
-            resolution = answerdict['OM_MOM_horizontal_res'].q_answer.split()
+            resolution = ocean.expConfig['OM_MOM_horizontal_res'].split()
             ocean.IM = int(resolution[0])
             ocean.JM = int(resolution[1])
         elif ocean.model == 'MOM6':
@@ -99,7 +99,7 @@ class ocean:
 
     def set_uncoupled(ocean):
         #rename this to 'uncoupled_hres'
-        hr_code = answerdict['OM_horizontal_res'].q_answer
+        hr_code = ocean.expConfig['OM_horizontal_res']
         todays_date = date.today()
 
         if hr_code == 'o1':
@@ -152,7 +152,7 @@ class ocean:
             ocean.data = ''
         elif hr_code == 'CS':
             # need to add input validation for this case
-            ocean.IM = int(answerdict['AM_horizontal_res'].q_answer[1:])
+            ocean.IM = int(ocean.expConfig['AM_horizontal_res'][1:])
             ocean.JM = ocean.IM * 6
             ocean.grid_type = 'Cubed-Sphere'
             ocean.NF = 6
@@ -206,7 +206,7 @@ class ocean:
         #
         # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
 
-        atmos_res = answerdict['AM_horizontal_res'].q_answer
+        atmos_res = ocean.expConfig['AM_horizontal_res']
 
         if atmos_res == 'c12':
             ocean.NX = 3

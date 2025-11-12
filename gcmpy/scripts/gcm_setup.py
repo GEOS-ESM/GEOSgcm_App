@@ -1,40 +1,34 @@
 #!/usr/bin/env python3
 
+import math, os, shutil, tempfile, yaml, re, glob, sys
 from ocean import ocean
 from atmosphere import atmosphere as atmos
 from land import land
 from gocart import gocart
-from env import answerdict, linkx
-from utility import envdict, pathdict, color
-import math, os, shutil, tempfile, yaml, re, glob
+from process_questions import ask_questions
+from clone import create_exp_yaml 
+from utility import envdict, pathdict, color, exceptions
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Undefined
 
 
 # combines all models (atmos, ocean, land, gocart) into one big one
 class setup:
-    def __init__(self):
-        self.ocean              = ocean()
-        self.atmos              = atmos()
-        self.land               = land()
-        self.gocart             = gocart()
+    def __init__(self, expConfig):
+        self.expConfig          = expConfig
         self.is_FCST            = False
         self.fv_cubed           = ''
-        self.bcs_res            = None
-        self.tile_data          = None
-        self.tile_bin           = None
-        self.interpolate_sst    = None
-        self.job_sgmt           = None
         self.begin_date         = '18910301 000000'
         self.end_date           = '29990302 210000'
         self.n_oserver_nodes    = None
         self.n_backend_pes      = None
         self.n_nodes            = None
-        self.exp_dir            = answerdict['exp_dir'].q_answer
+        self.exp_dir            = self.expConfig['exp_dir']
         self.restart_by_oserver = 'NO'
         self.several_tries      = ''
         self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text()
-        self.file_list          = ['gcm_run.j',
+        self.linkx              = False
+        self.templates          = ['gcm_run.j',
                                    'gcm_post.j',
                                    'gcm_archive.j',
                                    'gcm_regress.j',
@@ -49,16 +43,94 @@ class setup:
                                    'logging.yaml',
                                    'fvcore_layout.rc',
                                    'linkbcs.tmpl']
+    def initialize_models(self):
+        self.ocean = ocean(self.expConfig)
+        self.atmos = atmos(self.expConfig)
+        self.land = land(self.expConfig)
+        self.gocart = gocart(self.expConfig)
 
     def config_models(self):
         self.ocean.config()
         self.atmos.config(self.ocean.NX, self.ocean.NY)
         self.land.config()
         self.gocart.config()
-        self.file_list.append(self.ocean.history_template)
+        self.templates.append(self.ocean.history_template)
+
+    def check_flags(self):
+        # If argument is not recognized, display usage and exit
+        for arg in enumerate(sys.argv[1:]):
+            if (arg[-1] == '--link'):
+                self.linkx = True
+            elif (arg[-1] == '--singularity'):
+                self.bool_usingSingularity == True
+            elif (arg[-1] == '--help' or arg[-1] == '-h'):
+                exceptions.printusage()
+            else:
+                exceptions.raiseuserexception("Command line arguemnt \"" + arg[-1] + "\" not \
+                                        recognized. \nSee usage:\n" )
+            exceptions.printusage()
+
+    def set_num_CPUs(self):
+        if envdict['site'] == 'NCCS':
+            '''
+            NCCS currently recommends that users do not run with
+            48 cores per n_CPUs on SCU16 due to OS issues and
+            recommends that CPU-intensive works run with 46 or less
+            cores. As 45 is a multiple of 3, it's the best value
+            that doesn't waste too much
+            '''
+            if self.expConfig['processor'] == 'cas':
+                self.num_CPUs = 40
+            elif self.expConfig['processor'] == 'mil':
+                self.num_CPUs = 120
+
+        elif envdict['site'] == 'NAS':
+            if self.expConfig['processor'] == 'has':
+                self.num_CPUs = 24
+            elif self.expConfig['processor'] == 'bro':
+                self.num_CPUs = 24
+            elif self.expConfig['processor'] == 'sky':
+                self.expConfig['processor'] = 'sky_ele'
+                self.num_CPUs = 40
+            elif self.expConfig['processor'] == 'cas':
+                self.expConfig['processor'] = 'cas_ait'
+                self.num_CPUs = 40
+            elif self.expConfig['processor'] == 'rom' or self.expConfig['processor'] == 'mil':
+                self.expConfig['processor'] += '_ait'
+                self.num_CPUs = 120
+
+        elif envdict['site'] == 'AWS' or envdict['site'] == 'AZURE':
+            # Because we do not know the name of the model or the number of CPUs
+            # per node. We ask the user to set these variables in the script
+            print(color.RED + "\nSince you are running on ",  envdict['site'], \
+                               " you must set the processor and # of CPUs yourself.")
+            self.num_CPUs = questionary.text("Enter the number of CPUs per node: ").ask()
+
+        else:
+            envdict['site'] = 'UNKNOWN'
+            if envdict['arch'] == 'Linux':
+                # Get the number of CPU cores on Linux
+                try:
+                    with open('/proc/cpuinfo') as f:
+                        cpuinfo = f.read()
+                        self.num_CPUs = cpuinfo.count('processor')
+                except IOError:
+                    print(color.RED + "ERROR: Unable to retrieve the number of CPUs.")
+                    sys.exit(1)
+            elif envdict['arch'] == 'Darwin':
+                # Get the number of CPU cores on macOS
+                try:
+                    import multiprocessing
+                    self.num_CPUs = multiprocessing.cpu_count()
+                except NotImplementedError:
+                    print(color.RED + "ERROR: Unable to retrieve the number of CPUs.")
+                    sys.exit(1)
+            else:
+                print(f"ERROR: Unknown architecture", envdict['arch'])
+                sys.exit(1)
 
 
-    # setup some variables idk
+
     def set_some_stuff(self):
         if self.atmos.hist_im >= self.ocean.IM:
             self.interpolate_sst = True
@@ -75,17 +147,17 @@ class setup:
         model_npes = self.atmos.nx * self.atmos.ny
 
         # Calculate OSERVER nodes based on recommended algorithm
-        if answerdict['io_server'].q_answer == True:
+        if self.expConfig['io_server'] == True:
 
             # First we calculate the number of model nodes
-            n_model_nodes = math.ceil(model_npes / envdict["n_CPUs"])
+            n_model_nodes = math.ceil(model_npes / self.num_CPUs)
 
             # Next the number of frontend PEs is 10% of the model PEs
             n_frontend_pes = math.ceil(model_npes * 0.1)
 
             # Now we roughly figure out the number of collections in the HISTORY.rc
             n_hist_collections = 0
-            with open(f"{pathdict['etc']}/{answerdict['history_template'].q_answer}", 'r') as file:
+            with open(f"{pathdict['etc']}/{self.expConfig['history_template']}", 'r') as file:
                 in_collections = False
                 for line in file:
                     if line.split(' ', 1)[0] == "COLLECTIONS:":
@@ -100,7 +172,7 @@ class setup:
             n_oserver_pes = n_frontend_pes + n_hist_collections
 
             # calculate the number of oserver nodes
-            n_oserver_nodes = math.ceil(n_oserver_pes / envdict["n_CPUs"])
+            n_oserver_nodes = math.ceil(n_oserver_pes / self.num_CPUs)
 
             # The number of backend PEs is the number of history collections divided by the number of oserver nodes
             n_backend_pes = math.ceil(n_hist_collections / n_oserver_nodes)
@@ -112,7 +184,7 @@ class setup:
             self.nodes = n_model_nodes + n_oserver_nodes
 
         else:
-            self.nodes = math.ceil(model_npes / envdict["n_CPUs"])
+            self.nodes = math.ceil(model_npes / self.num_CPUs)
             self.n_oserver_nodes = 0
             self.n_backend_pes   = 0
 
@@ -120,18 +192,18 @@ class setup:
         self.set_nodes()
         # Longer job names are now supported with SLURM and PBS. Limits seem to be 1024 characters with SLURM
         # and 230 with PBS. To be safe, we will limit to 200
-        self.run_n     = f"{answerdict['experiment_id'].q_answer[:200]}_RUN"    # RUN      Job Name
-        self.run_fn    = f"{answerdict['experiment_id'].q_answer[:200]}_FCST"   # Forecast Job Name
-        self.post_n    = f"{answerdict['experiment_id'].q_answer[:200]}_POST"   # POST     Job Name
-        self.plot_n    = f"{answerdict['experiment_id'].q_answer[:200]}_PLT"    # PLOT     Job Name
-        self.move_n    = f"{answerdict['experiment_id'].q_answer[:200]}_MOVE"   # MOVE     Job Name
-        self.archive_n = f"{answerdict['experiment_id'].q_answer[:200]}_ARCH"   # ARCHIVE  Job Name
-        self.regress_n = f"{answerdict['experiment_id'].q_answer[:200]}_RGRS"   # REGRESS  Job Name
+        self.run_n     = f"{self.expConfig['experiment_id'][:200]}_RUN"    # RUN      Job Name
+        self.run_fn    = f"{self.expConfig['experiment_id'][:200]}_FCST"   # Forecast Job Name
+        self.post_n    = f"{self.expConfig['experiment_id'][:200]}_POST"   # POST     Job Name
+        self.plot_n    = f"{self.expConfig['experiment_id'][:200]}_PLT"    # PLOT     Job Name
+        self.move_n    = f"{self.expConfig['experiment_id'][:200]}_MOVE"   # MOVE     Job Name
+        self.archive_n = f"{self.expConfig['experiment_id'][:200]}_ARCH"   # ARCHIVE  Job Name
+        self.regress_n = f"{self.expConfig['experiment_id'][:200]}_RGRS"   # REGRESS  Job Name
 
         # Here we need to convert POST_NDS to total tasks. Using 16 cores
         # per task as a good default
         post_npes = self.atmos.post_NDS * 16
-        NPCUS = (post_npes + envdict["n_CPUs"] - 1)/envdict["n_CPUs"]
+        NPCUS = (post_npes + self.num_CPUs - 1)/self.num_CPUs
 
         '''
         Definition for each variable in the following if-else block:
@@ -168,6 +240,7 @@ class setup:
         work_dir                - User work directory <----------------- change this later
         gwdrs_dir               - Location of GWD_RIDGE files
         coupled_dir             - Coupled Ocean/Atmos Forcing
+        bcs_input_base          - location of SST Boundary Conditions
         '''
 
         if envdict['site'] == "NAS":
@@ -183,42 +256,38 @@ class setup:
             self.plot_t           = "8:00:00"
             self.archive_t        = "8:00:00"
             self.run_q            = f"PBS -q normal"
-            self.run_p            = f"PBS -l select={self.nodes}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
-            self.run_fp           = f"PBS -l select=24:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
-            self.regress_p        = f"PBS -l select={self.nodes * 2}:ncpus={envdict['n_CPUSs'] // 2}:mpiprocs={envdict['n_CPUs'] // 2}:model={answerdict['processor'].q_answer}"
+            self.run_p            = f"PBS -l select={self.nodes}:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
+            self.run_fp           = f"PBS -l select=24:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
+            self.regress_p        = f"PBS -l select={self.nodes * 2}:ncpus={self.num_CPUs // 2}:mpiprocs={self.num_CPUs // 2}:model={self.expConfig['processor']}"
             self.post_q           = "PBS -q normal"
             self.plot_q           = "PBS -q normal"
             self.move_q           = "PBS -q normal"
             self.archive_q        = "PBS -q normal"
-            self.post_p           = f"PBS -l select={NPCUS}:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
-            self.plot_p           = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs=1:model={answerdict['processor'].q_answer}"
-            self.archive_p        = f"PBS -l select=1:ncpus={envdict['n_CPUs']}:mpiprocs={envdict['n_CPUs']}:model={answerdict['processor'].q_answer}"
+            self.post_p           = f"PBS -l select={NPCUS}:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
+            self.plot_p           = f"PBS -l select=1:ncpus={self.num_CPUs}:mpiprocs=1:model={self.expConfig['processor']}"
+            self.archive_p        = f"PBS -l select=1:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.move_p           = "PBS -l select=1:ncpus=1"
-            self.boundary_path    = "/nobackup/gmao_SIteam/ModelData"
-            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
-            self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs}/{self.land.bcs}_{self.ocean.tag}"
+            self.boundary_dir     = "/nobackup/gmao_SIteam/ModelData"
+            self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
+            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs}/{self.land.bcs}_{self.ocean.tag}"
             self.replay_ana_expID        = "ONLY_MERRA2_SUPPORTED"
             self.replay_ana_location     = "ONLY_MERRA2_SUPPORTED"
-            self.M2_replay_ana_location  = f"{self.boundary_path}/merra2/data"
+            self.M2_replay_ana_location  = f"{self.boundary_dir}/merra2/data"
+            self.bcs_input_base = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
 
             # defines location of SST Boundary Conditions
             oceanres = f"{self.ocean.IM}x{self.ocean.JM}"
             if oceanres == "1440x720":
-                self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/SST/{oceanres}"
-            else:
-                self.sst_dir = f"{self.boundary_path}/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
-            if self.ocean.gridtyp == "LL":
+                self.sst_dir = f"{self.boundary_dir}/fvInput/g5gcm/bcs/SST/{oceanres}"
+            elif self.ocean.gridtyp == "MITLLC":
                 self.sst_dir = "/nobackupp2/estrobac/geos5/SSTDIR"
-
-            self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
-            self.work_dir         = f"/nobackup/{os.environ.get('LOGNAME')}"
-            self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
-
-            # Coupled Ocean/Atmos Forcing
-            if self.ocean.model == "MIT":
-                self.coupled_dir  = "/nobackupp2/estrobac/geos5/GRIDDIR"
             else:
-                self.coupled_dir  = f"{self.boundary_path}/aogcm"
+                self.sst_dir = f"{self.boundary_dir}/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
+
+            self.chem_dir         = f"{self.boundary_dir}/fvInput_nc3"
+            self.work_dir         = f"/nobackup/{os.environ.get('LOGNAME')}"
+            self.gwdrs_dir        = f"{self.boundary_dir}/GWD_RIDGE"
+            self.coupled_dir      = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/ocean"
 
 
         elif envdict['site'] == "NCCS":
@@ -233,44 +302,39 @@ class setup:
             self.post_t           = "8:00:00"
             self.plot_t           = "12:00:00"
             self.archive_t        = "2:00:00"
-            self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
-            self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
-            self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
-            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] // 2}"
-            self.post_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
-            self.plot_q           = f"SBATCH --constraint={answerdict['processor'].q_answer}"
+            self.run_q            = f"SBATCH --constraint={self.expConfig['processor']}"
+            self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
+            self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
+            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={self.num_CPUs // 2}"
+            self.post_q           = f"SBATCH --constraint={self.expConfig['processor']}"
+            self.plot_q           = f"SBATCH --constraint={self.expConfig['processor']}"
             self.move_q           = "SBATCH --partition=datamove"
             self.archive_q        = "SBATCH --partition=datamove"
-            self.post_p           = f"SBATCH --nodes={NPCUS} --ntasks-per-node={envdict['n_CPUs']}"
+            self.post_p           = f"SBATCH --nodes={NPCUS} --ntasks-per-node={self.num_CPUs}"
             self.plot_p           = f"SBATCH --nodes=4 --ntasks=4"
             self.archive_p        = "SBATCH --ntasks=1"
             self.move_p           = "SBATCH --ntasks=1"
-            self.boundary_path    = "/discover/nobackup/projects/gmao"
-            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
+            self.boundary_dir     = "/discover/nobackup/projects/gmao"
+            self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.bc_base}/{self.land.bcs}"
             self.replay_ana_expID       = "x0039"
-            self.replay_ana_location    = f"{self.boundary_path}/g6dev/ltakacs/x0039"
-            self.M2_replay_ana_location = f"{self.boundary_path}/merra2/data"
-
+            self.replay_ana_location    = f"{self.boundary_dir}/g6dev/ltakacs/x0039"
+            self.M2_replay_ana_location = f"{self.boundary_dir}/merra2/data"
+            self.bcs_input_base = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
 
             # define location of SST Boundary Conditions
             oceanres    = f"{self.ocean.IM}x{self.ocean.JM}"
             if oceanres == "1440x720":
                 self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/SST/{oceanres}"
+            elif self.ocean.gridtyp == "MITLLC":
+                self.sst_dir = "/discover/nobackup/estrobac/geos5/SSTDIR"
             else:
                 self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
-            if self.ocean.gridtyp == "LL":
-                self.sst_dir = "/discover/nobackup/estrobac/geos5/SSTDIR"
 
             self.chem_dir         = f"{os.environ.get('SHARE')}/gmao_ops/fvInput_nc3"
             self.work_dir         = f"/discover/nobackup/{os.environ.get('LOGNAME')}"
-            self.gwdrs_dir        = f"{self.boundary_path}/osse2/stage/BCS_FILES/GWD_RIDGE"
-
-            # Coupled Ocean/Atmos Forcing
-            if self.ocean.model == "MIT":
-                self.coupled_dir  = "/gpfsm/dnb32/estrobac/geos5/GRIDDIR"
-            else:
-                self.coupled_dir  = f"{self.boundary_path}/bcs_shared/make_bcs_inputs/ocean"
+            self.gwdrs_dir        = f"{self.boundary_dir}/osse2/stage/BCS_FILES/GWD_RIDGE"
+            self.coupled_dir      = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/ocean"
 
 
         elif envdict['site'] == "AWS" or envdict['site'] == "Azure":
@@ -285,10 +349,10 @@ class setup:
             self.post_t           = "8:00:00"
             self.plot_t           = "12:00:00"
             self.archive_t        = "1:00:00"
-            self.run_q            = f"SBATCH --constraint={answerdict['processor'].q_answer}"
-            self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
-            self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={envdict['n_CPUs']}"
-            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={envdict['n_CPUs'] // 2}"
+            self.run_q            = f"SBATCH --constraint={self.expConfig['processor']}"
+            self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
+            self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
+            self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={self.num_CPUs // 2}"
             self.post_q           = "NULL"
             self.plot_q           = "NULL"
             self.move_q           = "NULL"
@@ -297,17 +361,18 @@ class setup:
             self.plot_p           = f"SBATCH --nodes=4 --ntasks=4"
             self.archive_p        = "SBATCH --ntasks=1"
             self.move_p           = "SBATCH --ntasks=1"
-            self.boundary_path    = "/ford1/share/gmao_SIteam/ModelData"
-            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
-            self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs}_{self.ocean.tag}"
+            self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
+            self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
+            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs}_{self.ocean.tag}"
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
-            self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
+            self.bcs_input_base   = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
+            self.sst_dir          = f"{self.boundary_dir}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
+            self.chem_dir         = f"{self.boundary_dir}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME')
-            self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
-            self.coupled_dir      = f"{self.boundary_path}/aogcm"
+            self.gwdrs_dir        = f"{self.boundary_dir}/GWD_RIDGE"
+            self.coupled_dir      = f"{self.boundary_dir}/aogcm"
 
         else:
             # These are defaults for the desktop
@@ -334,23 +399,24 @@ class setup:
             self.plot_p           = "NULL"
             self.archive_p        = "NULL"
             self.move_p           = "NULL"
-            self.boundary_path    = "/ford1/share/gmao_SIteam/ModelData"
-            self.bc_base          = f"{self.boundary_path}/bcs_shared/fvInput/ExtData/esm/tiles"
-            self.bcs_dir          = f"{self.boundary_path}/bcs/{self.land.bcs} /{self.land.bcs}_{self.ocean.tag}"
+            self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
+            self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
+            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs} /{self.land.bcs}_{self.ocean.tag}"
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
-            self.sst_dir          = f"{self.boundary_path}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
-            self.chem_dir         = f"{self.boundary_path}/fvInput_nc3"
+            self.bcs_input_base   = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
+            self.sst_dir          = f"{self.boundary_dir}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
+            self.chem_dir         = f"{self.boundary_dir}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME')
-            self.gwdrs_dir        = f"{self.boundary_path}/GWD_RIDGE"
-            self.coupled_dir      = f"{self.boundary_path}/aogcm"
+            self.gwdrs_dir        = f"{self.boundary_dir}/GWD_RIDGE"
+            self.coupled_dir      = f"{self.boundary_dir}/aogcm"
 
         if envdict['site'] == 'GMAO.desktop':
             # By default on desktop, just ignore IOSERVER for now
             self.atmos.NX = 1
             self.atmos.NY = 6
-            answerdict["io_server"].q_answer = False
+            self.expConfig["io_server"] = False
             self.n_oserver_nodes = 0
             self.n_backend_pes = 0
 
@@ -386,7 +452,7 @@ class setup:
 
         # Copy or symlink GEOSgcm.x (((IGNORE SINGULARITY/NATIVE BUILDS FOR NOW!!)))
         geosgcmx_path = os.path.join(pathdict['bin'], 'GEOSgcm.x')
-        if linkx == True:
+        if self.linkx == True:
             os.symlink(geosgcmx_path, os.path.join(self.exp_dir, 'GEOSgcm.x'))
         else:
             shutil.copy(geosgcmx_path, self.exp_dir)
@@ -438,12 +504,12 @@ class setup:
     def copy_helper(self, src, destination, filename):
         if os.path.exists(src):
             shutil.copy(src, destination)
-            print(f"Creating {color.RED}{filename}{color.RESET} for Experiment: {answerdict['experiment_id'].q_answer}")
+            print(f"Creating {color.RED}{filename}{color.RESET} for Experiment: {self.expConfig['experiment_id']}")
 
     def copy_files_into_exp(self):
         print("\n\n\n")
 
-        for file in self.file_list:
+        for file in self.templates:
             self.copy_helper(f"{pathdict['install']}/bin/{file}", f"{self.exp_dir}/{file}", file)
             self.copy_helper(f"{pathdict['install']}/etc/{file}", f"{self.exp_dir}/{file}", file)
 
@@ -454,10 +520,10 @@ class setup:
         if self.ocean.running_ocean == True and self.ocean.model != 'MIT':
             self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/plotocn.j", f"{self.exp_dir}/plotocn.j", "plotocn.j")
             self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/confocn.py", f"{self.exp_dir}/__init__.py", "confocn.py")
-            self.file_list.extend(['input.nml', 'diag_table','plotocn.j', '__init__.py'])
+            self.templates.extend(['input.nml', 'diag_table','plotocn.j', '__init__.py'])
 
         if self.ocean.model == 'MOM5':
-            self.file_list.append('field_table')
+            self.templates.append('field_table')
             self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/INPUT/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
             MOM5_path = os.path.join(pathdict['etc'], 'MOM5', 'geos5', f"{self.ocean.IM}x{self.ocean.JM}", 'INPUT', '*table')
             files = glob.glob(MOM5_path)
@@ -465,7 +531,7 @@ class setup:
                 file_name = os.path.basename(file)
                 self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
         elif self.ocean.model == 'MOM6':
-            self.file_list.extend(['MOM_input', 'MOM_override', 'data_table'])
+            self.templates.extend(['MOM_input', 'MOM_override', 'data_table'])
 
             self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
             self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
@@ -478,9 +544,10 @@ class setup:
 
         if self.ocean.seaice_model == 'CICE6':
             self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in", "ice_in")
-            self.file_list.append('ice_in')
+            self.templates.append('ice_in')
 
         print(f"{color.GREEN}Done!{color.RESET}\n")
+
 
 
     #######################################################################
@@ -499,7 +566,7 @@ class setup:
                    'STRATCHEM': False}
         rstypes = ['INTERNAL','IMPORT']
 
-        with open(f"{answerdict['exp_dir'].q_answer}/AGCM.rc.tmpl", 'r') as file:
+        with open(f"{self.expConfig['exp_dir']}/AGCM.rc.tmpl", 'r') as file:
             file_content = file.read()
 
         # Template in a "#" if restart is set to false
@@ -509,7 +576,7 @@ class setup:
                 comment = "" if rsnames[rst] else "#"
                 file_content = file_content.replace(rst_string, f"{comment}{rst_string}")
 
-        with open(f"{answerdict['exp_dir'].q_answer}/AGCM.rc.tmpl", 'w') as file:
+        with open(f"{self.expConfig['exp_dir']}/AGCM.rc.tmpl", 'w') as file:
             file.write(file_content)
 
     #######################################################################
@@ -519,7 +586,7 @@ class setup:
         if self.atmos.lm == 72:
             return
 
-        rc_dir = f"{answerdict['exp_dir'].q_answer}/RC"
+        rc_dir = f"{self.expConfig['exp_dir']}/RC"
 
         # if atmospheric vertical resolution != 72, we loop through every
         # file in the RC dir and modify the atmos.lm values
@@ -547,7 +614,7 @@ class setup:
         else:
             pchem = 'FALSE'
 
-        chemgridcomp = f"{answerdict['exp_dir'].q_answer}/RC/GEOS_ChemGridComp.rc"
+        chemgridcomp = f"{self.expConfig['exp_dir']}/RC/GEOS_ChemGridComp.rc"
         with open(chemgridcomp, 'r') as file:
             file_content = file.read()
 
@@ -561,7 +628,7 @@ class setup:
 
     # update LAND_PARAMS choices
     def config_surfaceGridComp(self):
-        surfacegridcomp = f"{answerdict['exp_dir'].q_answer}/RC/GEOS_SurfaceGridComp.rc"
+        surfacegridcomp = f"{self.expConfig['exp_dir']}/RC/GEOS_SurfaceGridComp.rc"
         with open(surfacegridcomp, 'r') as file:
             file_content = file.read()
 
@@ -578,7 +645,7 @@ class setup:
 
     # enable DATA_DRIVEN gocart2G
     def config_gocartGridComp(self):
-        gocartgridcomp = f"{answerdict['exp_dir'].q_answer}/RC/GOCART2G_GridComp.rc"
+        gocartgridcomp = f"{self.expConfig['exp_dir']}/RC/GOCART2G_GridComp.rc"
         with open(gocartgridcomp, 'r') as file:
             file_content = file.read()
 
@@ -601,18 +668,18 @@ class setup:
         # use $OCEAN_DT instead. NOTE: This regex assumes integer followed by comma
         if self.ocean.model == 'MOM5':
 
-            with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'r') as file:
+            with open(f"{self.expConfig['exp_dir']}/input.nml", 'r') as file:
                 file_content = file.read()
 
             file_content = re.sub(r'dt_cpld\s*=\s*.*(,)', rf"dt_cpld = {self.atmos.dt_ocean}\1", file_content)
             file_content = re.sub(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.dt_ocean}\1", file_content)
 
-            with open(f"{answerdict['exp_dir'].q_answer}/input.nml", 'w') as file:
+            with open(f"{self.expConfig['exp_dir']}/input.nml", 'w') as file:
                 file.write(file_content)
 
         # We also need to change the dt in ice_in as well for CICE6
         if self.ocean.seaice_model == 'CICE6':
-            file_path = f"{answerdict['exp_dir'].q_answer}/icein"
+            file_path = f"{self.expConfig['exp_dir']}/icein"
             with open(file_path, 'r') as file:
                 content = file.read()
 
@@ -627,13 +694,13 @@ class setup:
         # and change MOM_override to match. NOTE: This assumes
         # floating point number with a decimal
         if self.ocean.model == 'MOM6':
-            with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'r') as file:
+            with open(f"{self.expConfig['exp_dir']}/MOM_override", 'r') as file:
                 file_content = file.read()
 
             file_content = re.sub(r'DT\s*=\s*.*', rf"DT = {self.atmos.dt_ocean}", file_content)
             file_content = re.sub(r'DT_THERM\s*=\s*.*', rf"DT_THERM = {self.atmos.dt_ocean}", file_content)
 
-            with open(f"{answerdict['exp_dir'].q_answer}/MOM_override", 'w') as file:
+            with open(f"{self.expConfig['exp_dir']}/MOM_override", 'w') as file:
                 file.write(file_content)
 
 
@@ -651,9 +718,9 @@ class setup:
         tarfile_path = f"{pathdict['install']}/src/{tarfile_name}"
 
         # remove and recreate src directory
-        if src_dir.exists():
+        if os.path.exists(src_dir):
             shutil.rmtree(src_dir)
-        src_dir.mkdir(parents=True)
+        os.makedirs(src_dir, exist_ok=True)
         print(f"Copying build source code into {color.GREEN}{src_dir}{color.RESET}")
 
         if os.path.exists(tarfile_path):
@@ -686,7 +753,7 @@ class setup:
             'SETENVS': self.mpi_config,
             'GCMVER': self.gcm_version,
             'EXPSRC': self.gcm_version,
-            'EXPID': answerdict['experiment_id'].q_answer,
+            'EXPID': self.expConfig['experiment_id'],
             'RUN_N': self.run_n,
             'RUN_FN': self.run_fn,
             'RUN_FT': self.run_ft,
@@ -727,9 +794,9 @@ class setup:
             'GWDRSDIR': self.gwdrs_dir,
             'NCAR_NRDG': self.NCAR_NRDG,
             'EXPDIR': self.exp_dir,
-            'EXPDSC': answerdict['experiment_description'].q_answer,
+            'EXPDSC': self.expConfig['experiment_description'],
             'HOMDIR': self.exp_dir,
-            'BATCH_GROUP': self.batch_group+answerdict['group_root'].q_answer,
+            'BATCH_GROUP': self.batch_group+self.expConfig['group_root'],
             'BATCH_TIME': self.batch_time,
             'BATCH_CMD': self.batch_cmd,
             'BATCH_JOBNAME': self.batch_jobname,
@@ -748,7 +815,8 @@ class setup:
             'REAL_BIND_PATH': '',
             'BASE_BIND_PATH': '',
             'BC_BASE': self.bc_base,
-            'BOUNDARY_DIR': self.boundary_path,
+            'BOUNDARY_DIR': self.boundary_dir,
+            'BCS_INPUT_BASE': self.bcs_input_base,
             'CHECKPOINT_TYPE': 'default',
             'OGCM_NX': self.ocean.NX,
             'OGCM_NY': self.ocean.NY,
@@ -804,11 +872,11 @@ class setup:
             'NX': self.atmos.nx,
             'NY': self.atmos.ny,
             'USE_SHMEM': int(self.atmos.use_SHMEM),
-            'USE_IOSERVER': int(answerdict['io_server'].q_answer),
+            'USE_IOSERVER': int(self.expConfig['io_server']),
             'NUM_OSERVER_NODES': self.n_oserver_nodes,
             'NUM_BACKEND_PES': self.n_backend_pes,
             'RESTART_BY_OSERVER': self.restart_by_oserver,
-            'NCPUS_PER_NODE': envdict['n_CPUs'],
+            'NCPUS_PER_NODE': self.num_CPUs,
             'NUM_READERS': self.atmos.num_readers,
             'NUM_WRITERS': self.atmos.num_writers,
             'LATLON_AGCM': self.atmos.latlon,
@@ -875,7 +943,7 @@ class setup:
         }
 
         # this is an edge-case that can't be handled with jinja2
-        for file in self.file_list:
+        for file in self.templates:
             with open(f"{self.exp_dir}/{file}", 'r') as tmpl:
                 file_content = tmpl.read()
 
@@ -888,21 +956,21 @@ class setup:
         default_env = Environment(
             loader=FileSystemLoader(self.exp_dir)
         )
-        for file in self.file_list:
+        for file in self.templates:
             template = default_env.get_template(file)
             content = template.render(jinja_dict)
             with open(f"{self.exp_dir}/{file}", 'w') as tmpl:
                 tmpl.write(content)
 
         # remove #DELETE lines
-        for file in self.file_list:
+        for file in self.templates:
             file_path = f"{self.exp_dir}/{file}"
             self.cleanup(file_path)
 
 
     # organize files into sub directories and update file permissions
     def organize_exp_dir(self):
-        exp_dir = answerdict['exp_dir'].q_answer
+        exp_dir = self.expConfig['exp_dir']
 
         # make sub dirs
         sub_dirs = ['archive', 'forecasts', 'plot', 'post' , 'regress']
@@ -951,22 +1019,31 @@ class setup:
         os.chmod(f"{exp_dir}/plot/gcm_plot.tmpl", 0o644)
 
 
-my_exp = setup()
-my_exp.config_models()
-#my_exp.print_all_vars()
-my_exp.set_some_stuff()
-my_exp.set_nodes()
-my_exp.set_stuff()
-my_exp.create_dotfile(f"{os.environ.get('HOME')}/.EXPDIRroot", answerdict['exp_dir'].q_answer)
-my_exp.create_dotfile(f"{os.environ.get('HOME')}/.GROUProot", answerdict['group_root'].q_answer)
-my_exp.RC_setup()
-my_exp.mpistacksettings()
-my_exp.copy_files_into_exp()
-my_exp.restarts()
-my_exp.mod_RC_dir_for_pchem()
-my_exp.config_chemGridComp()
-my_exp.config_surfaceGridComp()
-my_exp.config_gocartGridComp()
-my_exp.config_heartbeat()
-my_exp.template()
-my_exp.organize_exp_dir()
+
+def main():
+    expConfig = ask_questions()
+    experiment = setup(expConfig) 
+    experiment.initialize_models()
+    experiment.check_flags()
+    experiment.set_num_CPUs()
+    experiment.config_models()
+    experiment.set_some_stuff()
+    experiment.set_nodes()
+    experiment.set_stuff()
+    experiment.create_dotfile(f"{os.environ.get('HOME')}/.EXPDIRroot", expConfig['exp_dir'])
+    experiment.create_dotfile(f"{os.environ.get('HOME')}/.GROUProot", expConfig['group_root'])
+    experiment.RC_setup()
+    create_exp_yaml(expConfig)
+    experiment.mpistacksettings()
+    experiment.copy_files_into_exp()
+    experiment.restarts()
+    experiment.mod_RC_dir_for_pchem()
+    experiment.config_chemGridComp()
+    experiment.config_surfaceGridComp()
+    experiment.config_gocartGridComp()
+    experiment.config_heartbeat()
+    experiment.template()
+    experiment.organize_exp_dir()
+
+if __name__ == "__main__":
+    main()

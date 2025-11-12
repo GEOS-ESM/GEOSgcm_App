@@ -1,58 +1,58 @@
-from env import answerdict
 from utility import color
 
 class gocart:
-    def __init__(self):
+    def __init__(gocart, expConfig):
+        gocart.expConfig = expConfig
         # Gocart questions are skipped if data atmosphere is turned on. Use defaults
-        if answerdict['OM_data_atmos'].q_answer == True:
-            self.aerosol = 'Actual'
-            self.emissions = 'OPS_EMISSIONS'
+        if gocart.expConfig['OM_data_atmos'] == True:
+            gocart.aerosol = 'Actual'
+            gocart.emissions = 'OPS_EMISSIONS'
         else:
-            self.aerosol = answerdict["gocart_aerosols"].q_answer
-            self.emissions = f"{answerdict['gocart_emission'].q_answer}_EMISSIONS"
-        self.data_driven        = None
-        self.ops_species        = '#'
-        self.cmip_species       = '#'
-        self.MERRA2OX_species   = '#'
-        self.pchem_clim_years   = ''
-        self.ox_relaxtime       = None
-        self.gocart             = ''
-        self.gocart_hist        = None
-        self.aero_provider      = 'GOCART2G'
-        self.rats_provider      = 'PCHEM'
+            gocart.aerosol = gocart.expConfig["gocart_aerosols"]
+            gocart.emissions = f"{gocart.expConfig['gocart_emission']}_EMISSIONS"
+        gocart.data_driven        = None
+        gocart.ops_species        = '#'
+        gocart.cmip_species       = '#'
+        gocart.MERRA2OX_species   = '#'
+        gocart.pchem_clim_years   = ''
+        gocart.ox_relaxtime       = None
+        gocart.gocart             = ''
+        gocart.gocart_hist        = None
+        gocart.aero_provider      = 'GOCART2G'
+        gocart.rats_provider      = 'PCHEM'
 
         # Additional RATS settings for specific GHGs
-        self.ch4_provider       = 'none'
-        self.c02_provider       = 'none'
+        gocart.ch4_provider       = 'none'
+        gocart.c02_provider       = 'none'
 
     # for debugging purposes
-    def print_vars(self):
-        all_vars = vars(self)
+    def print_vars(gocart):
+        all_vars = vars(gocart)
         for var_name, var_value in all_vars.items():
             print(f"{color.BLUE}{var_name}: {var_value}{color.RESET}")
 
-    def set_gocart(self):
-        if self.aerosol == 'Actual':
-            self.data_driven    = False
-            self.gocart         = ''
-            self.gocart_hist    = ''
-        elif self.aerosol == 'Climatological':
-            self.data_driven    = True
-            self.gocart         = '#'
-            self.gocart_hist    = '#DELETE'
+    def set_gocart(gocart):
+        if gocart.aerosol == 'Actual':
+            gocart.data_driven    = False
+            gocart.gocart         = ''
+            gocart.gocart_hist    = ''
+        elif gocart.aerosol == 'Climatological':
+            gocart.data_driven    = True
+            gocart.gocart         = '#'
+            gocart.gocart_hist    = '#DELETE'
 
-    def set_emissions(self):
-        if self.emissions.split('_')[0] == 'OPS':
-            self.ops_species      = '' 
-            self.pchem_clim_years = 1
-            self.ox_relaxtime = '0.00'
-        elif self.emissions.split('_')[0] == 'AMIP':
-            self.MERRA2OX_species = ''
-            self.pchem_clim_years = 39
-            self.ox_relaxtime = '259200.'
+    def set_emissions(gocart):
+        if gocart.emissions.split('_')[0] == 'OPS':
+            gocart.ops_species      = '' 
+            gocart.pchem_clim_years = 1
+            gocart.ox_relaxtime = '0.00'
+        elif gocart.emissions.split('_')[0] == 'AMIP':
+            gocart.MERRA2OX_species = ''
+            gocart.pchem_clim_years = 39
+            gocart.ox_relaxtime = '259200.'
 
 
-    def config(self):
-        self.set_gocart()
-        self.set_emissions()
+    def config(gocart):
+        gocart.set_gocart()
+        gocart.set_emissions()
 

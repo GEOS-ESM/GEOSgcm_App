@@ -1,6 +1,5 @@
 set (programs
   atmosphere.py
-  env.py
   generate_question.py
   gocart.py
   land.py
@@ -8,6 +7,7 @@ set (programs
   ocean.py
   process_questions.py
   utility.py
+  clone.py
   )
 
 foreach (file ${programs})
