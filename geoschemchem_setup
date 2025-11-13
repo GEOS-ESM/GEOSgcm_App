@@ -771,21 +771,21 @@ else
     DORSLV:
 
     # We have two different default ocean resolutions based on the atmospheric resolution
-    # if LOW_ATM_RES is TRUE, we use o1 (Reynolds) as the default
+    # if LOW_ATM_RES is TRUE, we use o2 (MERRA-2) as the default
     # if LOW_ATM_RES is FALSE, we use CS (Cubed-Sphere OSTIA) as the default
 
     if( $LOW_ATM_RES == 'TRUE') then
-      set DEFAULT_HRCODE = 'o1'
-      set O1_DEFAULT = ' (Default)'
+      set DEFAULT_HRCODE = 'o2'
+      set O2_DEFAULT = ' (Default)'
       set CS_DEFAULT = ''
     else
       set DEFAULT_HRCODE = 'CS'
-      set O1_DEFAULT = ''
+      set O2_DEFAULT = ''
       set CS_DEFAULT = ' (Default)'
       set DEFAULT_HRCODE = 'CS'
     endif
-    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds)${O1_DEFAULT}"
-    echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)"
+    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds)"
+    echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)${O2_DEFAULT}"
     echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
     echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)${CS_DEFAULT}"
     # We also note that the Reynolds ocean does not exist past 2022
