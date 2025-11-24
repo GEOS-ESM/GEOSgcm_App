@@ -47,6 +47,7 @@ class atmosphere:
         atmos.target_lat         = None
         atmos.convpar_option     = 'GF'
         atmos.mp_turn_off_wsub_extdata = None
+        atmos.low_res            = False
 
         # These are superfluous for GCM, but are needed SCM (considered latlon)
         atmos.latlon             = '#DELETE'
@@ -72,7 +73,7 @@ class atmosphere:
                 atmos.nx_convert     = 1
                 atmos.ny_convert     = 6
                 atmos.res            = 'CF0012x6C'
-
+                atmos.low_res        = True
 
             case "c24":
                 atmos.conv_dt        = 1800
@@ -88,6 +89,7 @@ class atmosphere:
                 atmos.nx_convert     = 1
                 atmos.ny_convert     = 6
                 atmos.res            = 'CF0024x6C'
+                atmos.low_res        = True
 
             case "c48":
                 atmos.conv_dt        = 1200
@@ -103,6 +105,7 @@ class atmosphere:
                 atmos.res            = 'CF0048x6C'
                 atmos.hist_im        = 180
                 atmos.hist_jm        = 91
+                atmos.low_res        = True
 
             case "c90":
                 atmos.conv_dt        = 900

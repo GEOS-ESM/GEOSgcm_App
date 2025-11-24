@@ -6,7 +6,7 @@ from atmosphere import atmosphere as atmos
 from land import land
 from gocart import gocart
 from process_questions import ask_questions
-from clone import create_exp_yaml 
+from clone import create_exp_yaml
 from utility import envdict, pathdict, color, exceptions
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Undefined
@@ -481,8 +481,18 @@ class setup:
             # Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
             # to run. We believe this is due to LD_PRELOAD. For now we only set
             # this for coupled runs.
-            if self.ocean.running_ocean == True:
+            if self.ocean.running_ocean:
                 self.ocean.mpt_shepherd = "setenv MPI_SHEPHERD true"
+
+            # Also, for low res runs (c12, c24, c48) at NAS with MPT,
+            # MPT has an issue with writing restarts on a single node
+            # due to issues with many MPI_GatherV calls. We can "avoid"
+            # this by having the oserver write the restarts. But
+            # we only need to do this for single-node runs. For simplicity,
+            # we assume LOW_ATM_RES = TRUE means single-node
+            if self.atmos.low_res:
+                self.restart_by_oserver = 'YES'
+
 
         if envdict['site'] == 'NCCS':
             self.mpi_config += f"\n{mpidict.get('NCCS')}"
@@ -491,7 +501,7 @@ class setup:
         # For ICA and NL3 the gwd files are in a non-bcs location
         # and may or may not exist. If they don't we set NCAR_NRDG to 0
         self.NCAR_NRDG = 16
-        if self.land.gwd_in_bcs == False and \
+        if not self.land.gwd_in_bcs and \
            not os.path.exists(f"{self.gwdrs_dir}/gwd_internal_c{self.atmos.im}"):
             self.NCAR_NRDG = 0
 
@@ -1022,7 +1032,7 @@ class setup:
 
 def main():
     expConfig = ask_questions()
-    experiment = setup(expConfig) 
+    experiment = setup(expConfig)
     experiment.initialize_models()
     experiment.check_flags()
     experiment.set_num_CPUs()
