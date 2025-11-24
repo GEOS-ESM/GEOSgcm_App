@@ -51,14 +51,14 @@ class handle:
         # The default ocean resolution is based on the atmospheric resolution
         match questionDict['AM_horizontal_res'].answer:
             case 'c12' | 'c24' | 'c48':
-                questionDict[i].choices = ['o1 (1  -deg,  360x180  Reynolds)', \
-                                           'o2 (1/4-deg, 1440x720  MERRA-2)',  \
-                                           'o3 (1/8-deg, 2880x1440 OSTIA)']
+                questionDict[i].choices = ['o2 (1/4-deg, 1440x720  MERRA-2)',  \
+                                           'o3 (1/8-deg, 2880x1440 OSTIA)',    \
+                                           'o1 (1  -deg,  360x180  Reynolds, ends in 2022)']
             case _:
                 questionDict[i].choices = ['CS (Cubed-Sphere OSTIA)', \
-                                           'o1 (1  -deg,  360x180  Reynolds)', \
                                            'o2 (1/4-deg, 1440x720  MERRA-2)', \
-                                           'o3 (1/8-deg, 2880x1440 OSTIA)']
+                                           'o3 (1/8-deg, 2880x1440 OSTIA)',   \
+                                           'o1 (1  -deg,  360x180  Reynolds, ends in 2022)']
 
 
     @staticmethod
@@ -233,7 +233,7 @@ def ask_questions():
         except KeyError:
             pass
 
-            
+
 
     # creates a dictionary that only contains user answers (only thing that
     # matters from the question class at this point)
