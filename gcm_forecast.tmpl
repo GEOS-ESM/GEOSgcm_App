@@ -183,7 +183,19 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
-set NCPUS_PER_NODE = {{ NCPUS_PER_NODE }}
+if ($?SLURM_NTASKS_PER_NODE) then
+   set NCPUS_PER_NODE = $SLURM_NTASKS_PER_NODE
+else if ($?SLURM_CPUS_ON_NODE) then
+   set NCPUS_PER_NODE = $SLURM_CPUS_ON_NODE
+else if ($?PBS_NODEFILE) then
+   # Get CPU count for the first node (assuming homogeneous cluster)
+   set NCPUS_PER_NODE = `sort $PBS_NODEFILE | uniq -c | head -1 | awk '{print $1}'`
+else
+   # This is the default value if nothing is specified that is used
+   # for desktops and laptops from gcm_setup
+   set NCPUS_PER_NODE = {{ NCPUS_PER_NODE }}
+endif
+
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
 if ( $NCPUS != NULL ) then
