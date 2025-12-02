@@ -1532,6 +1532,21 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'TOTSTSCATAU'    , 'GOCART2G'  ,
                                          'PM25'           , 'GOCART2G'  ,
                                          'PM'             , 'GOCART2G'  ,
+# Fluxes  
+                                         'CA.bcFLUXU'     , 'CA.bc'     , 'BCFLUXU'     ,
+                                         'CA.bcFLUXV'     , 'CA.bc'     , 'BCFLUXV'     ,
+                                         'CA.brFLUXU'     , 'CA.br'     , 'BRFLUXU'     ,
+                                         'CA.brFLUXV'     , 'CA.br'     , 'BRFLUXV'     ,
+                                         'DUFLUXU'        , 'DU'        ,
+                                         'DUFLUXV'        , 'DU'        ,
+                                         'SSFLUXU'        , 'SS'        ,
+                                         'SSFLUXV'        , 'SS'        ,
+                                         'SUFLUXU'        , 'SU'        ,
+                                         'SUFLUXV'        , 'SU'        ,
+                                         'CA.ocFLUXU'     , 'CA.oc'     , 'OCFLUXU'     ,
+                                         'CA.ocFLUXV'     , 'CA.oc'     , 'OCFLUXV'     ,
+                                         'NIFLUXU'        , 'NI'        ,
+                                         'NIFLUXV'        , 'NI'        ,
                                           ::
 
   tavg3_2d_adg_Nx-.format:     'CFIO' ,
@@ -1555,8 +1570,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.bcEMBF'    , 'CA.bc'  , 'BCEMBF'    ,
                                          'CA.bcEMAN'    , 'CA.bc'  , 'BCEMAN'    ,
                                          'MCHEMTRI%CA.bc::CA.bcphilicIM' , 'PHYSICS' , 'BCSV' ,
-                                         'CA.bcFLUXU'     , 'CA.bc'     , 'BCFLUXU'     ,
-                                         'CA.bcFLUXV'     , 'CA.bc'     , 'BCFLUXV'     ,
 # Brown Carbon
                                          'CA.brEM'      , 'CA.br'  , 'BRPHOBICEM;BRPHILICEM'  ,
                                          'CA.brDP'      , 'CA.br'  , 'BRPHOBICDP;BRPHILICDP'  ,
@@ -1567,8 +1580,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.brEMAN'    , 'CA.br'  , 'BREMAN'    ,
                                          'CA.brPSOA'    , 'CA.br'  , 'BRPSOA'    ,
                                          'MCHEMTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
-                                         'CA.brFLUXU'     , 'CA.br'     , 'BRFLUXU'     ,
-                                         'CA.brFLUXV'     , 'CA.br'     , 'BRFLUXV'     ,
 # Dust
                                          'DUEM'         , 'DU'     , 'DUEM001;DUEM002;DUEM003;DUEM004;DUEM005' ,
                                          'DUSD'         , 'DU'     , 'DUSD001;DUSD002;DUSD003;DUSD004;DUSD005' ,
@@ -1577,8 +1588,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DUEXTTFM'     , 'DU'     ,
                                          'DUSCATFM'     , 'DU'     ,
                                          'MCHEMTRI%DU::DUIM'             , 'PHYSICS' , 'DUSV' ,
-                                         'DUFLUXU'        , 'DU'        ,
-                                         'DUFLUXV'        , 'DU'        ,
 # Seasalt
                                          'SSEM'         , 'SS'     , 'SSEM001;SSEM002;SSEM003;SSEM004;SSEM005' ,
                                          'SSSD'         , 'SS'     , 'SSSD001;SSSD002;SSSD003;SSSD004;SSSD005' ,
@@ -1587,8 +1596,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SSEXTTFM'     , 'SS'     ,
                                          'SSSCATFM'     , 'SS'     ,
                                          'MCHEMTRI%SS::SSIM'             , 'PHYSICS' , 'SSSV' ,
-                                         'SSFLUXU'        , 'SS'        ,
-                                         'SSFLUXV'        , 'SS'        ,
 # Sulfates
                                          'SUEM'         , 'SU'     , 'DMSEM;SO2EM;SO4EM;MSAEM'                  ,
                                          'SUSD'         , 'SU'     , 'DMSSD;SO2SD;SO4SD;MSASD'                  ,
@@ -1605,8 +1612,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SO2EMVN'      , 'SU'     ,
                                          'SO2EMVE'      , 'SU'     ,
                                          'MCHEMTRI%SU::SO4IM'            , 'PHYSICS' , 'SUSV' ,
-                                         'SUFLUXU'        , 'SU'        ,
-                                         'SUFLUXV'        , 'SU'        ,
 # Organic Carbon
                                          'CA.ocEM'      , 'CA.oc'  , 'OCPHOBICEM;OCPHILICEM'  ,
                                          'CA.ocDP'      , 'CA.oc'  , 'OCPHOBICDP;OCPHILICDP'  ,
@@ -1618,8 +1623,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.ocPSOA'    , 'CA.oc'  , 'OCPSOA'    ,
                                          'CA.ocHYPHIL'  , 'CA.oc'  , 'OCPHOB2PHIL'  ,
                                          'MCHEMTRI%CA.oc::CA.ocphilicIM' , 'PHYSICS' , 'OCSV' ,
-                                         'CA.ocFLUXU'     , 'CA.oc'     , 'OCFLUXU'     ,
-                                         'CA.ocFLUXV'     , 'CA.oc'     , 'OCFLUXV'     ,
 # Nitrate
                                          'NIPNO3AQ'     , 'NI'     ,
                                          'NIPNH4AQ'     , 'NI'     ,
@@ -1638,8 +1641,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'NH4WT'        , 'NI'     ,
                                          'NH4SV'        , 'NI'     ,
                                          'MCHEMTRI%NI::NO3an1IM'         , 'PHYSICS' , 'NISV' ,
-                                         'NIFLUXU'        , 'NI'        ,
-                                         'NIFLUXV'        , 'NI'        ,
                                           ::
 
   tavg3_2d_chm_Nx-.format:               'CFIO' ,
@@ -2554,8 +2555,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.brEMAN'    , 'CA.br'  , 'BREMAN'    ,
                                          'CA.brPSOA'    , 'CA.br'  , 'BRPSOA'    ,
                                          'MCHEMTRI%CA.br::CA.brphilicIM' , 'PHYSICS' , 'BRSV' ,
-                                         'CA.brFLUXU'   , 'CA.br'     , 'BRFLUXU'   ,
-                                         'CA.brFLUXV'   , 'CA.br'     , 'BRFLUXV'   ,
 # Dust
                                          'DUEM'         , 'DU'     , 'DUEM001;DUEM002;DUEM003;DUEM004;DUEM005' ,
                                          'DUSD'         , 'DU'     , 'DUSD001;DUSD002;DUSD003;DUSD004;DUSD005' ,
@@ -2564,8 +2563,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DUEXTTFM'     , 'DU'     ,
                                          'DUSCATFM'     , 'DU'     ,
                                          'MCHEMTRI%DU::DUIM'             , 'PHYSICS' , 'DUSV' ,
-                                         'DUFLUXU'      , 'DU'        ,
-                                         'DUFLUXV'      , 'DU'        ,
 # Seasalt
                                          'SSEM'         , 'SS'     , 'SSEM001;SSEM002;SSEM003;SSEM004;SSEM005' ,
                                          'SSSD'         , 'SS'     , 'SSSD001;SSSD002;SSSD003;SSSD004;SSSD005' ,
@@ -2574,8 +2571,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SSEXTTFM'     , 'SS'     ,
                                          'SSSCATFM'     , 'SS'     ,
                                          'MCHEMTRI%SS::SSIM'             , 'PHYSICS' , 'SSSV' ,
-                                         'SSFLUXU'      , 'SS'        ,
-                                         'SSFLUXV'      , 'SS'        ,
 # Sulfates
                                          'SUEM'         , 'SU'     , 'DMSEM;SO2EM;SO4EM;MSAEM'                  ,
                                          'SUSD'         , 'SU'     , 'DMSSD;SO2SD;SO4SD;MSASD'                  ,
@@ -2592,8 +2587,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'SO2EMVN'      , 'SU'     ,
                                          'SO2EMVE'      , 'SU'     ,
                                          'MCHEMTRI%SU::SO4IM'            , 'PHYSICS' , 'SUSV' ,
-                                         'SUFLUXU'      , 'SU'        ,
-                                         'SUFLUXV'      , 'SU'        ,
 # Organic Carbon
                                          'CA.ocEM'      , 'CA.oc'  , 'OCPHOBICEM;OCPHILICEM'  ,
                                          'CA.ocDP'      , 'CA.oc'  , 'OCPHOBICDP;OCPHILICDP'  ,
@@ -2605,8 +2598,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.ocPSOA'    , 'CA.oc'  , 'OCPSOA'    ,
                                          'CA.ocHYPHIL'  , 'CA.oc'  , 'OCPHOB2PHIL'  ,
                                          'MCHEMTRI%CA.oc::CA.ocphilicIM' , 'PHYSICS' , 'OCSV' ,
-                                         'CA.ocFLUXU'   , 'CA.oc'     , 'OCFLUXU'   ,
-                                         'CA.ocFLUXV'   , 'CA.oc'     , 'OCFLUXV'   ,
 # Nitrate
                                          'NIPNO3AQ'     , 'NI'     ,
                                          'NIPNH4AQ'     , 'NI'     ,
@@ -2625,8 +2616,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'NH4WT'        , 'NI'     ,
                                          'NH4SV'        , 'NI'     ,
                                          'MCHEMTRI%NI::NO3an1IM'         , 'PHYSICS' , 'NISV' ,
-                                         'NIFLUXU'      , 'NI'        ,
-                                         'NIFLUXV'      , 'NI'        ,
                                           ::
 
 #######################################################################
@@ -2972,6 +2961,21 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'TOTSTSCATAU'    , 'GOCART2G'  ,
                                          'PM25'           , 'GOCART2G'  ,
                                          'PM'             , 'GOCART2G'  ,
+# Fluxes  
+                                         'CA.bcFLUXU'     , 'CA.bc'     , 'BCFLUXU'     ,
+                                         'CA.bcFLUXV'     , 'CA.bc'     , 'BCFLUXV'     ,
+                                         'CA.brFLUXU'     , 'CA.br'     , 'BRFLUXU'     ,
+                                         'CA.brFLUXV'     , 'CA.br'     , 'BRFLUXV'     ,
+                                         'DUFLUXU'        , 'DU'        ,
+                                         'DUFLUXV'        , 'DU'        ,
+                                         'SSFLUXU'        , 'SS'        ,
+                                         'SSFLUXV'        , 'SS'        ,
+                                         'SUFLUXU'        , 'SU'        ,
+                                         'SUFLUXV'        , 'SU'        ,
+                                         'CA.ocFLUXU'     , 'CA.oc'     , 'OCFLUXU'     ,
+                                         'CA.ocFLUXV'     , 'CA.oc'     , 'OCFLUXV'     ,
+                                         'NIFLUXU'        , 'NI'        ,
+                                         'NIFLUXV'        , 'NI'        ,
                                           ::
 
   inst1_2d_wwi_Nx+-.format:              'CFIO' ,
