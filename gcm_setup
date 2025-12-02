@@ -123,7 +123,7 @@ if ($singstat == 1) then
       set SINGULARITY_RUN_SITE = "NCCS"
    else if (($NODE =~ pfe*) || \
             ($NODE =~ afe*) || \
-            ($NODE =~ mvnfe*) || \
+            ($NODE =~ athfe*) || \
             ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
             ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*) || \
             ($NODE =~ x[0-9]*c[0-9]*s[0-9]*b[0-9]*n[0-9]*)) then
