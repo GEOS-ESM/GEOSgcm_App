@@ -2119,6 +2119,23 @@ EOF
 
 endif # if NCCS or NAS
 
+else if ( $MPI_STACK == mpich ) then
+
+if ( $SITE == 'NAS' ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+# Testing on Athena/Turin at NAS shows these
+# settings are needed for oserver use
+# NOTE: These should probably only be used by
+# *Cray* MPICH at NAS, but for now, that's
+# the only MPICH being used there.
+
+setenv FI_CXI_OPTIMIZED_MRS 0
+setenv FI_CXI_RX_MATCH_MODE hybrid
+EOF
+
+endif # if NAS
+
 endif # if mpi
 
 # Check for gwd_internal for Ridge Scheme
