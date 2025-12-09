@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import math, os, shutil, tempfile, yaml, re, glob, sys
+import math, os, shutil, tempfile, yaml, re, glob, sys, argparse
 from ocean import ocean
 from atmosphere import atmosphere as atmos
 from land import land
 from gocart import gocart
 from process_questions import ask_questions
-from clone import create_exp_yaml
+from clone import yaml_receipt, yaml_input_exp
 from utility import envdict, pathdict, color, exceptions
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Undefined
@@ -56,6 +56,7 @@ class setup:
         self.gocart.config()
         self.templates.append(self.ocean.history_template)
 
+    '''
     def check_flags(self):
         # If argument is not recognized, display usage and exit
         for arg in enumerate(sys.argv[1:]):
@@ -66,9 +67,10 @@ class setup:
             elif (arg[-1] == '--help' or arg[-1] == '-h'):
                 exceptions.printusage()
             else:
-                exceptions.raiseuserexception("Command line arguemnt \"" + arg[-1] + "\" not \
+                exceptions.raise_user_exception("Command line arguemnt \"" + arg[-1] + "\" not \
                                         recognized. \nSee usage:\n" )
             exceptions.printusage()
+    '''
 
     def set_num_CPUs(self):
         if envdict['site'] == 'NCCS':
@@ -1031,10 +1033,18 @@ class setup:
 
 
 def main():
-    expConfig = ask_questions()
+    # Parse command line flags
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--yaml", "-y")
+    args = parser.parse_args()
+
+    if args.yaml:
+        expConfig = yaml_input_exp(args.yaml)
+    else:
+        expConfig = ask_questions()
+
     experiment = setup(expConfig)
     experiment.initialize_models()
-    experiment.check_flags()
     experiment.set_num_CPUs()
     experiment.config_models()
     experiment.set_some_stuff()
@@ -1043,7 +1053,7 @@ def main():
     experiment.create_dotfile(f"{os.environ.get('HOME')}/.EXPDIRroot", expConfig['exp_dir'])
     experiment.create_dotfile(f"{os.environ.get('HOME')}/.GROUProot", expConfig['group_root'])
     experiment.RC_setup()
-    create_exp_yaml(expConfig)
+    yaml_receipt(expConfig)
     experiment.mpistacksettings()
     experiment.copy_files_into_exp()
     experiment.restarts()

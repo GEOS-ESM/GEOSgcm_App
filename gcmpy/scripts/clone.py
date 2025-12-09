@@ -2,7 +2,7 @@ import os, yaml
 from copy import deepcopy
 
 # Helper to create a yaml copy of the experiment configurations
-def create_exp_yaml(expConfig):
+def yaml_receipt(expConfig):
     
     # we don't care about these anymore
     try:
@@ -17,7 +17,7 @@ def create_exp_yaml(expConfig):
     # if the question was never asked remove it from the dictionary before creating the yaml
     # delete if we want to give access to all questions in the yaml
     for key in list(yamlDict):
-        if yamlDict[key] == "null":
+        if yamlDict[key] == "None":
             yamlDict.pop(key)
             
 
@@ -27,14 +27,13 @@ def create_exp_yaml(expConfig):
         yaml.dump(yamlDict, f, default_flow_style=False, sort_keys=False)
 
 
-# Helper to create an expConfig from previous experiment
-def clone_exp(expConfig, yamlFile):
+# Helper to create an expConfig from yaml file input
+def yaml_input_exp(yamlFile):
+    expConfig = {}
+
     # copy yaml into dictionary 
     with open(yamlFile, 'r') as f:
-        cloneDict = yaml.safe_load(f)
-
-    # copy old exp answers into expConfig, but keeps the new exp name and description items
-    expConfig = {**cloneDict, **expConfig}
+        expConfig = yaml.safe_load(f)
 
     return expConfig
 

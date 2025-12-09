@@ -26,7 +26,7 @@ clone_experiment:
   default_answer: False
   follows_up:     ''
 
-yaml_clone_path:
+clone_path:
   type:           'path'
   prompt:         'Enter the location of the experiment yaml you wish to clone from:'
   choices:        ''

@@ -1,5 +1,4 @@
 import yaml, re, os, subprocess
-from clone import clone_exp
 from generate_question import question
 from utility import envdict, pathdict, color, load_yamls
 
@@ -227,21 +226,15 @@ def ask_questions():
         handle.select_type(questionDict, i)
 
         try:
-            if questionDict['clone_experiment'].answer == True and i == 'yaml_clone_path':
-                # The rest is handled in clone.py
+            if questionDict['clone_experiment'].answer == True and i == 'exp_clone_path':
                 break
         except KeyError:
             pass
+    
 
-
-
-    # creates a dictionary that only contains user answers (only thing that
-    # matters from the question class at this point)
+    # creates a dictionary that only contains user answers (for simplicity)
     expConfig = {key: questionDict.answer for key, questionDict in questionDict.items()}
     del questionDict
-
-    if expConfig['clone_experiment'] == True:
-        expConfig = clone_exp(expConfig, expConfig['yaml_clone_path'])
 
     return expConfig
 
