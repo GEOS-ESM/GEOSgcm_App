@@ -771,16 +771,16 @@ else
     DORSLV:
 
     # We have two different default ocean resolutions based on the atmospheric resolution
-    # if LOW_ATM_RES is TRUE, we use o1 (Reynolds) as the default
+    # if LOW_ATM_RES is TRUE, we use o2 (MERRA-2) as the default
     # if LOW_ATM_RES is FALSE, we use CS (Cubed-Sphere OSTIA) as the default
 
     if( $LOW_ATM_RES == 'TRUE') then
-      set DEFAULT_HRCODE = 'o1'
-      set O1_DEFAULT = ' (Default)'
+      set DEFAULT_HRCODE = 'o2'
+      set O2_DEFAULT = ' (Default)'
       set CS_DEFAULT = ''
     else
       set DEFAULT_HRCODE = 'CS'
-      set O1_DEFAULT = ''
+      set O2_DEFAULT = ''
       set CS_DEFAULT = ' (Default)'
       set DEFAULT_HRCODE = 'CS'
     endif
@@ -789,8 +789,8 @@ else
     echo "------------------------------------------------"
     echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code:"
     echo "------------------------------------------------"
-    echo "    ${C2}o1${CN} 1  -deg,  360x 180 Reynolds (1971-2022)${O1_DEFAULT}"
-    echo "    ${C2}o2${CN} 1/4-deg, 1440x 720 MERRA-2"
+    echo "    ${C2}o1${CN} 1  -deg,  360x 180 Reynolds (1971-2022)"
+    echo "    ${C2}o2${CN} 1/4-deg, 1440x 720 MERRA-2${O2_DEFAULT}"
     echo "    ${C2}o3${CN} 1/8-deg, 2880x1440 OSTIA"
     echo "    ${C2}o4${CN} 1  -deg,  360x 180 Hadley (1949-2006)"
     echo "    ${C2}o5${CN} 1  -deg,  360x 180 CCSM_4.0 (1850-2005)"
@@ -1072,387 +1072,7 @@ endif
 
 # Default Run Parameters
 # ----------------------
-if( $AGCM_IM ==  "c12" ) then
-     set       DT = 1800
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 12
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     # C12 MOM6 should be 1x6 to match the default 3x2 ocean layout
-     if ( "$OCNMODEL" == "MOM6") then
-        set    NX = 1
-     else
-        set    NX = 2
-     endif
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set JOB_SGMT = 00000015
-     set NUM_SGMT = 20
-     set ATMOS_RES = CF0012x6C
-     set POST_NDS = 4
-endif
-if( $AGCM_IM ==  "c24" ) then
-     set       DT = 1200
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 24
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 4
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set JOB_SGMT = 00000015
-     set NUM_SGMT = 20
-     set ATMOS_RES = CF0024x6C
-     set POST_NDS = 4
-endif
-if( $AGCM_IM ==  "c48" ) then
-     set       DT = 1200
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 48
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 6
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = 180
-     set HIST_JM  =  91
-     set JOB_SGMT = 00000015
-     set NUM_SGMT = 20
-     set ATMOS_RES = CF0048x6C
-     set POST_NDS = 4
-endif
-if( $AGCM_IM ==  "c90" ) then
-     set       DT = 900
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set AGCM_IM  = 90
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     if( $OGCM == TRUE ) then
-        if( "$OCNMODEL" == "MIT" ) then
-           set  NX = 10
-           set  NY = 36
-        else if ( "$OCNMODEL" == "MOM6") then
-           # For MOM6 c90 means atm NXxNY = 5x36
-           set  NX = 5
-           set  NY = 36
-        else
-           set  NX = $OGCM_NY
-           set  NY = $OGCM_NX
-        endif
-        set OCEAN_DT = $DT
-     else
-        set  NX = 10
-        set  NY = `expr $NX \* 6`
-        set OCEAN_DT = $IRRAD_DT
-     endif
-     set  LONG_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set JOB_SGMT = 00000032
-     set NUM_SGMT = 4
-     set ATMOS_RES = CF0090x6C
-     set POST_NDS = 8
-endif
-if( $AGCM_IM ==  "c180" ) then
-     set       DT = 600
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set  LONG_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 180
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     if( $OGCM == TRUE ) then
-        if ( "$OCNMODEL" == "MOM6") then
-           # For MOM6 c180 means atm NXxNY = 30x36
-           set  NX = 30
-           set  NY = 36
-        else
-           set  NX = $OGCM_NY
-           set  NY = $OGCM_NX
-        endif
-        set OCEAN_DT = $DT
-     else
-        set  NX = 20
-        set  NY = `expr $NX \* 6`
-        set OCEAN_DT = $IRRAD_DT
-     endif
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 2
-     set JOB_SGMT = 00000016
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0180x6C
-     set POST_NDS = 8
-endif
-if( $AGCM_IM == "c360" ) then
-     set       DT = 450
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 360
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 4
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0360x6C
-     set POST_NDS = 12
-endif
-if( $AGCM_IM == "c720" ) then
-     set       DT = 300
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = $DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 720
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 40
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0720x6C
-     set POST_NDS = 16
-     set USE_SHMEM = 1
-endif
-if( $AGCM_IM == "c1120" ) then
-     set       DT = 300
-     set  LONG_DT = 600
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set OCEAN_DT = 3600
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 1120
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 60
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000005
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF1120x6C
-     set POST_NDS = 16
-     set USE_SHMEM = 1
-endif
-if( $AGCM_IM == "c1440" ) then
-     set       DT = 225
-     set SOLAR_DT  = `expr $DT \* 2`
-     set IRRAD_DT  = `expr $DT \* 2`
-     set OCEAN_DT = $IRRAD_DT
-     set  LONG_DT = 300
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 1440
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 80
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF1440x6C
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-endif
-if( $AGCM_IM == "c2880" ) then
-     set       DT = 150
-     set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = $IRRAD_DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 2880
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 80
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF2880x6C
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
-     set CONVPAR_OPTION = NONE
-endif
-if( $AGCM_IM == "c5760" ) then
-     set       DT = 75
-     set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = 1800
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 5760
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 80
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF5760x6C
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set DEF_IOS_NDS = 4
-     set CONVPAR_OPTION = NONE
-endif
-# CONUS Stretched Grids
-set CONUS = '#'
-set STRETCH_FACTOR = ""
-if( $AGCM_IM == "c270" ) then
-     set       DT = 600
-     set  LONG_DT = 1200
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 270
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 20
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0270x6C-SG001
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set CONUS = ''
-     set STRETCH_FACTOR = 2.5
-endif
-if( $AGCM_IM == "c540" ) then
-     set       DT = 300
-     set  LONG_DT = 600
-     set SOLAR_DT = 3600
-     set IRRAD_DT = 3600
-     set OCEAN_DT = $IRRAD_DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 540
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF0540x6C-SG001
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set CONUS = ''
-     set STRETCH_FACTOR = 2.5
-endif
-if( $AGCM_IM == "c1080" ) then
-     set       DT = 150
-     set  LONG_DT = 300
-     set SOLAR_DT = 1800
-     set IRRAD_DT = 1800
-     set OCEAN_DT = $IRRAD_DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 1080
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 40
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF1080x6C-SG001
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set CONUS = ''
-     set STRETCH_FACTOR = 2.5
-endif
-if( $AGCM_IM == "c1536" ) then
-     set       DT = 75
-     set  LONG_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = $IRRAD_DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 1536
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 60
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF1536x6C-SG002
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set CONUS = ''
-     set STRETCH_FACTOR = 3.0
-endif
-if( $AGCM_IM == "c2160" ) then
-     set       DT = 75
-     set  LONG_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = $IRRAD_DT
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 2160
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 80
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF2160x6C-SG001
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set CONUS = ''
-     set STRETCH_FACTOR = 2.5
-endif
-if( $AGCM_IM == "c4320" ) then
-     set       DT = 30
-     set  LONG_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
-     set GMICHEM_DT = `expr $DT \* 2`
-     set AGCM_IM  = 4320
-     set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 80
-     set       NY = `expr $NX \* 6`
-     set HIST_IM  = `expr $AGCM_IM \* 4`
-     set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
-     set NUM_READERS = 6
-     set JOB_SGMT = 00000001
-     set NUM_SGMT = 1
-     set ATMOS_RES = CF4320x6C
-     set POST_NDS = 32
-     set USE_SHMEM = 1
-     set CONUS = ''
-     set STRETCH_FACTOR = 2.5
-endif
+source $BINDIR/set_resolution_params.csh $AGCM_IM $CLDMICRO $OGCM $OCNMODEL
 
 set OGCM_IS_FCST = 0
 set FVCUBED         = ""
@@ -1476,11 +1096,9 @@ else
    set INTERPOLATE_SST = 0
 endif
 
-
 set BEG_DATE =  '18910301 000000'
 set END_DATE =  '29990302 210000'
 set JOB_SGMT = "$JOB_SGMT 000000"
-
 
 #######################################################################
 #           Setting for Microphysics                                  #
@@ -1508,18 +1126,6 @@ else
    set MP_TURN_OFF_WSUB_EXTDATA = "#DELETE#"
 endif
 
-if ($CONUS == '#') then
-  set SCHMIDT     = "do_schmidt  = .false."
-  set STRETCH_FAC = "stretch_fac = 1.0"
-  set TARGET_LON  = "target_lon  = 0.0"
-  set TARGET_LAT  = "target_lat  = -90.0"
-else
-  set SCHMIDT     = "do_schmidt  = .true."
-  set STRETCH_FAC = "stretch_fac = $STRETCH_FACTOR"
-  set TARGET_LON  = "target_lon  = -98.35"
-  set TARGET_LAT  = "target_lat  = 39.5"
-endif
-
 #######################################################################
 #           Check for land surface and runoff routing  models         #
 #######################################################################
@@ -1545,7 +1151,7 @@ if ($DATA_ATMOS == TRUE) then
   set GWD_IN_BCS   = "FALSE"
 else
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), or ${C2}v12${CN} (Default)"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), ${C2}v14${CN} (v14_BETA) or ${C2}v12${CN} (Default)"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = "v12"
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
@@ -1572,9 +1178,17 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v12" ) then
     set EMIP_NEWLAND = ""
     set EMIP_MERRA2  = "MERRA2_NewLand"
     set GWD_IN_BCS   = "TRUE"
+else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v14" ) then
+    set LSM_BCS      = "v14"
+    set LSM_PARMS    = ""
+    set EMIP_BCS_IN  = "NL3"
+    set EMIP_OLDLAND = "#DELETE"
+    set EMIP_NEWLAND = ""
+    set EMIP_MERRA2  = "MERRA2_NewLand"
+    set GWD_IN_BCS   = "TRUE"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, or ${C2}v12${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, ${C2}v14${CN} (v14_BETA) or ${C2}v12${CN}!"
     goto LSM_BCS
 endif
 
@@ -1789,16 +1403,6 @@ set CO2_PROVIDER     = none
 #                  Confirm HEARTBEAT time for the model
 #######################################################################
 
-# Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
-if( "$CLDMICRO" == "BACM_1M" ) then
-   set DT = 450
-   set LONG_DT = 450
-   set SOLAR_DT  = `expr $DT \* 2`
-   set IRRAD_DT  = `expr $DT \* 2`
-   set OCEAN_DT = $IRRAD_DT
-   set GMICHEM_DT = `expr $DT \* 2`
-endif
-
 ASKHB:
 echo "Enter ${C1}HEARTBEAT_DT${CN} to use"
 echo "   ${C2}1. Hit ENTER to use the recommended default of ${DT} ${CN}"
@@ -1974,6 +1578,8 @@ if( $SITE == 'NAS' ) then
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                                                    # Default Analysis Location   for M2 REPLAY
 
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
+
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
@@ -2022,6 +1628,8 @@ else if( $SITE == 'NCCS' ) then
               setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
 
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
+
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
@@ -2067,6 +1675,8 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
+
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                   # user work directory
@@ -2086,8 +1696,8 @@ else
               setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
-              setenv  RUN_Q     NULL                                                   # batch queue name for gcm_run.j
-              setenv  RUN_P     NULL                                                   # PE Configuration for gcm_run.j
+              setenv  RUN_Q     "DELETE"                                               # batch queue name for gcm_run.j
+              setenv  RUN_P     "SBATCH --ntasks=${MODEL_NPES}"                        # PE Configuration for gcm_run.j
               setenv  RUN_FP    NULL                                                   # PE Configuration for gcm_forecast.j
               setenv  REGRESS_P NULL                                                   # PE Configuration for gcm_regress.j
               setenv    POST_Q  NULL                                                   # batch queue name for gcm_post.j
@@ -2106,17 +1716,22 @@ else
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
 
+              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
+
               setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
               setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
-              set NX = 1
-              set NY = 6
-              # By default on desktop, just ignore IOSERVER for now
-              set USE_IOSERVER = 0
-              set NUM_OSERVER_NODES = 0
-              set NUM_BACKEND_PES = 0
+endif
+
+if( $SITE == 'GMAO.desktop' ) then
+   # By default on desktop, just ignore IOSERVER for now
+   set USE_IOSERVER = 0
+   set NUM_OSERVER_NODES = 0
+   set NUM_BACKEND_PES = 0
+   set NX = 1
+   set NY = 6
 endif
 
 # If SST and SEAICE files are not in the standard location:
@@ -2411,6 +2026,16 @@ EOF
 
 else if( $MPI_STACK == mpt ) then
 
+# MPT has an issue with writing restarts on a single node
+# due to issues with many MPI_GatherV calls. We can "avoid"
+# this by having the oserver write the restarts. But
+# we only need to do this for single-node runs. For simplicity,
+# we assume LOW_ATM_RES = TRUE means single-node
+
+if ( $LOW_ATM_RES == TRUE ) then
+   set RESTART_BY_OSERVER = YES
+endif
+
 # NAS recommends several_tries for MPT job issues
 # https://www.nas.nasa.gov/hecc/support/kb/mpt-startup-failures-workarounds_526.html
 set SEVERAL_TRIES = '/u/scicon/tools/bin/several_tries'
@@ -2460,10 +2085,12 @@ cat > $HOMDIR/SETENV.commands << EOF
 #setenv I_MPI_DEBUG 9
 EOF
 
-# These are options determined to be useful at NCCS
+# These are options determined to be useful at NCCS and NAS
 # Not setting generally as they are more fabric/cluster
-# specific compared to the above adjustments
-if ( $SITE == 'NCCS' ) then
+# specific compared to the above adjustments. We protect
+# like this because these settings do *not* work on systems like
+# CI runners
+if ( $SITE == 'NCCS' | $SITE == 'NAS' ) then
 
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
@@ -2474,9 +2101,18 @@ setenv I_MPI_OFI_PROVIDER psm3
 
 # This has been found to help with congestion
 setenv FI_PSM3_CONN_TIMEOUT 120
+
+# NOTE: If you are seeing oddities with Intel MPI
+# and a -perhost/-ppn use, you might need to
+# uncomment the below line
+#
+#setenv I_MPI_JOB_RESPECT_PROCESS_PLACEMENT disable
+#
+# This is usually needed when running interactively
+# as SLURM/PBS in batch mode is usually fine with process placement
 EOF
 
-endif # if NCCS
+endif # if NCCS or NAS
 
 endif # if mpi
 
@@ -2566,6 +2202,7 @@ s?@REAL_BIND_PATH?$REAL_BIND_PATH?g
 s?@BASE_BIND_PATH?$BASE_BIND_PATH?g
 s?@BC_BASE?$BC_BASE?g
 s?@BOUNDARY_DIR?$BOUNDARY_DIR?g
+s?@BCS_INPUT_BASE?$BCS_INPUT_BASE?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -2604,10 +2241,10 @@ s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?@4DIAUDAS?#DELETE?g
-s?@REGULAR_REPLAY?#?g
 s?@REGULAR_REPLAY_GMAO?#?g
 s?@REGULAR_REPLAY_NCEP?#DELETE?g
 s?@REGULAR_REPLAY_ECMWF?#DELETE?g
+s?@REGULAR_REPLAY?#?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
@@ -2639,10 +2276,11 @@ s^@RES_DATELINE^$RES_DATELINE^g
 s^@TILEDATA^$TILEDATA^g
 s^@TILEBIN^$TILEBIN^g
 s/@DT/$DT/g
+s/@CONV_DT/$CONV_DT/g
+s/@CHEM_DT/$CHEM_DT/g
 s/@SOLAR_DT/$SOLAR_DT/g
 s/@IRRAD_DT/$IRRAD_DT/g
 s/@OCEAN_DT/$OCEAN_DT/g
-s/@LONG_DT/$LONG_DT/g
 s/@NX/$NX/g
 s/@NY/$NY/g
 s/@USE_SHMEM/$USE_SHMEM/g
@@ -2680,6 +2318,8 @@ s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
 s/@HIST_JM/$HIST_JM/g
+s/@CLIM_IM/$CLIM_IM/g
+s/@CLIM_JM/$CLIM_JM/g
 
 s/@ISCCP_SATSIM/1/g
 s/@MODIS_SATSIM/0/g
@@ -3234,7 +2874,11 @@ if( $OGCM == TRUE ) then
 
       sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
              -e "s/dt_atmos = [0-9]*,/dt_atmos = $OCEAN_DT,/g" $HOMDIR/input.nml
+   endif
 
+   # We also need to change the dt in ice_in as well for CICE6
+   if ( $SEAICE_NAME == "CICE6" ) then
+      sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
    endif
 
 endif
@@ -3424,6 +3068,7 @@ if ( $OGCM == 1 ) then
    # Now we need to find out if we are running MOM or MOM6 by looking
    # at OCEAN_NAME: val and checking if it is MOM or MOM6
    set OCNMODEL = `grep "OCEAN_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
+   set SEAICEMODEL = `grep "SEAICE_NAME" ${OLDHOMDIR}/AGCM.rc | cut -d: -f2 | tr -d ' '`
 else if ( $OGCM == 0 ) then
    set OGCM = FALSE
 else
@@ -3514,6 +3159,12 @@ cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/MOM_override
 HOMDIR/MOM_input
 HOMDIR/data_table
+EOF
+endif
+
+if ( "$SEAICEMODEL" == "CICE6" ) then
+cat >> $FILES_TO_PROCESS << EOF
+HOMDIR/ice_in
 EOF
 endif
 

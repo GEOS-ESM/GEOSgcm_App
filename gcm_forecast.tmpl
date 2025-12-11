@@ -183,7 +183,19 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
-set NCPUS_PER_NODE = @NCPUS_PER_NODE
+if ($?SLURM_NTASKS_PER_NODE) then
+   set NCPUS_PER_NODE = $SLURM_NTASKS_PER_NODE
+else if ($?SLURM_CPUS_ON_NODE) then
+   set NCPUS_PER_NODE = $SLURM_CPUS_ON_NODE
+else if ($?PBS_NODEFILE) then
+   # Get CPU count for the first node (assuming homogeneous cluster)
+   set NCPUS_PER_NODE = `sort $PBS_NODEFILE | uniq -c | head -1 | awk '{print $1}'`
+else
+   # This is the default value if nothing is specified that is used
+   # for desktops and laptops from gcm_setup
+   set NCPUS_PER_NODE = @NCPUS_PER_NODE
+endif
+
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
 if ( $NCPUS != NULL ) then
@@ -290,8 +302,14 @@ endif
 #                 Create Forecast History RC Files
 #######################################################################
 
-set HIST_IM  = `expr $AGCM_IM \* 4`
-set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+set HIST_IM = `expr $AGCM_IM \* 4`
+set HIST_JM = `expr $AGCM_IM \* 2 + 1`
+set CLIM_IM = 576
+set CLIM_JM = 361
+if ( $HIST_IM < $CLIM_IM ) then
+  set HIST_IM = $CLIM_IM
+  set HIST_JM = $CLIM_JM
+endif
 
 set         FILE = HISTORY.rc
 /bin/rm -f $FILE
