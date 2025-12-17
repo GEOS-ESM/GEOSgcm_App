@@ -1,22 +1,4 @@
 ecbuild_add_executable (
-  TARGET GEOSgcm.x
-  SOURCES GEOSgcm.F90
-  LIBS GEOSgcm_GridComp ESMF::ESMF OpenMP::OpenMP_Fortran
-  )
-# NOTE Due to Gigatraj being a C++ code, CMake apparently
-# gets confused if building with it and thinks GEOSgcm.x
-# is a C++ code and tries to link as C++. This will fail.
-# To fix this, we explicitly set the linker language to Fortran.
-set_target_properties (GEOSgcm.x PROPERTIES LINKER_LANGUAGE Fortran)
-
-# Using JeMalloc will be optional, default OFF
-option (USE_JEMALLOC "Use JeMalloc" OFF)
-if (USE_JEMALLOC)
-  find_package (JeMalloc REQUIRED)
-  target_link_libraries (GEOSgcm.x JeMalloc::JeMalloc)
-endif ()
-
-ecbuild_add_executable (
   TARGET idfupd.x
   SOURCES idfupd.F90
   LIBS GEOSgcm_GridComp ESMF::ESMF
