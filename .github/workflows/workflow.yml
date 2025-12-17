@@ -19,7 +19,11 @@ jobs:
   build_gcm:
     strategy:
       matrix:
-        compiler: [ifort, gfortran-14, gfortran-15]
+        #compiler: [ifort, gfortran-14, gfortran-15]
+        # We remove ifort because for some reason, MAPL3 + ifort + Github CI
+        # is running out of space on the device. For now, CircleCI will
+        # continue to test ifort.
+        compiler: [gfortran-14, gfortran-15]
         build-type: [Debug]
     uses: GEOS-ESM/CI-workflows/.github/workflows/geosgcm_build_tests.yml@project/geosgcm
     with:
