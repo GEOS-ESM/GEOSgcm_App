@@ -636,9 +636,11 @@ if( $OGCM == TRUE ) then
        # c12      1x6        12x72      3x2          72x36        50
        # c90      5x36       90x540     90x2         540x458      50
        # c180     30x36      180x1080   36x30        1440x1080    75
-       #
+       # c180     24x36      180x1080   36x24        720x576      75
+       # c360     30x36      180x1080   36x30        1440x1080    75
+       # c180     20x36      180x1080   36x20        2880x2240    75
        # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
-
+  
        if ( $AGCM_IM == "c12" ) then
           set OGCM_NX = 3
           set OGCM_NY = 2
@@ -652,6 +654,41 @@ if( $OGCM == TRUE ) then
           set OGCM_JM = 458
           set OGCM_LM = 50
        else if ( $AGCM_IM == "c180" ) then
+
+          DOROCN:
+          set DEFAULT_HRCODE = 'o1440'
+          echo "Enter the ${C1}Ocean Horizontal Resolution ${CN}code: ${C2}o720${CN}  (1/2-deg,  720x576  Tripolar)"
+          echo "                                            ${C2}o1440${CN} (1/4-deg, 1440x1080  Tripolar) (Default)"
+          echo "                                            ${C2}o2880${CN} (1/8-deg, 2880x2240 Tripolar)"
+          set   HRCODE = `echo $<`
+          if( .$HRCODE == . ) set HRCODE = $DEFAULT_HRCODE
+          set   HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
+
+          if( $HRCODE != 'o720' & \
+             $HRCODE != 'o1440' & \
+             $HRCODE != 'o2880' ) goto DOROCN
+
+          if ( $HRCODE == "o720" ) then
+             set OGCM_IM = 720
+             set OGCM_JM = 576
+             set OGCM_NX = 36
+             set OGCM_NY = 24
+             set OGCM_LM = 75
+          else if ( $HRCODE == "o2880" ) then
+             set OGCM_IM = 2880
+             set OGCM_JM = 2240
+             set OGCM_NX = 36
+             set OGCM_NY = 20
+             set OGCM_LM = 75
+          else if ( $HRCODE == "o1440" ) then
+             set OGCM_IM = 1440
+             set OGCM_JM = 1080
+             set OGCM_NX = 36
+             set OGCM_NY = 30
+             set OGCM_LM = 75
+          endif 
+
+       else if ( $AGCM_IM == "c360" ) then
           set OGCM_NX = 36
           set OGCM_NY = 30
           set OGCM_IM = 1440
@@ -659,7 +696,7 @@ if( $OGCM == TRUE ) then
           set OGCM_LM = 75
        else
           echo
-          echo "ERROR: MOM6 is currently only supported for c12, c90, and c180 atmospheric resolutions"
+          echo "ERROR: MOM6 is currently only supported for c12, c90, c180 and c360 atmospheric resolutions"
           exit 1
        endif
     endif
@@ -2601,7 +2638,7 @@ foreach FILE ($FILES)
    else if ( -e $TMPOCEANDIR/$FILE ) then
       cat       $TMPOCEANDIR/$FILE > $HOMDIR/tmpfile
    else
-      echo "ERROR! Cannot find $FILE in $BINDIR or $ETCDIR!"
+      echo "ERROR! Cannot find $FILE in $BINDIR or $ETCDIR or $TMPOCEANDIR !"
       exit 2
    endif
 
