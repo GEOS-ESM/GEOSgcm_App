@@ -421,6 +421,11 @@ case $SITE in
    fi
 
    echo "Proceeding with TinyBCs paths at $TINYBCS_PATH"
+   # We should also tell the user that SCM in TinyBCs has only
+   # been tested for 7 days of simulation. So they should alter
+   # CAP.rc JOB_SGMT to 'JOB_SGMT:     00000007 000000'
+   echo "Note: SCM in TinyBCs has only been tested for 7 days of simulation."
+   echo "      Please ensure that CAP.rc JOB_SGMT is set to 'JOB_SGMT: 00000007 000000'"
    ;;
 esac
 
