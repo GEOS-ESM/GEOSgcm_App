@@ -32,7 +32,9 @@ cd $EXPDIR
 
 $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# NOTE: This seems to fail on macOS, so do not set file_weights: true
+# NOTE: Both reading and writing file_weights seems to fail
+# on macOS. So for now we set to false on Darwin until we can
+# investigate further.
 echo "file_weights: @FILE_WEIGHTS" >> extdata.yaml
 
 $RUN_CMD 1 ./GEOSgcm.x --logging_config 'logging.yaml'
