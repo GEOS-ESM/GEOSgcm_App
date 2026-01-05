@@ -399,12 +399,28 @@ case $SITE in
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    *)
-   echo "Unknown site $SITE. Will need to hardcode in SCMDIR, BCSDIR, and CHMDIR."
-   exit 3
-   # Example using TinyBCs
-   #SCMDIR="$HOME/ModelData/TinyBCs-GitV10/scm/"
-   #BCSDIR="$HOME/ModelData/TinyBCs-GitV10/bcs/Icarus"
-   #CHMDIR="$HOME/ModelData/TinyBCs-GitV10/chem"
+   echo "Unknown site $SITE detected."
+
+   # 1. Prompt the user for the TinyBCs installation path
+   read -p "Please enter the full path to your TinyBCs installation: " TINYBCS_PATH
+
+   # 2. Set the required directory variables based on the user input
+   SCMDIR="$TINYBCS_PATH/scm/"
+   BCSDIR="$TINYBCS_PATH/bcs/Icarus/$BCSTAG"
+   CHMDIR="$TINYBCS_PATH/chem"
+
+   # 3. Check if the selected case exists in this new SCMDIR
+   if [[ ! -d "$SCMDIR/$selected_case" ]]; then
+      echo "ERROR: Case '$selected_case' not found in $SCMDIR"
+      echo "The available cases in this installation are:"
+
+      # List only the directories available in the user's SCMDIR
+      ls -1 "$SCMDIR"
+
+      exit 1
+   fi
+
+   echo "Proceeding with TinyBCs paths at $TINYBCS_PATH"
    ;;
 esac
 
