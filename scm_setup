@@ -398,7 +398,7 @@ case $SITE in
 
    # 2. Set the required directory variables based on the user input
    SCMDIR="$TINYBCS_PATH/scm/"
-   BCSDIR="$TINYBCS_PATH/bcs/Icarus/$BCSTAG"
+   BCSDIR="$TINYBCS_PATH/bcs/Icarus"
    CHMDIR="$TINYBCS_PATH/chem"
 
    # 3. Check if the selected case exists in this new SCMDIR
