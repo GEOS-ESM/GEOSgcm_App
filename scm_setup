@@ -235,11 +235,17 @@ then
    fi
    PRELOAD_COMMAND='DYLD_INSERT_LIBRARIES'
    LD_LIBRARY_PATH_CMD='DYLD_LIBRARY_PATH'
+   # On macOS we seem to need to call mpirun directly and not use esma_mpirun
+   # For some reason SIP does not let the libraries be preloaded
+   RUN_CMD='mpirun -np '
+   FILE_WEIGHTS='false'
 else
    SED="$(command -v sed) "
    ISED="$SED -i "
    PRELOAD_COMMAND='LD_PRELOAD'
    LD_LIBRARY_PATH_CMD='LD_LIBRARY_PATH'
+   RUN_CMD='$GEOSBIN/esma_mpirun -np '
+   FILE_WEIGHTS='true'
 fi
 
 case $selected_case in
@@ -552,6 +558,8 @@ s?@BATCH_GROUP?$BATCH_GROUP?g
 s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
 s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
+s?@RUN_CMD?$RUN_CMD?g
+s?@FILE_WEIGHTS?$FILE_WEIGHTS?g
 EOF
 
 $ISED -f $expdir/sedfile $expdir/scm_run.j
