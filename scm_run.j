@@ -21,7 +21,7 @@ if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
 endif
 
-setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+setenv RUN_CMD "@RUN_CMD"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
@@ -34,6 +34,9 @@ $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
 cp fvcore_layout.rc input.nml
 
-echo "file_weights: true" >> extdata.yaml
+# NOTE: Both reading and writing file_weights seems to fail
+# on macOS. So for now we set to false on Darwin until we can
+# investigate further.
+echo "file_weights: @FILE_WEIGHTS" >> extdata.yaml
 
 $RUN_CMD 1 ./GEOSgcm.x --logging_config 'logging.yaml'
