@@ -58,7 +58,7 @@ class atmosphere:
     def hres(atmos, ocean_nx, ocean_ny):
         match atmos.expConfig["AM_horizontal_res"]:
             case "c12":
-                atmos.conv_dt        = 3600
+                atmos.conv_dt        = 1200
                 atmos.chem_dt        = 3600
                 atmos.dt_solar       = 3600
                 atmos.dt_irrad       = 3600
@@ -77,7 +77,7 @@ class atmosphere:
                 atmos.low_res        = True
 
             case "c24":
-                atmos.conv_dt        = 1800
+                atmos.conv_dt        = 1200
                 atmos.chem_dt        = 3600
                 atmos.dt_solar       = 3600
                 atmos.dt_irrad       = 3600
@@ -308,9 +308,9 @@ class atmosphere:
             case "c1536":
                 atmos.conv_dt        = 300
                 atmos.chem_dt        = 900
-                atmos.dt_solar       = 900
-                atmos.dt_irrad       = 900
-                atmos.dt_ocean       = 900
+                atmos.dt_solar       = 1800
+                atmos.dt_irrad       = 1800
+                atmos.dt_ocean       = 1800
                 atmos.nx             = 60
                 atmos.ny             = atmos.nx * 6
                 atmos.num_readers    = 6

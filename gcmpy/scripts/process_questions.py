@@ -91,9 +91,9 @@ class handle:
         heartbeat = ""
         match questionDict["AM_horizontal_res"].answer:
             case 'c12':
-                heartbeat = 3600
+                heartbeat = 1200
             case 'c24':
-                heartbeat = 1800
+                heartbeat = 1200
             case 'c48':
                 heartbeat = 1200
             case 'c90':
