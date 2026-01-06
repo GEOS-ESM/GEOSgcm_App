@@ -6,8 +6,8 @@ from atmosphere import atmosphere as atmos
 from land import land
 from gocart import gocart
 from process_questions import ask_questions
-from clone import yaml_receipt, yaml_input_exp
-from utility import envdict, pathdict, color, exceptions
+from clone import yaml_receipt, yaml_input_exp, clone_exp
+from utility import envdict, pathdict, color, exceptions, cpfile, copy_src_tarfile
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Undefined
 
@@ -205,7 +205,7 @@ class setup:
         # Here we need to convert POST_NDS to total tasks. Using 16 cores
         # per task as a good default
         post_npes = self.atmos.post_NDS * 16
-        NPCUS = (post_npes + self.num_CPUs - 1)/self.num_CPUs
+        NPCUS = math.ceil((post_npes + self.num_CPUs - 1)/self.num_CPUs)
 
         '''
         Definition for each variable in the following if-else block:
@@ -431,7 +431,7 @@ class setup:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.touch()
             with open(path, 'w') as file:
-                file.write(os.path.dirname(content))
+                file.write(content)
         except Exception as e:
             print(f"An error occurred while creating directory: {str(e)}")
             exit(1)
@@ -512,50 +512,44 @@ class setup:
     #######################################################################
     #            Create directories and copy files over
     #######################################################################
-    # A little helper function for copying files and displaying the info to the user
-    def copy_helper(self, src, destination, filename):
-        if os.path.exists(src):
-            shutil.copy(src, destination)
-            print(f"Creating {color.RED}{filename}{color.RESET} for Experiment: {self.expConfig['experiment_id']}")
-
     def copy_files_into_exp(self):
         print("\n\n\n")
 
         for file in self.templates:
-            self.copy_helper(f"{pathdict['install']}/bin/{file}", f"{self.exp_dir}/{file}", file)
-            self.copy_helper(f"{pathdict['install']}/etc/{file}", f"{self.exp_dir}/{file}", file)
+            cpfile(f"{pathdict['install']}/bin/{file}", f"{self.exp_dir}/{file}", file)
+            cpfile(f"{pathdict['install']}/etc/{file}", f"{self.exp_dir}/{file}", file)
 
-        self.copy_helper(f"{pathdict['install']}/post/plot.rc", f"{self.exp_dir}/plot.rc", "plot.rc")
-        self.copy_helper(f"{pathdict['install']}/post/post.rc", f"{self.exp_dir}/post.rc", "post.rc")
+        cpfile(f"{pathdict['install']}/post/plot.rc", f"{self.exp_dir}/plot.rc", "plot.rc")
+        cpfile(f"{pathdict['install']}/post/post.rc", f"{self.exp_dir}/post.rc", "post.rc")
 
         # These files will be added if user chose to run coupled, regardless of ocean model selected.
         if self.ocean.running_ocean == True and self.ocean.model != 'MIT':
-            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/plotocn.j", f"{self.exp_dir}/plotocn.j", "plotocn.j")
-            self.copy_helper(f"{pathdict['install']}/coupled_diagnostics/g5lib/confocn.py", f"{self.exp_dir}/__init__.py", "confocn.py")
+            cpfile(f"{pathdict['install']}/coupled_diagnostics/g5lib/plotocn.j", f"{self.exp_dir}/plotocn.j", "plotocn.j")
+            cpfile(f"{pathdict['install']}/coupled_diagnostics/g5lib/confocn.py", f"{self.exp_dir}/__init__.py", "confocn.py")
             self.templates.extend(['input.nml', 'diag_table','plotocn.j', '__init__.py'])
 
         if self.ocean.model == 'MOM5':
             self.templates.append('field_table')
-            self.copy_helper(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/INPUT/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
+            cpfile(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/INPUT/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
             MOM5_path = os.path.join(pathdict['etc'], 'MOM5', 'geos5', f"{self.ocean.IM}x{self.ocean.JM}", 'INPUT', '*table')
             files = glob.glob(MOM5_path)
             for file in files:
                 file_name = os.path.basename(file)
-                self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
+                cpfile(file, f"{self.exp_dir}/{file_name}", file_name)
         elif self.ocean.model == 'MOM6':
             self.templates.extend(['MOM_input', 'MOM_override', 'data_table'])
 
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
-            self.copy_helper(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
+            cpfile(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
+            cpfile(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
+            cpfile(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
             MOM6_path = os.path.join(pathdict['etc'], 'MOM6', 'mom6_app', f"{self.ocean.IM}x{self.ocean.JM}", '*table')
             files = glob.glob(MOM6_path)
             for file in files:
                 file_name = os.path.basename(file)
-                self.copy_helper(file, f"{self.exp_dir}/{file_name}", file_name)
+                cpfile(file, f"{self.exp_dir}/{file_name}", file_name)
 
         if self.ocean.seaice_model == 'CICE6':
-            self.copy_helper(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in", "ice_in")
+            cpfile(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in", "ice_in")
             self.templates.append('ice_in')
 
         print(f"{color.GREEN}Done!{color.RESET}\n")
@@ -714,32 +708,6 @@ class setup:
 
             with open(f"{self.expConfig['exp_dir']}/MOM_override", 'w') as file:
                 file.write(file_content)
-
-
-    #######################################################################
-    #                     Copy over Source Tarfile
-    #######################################################################
-    def copy_src_tarfile(self):
-        bool_install_tarfile = '@CFG_INSTALL_SOURCE_TARFILE@'
-        tarfile_name = '@CMAKE_PROJECT_NAME@.tar.gz'
-
-        if bool_install_tarfile != 'TRUE':
-            return
-
-        src_dir = f"{self.exp_dir}/src"
-        tarfile_path = f"{pathdict['install']}/src/{tarfile_name}"
-
-        # remove and recreate src directory
-        if os.path.exists(src_dir):
-            shutil.rmtree(src_dir)
-        os.makedirs(src_dir, exist_ok=True)
-        print(f"Copying build source code into {color.GREEN}{src_dir}{color.RESET}")
-
-        if os.path.exists(tarfile_path):
-            shutil.copy(tarfile_path, src_dir)
-        else:
-            print(f"{tarfile_path} not found, yet CMake was asked to make and install a tarfile")
-            print("Something went wrong.")
 
 
     # We create a RESTART dir if running ocean
@@ -988,7 +956,7 @@ class setup:
         sub_dirs = ['archive', 'forecasts', 'plot', 'post' , 'regress']
         for i in sub_dirs:
             os.makedirs(os.path.join(exp_dir, i), exist_ok=True)
-        self.copy_src_tarfile()
+        copy_src_tarfile(exp_dir)
         self.make_RESTART_dir()
 
         # archive dir
@@ -1030,8 +998,7 @@ class setup:
         os.chmod(f"{exp_dir}/forecasts/gcm_forecast.tmpl", 0o644)
         os.chmod(f"{exp_dir}/plot/gcm_plot.tmpl", 0o644)
 
-
-
+    
 def main():
     # Parse command line flags
     parser = argparse.ArgumentParser()
@@ -1042,6 +1009,12 @@ def main():
         expConfig = yaml_input_exp(args.yaml)
     else:
         expConfig = ask_questions()
+   
+    # if cloning we don't care about 90% of this script
+    if expConfig['clone_experiment']:
+        clone_exp(expConfig)
+        copy_src_tarfile(expConfig['exp_dir'])
+        exit()
 
     experiment = setup(expConfig)
     experiment.initialize_models()
@@ -1050,7 +1023,7 @@ def main():
     experiment.set_some_stuff()
     experiment.set_nodes()
     experiment.set_stuff()
-    experiment.create_dotfile(f"{os.environ.get('HOME')}/.EXPDIRroot", expConfig['exp_dir'])
+    experiment.create_dotfile(f"{os.environ.get('HOME')}/.EXPDIRroot", os.path.dirname(expConfig['exp_dir']))
     experiment.create_dotfile(f"{os.environ.get('HOME')}/.GROUProot", expConfig['group_root'])
     experiment.RC_setup()
     yaml_receipt(expConfig)

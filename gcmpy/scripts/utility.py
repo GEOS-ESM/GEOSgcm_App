@@ -1,4 +1,4 @@
-import os, platform, yaml
+import os, platform, yaml, shutil
 
 # pretty font
 class color:
@@ -47,6 +47,33 @@ class exceptions:
     def cleanup():
         pass
 
+# Helper function for cp'ing 
+def cpfile(src, destination, filename):
+    if os.path.exists(src):
+        shutil.copy(src, destination)
+        print(f"Creating {color.RED}{filename}{color.RESET}")
+
+def copy_src_tarfile(exp_dir):
+    bool_install_tarfile = '@CFG_INSTALL_SOURCE_TARFILE@'
+    tarfile_name = '@CMAKE_PROJECT_NAME@.tar.gz'
+
+    if bool_install_tarfile != 'TRUE':
+        return
+
+    src_dir = f"{exp_dir}/src"
+    tarfile_path = f"{pathdict['install']}/src/{tarfile_name}"
+
+    # remove and recreate src directory
+    if os.path.exists(src_dir):
+        shutil.rmtree(src_dir)
+    os.makedirs(src_dir, exist_ok=True)
+    print(f"Copying build source code into {color.GREEN}{src_dir}{color.RESET}")
+
+    if os.path.exists(tarfile_path):
+        shutil.copy(tarfile_path, src_dir)
+    else:
+        print(f"{tarfile_path} not found, yet CMake was asked to make and install a tarfile")
+        print("Something went wrong.")
 
 # open yaml file and create dictionary from it's contents
 def load_yamls():

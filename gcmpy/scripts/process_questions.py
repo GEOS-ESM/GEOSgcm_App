@@ -226,7 +226,7 @@ def ask_questions():
         handle.select_type(questionDict, i)
 
         try:
-            if questionDict['clone_experiment'].answer == True and i == 'exp_clone_path':
+            if questionDict['clone_experiment'].answer == True and i == 'original_exp_path':
                 break
         except KeyError:
             pass
