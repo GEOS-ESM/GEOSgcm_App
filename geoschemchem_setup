@@ -466,7 +466,7 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 120
    else if ($MODEL == 'tur_ath') then
       # we use 240 of 256 cores per node for even division
-      set NCPUS_PER_NODE = 256
+      set NCPUS_PER_NODE = 240
    endif
 
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
