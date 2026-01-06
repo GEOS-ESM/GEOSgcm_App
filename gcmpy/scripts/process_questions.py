@@ -35,10 +35,7 @@ class handle:
         if envdict['site'] == 'NCCS':
             questionDict[i].choices = ['mil', 'cas']
         elif envdict['site'] == 'NAS':
-            print(color.GREEN + "NOTE Due to how FV3 is compiled by default, Sandy Bridge\n" + \
-                                "and Ivy Bridge are not supported by current GEOS" + color.RESET)
-
-            questionDict[i].choices = ["rom", "mil", "sky", "cas", "bro", "has"]
+            questionDict[i].choices = ["rom", "mil", "sky", "cas", "bro", "tur"]
         else:
             exit(1)
 
@@ -230,7 +227,7 @@ def ask_questions():
                 break
         except KeyError:
             pass
-    
+
 
     # creates a dictionary that only contains user answers (for simplicity)
     expConfig = {key: questionDict.answer for key, questionDict in questionDict.items()}

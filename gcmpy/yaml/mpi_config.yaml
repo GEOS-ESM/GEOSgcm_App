@@ -25,6 +25,16 @@ mvapich: |
   setenv MV2_MPIRUN_TIMEOUT 100
   setenv MV2_GATHERV_SSEND_THRESHOLD 256
 
+mpich: |
+  # Testing on Athena/Turin at NAS shows these
+  # settings are needed for oserver use
+  # NOTE: These should probably only be used by
+  # *Cray* MPICH at NAS, but for now, that's
+  # the only MPICH being used there.
+
+  setenv FI_CXI_OPTIMIZED_MRS 0
+  setenv FI_CXI_RX_MATCH_MODE hybrid
+
 mpt: |
   setenv MPI_COLL_REPRODUCIBLE
   setenv SLURM_DISTRIBUTION block
@@ -57,11 +67,13 @@ intelmpi: |
   # This flag prints out the Intel MPI state. Uncomment if needed
   #setenv I_MPI_DEBUG 9
 
-# These are options determined to be useful at NCCS
+# These are options determined to be useful at NCCS and NAS
 # Not setting generally as they are more fabric/cluster
-# specific compared to the above adjustments
+# specific compared to the above adjustments. We protect
+# like this because these settings do *not* work on systems like
+# CI runners
 #
-NCCS: |
+intelmpi_NASA: |
   setenv I_MPI_ADJUST_ALLREDUCE 12
   setenv I_MPI_ADJUST_GATHERV 3
 

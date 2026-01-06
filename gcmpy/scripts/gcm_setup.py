@@ -67,7 +67,7 @@ class setup:
             elif (arg[-1] == '--help' or arg[-1] == '-h'):
                 exceptions.printusage()
             else:
-                exceptions.raise_user_exception("Command line arguemnt \"" + arg[-1] + "\" not \
+                exceptions.raise_user_exception("Command line argument \"" + arg[-1] + "\" not \
                                         recognized. \nSee usage:\n" )
             exceptions.printusage()
     '''
@@ -87,10 +87,9 @@ class setup:
                 self.num_CPUs = 120
 
         elif envdict['site'] == 'NAS':
-            if self.expConfig['processor'] == 'has':
+            if self.expConfig['processor'] == 'bro':
                 self.num_CPUs = 24
-            elif self.expConfig['processor'] == 'bro':
-                self.num_CPUs = 24
+                self.expConfig['processor'] = 'bro_ele'
             elif self.expConfig['processor'] == 'sky':
                 self.expConfig['processor'] = 'sky_ele'
                 self.num_CPUs = 40
@@ -100,6 +99,9 @@ class setup:
             elif self.expConfig['processor'] == 'rom' or self.expConfig['processor'] == 'mil':
                 self.expConfig['processor'] += '_ait'
                 self.num_CPUs = 120
+            elif self.expConfig['processor'] == 'tur':
+                self.expConfig['processor'] = 'tur_ath'
+                self.num_CPUs = 240
 
         elif envdict['site'] == 'AWS' or envdict['site'] == 'AZURE':
             # Because we do not know the name of the model or the number of CPUs
@@ -495,9 +497,8 @@ class setup:
             if self.atmos.low_res:
                 self.restart_by_oserver = 'YES'
 
-
-        if envdict['site'] == 'NCCS':
-            self.mpi_config += f"\n{mpidict.get('NCCS')}"
+        if envdict['mpi'] == 'intelmpi' and (envdict['site'] == 'NCCS' or envdict['site'] == 'NAS'):
+            self.mpi_config += f"\n{mpidict.get('intelmpi_NASA')}"
 
         # Check for gwd_internal for Ridge Scheme
         # For ICA and NL3 the gwd files are in a non-bcs location
@@ -998,7 +999,7 @@ class setup:
         os.chmod(f"{exp_dir}/forecasts/gcm_forecast.tmpl", 0o644)
         os.chmod(f"{exp_dir}/plot/gcm_plot.tmpl", 0o644)
 
-    
+
 def main():
     # Parse command line flags
     parser = argparse.ArgumentParser()
@@ -1009,7 +1010,7 @@ def main():
         expConfig = yaml_input_exp(args.yaml)
     else:
         expConfig = ask_questions()
-   
+
     # if cloning we don't care about 90% of this script
     if expConfig['clone_experiment']:
         clone_exp(expConfig)
