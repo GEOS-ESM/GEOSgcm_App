@@ -2435,6 +2435,16 @@ EOF
 
 else if( $MPI_STACK == mpt ) then
 
+# MPT has an issue with writing restarts on a single node
+# due to issues with many MPI_GatherV calls. We can "avoid"
+# this by having the oserver write the restarts. But
+# we only need to do this for single-node runs. For simplicity,
+# we assume LOW_ATM_RES = TRUE means single-node
+
+if ( $LOW_ATM_RES == TRUE ) then
+   set RESTART_BY_OSERVER = YES
+endif
+
 # NAS recommends several_tries for MPT job issues
 # https://www.nas.nasa.gov/hecc/support/kb/mpt-startup-failures-workarounds_526.html
 set SEVERAL_TRIES = '/u/scicon/tools/bin/several_tries'
@@ -2646,10 +2656,10 @@ s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?@4DIAUDAS?#DELETE?g
-s?@REGULAR_REPLAY?#?g
 s?@REGULAR_REPLAY_GMAO?#?g
 s?@REGULAR_REPLAY_NCEP?#DELETE?g
 s?@REGULAR_REPLAY_ECMWF?#DELETE?g
+s?@REGULAR_REPLAY?#?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
 s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
@@ -3292,6 +3302,13 @@ if( $OGCM == TRUE ) then
    endif
 
 endif
+
+if ($DATA_ATMOS == TRUE) then
+   /bin/mv $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+   cat  $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp | sed -e "s/%OCN_RES%/${OGCM_IM}x${OGCM_JM}/g" > $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml
+   /bin/rm $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+endif
+
 
 #######################################################################
 #                       Echo Settings and Messages
