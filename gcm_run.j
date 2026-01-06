@@ -382,7 +382,6 @@ done:
 setenv BCSDIR    @BCSDIR
 @DATAOCEANsetenv SSTDIR    @SSTDIR
 setenv BCRSLV    @ATMOStag_@OCEANtag
-@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 @MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
@@ -816,8 +815,6 @@ endif
 @COUPLEDset HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
 
 @COUPLED sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
-@MOM5 sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
-@MOM5        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
 @MOM6 sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
 @MOM6        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
 @CICE6 sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
@@ -1364,15 +1361,7 @@ end
 
 @COUPLED # MOM-Specific Output Files
 @COUPLED # -------------------------
-@MOM5 set dsets="ocean_month"
 @MOM6 set dsets="ocean_state prog_z sfc_ave forcing"
-@MOM5  foreach dset ( $dsets )
-@MOM5  set num = `/bin/ls -1 $dset.nc | wc -l`
-@MOM5  if($num != 0) then
-@MOM5     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-@MOM5     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-@MOM5  endif
-@MOM5  end
 @MOM6  foreach dset ( $dsets )
 @MOM6  set num = `/bin/ls -1 $dset.nc | wc -l`
 @MOM6  if($num != 0) then

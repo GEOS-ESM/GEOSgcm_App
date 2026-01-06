@@ -100,9 +100,6 @@ if( $AGCM_IM ==  "c90" ) then
            # For MOM6 c90 means atm NXxNY = 5x36
            set  NX = 5
            set  NY = 36
-        else
-           set  NX = $OGCM_NY
-           set  NY = $OGCM_NX
         endif
         set OCEAN_DT = $DT
      else

@@ -551,7 +551,6 @@ if( $OGCM == TRUE ) then
     # -----------
     OCNMODEL:
     echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM6${CN})"
-    echo "   ${C2}MOM5${CN}"
     echo "   ${C2}MOM6${CN}"
     echo "   ${C2}MIT${CN}"
 
@@ -561,9 +560,9 @@ if( $OGCM == TRUE ) then
     else
        set OCNMODEL = `echo $OCNMODEL | tr "[:lower:]" "[:upper:]"`
 
-       if ( "$OCNMODEL" != "MOM5" & "$OCNMODEL" != "MOM6"  & "$OCNMODEL" != "MIT") then
+       if ( "$OCNMODEL" != "MOM6"  & "$OCNMODEL" != "MIT") then
           echo
-          echo "${C1}Ocean Model${CN} must be either MOM5, MOM6 or MIT!"
+          echo "${C1}Ocean Model${CN} must be either MOM6 or MIT!"
           goto OCNMODEL
        else
           echo
@@ -572,23 +571,11 @@ if( $OGCM == TRUE ) then
 
     # NOTE: We use a CMake variable here because the shared library
     # suffix is different on Linux and macOS. This is set by configure_file()
-    if ( "$OCNMODEL" == "MOM5" ) then
-       set OCEAN_NAME="MOM"
-       set OGRIDTYP  = "M5TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
-       set MOM5=""
-       set MOM6 = "#DELETE"
-       set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
-
-       set mom5_warning="######################################################\nYou (user) have chosen to set up a coupled model experiment with MOM5.\nBe aware that such a set up is _known_ to have problems. See following for more details.\nhttps://github.com/GEOS-ESM/MOM5/issues/19\nIf your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\nOtherwise, until this above issue is _fixed_ you are on your own with above choice.\n######################################################"
-       echo "\033[31;5m"${mom5_warning}"\033[0m"
-       set MIT  = "#DELETE"
-    else if ( "$OCNMODEL" == "MOM6" ) then
+    if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OGRIDTYP  = "M6TP"
        set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
-       set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
        set MIT  = "#DELETE"
     else if ( "$OCNMODEL" == "MIT" ) then
@@ -597,7 +584,6 @@ if( $OGCM == TRUE ) then
        set OGRIDTYP  = "MITLLC"
        set MIT = ""
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM_MITgcm.rc.tmpl"
-       set MOM5 = "#DELETE"
        set MOM6 = "#DELETE"
     endif
 
@@ -612,25 +598,6 @@ if( $OGCM == TRUE ) then
         set OGRIDTYP = "MITLLC"
         set OGCM_JM = 15
         set OGCM_IM = `expr $OGCM_JM \* 360`
-
-    else if ( $OCEAN_NAME == "MOM" ) then
-        set Resolution = `echo 360 200`
-        echo "Enter the Ocean Lat/Lon ${C1}Horizontal Resolution${CN}: ${C2}IM JM${CN} (Default:" $Resolution")"
-        set Resolution = `echo $<`
-        set num = $#Resolution
-        if( $num == 2 ) then
-           set OGCM_IM = $Resolution[1]
-           set OGCM_JM = $Resolution[2]
-        else
-           set Resolution = `echo 360 200`
-
-           if( $num == 0 ) then
-              set OGCM_IM = $Resolution[1]
-              set OGCM_JM = $Resolution[2]
-           else
-              goto CORSLV
-           endif
-        endif
 
     else if ( "$OCNMODEL" == "MOM6" ) then
        # For MOM6 we currently have only 3 allowed ocean resolutions based on the
@@ -915,7 +882,6 @@ else
     set OCEAN_PRELOAD = ""
     set OGCM_LM   =  34
     set COUPLED   = "#DELETE"
-    set MOM5      = "#DELETE"
     set MOM6      = "#DELETE"
     set CICE4     = "#DELETE"
     set CICE6     = "#DELETE"
@@ -2066,7 +2032,6 @@ s?@FORCEDAS?$FORCEDAS?g
 s?@FORCEGCM?$FORCEGCM?g
 s?@COUPLED?$COUPLED?g
 s?@CLDMICRO?$CLDMICRO?g
-s?@MOM5?$MOM5?g
 s?@MOM6?$MOM6?g
 s?@OCNMODEL?$OCNMODEL?g
 s?@CICE4?$CICE4?g
@@ -2230,11 +2195,7 @@ set FILES = `echo $FILES`
 set TMPOCEANDIR = `mktemp -d`
 
 if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
-   if ( $OCEAN_NAME == "MOM" ) then
-      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/input.nml ${TMPOCEANDIR}
-      /bin/cp ${ETCDIR}/MOM5/geos5/${OGCM_IM}x${OGCM_JM}/INPUT/*table ${TMPOCEANDIR}
-      set FILES = "$FILES field_table "
-   else if ( $OCEAN_NAME == "MOM6" ) then
+   if ( $OCEAN_NAME == "MOM6" ) then
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_input ${TMPOCEANDIR}
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_override ${TMPOCEANDIR}
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml ${TMPOCEANDIR}
@@ -2489,17 +2450,6 @@ if( $OGCM == TRUE ) then
 
       sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
-   else if ("$OCNMODEL" == "MOM5" ) then
-      # With MOM5 we need to change dt lines in input.nml to
-      # use $OCEAN_DT instead. NOTE: This sed assumes integer followed by comma
-
-      sed -i -e "s/dt_cpld = [0-9]*,/dt_cpld = $OCEAN_DT,/g" \
-             -e "s/dt_atmos = [0-9]*,/dt_atmos = $OCEAN_DT,/g" $HOMDIR/input.nml
-   endif
-
-   # We also need to change the dt in ice_in as well for CICE6
-   if ( $SEAICE_NAME == "CICE6" ) then
-      sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
    endif
 
 endif
@@ -2758,25 +2708,11 @@ if( $OGCM == TRUE ) then
 
 if ("$OCNMODEL" != "MIT" ) then
 
-# Some files are common to both MOM and MOM6
 cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/input.nml
 HOMDIR/diag_table
 HOMDIR/__init__.py
 EXPDIR/plot/plotocn.j
-EOF
-endif
-
-# Some files are specific to MOM
-if ( "$OCNMODEL" == "MOM" ) then
-cat >> $FILES_TO_PROCESS << EOF
-HOMDIR/field_table
-EOF
-endif
-
-# Some files are specific to MOM6
-if ( "$OCNMODEL" == "MOM6" ) then
-cat >> $FILES_TO_PROCESS << EOF
 HOMDIR/MOM_override
 HOMDIR/MOM_input
 HOMDIR/data_table
