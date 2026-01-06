@@ -122,8 +122,11 @@ if ($singstat == 1) then
    if (($NODE =~ discover*) || ($NODE =~ borg*) || ($NODE =~ warp*)) then
       set SINGULARITY_RUN_SITE = "NCCS"
    else if (($NODE =~ pfe*) || \
+            ($NODE =~ afe*) || \
+            ($NODE =~ athfe*) || \
             ($NODE =~ r[0-9]*i[0-9]*n[0-9]*) || \
-            ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*)) then
+            ($NODE =~ r[0-9]*c[0-9]*t[0-9]*n[0-9]*) || \
+            ($NODE =~ x[0-9]*c[0-9]*s[0-9]*b[0-9]*n[0-9]*)) then
       set SINGULARITY_RUN_SITE = "NAS"
    endif
 else
@@ -444,15 +447,12 @@ if ( $SITE == 'NCCS' ) then
 else if ( $SITE == 'NAS' ) then
 
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
-   echo "   ${C2}has (Haswell)${CN}"
    echo "   ${C2}bro (Broadwell)${CN}"
    echo "   ${C2}sky (Skylake)${CN}"
    echo "   ${C2}cas (Cascade Lake)${CN}"
    echo "   ${C2}rom (AMD Rome) (default)${CN}"
    echo "   ${C2}mil (AMD Milan)${CN}"
-   echo " "
-   echo " NOTE Due to how FV3 is compiled by default, Sandy Bridge"
-   echo "      and Ivy Bridge are not supported by current GEOS"
+   echo "   ${C2}tur (AMD Turin)${CN}"
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -460,17 +460,19 @@ else if ( $SITE == 'NAS' ) then
       set MODEL = 'rom'
    endif
 
-   if( $MODEL != 'has' & \
-       $MODEL != 'bro' & \
+   if( $MODEL != 'bro' & \
        $MODEL != 'sky' & \
        $MODEL != 'cas' & \
        $MODEL != 'rom' & \
-       $MODEL != 'mil' ) goto ASKPROC
+       $MODEL != 'mil' & \
+       $MODEL != 'tur' ) goto ASKPROC
 
    # Some processors have weird names at NAS
    # ---------------------------------------
 
-   if ($MODEL == sky) then
+   if ($MODEL == bro) then
+      set MODEL = 'bro_ele'
+   else if ($MODEL == sky) then
       set MODEL = 'sky_ele'
    else if ($MODEL == cas) then
       set MODEL = 'cas_ait'
@@ -478,11 +480,11 @@ else if ( $SITE == 'NAS' ) then
       set MODEL = 'rom_ait'
    else if ($MODEL == mil) then
       set MODEL = 'mil_ait'
+   else if ($MODEL == tur) then
+      set MODEL = 'tur_ath'
    endif
 
-   if ($MODEL == 'has') then
-      set NCPUS_PER_NODE = 24
-   else if ($MODEL == 'bro') then
+   if ($MODEL == 'bro_ele') then
       set NCPUS_PER_NODE = 28
    else if ($MODEL == 'sky_ele') then
       set NCPUS_PER_NODE = 40
@@ -492,6 +494,8 @@ else if ( $SITE == 'NAS' ) then
       set NCPUS_PER_NODE = 128
    else if ($MODEL == 'mil_ait') then
       set NCPUS_PER_NODE = 128
+   else if ($MODEL == 'tur_ath') then
+      set NCPUS_PER_NODE = 256
    endif
 
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
@@ -2460,16 +2464,12 @@ cat > $HOMDIR/SETENV.commands << EOF
 #setenv I_MPI_DEBUG 9
 EOF
 
-# These are options determined to be useful at NCCS
+# These are options determined to be useful at NCCS and NAS
 # Not setting generally as they are more fabric/cluster
-# specific compared to the above adjustments
-if ( $SITE == 'NCCS' ) then
-
-# Some flags we know work on SLES15 and Milan (see below)
-# For safety, we keep the old SLES12 flags for that system
-#
-# NOTE: When Cascade Lake is on SLES15, the following flags
-# might need to be Milan only
+# specific compared to the above adjustments. We protect
+# like this because these settings do *not* work on systems like
+# CI runners
+if ( $SITE == 'NCCS' | $SITE == 'NAS' ) then
 
 cat >> $HOMDIR/SETENV.commands << EOF
 setenv I_MPI_ADJUST_ALLREDUCE 12
@@ -2480,9 +2480,35 @@ setenv I_MPI_OFI_PROVIDER psm3
 
 # This has been found to help with congestion
 setenv FI_PSM3_CONN_TIMEOUT 120
+
+# NOTE: If you are seeing oddities with Intel MPI
+# and a -perhost/-ppn use, you might need to
+# uncomment the below line
+#
+#setenv I_MPI_JOB_RESPECT_PROCESS_PLACEMENT disable
+#
+# This is usually needed when running interactively
+# as SLURM/PBS in batch mode is usually fine with process placement
 EOF
 
-endif # if NCCS
+endif # if NCCS or NAS
+
+else if ( $MPI_STACK == mpich ) then
+
+if ( $SITE == 'NAS' ) then
+
+cat > $HOMDIR/SETENV.commands << EOF
+# Testing on Athena/Turin at NAS shows these
+# settings are needed for oserver use
+# NOTE: These should probably only be used by
+# *Cray* MPICH at NAS, but for now, that's
+# the only MPICH being used there.
+
+setenv FI_CXI_OPTIMIZED_MRS 0
+setenv FI_CXI_RX_MATCH_MODE hybrid
+EOF
+
+endif # if NAS
 
 endif # if mpi
 
