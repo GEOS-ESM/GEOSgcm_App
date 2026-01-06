@@ -15,14 +15,14 @@ setenv GEOSETC          {{ INSTALLDIR }}/etc
 setenv GEOSUTIL         {{ INSTALLDIR }}
 
 source $GEOSBIN/g5_modules
-setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+setenv {{ LD_LIBRARY_PATH_CMD }} "${LD_LIBRARY_PATH}:${GEOSDIR}/lib"
 # We only add BASEDIR to the {{ LD_LIBRARY_PATH_CMD }} if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
-    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
-    setenv PATH ${PATH}:${BASEDIR}/${ARCH}/bin
+    setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib"
+    setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
 endif
 
-setenv RUN_CMD "@RUN_CMD"
+setenv RUN_CMD "{{ RUN_CMD }}"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
@@ -38,6 +38,6 @@ cp fvcore_layout.rc input.nml
 # NOTE: Both reading and writing file_weights seems to fail
 # on macOS. So for now we set to false on Darwin until we can
 # investigate further.
-echo "file_weights: @FILE_WEIGHTS" >> extdata.yaml
+echo "file_weights: {{ FILE_WEIGHTS }}" >> extdata.yaml
 
 $RUN_CMD 1 ./GEOSgcm.x --logging_config 'logging.yaml'
