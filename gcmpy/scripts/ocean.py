@@ -7,7 +7,7 @@ class ocean:
         ocean.running_ocean = ocean.expConfig['OM_coupled']
         ocean.model = ocean.expConfig['OM_name']
         ocean.seaice_model = ocean.expConfig['OM_seaice_model']
-        ocean.history_template = ocean.expConfig['history_template'] 
+        ocean.history_template = ocean.expConfig['history_template']
         ocean.LM = ocean.expConfig['OM_vertical_res']
         ocean.data_atmos = ocean.expConfig['OM_data_atmos']
         ocean.name = ''
@@ -28,7 +28,7 @@ class ocean:
             ocean.set_uncoupled()
             ocean.set_data_atmosphere()
 
-    
+
     def set_coupled(ocean):
         # NOTE: We use a CMake variable here because the shared library
         # suffix is different on Linux and macOS. This is set by configure_file()
@@ -126,8 +126,8 @@ class ocean:
             ocean.tag = 'MERRA-2'
             ocean.sst_name = 'MERRA2'
             ocean.out = '1440x720'
-            ocean.sst_file = f"dataoceanfile_MERRA2_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
-            ocean.ice_file = f"dataoceanfile_MERRA2_ICE.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.sst_file = f"dataoceanfile_MERRA2_SST.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
+            ocean.ice_file = f"dataoceanfile_MERRA2_ICE.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
             ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
             ocean.gridtyp = 'DE'
             ocean.latlon = ''
@@ -142,8 +142,8 @@ class ocean:
             ocean.tag = 'Ostia'
             ocean.sst_name = 'OSTIA_REYNOLDS'
             ocean.out = '2880x1440'
-            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
-            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
+            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
             ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
             ocean.gridtyp = 'DE'
             ocean.latlon = ''
@@ -159,18 +159,18 @@ class ocean:
             ocean.tag = 'Ostia'
             ocean.sst_name = 'OSTIA_REYNOLDS'
             ocean.out = 'CS'
-            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data" 
-            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.\\{todays_date.year}.data"
+            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
+            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
             ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
             ocean.gridtyp = 'CF'
             ocean.latlon = '#DELETE'
             ocean.cube = ''
             ocean.ostia = ''
-            ocean.data = '#DELETE'
-        
+            ocean.data = ''
+
         IMO = '%04d' % ocean.IM
         JMO = '%04d' % ocean.JM
-        if hr_code == 'cs':
+        if hr_code == 'CS':
             ocean.res = f"CF{IMO}x6C"
         else:
             ocean.res = f"DE{IMO}xPE{JMO}"
