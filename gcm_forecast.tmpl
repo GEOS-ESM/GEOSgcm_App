@@ -79,8 +79,64 @@ set hour  = `echo $time0 | cut -c1-2`
 set fdate = ${date0}_${hour}z
 
 setenv   FCSTDIR  $EXPDIR/forecasts/${FCST_LABL}_$fdate
-setenv    SCRDIR  $FCSTDIR/scratch
-if (! -e $SCRDIR ) mkdir -p $SCRDIR
+mkdir -p $FCSTDIR
+
+# Handling of TSE_TMPDIR
+# ----------------------
+#
+# TSE_TMPDIR only exists at NCCS so first we check if it is defined
+
+if ( $?TSE_TMPDIR ) then
+
+   # Next, we might not want to always use TSE_TMPDIR as the scratch
+   # if we need a permanent scratch directory for debugging or other
+   # purposes. So we can set a flag USE_TSE_TMPDIR to TRUE if we want
+   # and we default to TRUE
+
+   set USE_TSE_TMPDIR = TRUE
+
+   # If we want to use TSE_TMPDIR as the scratch, we create a scratch
+   # directory under TSE_TMPDIR and link it to SCRDIR
+
+   if ( $USE_TSE_TMPDIR == TRUE ) then
+
+      # Finally, we should be careful as there is a possibility we
+      # could collide if two runs use the same TSE_TMPDIR (for example
+      # a packable job). So we use $SLURM_JOB_ID and, if defined,
+      # $SLURM_ARRAY_TASK_ID to create a unique scratch directory
+
+      set TSE_TMPDIR_NAME = $SLURM_JOB_ID
+
+      setenv SCRDIR $TSE_TMPDIR/$TSE_TMPDIR_NAME/scratch
+
+      if (-e $FCSTDIR/scratch ) /bin/rm -rf $FCSTDIR/scratch
+      if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+      mkdir -p $SCRDIR
+      ln -s $SCRDIR $FCSTDIR/scratch
+
+   else
+
+      # If USE_TSE_TMPDIR is FALSE, we create a scratch directory
+      # as we did before under the experiment directory
+
+      setenv SCRDIR $FCSTDIR/scratch
+      if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+      mkdir -p $SCRDIR
+
+   endif # USE_TSE_TMPDIR
+
+else
+
+   # If TSE_TMPDIR is not defined, we are not at NCCS and we have to
+   # act as we did before and create a scratch directory under the
+   # experiment directory
+
+   setenv SCRDIR $FSCTDIR/scratch
+   if (-e $SCRDIR ) /bin/rm -rf $SCRDIR
+   mkdir -p $SCRDIR
+
+endif # is TSE_TMPDIR defined
+
 cd       $SCRDIR
 
 /bin/rm -rf *
@@ -127,7 +183,19 @@ endif
 
 @ MODEL_NPES = $NX * $NY
 
-set NCPUS_PER_NODE = @NCPUS_PER_NODE
+if ($?SLURM_NTASKS_PER_NODE) then
+   set NCPUS_PER_NODE = $SLURM_NTASKS_PER_NODE
+else if ($?SLURM_CPUS_ON_NODE) then
+   set NCPUS_PER_NODE = $SLURM_CPUS_ON_NODE
+else if ($?PBS_NODEFILE) then
+   # Get CPU count for the first node (assuming homogeneous cluster)
+   set NCPUS_PER_NODE = `sort $PBS_NODEFILE | uniq -c | head -1 | awk '{print $1}'`
+else
+   # This is the default value if nothing is specified that is used
+   # for desktops and laptops from gcm_setup
+   set NCPUS_PER_NODE = @NCPUS_PER_NODE
+endif
+
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
 
 if ( $NCPUS != NULL ) then
@@ -234,8 +302,14 @@ endif
 #                 Create Forecast History RC Files
 #######################################################################
 
-set HIST_IM  = `expr $AGCM_IM \* 4`
-set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
+set HIST_IM = `expr $AGCM_IM \* 4`
+set HIST_JM = `expr $AGCM_IM \* 2 + 1`
+set CLIM_IM = 576
+set CLIM_JM = 361
+if ( $HIST_IM < $CLIM_IM ) then
+  set HIST_IM = $CLIM_IM
+  set HIST_JM = $CLIM_JM
+endif
 
 set         FILE = HISTORY.rc
 /bin/rm -f $FILE
@@ -274,6 +348,7 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
   geosgcm_fcst.levels:         1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1,
   geosgcm_fcst.fields:        'PHIS'   , 'AGCM'       ,
                               'SLP'    , 'DYN'        ,
+                              'W'      , 'DYN'        ,
                               'U;V'    , 'DYN'        ,
                               'T'      , 'DYN'        ,
                               'PS'     , 'DYN'        ,
@@ -282,6 +357,9 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
                               'Q'      , 'MOIST'      , 'QV'  ,
                               'QITOT'  , 'AGCM'       , 'QI'  ,
                               'QLTOT'  , 'AGCM'       , 'QL'  ,
+                              'QRTOT'  , 'AGCM'       , 'QR'  ,
+                              'QSTOT'  , 'AGCM'       , 'QS'  ,
+                              'QGTOT'  , 'AGCM'       , 'QG'  ,
                               'RH2'    , 'MOIST'      , 'RH'  ,
                               'O3'     , 'CHEMISTRY'  ,
                                ::
@@ -306,14 +384,18 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
                           'FRACI'      , 'SURFACE'    , 'frseaice'   ,
                           'PS'         , 'DYN'        , 'ps'         ,
                           'DELP'       , 'DYN'        , 'delp'       ,
+                          'DELZ'       , 'DYN'        , 'delz'       ,
+                          'W'          , 'DYN'        , 'w'          ,
                           'U;V'        , 'DYN'        , 'u;v'        ,
                           'TV'         , 'DYN'        , 'tv'         ,
+                          'T'          , 'DYN'        , 't'          ,
                           'Q'          , 'MOIST'      , 'sphu'       ,
                           'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
                           'QITOT'      , 'AGCM'       , 'qitot'      ,
                           'QLTOT'      , 'AGCM'       , 'qltot'      ,
                           'QRTOT'      , 'MOIST'      , 'qrtot'      ,
                           'QSTOT'      , 'MOIST'      , 'qstot'      ,
+                          'QGTOT'      , 'MOIST'      , 'qgtot'      ,
                            ::
 
 _EOF_
@@ -402,7 +484,10 @@ end
      set month = `echo $nymd0 | cut -c5-6`
 
      if( $CYCLED == .TRUE. ) then
-          /bin/ln -s $EXPDIR/restarts/*${nymd0}_${hour}*z.*  .
+          foreach rst ( $rst_files )
+            /bin/cp $EXPDIR/restarts/*${nymd0}_${hour}*z.*  . &
+          end
+          wait
           $GEOSBIN/stripname ${EXPID}.
           $GEOSBIN/stripname _checkpoint.${nymd0}_${hour}\* _rst  # Format if written from RECORD_FREQUENCY
           $GEOSBIN/stripname .e${nymd0}_${hour}\*                 # Format if decorated by gcm_run.j
@@ -419,11 +504,6 @@ end
           # /bin/rm solar_internal_rst
           # /bin/rm irrad_internal_rst
 endif
-
-# Get proper ridge scheme GWD internal restart
-# --------------------------------------------
-/bin/rm gwd_internal_rst
-/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
 
 # Re-Create Proper CAP.rc
 # -----------------------
@@ -536,6 +616,18 @@ if( $AGCM_LM  != 72 ) then
       cp $file dummy
       cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
     end
+
+    # We have to do something special for L186. By default all of the GOCART emissions have:
+    #   pressure_lid_in_hPa: 0.01
+    # which is the pressure lid in hPa for all other GEOS vertical levels. But L186 has a lid
+    # at 0.00025 Pa. So we need to change this value in the GOCART emissions files for L186.
+    if ( $AGCM_LM == 186 ) then
+       set files = `/bin/ls  *.rc`
+       foreach file ($files)
+          cp $file dummy
+          cat dummy | sed -e '/pressure_lid_in_hPa:/c\pressure_lid_in_hPa: 2.5e-6' > $file
+       end
+    endif
 endif
 
 # Rename big ExtData files that are not needed
@@ -590,17 +682,29 @@ endif
 # -------------------------------
 # UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
 #
-#set instance_files = `/bin/ls -1 *_instance*.rc`
-#foreach instance ($instance_files)
-#   /bin/mv $instance $instance.tmp
-#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
-#   /bin/rm $instance.tmp
-#end
+set instance_files = `/bin/ls -1 *_instance*.rc`
+foreach instance ($instance_files)
+   /bin/mv $instance $instance.tmp
+   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   /bin/rm $instance.tmp
+end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
 ./linkbcs
+
+if ( ! -e gwd_internal_rst ) then
+  echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+  # Now, if the user has already set an NCAR_NRDG value, we need to
+  # change it to 0. If they haven't set it, we need to add it to the
+  # AGCM.rc file.
+  if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+    echo "NCAR_NRDG: 0" >> AGCM.rc
+  else
+    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+  endif
+endif
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
@@ -842,3 +946,5 @@ $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files \
  @ NFCST  = $NFCST + 1
 set date  = `$GEOSUTIL/post/tick $date0 $time0 86400`
 end
+
+# vi: ft=tcsh

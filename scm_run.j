@@ -32,6 +32,8 @@ cd $EXPDIR
 
 $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
+cp fvcore_layout.rc input.nml
+
 # NOTE: Both reading and writing file_weights seems to fail
 # on macOS. So for now we set to false on Darwin until we can
 # investigate further.

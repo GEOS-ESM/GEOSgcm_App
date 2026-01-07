@@ -66,6 +66,8 @@ allowed_cases+=("bomex")
 allowed_cases+=("dycoms_rf01")
 allowed_cases+=("arm_97jun")
 allowed_cases+=("dry_cbl")
+allowed_cases+=("rico")
+allowed_cases+=("gabls1")
 
 sorted_cases=($(for each in ${allowed_cases[@]}; do echo $each; done | sort))
 
@@ -93,7 +95,7 @@ usage ()
    echo "    --account: account under which to run the job"
    echo
    echo "  Optional argument: "
-   echo "    --num_levels: number of levels (72, 71, 91, 132, 137, and 181 allowed)."
+   echo "    --num_levels: number of levels (default: 181; 72, 71, 91, 132, 137, and 181 allowed)."
    echo
    echo
 }
@@ -104,7 +106,7 @@ usage ()
 selected_case=NULL
 expdir=NULL
 account=NULL
-nlev=72
+nlev=181
 
 while [ "${1+defined}" ]
 do
@@ -369,6 +371,12 @@ case $selected_case in
    "LASIC_aug2016")
       DATFILE="merra2_lasic_aug2016.dat"
       ;;
+   "rico")
+      DATFILE="rico.dat"
+      ;;
+   "gabls1")
+      DATFILE="gabls1.dat"
+      ;;
    *)
       echo "You should not be here!"
       echo "If you are here, there is a case in allowed_cases"
@@ -382,17 +390,17 @@ BCSTAG="Icarus_Reynolds"
 
 case $SITE in
    NCCS)
-   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v11.1/"
+   SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v12.0/"
    BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput_nc3"
    ;;
    NAS)
-   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
+   SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
    BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
-   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v11.1/"
+   SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
    BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;

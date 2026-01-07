@@ -456,11 +456,6 @@ else
 endif
 wait
 
-# Get proper ridge scheme GWD internal restart
-# --------------------------------------------
-/bin/rm gwd_internal_rst
-/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
-
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
@@ -630,6 +625,26 @@ if( ${EMISSIONS} == AMIP_EMISSIONS ) then
 
 endif
 
+if( $AGCM_LM  != 72 ) then
+    set files = `/bin/ls  *.yaml`
+    foreach file ($files)
+      cp $file dummy
+      cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
+    end
+
+    # We have to do something special for L186. By default all of the GOCART emissions have:
+    #   pressure_lid_in_hPa: 0.01
+    # which is the pressure lid in hPa for all other GEOS vertical levels. But L186 has a lid
+    # at 0.00025 Pa. So we need to change this value in the GOCART emissions files for L186.
+    if ( $AGCM_LM == 186 ) then
+       set files = `/bin/ls  *.rc`
+       foreach file ($files)
+          cp $file dummy
+          cat dummy | sed -e '/pressure_lid_in_hPa:/c\pressure_lid_in_hPa: 2.5e-6' > $file
+       end
+    endif
+endif
+
 # Rename big ExtData files that are not needed
 # --------------------------------------------
 set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
@@ -684,17 +699,29 @@ endif
 # -------------------------------
 # UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
 #
-#set instance_files = `/bin/ls -1 *_instance*.rc`
-#foreach instance ($instance_files)
-#   /bin/mv $instance $instance.tmp
-#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
-#   /bin/rm $instance.tmp
-#end
+set instance_files = `/bin/ls -1 *_instance*.rc`
+foreach instance ($instance_files)
+   /bin/mv $instance $instance.tmp
+   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   /bin/rm $instance.tmp
+end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
 ./linkbcs
+
+if (! -e gwd_internal_rst ) then
+  echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+  # Now, if the user has already set an NCAR_NRDG value, we need to
+  # change it to 0. If they haven't set it, we need to add it to the
+  # AGCM.rc file.
+  if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+    echo "NCAR_NRDG: 0" >> AGCM.rc
+  else
+    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+  endif
+endif
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
