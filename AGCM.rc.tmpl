@@ -537,7 +537,8 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 
 # Choice for Land Surface Model
 #      1 : Catchment
-#      2 : CatchmentCNCLM40
+#      2 : Catchment-CN4.0 (CNCLM40)
+#      4 : Catchment-CN5.1 (CNCLM51)
 # ------------------------------------------------------------
 LSM_CHOICE: @LSM_CHOICE
 
@@ -560,7 +561,7 @@ LSM_CHOICE: @LSM_CHOICE
 # -------   not from this file.                            -------
 # Atmosphere-Land CO2 coupling
 # ----------------------------
-# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NNEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc and AMIP/CO2_GridComp.rc,
+# USE_CNNEE: 0 #  options : 0 (default); 1 (Chem uses NEE from CatchmentCN, NOTE you must add USE_CNNEE: 1 to CO2_GridComp.rc and AMIP/CO2_GridComp.rc,
 #                           in GOCART/ESMF/GOCART_GridComp/CO2_GridComp/ before you build the model.)
 #
 # ----------------------------------------------------------------
@@ -611,6 +612,10 @@ MAPL_ENABLE_BOOTSTRAP: @BOOT
 @MODELATMCATCHCNCLM40_INTERNAL_RESTART_FILE:     catchcn_internal_rst
 @MODELATMCATCHCNCLM40_INTERNAL_CHECKPOINT_FILE:  catchcn_internal_checkpoint
 @MODELATMCATCHCNCLM40_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
+
+@MODELATMCATCHCNCLM51_INTERNAL_RESTART_FILE:     catchcn_internal_rst
+@MODELATMCATCHCNCLM51_INTERNAL_CHECKPOINT_FILE:  catchcn_internal_checkpoint
+@MODELATMCATCHCNCLM51_INTERNAL_CHECKPOINT_TYPE:  @CHECKPOINT_TYPE
 
 @MODELATMMOIST_INTERNAL_RESTART_FILE:            moist_internal_rst
 @MODELATMMOIST_INTERNAL_CHECKPOINT_FILE:         moist_internal_checkpoint
