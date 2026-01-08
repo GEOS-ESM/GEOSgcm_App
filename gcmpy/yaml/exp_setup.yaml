@@ -1,0 +1,39 @@
+experiment_id:
+  type:           'text'
+  prompt:         'Enter the experiment ID:'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''
+
+experiment_description:
+  type:           'text'
+  prompt:         'Enter a 1-line Experiment Description:'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''
+
+exp_dir:
+  type:           'path'
+  prompt:         'Enter Desired Location for the EXPERIMENT Directory (to contain model output and restart files):'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''
+
+clone_experiment:
+  type:           'confirm'
+  prompt:         'Would you like to CLONE an old experiment?'
+  choices:        ''
+  default_answer: False
+  follows_up:     ''
+
+original_exp_path:
+  type:           'path'
+  prompt:         'Enter the location of the experiment you wish to clone from:'
+  choices:        ''
+  default_answer: ''
+  follows_up:
+    - ['clone_experiment', [True]]
+
+
+
+

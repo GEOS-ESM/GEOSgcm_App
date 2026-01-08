@@ -1,0 +1,94 @@
+# Testing by Bill Putman determined some useful
+# Open MPI parameters. Testing shows these work
+# on both OSs at NCCS and on macOS
+openmpi: |
+  # Turn off warning about TMPDIR on NFS
+  setenv OMPI_MCA_shmem_mmap_enable_nfs_warning 0
+  # pre-connect MPI procs on mpi_init
+  setenv OMPI_MCA_mpi_preconnect_all 1
+  setenv OMPI_MCA_coll_tuned_bcast_algorithm 7
+  setenv OMPI_MCA_coll_tuned_scatter_algorithm 2
+  setenv OMPI_MCA_coll_tuned_reduce_scatter_algorithm 3
+  setenv OMPI_MCA_coll_tuned_allreduce_algorithm 3
+  setenv OMPI_MCA_coll_tuned_allgather_algorithm 4
+  setenv OMPI_MCA_coll_tuned_allgatherv_algorithm 3
+  setenv OMPI_MCA_coll_tuned_gather_algorithm 1
+  setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
+  # required for a tuned flag to be effective
+  setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
+  # disable file locks
+  setenv OMPI_MCA_sharedfp "^lockedfile,individual"
+
+mvapich: |
+  setenv MV2_ENABLE_AFFINITY 0
+  setenv SLURM_DISTRIBUTION block
+  setenv MV2_MPIRUN_TIMEOUT 100
+  setenv MV2_GATHERV_SSEND_THRESHOLD 256
+
+mpich: |
+  # Testing on Athena/Turin at NAS shows these
+  # settings are needed for oserver use
+  # NOTE: These should probably only be used by
+  # *Cray* MPICH at NAS, but for now, that's
+  # the only MPICH being used there.
+
+  setenv FI_CXI_OPTIMIZED_MRS 0
+  setenv FI_CXI_RX_MATCH_MODE hybrid
+
+mpt: |
+  setenv MPI_COLL_REPRODUCIBLE
+  setenv SLURM_DISTRIBUTION block
+
+  #setenv MPI_DISPLAY_SETTINGS 1
+  #setenv MPI_VERBOSE 1
+
+  setenv MPI_MEMMAP_OFF
+  unsetenv MPI_NUM_MEMORY_REGIONS
+  setenv MPI_XPMEM_ENABLED yes
+  unsetenv SUPPRESS_XPMEM_TRIM_THRESH
+
+  setenv MPI_LAUNCH_TIMEOUT 40
+
+  setenv MPI_COMM_MAX  1024
+  setenv MPI_GROUP_MAX 1024
+  setenv MPI_BUFS_PER_PROC 256
+
+  # For some reason, PMI_RANK is randomly set and interferes
+  # with binarytile.x and other executables.
+  unsetenv PMI_RANK
+
+  # Often when debugging on MPT, the traceback from Intel Fortran
+  # is "absorbed" and only MPT's errors are displayed. To allow the
+  # compiler's traceback to be displayed, uncomment this environment
+  # variable
+  #setenv FOR_IGNORE_EXCEPTIONS false
+
+intelmpi: |
+  # This flag prints out the Intel MPI state. Uncomment if needed
+  #setenv I_MPI_DEBUG 9
+
+# These are options determined to be useful at NCCS and NAS
+# Not setting generally as they are more fabric/cluster
+# specific compared to the above adjustments. We protect
+# like this because these settings do *not* work on systems like
+# CI runners
+#
+intelmpi_NASA: |
+  setenv I_MPI_ADJUST_ALLREDUCE 12
+  setenv I_MPI_ADJUST_GATHERV 3
+
+  setenv I_MPI_FABRICS shm:ofi
+  setenv I_MPI_OFI_PROVIDER psm3
+
+  # This has been found to help with congestion
+  setenv FI_PSM3_CONN_TIMEOUT 120
+
+  # NOTE: If you are seeing oddities with Intel MPI
+  # and a -perhost/-ppn use, you might need to
+  # uncomment the below line
+  #
+  #setenv I_MPI_JOB_RESPECT_PROCESS_PLACEMENT disable
+  #
+  # This is usually needed when running interactively
+  # as SLURM/PBS in batch mode is usually fine with process placement
+

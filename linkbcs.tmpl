@@ -1,44 +1,43 @@
 #!/bin/csh -f
 
-setenv BCSDIR    @BCSDIR
-@DATAOCEANsetenv SSTDIR    @SSTDIR
-@COUPLEDsetenv CPLDIR @COUPLEDIR/@OCNMODEL
-setenv CHMDIR    @CHMDIR
-setenv BCRSLV    @ATMOStag_@OCEANtag
+setenv BCSDIR    {{ BCSDIR }}
+{{ DATAOCEAN }}setenv SSTDIR    {{ SSTDIR }}
+{{ COUPLED }}setenv CPLDIR {{ COUPLEDIR }}/{{ OCNMODEL }}
+setenv CHMDIR    {{ CHMDIR }}
+setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
 
-@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/@OGCM_IMx@OGCM_JM/v1
-@MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/@OGCM_IMx@OGCM_JM/v1
+{{ MOM5 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/{{ OGCM_IM }}x{{ OGCM_JM }}/v1
+{{ MOM6 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/{{ OGCM_IM }}x{{ OGCM_JM }}/v1
 
-@COUPLED /bin/mkdir -p RESTART
+{{ COUPLED }} /bin/mkdir -p RESTART
 /bin/mkdir -p            ExtData
 /bin/ln    -sf $CHMDIR/* ExtData
 
-@COUPLED/bin/ln -sf @COUPLEDIR/dataatm/* ExtData
-@COUPLED/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/SEAWIFS_KPAR_mon_clim.@OGCM_IMx@OGCM_JM SEAWIFS_KPAR_mon_clim.data
-@COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
-@COUPLED/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
-@MOM5/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/MAPL_Tripolar.nc .
-@MOM6/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/MAPL_Tripolar.nc .
-@MIT/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/mit.ascii
-@MOM5/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/vgrid@OGCM_LM.ascii ./vgrid.ascii
-@MOM6/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/vgrid@OGCM_LM.ascii ./vgrid.ascii
-@MIT/bin/ln  -sf $CPLDIR/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
+{{ COUPLED }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/SEAWIFS_KPAR_mon_clim.{{ OGCM_IM }}x{{ OGCM_JM }} SEAWIFS_KPAR_mon_clim.data
+{{ COUPLED }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.til   tile.data
+{{ COUPLED }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/${BCRSLV}-Pfafstetter.TRN   runoff.bin
+{{ MOM5 }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
+{{ MOM6 }}/bin/ln -sf $BCSDIR/geometry/${BCRSLV}/MAPL_Tripolar.nc .
+{{ MIT }}/bin/ln  -sf $BCSDIR/geometry/${BCRSLV}/mit.ascii
+{{ MOM5 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/vgrid{{ OGCM_LM }}.ascii ./vgrid.ascii
+{{ MOM6 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/vgrid{{ OGCM_LM }}.ascii ./vgrid.ascii
+{{ MIT }}/bin/ln  -sf $CPLDIR/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
  # Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
-@DATAOCEAN/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
-@DATAOCEANif(     -e  $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
-@DATAOCEAN/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
-@DATAOCEANendif
+{{ DATAOCEAN }}/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
+{{ DATAOCEAN }}if(     -e  $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
+{{ DATAOCEAN }}/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
+{{ DATAOCEAN }}endif
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
-@OPS_SPECIES/bin/ln -sf $BCSDIR/PCHEM/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
+{{ OPS_SPECIES }}/bin/ln -sf $BCSDIR/PCHEM/pchem.species.Clim_Prod_Loss.z_721x72.nc4 species.data
 
 # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
 # ----------------------------------------------------------
-@CMIP_SPECIES/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
+{{ CMIP_SPECIES }}/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 species.data
 
 # S2S pre-industrial with prod/loss of stratospheric water vapor
 # (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
@@ -47,17 +46,17 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 
 # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
 # ----------------------------------------------------------
-@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+{{ MERRA2OX_SPECIES }}/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
 
-/bin/ln -sf $BCSDIR/land/$BCRSLV/visdf_@AGCM_IMx@AGCM_JM.dat visdf.dat
-/bin/ln -sf $BCSDIR/land/$BCRSLV/nirdf_@AGCM_IMx@AGCM_JM.dat nirdf.dat
-/bin/ln -sf $BCSDIR/land/$BCRSLV/vegdyn_@AGCM_IMx@AGCM_JM.dat vegdyn.data
-/bin/ln -sf $BCSDIR/land/$BCRSLV/lai_clim_@AGCM_IMx@AGCM_JM.data lai.data
-/bin/ln -sf $BCSDIR/land/$BCRSLV/green_clim_@AGCM_IMx@AGCM_JM.data green.data
-/bin/ln -sf $BCSDIR/land/$BCRSLV/ndvi_clim_@AGCM_IMx@AGCM_JM.data ndvi.data
+/bin/ln -sf $BCSDIR/land/$BCRSLV/visdf_{{ AGCM_IM }}x{{ AGCM_JM }}.dat visdf.dat
+/bin/ln -sf $BCSDIR/land/$BCRSLV/nirdf_{{ AGCM_IM }}x{{ AGCM_JM }}.dat nirdf.dat
+/bin/ln -sf $BCSDIR/land/$BCRSLV/vegdyn_{{ AGCM_IM }}x{{ AGCM_JM }}.dat vegdyn.data
+/bin/ln -sf $BCSDIR/land/$BCRSLV/lai_clim_{{ AGCM_IM }}x{{ AGCM_JM }}.data lai.data
+/bin/ln -sf $BCSDIR/land/$BCRSLV/green_clim_{{ AGCM_IM }}x{{ AGCM_JM }}.data green.data
+/bin/ln -sf $BCSDIR/land/$BCRSLV/ndvi_clim_{{ AGCM_IM }}x{{ AGCM_JM }}.data ndvi.data
 
-@GCMRUN_CATCHCNif ( -f $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data lnfm.data
-@GCMRUN_CATCHCN/bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
+{{ GCMRUN_CATCHCN }}if ( -f $BCSDIR/$BCRSLV/lnfm_clim_{{ AGCM_IM }}x{{ AGCM_JM }}.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_{{ AGCM_IM }}x{{ AGCM_JM }}.data lnfm.data
+{{ GCMRUN_CATCHCN }}/bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
 
 
 set MERRA2OX_SPECIES = "#"
@@ -73,16 +72,16 @@ if ( "$bc_ver_num" == "" ) set bc_ver_num = 0
 
 if ( $bc_is_gm4 ) then
   # GM4 stays on legacy tiles layout
-  set topo_src_dir = "$BCSDIR/TOPO/TOPO_@ATMOStag"
+  set topo_src_dir = "$BCSDIR/TOPO/TOPO_{{ ATMOStag }}"
 else
   set stream = v1
   if ( $bc_ver_num >= 14 ) set stream = v2
-  set topo_src_dir = "@BCS_INPUT_BASE/TOPO/${stream}/@ATMOStag/smoothed"
+  set topo_src_dir = "{{ BCS_INPUT_BASE }}/TOPO/${stream}/{{ ATMOStag }}/smoothed"
 endif
 
-set fn_dyn = topo_DYN_ave_@AGCM_IMx@AGCM_JM.data
-set fn_gwd = topo_GWD_var_@AGCM_IMx@AGCM_JM.data
-set fn_trb = topo_TRB_var_@AGCM_IMx@AGCM_JM.data
+set fn_dyn = topo_DYN_ave_{{ AGCM_IM }}x{{ AGCM_JM }}.data
+set fn_gwd = topo_GWD_var_{{ AGCM_IM }}x{{ AGCM_JM }}.data
+set fn_trb = topo_TRB_var_{{ AGCM_IM }}x{{ AGCM_JM }}.data
 
 if ( ! -e ${topo_src_dir}/${fn_dyn} ) then
   echo "FATAL: ${fn_dyn} not found in ${topo_src_dir}"
@@ -96,20 +95,20 @@ endif
 # Optional internal restart
 if ( -e ${topo_src_dir}/gwd_internal_rst ) then
   /bin/cp -vf ${topo_src_dir}/gwd_internal_rst gwd_internal_rst
-else if (-e @GWDRSDIR/gwd_internal_c@AGCM_IM) then
-  /bin/cp -vf @GWDRSDIR/gwd_internal_c@AGCM_IM gwd_internal_rst
+else if (-e {{ GWDRSDIR }}/gwd_internal_c{{ AGCM_IM }}) then
+  /bin/cp -vf {{ GWDRSDIR }}/gwd_internal_c{{ AGCM_IM }} gwd_internal_rst
 endif
 # ----- end topo gwd linking -----
 
-@COUPLEDcp $HOMDIR/*_table .
-@COUPLEDcp $CPLDIR/@OGCM_IMx@OGCM_JM/INPUT/* INPUT
-@CICE4/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/cice/kmt_cice.bin .
-@CICE4/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/cice/grid_cice.bin .
-@CICE6/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/cice6/cice6_grid.nc .
-@CICE6/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/cice6/cice6_kmt.nc .
-@CICE6/bin/ln -sf $CPLDIR/@OGCM_IMx@OGCM_JM/cice6/cice6_global.bathy.nc .
+{{ COUPLED }}cp $HOMDIR/*_table .
+{{ COUPLED }}cp $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/INPUT/* INPUT
+{{ CICE4 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/cice/kmt_cice.bin .
+{{ CICE4 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/cice/grid_cice.bin .
+{{ CICE6 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/cice6/cice6_grid.nc .
+{{ CICE6 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/cice6/cice6_kmt.nc .
+{{ CICE6 }}/bin/ln -sf $CPLDIR/{{ OGCM_IM }}x{{ OGCM_JM }}/cice6/cice6_global.bathy.nc .
 
 
-@DATAOCEAN/bin/ln -sf $SSTDIR/@SSTFILE   sst.data
-@DATAOCEAN/bin/ln -sf $SSTDIR/@ICEFILE fraci.data
-@DATAOCEAN/bin/ln -sf $SSTDIR/@KPARFILE SEAWIFS_KPAR_mon_clim.data
+{{ DATAOCEAN }}/bin/ln -sf $SSTDIR/{{ SSTFILE }}   sst.data
+{{ DATAOCEAN }}/bin/ln -sf $SSTDIR/{{ ICEFILE }} fraci.data
+{{ DATAOCEAN }}/bin/ln -sf $SSTDIR/{{ KPARFILE }} SEAWIFS_KPAR_mon_clim.data

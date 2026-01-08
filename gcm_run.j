@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#@BATCH_TIME@RUN_T
-#@RUN_P
-#@BATCH_JOBNAME@RUN_N
-#@RUN_Q
-#@BATCH_GROUP
-#@BATCH_JOINOUTERR
+#{{ BATCH_TIME }}{{ RUN_T }}
+#{{ RUN_P }}
+#{{ BATCH_JOBNAME }}{{ RUN_N }}
+#{{ RUN_Q }}
+#{{ BATCH_GROUP }}
+#{{ BATCH_JOINOUTERR }}
 #@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
@@ -26,21 +26,21 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             @SITE
-setenv GEOSDIR          @GEOSDIR
-setenv GEOSBIN          @GEOSBIN
-setenv GEOSETC          @GEOSETC
-setenv GEOSUTIL         @GEOSSRC
+setenv SITE             {{ SITE }}
+setenv GEOSDIR          {{ GEOSDIR }}
+setenv GEOSBIN          {{ GEOSBIN }}
+setenv GEOSETC          {{ GEOSETC }}
+setenv GEOSUTIL         {{ GEOSSRC }}
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
-# We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
+setenv {{ LD_LIBRARY_PATH_CMD }} "${LD_LIBRARY_PATH}:${GEOSDIR}/lib"
+# We only add BASEDIR to the {{ LD_LIBRARY_PATH_CMD }} if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
-    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
-    setenv PATH ${PATH}:${BASEDIR}/${ARCH}/bin
+    setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib"
+    setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
 endif
 
-setenv RUN_CMD "@RUN_CMD"
+setenv RUN_CMD "{{ RUN_CMD }}"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
@@ -50,9 +50,9 @@ echo   VERSION: $GCMVER
 #######################################################################
 
 
-setenv  EXPID   @EXPID
-setenv  EXPDIR  @EXPDIR
-setenv  HOMDIR  @HOMDIR
+setenv  EXPID   {{ EXPID }}
+setenv  EXPDIR  {{ EXPDIR }}
+setenv  HOMDIR  {{ HOMDIR }}
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
@@ -146,14 +146,14 @@ set  AGCM_LM  = `grep '^\s*AGCM_LM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_IM  = `grep '^\s*OGCM\.IM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
-@COUPLED set  OGCM_LM  = `grep '^\s*OGCM\.LM:'       $HOMDIR/AGCM.rc | cut -d: -f2`
-@COUPLED set       NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
-@COUPLED set       NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+{{ COUPLED }} set  OGCM_LM  = `grep '^\s*OGCM\.LM:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+{{ COUPLED }} set       NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+{{ COUPLED }} set       NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
 
-set USE_IOSERVER      = @USE_IOSERVER
+set USE_IOSERVER      = {{ USE_IOSERVER }}
 set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:'  $HOMDIR/AGCM.rc | cut -d: -f2`
 set NUM_BACKEND_PES   = `grep '^\s*NUM_BACKEND_PES:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
@@ -179,7 +179,7 @@ else if ($?PBS_NODEFILE) then
 else
    # This is the default value if nothing is specified that is used
    # for desktops and laptops from gcm_setup
-   set NCPUS_PER_NODE = @NCPUS_PER_NODE
+   set NCPUS_PER_NODE = {{ NCPUS_PER_NODE }}
 endif
 
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
@@ -256,7 +256,7 @@ tar -xvf restarts.e${year}${month}10_21z.tar --wildcards "*_internal_rst*"
 # ------------------------------------------------
 set RSTID = `/bin/ls *catch* | /bin/grep -Po '^.*(?=\.\w+_rst\.)'`
 set day   = `/bin/ls *catch* | /bin/grep -Po '(?<=\d{6})\d{2}(?=_21z)'`
-$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nobkg -nolcv -bcvout @LSMBCS -rs 3 -oceanout @OCEANOUT -out_bc_base @BC_BASE
+$GEOSBIN/remap_restarts.py command_line -np -ymdh ${year}${month}${day}21 -grout C${AGCM_IM} -levsout ${AGCM_LM} -out_dir . -rst_dir . -expid $RSTID -bcvin NL3 -oceanin 1440x720 -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles -newid regrid -nobkg -nolcv -bcvout {{ LSMBCS }} -rs 3 -oceanout {{ OCEANOUT }} -out_bc_base {{ BC_BASE }}
 
      set IMC = $AGCM_IM
 if(     $IMC < 10 ) then
@@ -333,9 +333,9 @@ if (-z input.nml) then
    exit 0
 endif
 
-@MOM6cp -f  $HOMDIR/MOM_input .
-@MOM6cp -f  $HOMDIR/MOM_override .
-@CICE6cp -f  $HOMDIR/ice_in .
+{{ MOM6 }}cp -f  $HOMDIR/MOM_input .
+{{ MOM6 }}cp -f  $HOMDIR/MOM_override .
+{{ CICE6 }}cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
     cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -379,112 +379,112 @@ done:
 #######################################################################
 #                        Link Boundary Datasets
 #######################################################################
-setenv BCSDIR    @BCSDIR
-@DATAOCEANsetenv SSTDIR    @SSTDIR
-setenv BCRSLV    @ATMOStag_@OCEANtag
-@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
-@MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
+setenv BCSDIR    {{ BCSDIR }}
+{{ DATAOCEAN }}setenv SSTDIR    {{ SSTDIR }}
+setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
+{{ MOM5 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
+{{ MOM6 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
-@DATAOCEANsetenv BCTAG `basename $BCSDIR`
-@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
-setenv EMISSIONS @EMISSIONS
+{{ DATAOCEAN }}setenv BCTAG `basename $BCSDIR`
+{{ COUPLED }}setenv BCTAG `basename {{ COUPLEDIR }}/{{ OCNMODEL }}/${OGCM_IM}x${OGCM_JM}`
+setenv EMISSIONS {{ EMISSIONS }}
 chmod +x linkbcs
 
-@GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
-@GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
-@GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
-@GCMRUN_CATCHCNendif
+{{ GCMRUN_CATCHCN }}set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
+{{ GCMRUN_CATCHCN }}if ($LSM_CHOICE == 2) then
+{{ GCMRUN_CATCHCN }}  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+{{ GCMRUN_CATCHCN }}endif
 #######################################################################
 #                  Setup executable
 #######################################################################
 
-@SINGULARITY_BUILD #######################################################################
-@SINGULARITY_BUILD #             Settings for Singularity - EXPERIMENTAL
-@SINGULARITY_BUILD #######################################################################
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Based on work on discover, to run you need to load the same compiler
-@SINGULARITY_BUILD # and MPI to match those in the container. For example, if your container was
-@SINGULARITY_BUILD # built with:
-@SINGULARITY_BUILD #   GNU 11.2.0
-@SINGULARITY_BUILD #   Intel Fortran 2021.6.0 (aka Intel oneAPI 2022.1.0)
-@SINGULARITY_BUILD #   Intel MPI 2021.6.0 (aka Intel oneAPI 2022.1.0)
-@SINGULARITY_BUILD # then you would need to load:
-@SINGULARITY_BUILD #   source /usr/share/modules/init/csh
-@SINGULARITY_BUILD #   module purge
-@SINGULARITY_BUILD #   module load comp/gcc/11.2.0
-@SINGULARITY_BUILD #   module load comp/intel/2021.6.0
-@SINGULARITY_BUILD #   module load mpi/impi/2021.6.0
-@SINGULARITY_BUILD #
-@SINGULARITY_BUILD # And then also append ${GEOSDIR}/lib to LD_LIBRARY_PATH
-@SINGULARITY_BUILD #   setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
-@SINGULARITY_BUILD #
-@SINGULARITY_BUILD # For now we use the fact that on discover we can source g5_modules
-@SINGULARITY_BUILD #
-@SINGULARITY_BUILD # If you are using singularity, set the path to the singularity sandbox here
-@SINGULARITY_BUILD setenv SINGULARITY_SANDBOX @SINGULARITY_SANDBOX
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
-@SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
-@SINGULARITY_BUILD    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
-@SINGULARITY_BUILD    exit 1
-@SINGULARITY_BUILD endif
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
-@SINGULARITY_BUILD echo "We are running under Singularity"
-@SINGULARITY_BUILD echo ""
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Load the Singularity module
-@SINGULARITY_BUILD module load singularity
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Set Singularity Bind Paths. Note: These are dependent on where you are running.
-@SINGULARITY_BUILD # By default, we'll assume you are running this script from NOBACKUP
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD setenv REAL_BIND_PATH @REAL_BIND_PATH
-@SINGULARITY_BUILD setenv BASE_BIND_PATH @BASE_BIND_PATH
-@SINGULARITY_BUILD setenv BOUNDARY_DIR @BOUNDARY_DIR
-@SINGULARITY_BUILD setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}:rw,${REAL_BIND_PATH}:${REAL_BIND_PATH}:rw,${BASE_BIND_PATH}:${BASE_BIND_PATH}:ro,${BOUNDARY_DIR}:${BOUNDARY_DIR}:ro"
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # If you are running from a different location, you will need to change the bind path
-@SINGULARITY_BUILD # Also, note that often $NOBACKUP is, say, /discover/nobackup/username, but gcm_setup
-@SINGULARITY_BUILD # will set GEOSDIR, GEOSBIN, etc. above to something like /gpfsm/dnbXX/username which
-@SINGULARITY_BUILD # is the "real" physical path that /discover/nobackup/username is a symlink to.
-@SINGULARITY_BUILD # You might need to change all the gpfsm paths to nobackup paths.
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Set a variable to encapsulate all Singularity details
-@SINGULARITY_BUILD setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD # Detect if GEOSgcm.x is in the experiment directory
-@SINGULARITY_BUILD if (-e $EXPDIR/GEOSgcm.x) then
-@SINGULARITY_BUILD    echo "Found GEOSgcm.x in $EXPDIR"
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD    # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
-@SINGULARITY_BUILD    # force the use of GEOSgcm.x in the installation directory
-@SINGULARITY_BUILD    if( $SINGULARITY_SANDBOX != "" ) then
-@SINGULARITY_BUILD       echo "NOTE: Testing has shown Singularity only works when running with"
-@SINGULARITY_BUILD       echo "      the GEOSgcm.x executable directly from the installation bin directory"
-@SINGULARITY_BUILD       echo ""
-@SINGULARITY_BUILD       echo "      So, we will *ignore* the local GEOSgcm.x and "
-@SINGULARITY_BUILD       echo "      instead use $GEOSBIN/GEOSgcm.x"
-@SINGULARITY_BUILD       echo ""
-@SINGULARITY_BUILD    else
-@SINGULARITY_BUILD       echo "Using GEOSgcm.x from $GEOSBIN"
-@SINGULARITY_BUILD    endif
-@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-@SINGULARITY_BUILD else
-@SINGULARITY_BUILD    echo "Using GEOSgcm.x from $GEOSBIN"
-@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-@SINGULARITY_BUILD endif
+{{ SINGULARITY_BUILD }} #######################################################################
+{{ SINGULARITY_BUILD }} #             Settings for Singularity - EXPERIMENTAL
+{{ SINGULARITY_BUILD }} #######################################################################
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # Based on work on discover, to run you need to load the same compiler
+{{ SINGULARITY_BUILD }} # and MPI to match those in the container. For example, if your container was
+{{ SINGULARITY_BUILD }} # built with:
+{{ SINGULARITY_BUILD }} #   GNU 11.2.0
+{{ SINGULARITY_BUILD }} #   Intel Fortran 2021.6.0 (aka Intel oneAPI 2022.1.0)
+{{ SINGULARITY_BUILD }} #   Intel MPI 2021.6.0 (aka Intel oneAPI 2022.1.0)
+{{ SINGULARITY_BUILD }} # then you would need to load:
+{{ SINGULARITY_BUILD }} #   source /usr/share/modules/init/csh
+{{ SINGULARITY_BUILD }} #   module purge
+{{ SINGULARITY_BUILD }} #   module load comp/gcc/11.2.0
+{{ SINGULARITY_BUILD }} #   module load comp/intel/2021.6.0
+{{ SINGULARITY_BUILD }} #   module load mpi/impi/2021.6.0
+{{ SINGULARITY_BUILD }} #
+{{ SINGULARITY_BUILD }} # And then also append ${GEOSDIR}/lib to LD_LIBRARY_PATH
+{{ SINGULARITY_BUILD }} #   setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+{{ SINGULARITY_BUILD }} #
+{{ SINGULARITY_BUILD }} # For now we use the fact that on discover we can source g5_modules
+{{ SINGULARITY_BUILD }} #
+{{ SINGULARITY_BUILD }} # If you are using singularity, set the path to the singularity sandbox here
+{{ SINGULARITY_BUILD }} setenv SINGULARITY_SANDBOX {{ SINGULARITY_SANDBOX }}
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # Error out if SINGULARITY_SANDBOX is not set
+{{ SINGULARITY_BUILD }} if( $SINGULARITY_SANDBOX == "" ) then
+{{ SINGULARITY_BUILD }}    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
+{{ SINGULARITY_BUILD }}    exit 1
+{{ SINGULARITY_BUILD }} endif
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
+{{ SINGULARITY_BUILD }} echo "We are running under Singularity"
+{{ SINGULARITY_BUILD }} echo ""
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # Load the Singularity module
+{{ SINGULARITY_BUILD }} module load singularity
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # Set Singularity Bind Paths. Note: These are dependent on where you are running.
+{{ SINGULARITY_BUILD }} # By default, we'll assume you are running this script from NOBACKUP
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} setenv REAL_BIND_PATH {{ REAL_BIND_PATH }}
+{{ SINGULARITY_BUILD }} setenv BASE_BIND_PATH {{ BASE_BIND_PATH }}
+{{ SINGULARITY_BUILD }} setenv BOUNDARY_DIR {{ BOUNDARY_DIR }}
+{{ SINGULARITY_BUILD }} setenv SINGULARITY_BIND_PATH "-B ${NOBACKUP}:${NOBACKUP}:rw,${REAL_BIND_PATH}:${REAL_BIND_PATH}:rw,${BASE_BIND_PATH}:${BASE_BIND_PATH}:ro,${BOUNDARY_DIR}:${BOUNDARY_DIR}:ro"
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # If you are running from a different location, you will need to change the bind path
+{{ SINGULARITY_BUILD }} # Also, note that often $NOBACKUP is, say, /discover/nobackup/username, but gcm_setup
+{{ SINGULARITY_BUILD }} # will set GEOSDIR, GEOSBIN, etc. above to something like /gpfsm/dnbXX/username which
+{{ SINGULARITY_BUILD }} # is the "real" physical path that /discover/nobackup/username is a symlink to.
+{{ SINGULARITY_BUILD }} # You might need to change all the gpfsm paths to nobackup paths.
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # Set a variable to encapsulate all Singularity details
+{{ SINGULARITY_BUILD }} setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }} # Detect if GEOSgcm.x is in the experiment directory
+{{ SINGULARITY_BUILD }} if (-e $EXPDIR/GEOSgcm.x) then
+{{ SINGULARITY_BUILD }}    echo "Found GEOSgcm.x in $EXPDIR"
+{{ SINGULARITY_BUILD }}
+{{ SINGULARITY_BUILD }}    # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
+{{ SINGULARITY_BUILD }}    # force the use of GEOSgcm.x in the installation directory
+{{ SINGULARITY_BUILD }}    if( $SINGULARITY_SANDBOX != "" ) then
+{{ SINGULARITY_BUILD }}       echo "NOTE: Testing has shown Singularity only works when running with"
+{{ SINGULARITY_BUILD }}       echo "      the GEOSgcm.x executable directly from the installation bin directory"
+{{ SINGULARITY_BUILD }}       echo ""
+{{ SINGULARITY_BUILD }}       echo "      So, we will *ignore* the local GEOSgcm.x and "
+{{ SINGULARITY_BUILD }}       echo "      instead use $GEOSBIN/GEOSgcm.x"
+{{ SINGULARITY_BUILD }}       echo ""
+{{ SINGULARITY_BUILD }}    else
+{{ SINGULARITY_BUILD }}       echo "Using GEOSgcm.x from $GEOSBIN"
+{{ SINGULARITY_BUILD }}    endif
+{{ SINGULARITY_BUILD }}    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+{{ SINGULARITY_BUILD }} else
+{{ SINGULARITY_BUILD }}    echo "Using GEOSgcm.x from $GEOSBIN"
+{{ SINGULARITY_BUILD }}    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
+{{ SINGULARITY_BUILD }} endif
 
-@NATIVE_BUILD if (-e $EXPDIR/GEOSgcm.x) then
-@NATIVE_BUILD    echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-@NATIVE_BUILD    echo ""
-@NATIVE_BUILD    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
-@NATIVE_BUILD else
-@NATIVE_BUILD    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
-@NATIVE_BUILD    exit 1
-@NATIVE_BUILD endif
-@NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
+{{ NATIVE_BUILD }} if (-e $EXPDIR/GEOSgcm.x) then
+{{ NATIVE_BUILD }}    echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
+{{ NATIVE_BUILD }}    echo ""
+{{ NATIVE_BUILD }}    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
+{{ NATIVE_BUILD }} else
+{{ NATIVE_BUILD }}    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
+{{ NATIVE_BUILD }}    exit 1
+{{ NATIVE_BUILD }} endif
+{{ NATIVE_BUILD }} setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
 #######################################################################
 #                         Get RESTARTS
@@ -611,8 +611,8 @@ else
 endif
 wait
 
-@COUPLED /bin/mkdir INPUT
-@COUPLED cp $EXPDIR/RESTART/* INPUT
+{{ COUPLED }} /bin/mkdir INPUT
+{{ COUPLED }} cp $EXPDIR/RESTART/* INPUT
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
@@ -625,17 +625,17 @@ if($numrs == 0) then
       endif
    end
    wait
-@COUPLED    cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
+{{ COUPLED }}    cp -r $EXPDIR/RESTART ${EXPDIR}/restarts/RESTART.${edate}
    # WW3 restart file
    if( $wavewatch ) then
        set rst_ww3 = "restart.ww3"
        if( -e ${rst_ww3} ) cp ${rst_ww3}  ${EXPDIR}/restarts/$EXPID.${rst_ww3}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
    endif
    cd $EXPDIR/restarts
-      @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-      @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
+      {{ DATAOCEAN }} tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
+      {{ COUPLED }} tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV} RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
-     @COUPLED /bin/rm -rf RESTART.${edate}
+     {{ COUPLED }} /bin/rm -rf RESTART.${edate}
    cd $SCRDIR
 endif
 
@@ -727,7 +727,7 @@ set yearf = `echo $nymdf | cut -c1-4`
 
 # For Non-Reynolds SST, Modify local CAP.rc Ending date if Finish time exceeds Current year boundary
 # --------------------------------------------------------------------------------------------------
-if( @OCEANtag != DE0360xPE0180 ) then
+if( {{ OCEANtag }} != DE0360xPE0180 ) then
     if( $yearf > $yearc ) then
        @ yearf = $yearc + 1
        @ nymdf = $yearf * 10000 + 0101
@@ -808,19 +808,19 @@ if( $wavewatch ) then
     /bin/rm ww3_multi.nml.tmp
 endif
 
-@COUPLED# gcm_setup will make sure AGCM.rc, MOM_override and CICE6 use a Ocean DT
-@COUPLED# consistent with CAP.rc HEARTBEAT_DT. But a user might change the
-@COUPLED# HEARTBEAT_DT in CAP.rc at run time, so we need to update the dt in
-@COUPLED# the other files
+{{ COUPLED }}# gcm_setup will make sure AGCM.rc, MOM_override and CICE6 use a Ocean DT
+{{ COUPLED }}# consistent with CAP.rc HEARTBEAT_DT. But a user might change the
+{{ COUPLED }}# HEARTBEAT_DT in CAP.rc at run time, so we need to update the dt in
+{{ COUPLED }}# the other files
 
-@COUPLEDset HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
+{{ COUPLED }}set HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
 
-@COUPLED sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
-@MOM5 sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
-@MOM5        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
-@MOM6 sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
-@MOM6        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
-@CICE6 sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
+{{ COUPLED }} sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
+{{ MOM5 }} sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
+{{ MOM5 }}        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
+{{ MOM6 }} sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
+{{ MOM6 }}        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
+{{ CICE6 }} sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
 
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -846,16 +846,16 @@ if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv       
 set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
 if (       $ACHEM_TRUE == 0 && -e ACHEM_ExtData.rc              ) /bin/mv              ACHEM_ExtData.rc              ACHEM_ExtData.rc.NOT_USED
 
-@MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
-@MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
+{{ MP_TURN_OFF_WSUB_EXTDATA }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
+{{ MP_TURN_OFF_WSUB_EXTDATA }}# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+   {{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   {{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 else
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+   {{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   {{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 endif
-@MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
+{{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -901,7 +901,7 @@ if ( $rst_by_face == YES ) then
   echo "WARNING: The generated gwd_internal_face_x_rst are used"
   #foreach n (1 2 3 4 5 6)
     #/bin/rm gwd_internal_face_${n}_rst
-    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+    #/bin/cp {{ GWDRSDIR }}/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
   #end
 else
   if (! -e gwd_internal_rst) then
@@ -927,15 +927,15 @@ endif
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
-@CICE6 #detect exisistence of certain fields in CICE6 restart
-@CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
-@CICE6 if( $status == 0 ) then
-@CICE6    echo 'pond state in restart, turn on restart flag if not already'
-@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
-@CICE6 else
-@CICE6    echo 'pond state NOT in restart, turn off restart flag if already on'
-@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
-@CICE6 endif
+{{ CICE6 }} #detect exisistence of certain fields in CICE6 restart
+{{ CICE6 }} ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
+{{ CICE6 }} if( $status == 0 ) then
+{{ CICE6 }}    echo 'pond state in restart, turn on restart flag if not already'
+{{ CICE6 }}    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
+{{ CICE6 }} else
+{{ CICE6 }}    echo 'pond state NOT in restart, turn off restart flag if already on'
+{{ CICE6 }}    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
+{{ CICE6 }} endif
 
 #######################################################################
 #                Split Saltwater Restart if detected
@@ -958,8 +958,8 @@ else
 
    # Run the script
    # --------------
-   @SINGULARITY_BUILD $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
-   @NATIVE_BUILD $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   {{ SINGULARITY_BUILD }} $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
+   {{ NATIVE_BUILD }} $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
 
    # Move restarts
    # -------------
@@ -997,8 +997,8 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   {{ SINGULARITY_BUILD }} set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   {{ NATIVE_BUILD }} set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -1036,9 +1036,9 @@ endif
 # Environment variables for MPI, etc
 # ----------------------------------
 
-@SETENVS
+{{ SETENVS }}
 
-@MPT_SHEPHERD
+{{ MPT_SHEPHERD }}
 
 # Run bundleParser.py
 #---------------------
@@ -1073,75 +1073,75 @@ endif
 
 # Establish safe default number of OpenMP threads
 # -----------------------------------------------
-@MIT # ---------------------------------------------------
-@MIT # For MITgcm restarts - before running GEOSgcm.x
-@MIT # ---------------------------------------------------
-@MIT
-@MIT # set time interval for segment in seconds
-@MIT
-@MIT set yearc  = `echo $nymdc | cut -c1-4`
-@MIT set monthc = `echo $nymdc | cut -c5-6`
-@MIT set dayc   = `echo $nymdc | cut -c7-8`
-@MIT set hourc  = `echo $nhmsc | cut -c1-2`
-@MIT set minutec = `echo $nhmsc | cut -c3-4`
-@MIT set secondc = `echo $nhmsc | cut -c5-6`
-@MIT
-@MIT set yearf  = `echo $nymdf | cut -c1-4`
-@MIT set monthf = `echo $nymdf | cut -c5-6`
-@MIT set dayf   = `echo $nymdf | cut -c7-8`
-@MIT set hourf  = `echo $nhmsf | cut -c1-2`
-@MIT set minutef = `echo $nhmsf | cut -c3-4`
-@MIT set secondf = `echo $nhmsf | cut -c5-6`
-@MIT
-@MIT set yearf = `echo $nymdf | cut -c1-4`
-@MIT
-@MIT set time1 = `date -u -d "${yearc}-${monthc}-${dayc}T${hourc}:${minutec}:${secondc}" "+%s"`
-@MIT set time2 = `date -u -d "${yearf}-${monthf}-${dayf}T${hourf}:${minutef}:${secondf}" "+%s"`
-@MIT
-@MIT      @ mitdt = $time2 - $time1
-@MIT echo "Segment time: $mitdt"
-@MIT
-@MIT
-@MIT # Set-up MITgcm run directory
-@MIT if (! -e mitocean_run) mkdir -p mitocean_run
-@MIT cd mitocean_run
-@MIT
-@MIT # link mit configuration and initialization files
-@MIT ln -sf $EXPDIR/mit_input/* .
-@MIT # link mitgcm restarts if exist
-@MIT /bin/ln -sf $EXPDIR/restarts/pic* .
-@MIT # make an archive folder for mitgcm run
-@MIT mkdir $EXPDIR/mit_output
-@MIT
-@MIT # Calculate segment time steps
-@MIT set mit_nTimeSteps = `cat ${SCRDIR}/AGCM.rc | grep OGCM_RUN_DT: | cut -d: -f2 | tr -s " " | cut -d" " -f2`
-@MIT @ mit_nTimeSteps = ${mitdt} / $mit_nTimeSteps
-@MIT
-@MIT #change namelist variables in data - nTimeSteps, chkptFreq and monitorFreq
-@MIT sed -i "s/nTimeSteps.*/nTimeSteps       = ${mit_nTimeSteps},/" data
-@MIT sed -i "s/chkptFreq.*/chkptFreq        = ${mitdt}.0,/" data
-@MIT sed -i "s/pChkptFreq.*/pChkptFreq        = ${mitdt}.0,/" data
-@MIT # get nIter0
-@MIT
-@MIT if (! -e ${EXPDIR}/restarts/MITgcm_restart_dates.txt ) then
-@MIT   set nIter0 = `grep nIter0 data | tr -s " " | cut -d"=" -f2 | cut -d"," -f1 | awk '{$1=$1;print}'`
-@MIT else
-@MIT   set nIter0 = `grep "$nymdc $nhmsc" ${EXPDIR}/restarts/MITgcm_restart_dates.txt | cut -d" " -f5`
-@MIT   if ( $nIter0 == "" ) then
-@MIT     echo "No ocean restart file for $nymdc $nhmsc, exiting"
-@MIT     echo "If this is a new initialized experiment, delete:"
-@MIT     echo "${EXPDIR}/restarts/MITgcm_restart_dates.txt"
-@MIT     echo "and restart"
-@MIT     exit
-@MIT   else
-@MIT     sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
-@MIT   endif
-@MIT endif
-@MIT
-@MIT cd ..
-@MIT # ---------------------------------------------------
-@MIT # End MITgcm restarts - before running GEOSgcm.x
-@MIT # ---------------------------------------------------
+{{ MIT }} # ---------------------------------------------------
+{{ MIT }} # For MITgcm restarts - before running GEOSgcm.x
+{{ MIT }} # ---------------------------------------------------
+{{ MIT }}
+{{ MIT }} # set time interval for segment in seconds
+{{ MIT }}
+{{ MIT }} set yearc  = `echo $nymdc | cut -c1-4`
+{{ MIT }} set monthc = `echo $nymdc | cut -c5-6`
+{{ MIT }} set dayc   = `echo $nymdc | cut -c7-8`
+{{ MIT }} set hourc  = `echo $nhmsc | cut -c1-2`
+{{ MIT }} set minutec = `echo $nhmsc | cut -c3-4`
+{{ MIT }} set secondc = `echo $nhmsc | cut -c5-6`
+{{ MIT }}
+{{ MIT }} set yearf  = `echo $nymdf | cut -c1-4`
+{{ MIT }} set monthf = `echo $nymdf | cut -c5-6`
+{{ MIT }} set dayf   = `echo $nymdf | cut -c7-8`
+{{ MIT }} set hourf  = `echo $nhmsf | cut -c1-2`
+{{ MIT }} set minutef = `echo $nhmsf | cut -c3-4`
+{{ MIT }} set secondf = `echo $nhmsf | cut -c5-6`
+{{ MIT }}
+{{ MIT }} set yearf = `echo $nymdf | cut -c1-4`
+{{ MIT }}
+{{ MIT }} set time1 = `date -u -d "${yearc}-${monthc}-${dayc}T${hourc}:${minutec}:${secondc}" "+%s"`
+{{ MIT }} set time2 = `date -u -d "${yearf}-${monthf}-${dayf}T${hourf}:${minutef}:${secondf}" "+%s"`
+{{ MIT }}
+{{ MIT }}      @ mitdt = $time2 - $time1
+{{ MIT }} echo "Segment time: $mitdt"
+{{ MIT }}
+{{ MIT }}
+{{ MIT }} # Set-up MITgcm run directory
+{{ MIT }} if (! -e mitocean_run) mkdir -p mitocean_run
+{{ MIT }} cd mitocean_run
+{{ MIT }}
+{{ MIT }} # link mit configuration and initialization files
+{{ MIT }} ln -sf $EXPDIR/mit_input/* .
+{{ MIT }} # link mitgcm restarts if exist
+{{ MIT }} /bin/ln -sf $EXPDIR/restarts/pic* .
+{{ MIT }} # make an archive folder for mitgcm run
+{{ MIT }} mkdir $EXPDIR/mit_output
+{{ MIT }}
+{{ MIT }} # Calculate segment time steps
+{{ MIT }} set mit_nTimeSteps = `cat ${SCRDIR}/AGCM.rc | grep OGCM_RUN_DT: | cut -d: -f2 | tr -s " " | cut -d" " -f2`
+{{ MIT }} @ mit_nTimeSteps = ${mitdt} / $mit_nTimeSteps
+{{ MIT }}
+{{ MIT }} #change namelist variables in data - nTimeSteps, chkptFreq and monitorFreq
+{{ MIT }} sed -i "s/nTimeSteps.*/nTimeSteps       = ${mit_nTimeSteps},/" data
+{{ MIT }} sed -i "s/chkptFreq.*/chkptFreq        = ${mitdt}.0,/" data
+{{ MIT }} sed -i "s/pChkptFreq.*/pChkptFreq        = ${mitdt}.0,/" data
+{{ MIT }} # get nIter0
+{{ MIT }}
+{{ MIT }} if (! -e ${EXPDIR}/restarts/MITgcm_restart_dates.txt ) then
+{{ MIT }}   set nIter0 = `grep nIter0 data | tr -s " " | cut -d"=" -f2 | cut -d"," -f1 | awk '{$1=$1;print}'`
+{{ MIT }} else
+{{ MIT }}   set nIter0 = `grep "$nymdc $nhmsc" ${EXPDIR}/restarts/MITgcm_restart_dates.txt | cut -d" " -f5`
+{{ MIT }}   if ( $nIter0 == "" ) then
+{{ MIT }}     echo "No ocean restart file for $nymdc $nhmsc, exiting"
+{{ MIT }}     echo "If this is a new initialized experiment, delete:"
+{{ MIT }}     echo "${EXPDIR}/restarts/MITgcm_restart_dates.txt"
+{{ MIT }}     echo "and restart"
+{{ MIT }}     exit
+{{ MIT }}   else
+{{ MIT }}     sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
+{{ MIT }}   endif
+{{ MIT }} endif
+{{ MIT }}
+{{ MIT }} cd ..
+{{ MIT }} # ---------------------------------------------------
+{{ MIT }} # End MITgcm restarts - before running GEOSgcm.x
+{{ MIT }} # ---------------------------------------------------
 
 # Set OMP_NUM_THREADS
 # -------------------
@@ -1168,8 +1168,8 @@ else
    set IOSERVER_EXTRA   = ""
 endif
 
-@SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
-@NATIVE_BUILD @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+{{ SINGULARITY_BUILD }} {{ OCEAN_PRELOAD }} $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+{{ NATIVE_BUILD }} {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
@@ -1185,86 +1185,86 @@ setenv OMP_NUM_THREADS 1
 ./strip GWD_GridComp.rc
 sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
 
-@MIT # ---------------------------------------------------
-@MIT # For MITgcm restarts - after running GEOSgcm.x
-@MIT # ---------------------------------------------------
-@MIT
-@MIT set STEADY_STATE_OCEAN=`grep STEADY_STATE_OCEAN AGCM.rc | cut -d':' -f2 | tr -d " "`
-@MIT
-@MIT # update ocean only if activated. Otherwize use the same pickups (passive ocean).
-@MIT if ( ${STEADY_STATE_OCEAN} != 0 ) then
-@MIT
-@MIT   if ( ${rc} == 0 ) then
-@MIT
-@MIT     # Update nIter0 for next segment
-@MIT     set znIter00 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
-@MIT     @ nIter0 = $nIter0 + $mit_nTimeSteps
-@MIT     set znIter0 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
-@MIT
-@MIT     # to update MITgcm restart list file
-@MIT     sed -i "/${nIter0}/d" ${EXPDIR}/restarts/MITgcm_restart_dates.txt
-@MIT     echo "Date_GEOS5 $nymdf $nhmsf NITER0_MITgcm ${nIter0}" >> ${EXPDIR}/restarts/MITgcm_restart_dates.txt
-@MIT
-@MIT     /bin/mv $SCRDIR/mitocean_run/STDOUT.0000 $EXPDIR/mit_output/STDOUT.${znIter00}
-@MIT
-@MIT   endif
-@MIT
-@MIT   cd $SCRDIR/mitocean_run
-@MIT
-@MIT   # Check existance of roling pickups
-@MIT   set nonomatch rp =  ( pickup*ckptA* )
-@MIT   echo $rp
-@MIT   # Rename and move them if exist
-@MIT   if ( -e $rp[1] ) then
-@MIT     set timeStepNumber=`cat pickup.ckptA.meta | grep timeStepNumber | tr -s " " | cut -d" " -f5 | awk '{printf("%010d",$1)}'`
-@MIT     foreach fname ( pickup*ckptA* )
-@MIT       set bname = `echo ${fname} | cut -d "." -f1 | cut -d "/" -f2`
-@MIT       set aname = `echo ${fname} | cut -d "." -f3`
-@MIT       echo $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
-@MIT       /bin/mv ${fname} $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
-@MIT     end
-@MIT   endif
-@MIT
-@MIT   # Check existance of permanent pickups
-@MIT   set nonomatch pp =  ( pickup* )
-@MIT   echo $pp
-@MIT   # Move them if exist
-@MIT   if ( -e $pp[1] ) then
-@MIT     foreach fname ( pickup* )
-@MIT       if ( ! -e $EXPDIR/restarts/${fname} ) /bin/mv ${fname} $EXPDIR/restarts/${fname}
-@MIT     end
-@MIT   endif
-@MIT
-@MIT   /bin/mv T.* $EXPDIR/mit_output/
-@MIT   /bin/mv S.* $EXPDIR/mit_output/
-@MIT   /bin/mv U.* $EXPDIR/mit_output/
-@MIT   /bin/mv V.* $EXPDIR/mit_output/
-@MIT   /bin/mv W.* $EXPDIR/mit_output/
-@MIT   /bin/mv PH* $EXPDIR/mit_output/
-@MIT   /bin/mv Eta.* $EXPDIR/mit_output/
-@MIT
-@MIT   /bin/mv AREA.* $EXPDIR/mit_output/
-@MIT   /bin/mv HEFF.* $EXPDIR/mit_output/
-@MIT   /bin/mv HSNOW.* $EXPDIR/mit_output/
-@MIT   /bin/mv UICE.* $EXPDIR/mit_output/
-@MIT   /bin/mv VICE.* $EXPDIR/mit_output/
-@MIT
-@MIT   #copy mit output to mit_output
-@MIT   foreach i (`grep -i filename data.diagnostics  | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
-@MIT    /bin/mv ${i}* $EXPDIR/mit_output/
-@MIT   end
-@MIT
-@MIT   foreach i (`grep -i stat_fName data.diagnostics | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
-@MIT    /bin/mv ${i}* $EXPDIR/mit_output/
-@MIT   end
-@MIT
-@MIT   cd $SCRDIR
-@MIT
-@MIT endif
-@MIT
-@MIT # ---------------------------------------------------
-@MIT # End MITgcm restarts - after running GEOSgcm.x
-@MIT # ---------------------------------------------------
+{{ MIT }} # ---------------------------------------------------
+{{ MIT }} # For MITgcm restarts - after running GEOSgcm.x
+{{ MIT }} # ---------------------------------------------------
+{{ MIT }}
+{{ MIT }} set STEADY_STATE_OCEAN=`grep STEADY_STATE_OCEAN AGCM.rc | cut -d':' -f2 | tr -d " "`
+{{ MIT }}
+{{ MIT }} # update ocean only if activated. Otherwize use the same pickups (passive ocean).
+{{ MIT }} if ( ${STEADY_STATE_OCEAN} != 0 ) then
+{{ MIT }}
+{{ MIT }}   if ( ${rc} == 0 ) then
+{{ MIT }}
+{{ MIT }}     # Update nIter0 for next segment
+{{ MIT }}     set znIter00 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
+{{ MIT }}     @ nIter0 = $nIter0 + $mit_nTimeSteps
+{{ MIT }}     set znIter0 = `echo $nIter0 | awk '{printf("%010d",$1)}'`
+{{ MIT }}
+{{ MIT }}     # to update MITgcm restart list file
+{{ MIT }}     sed -i "/${nIter0}/d" ${EXPDIR}/restarts/MITgcm_restart_dates.txt
+{{ MIT }}     echo "Date_GEOS5 $nymdf $nhmsf NITER0_MITgcm ${nIter0}" >> ${EXPDIR}/restarts/MITgcm_restart_dates.txt
+{{ MIT }}
+{{ MIT }}     /bin/mv $SCRDIR/mitocean_run/STDOUT.0000 $EXPDIR/mit_output/STDOUT.${znIter00}
+{{ MIT }}
+{{ MIT }}   endif
+{{ MIT }}
+{{ MIT }}   cd $SCRDIR/mitocean_run
+{{ MIT }}
+{{ MIT }}   # Check existance of roling pickups
+{{ MIT }}   set nonomatch rp =  ( pickup*ckptA* )
+{{ MIT }}   echo $rp
+{{ MIT }}   # Rename and move them if exist
+{{ MIT }}   if ( -e $rp[1] ) then
+{{ MIT }}     set timeStepNumber=`cat pickup.ckptA.meta | grep timeStepNumber | tr -s " " | cut -d" " -f5 | awk '{printf("%010d",$1)}'`
+{{ MIT }}     foreach fname ( pickup*ckptA* )
+{{ MIT }}       set bname = `echo ${fname} | cut -d "." -f1 | cut -d "/" -f2`
+{{ MIT }}       set aname = `echo ${fname} | cut -d "." -f3`
+{{ MIT }}       echo $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
+{{ MIT }}       /bin/mv ${fname} $EXPDIR/restarts/${bname}.${timeStepNumber}.${aname}
+{{ MIT }}     end
+{{ MIT }}   endif
+{{ MIT }}
+{{ MIT }}   # Check existance of permanent pickups
+{{ MIT }}   set nonomatch pp =  ( pickup* )
+{{ MIT }}   echo $pp
+{{ MIT }}   # Move them if exist
+{{ MIT }}   if ( -e $pp[1] ) then
+{{ MIT }}     foreach fname ( pickup* )
+{{ MIT }}       if ( ! -e $EXPDIR/restarts/${fname} ) /bin/mv ${fname} $EXPDIR/restarts/${fname}
+{{ MIT }}     end
+{{ MIT }}   endif
+{{ MIT }}
+{{ MIT }}   /bin/mv T.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv S.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv U.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv V.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv W.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv PH* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv Eta.* $EXPDIR/mit_output/
+{{ MIT }}
+{{ MIT }}   /bin/mv AREA.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv HEFF.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv HSNOW.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv UICE.* $EXPDIR/mit_output/
+{{ MIT }}   /bin/mv VICE.* $EXPDIR/mit_output/
+{{ MIT }}
+{{ MIT }}   #copy mit output to mit_output
+{{ MIT }}   foreach i (`grep -i filename data.diagnostics  | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
+{{ MIT }}    /bin/mv ${i}* $EXPDIR/mit_output/
+{{ MIT }}   end
+{{ MIT }}
+{{ MIT }}   foreach i (`grep -i stat_fName data.diagnostics | grep "^ " | cut -d"=" -f2 | cut -d"'" -f2 | awk '{$1=$1;print}'`)
+{{ MIT }}    /bin/mv ${i}* $EXPDIR/mit_output/
+{{ MIT }}   end
+{{ MIT }}
+{{ MIT }}   cd $SCRDIR
+{{ MIT }}
+{{ MIT }} endif
+{{ MIT }}
+{{ MIT }} # ---------------------------------------------------
+{{ MIT }} # End MITgcm restarts - after running GEOSgcm.x
+{{ MIT }} # ---------------------------------------------------
 
 
 #######################################################################
@@ -1274,8 +1274,8 @@ sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
 
 set edate  = e`awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut -c1-2`z
 
-@COUPLED cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
-@COUPLED cp RESTART/* INPUT
+{{ COUPLED }} cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
+{{ COUPLED }} cp RESTART/* INPUT
 
 # Move Intermediate Checkpoints to RESTARTS directory
 # ---------------------------------------------------
@@ -1344,10 +1344,10 @@ endif
 # ---------------------
 cd $EXPDIR/restarts
 if( $FSEGMENT == 00000000 ) then
-        @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
-        @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
+        {{ DATAOCEAN }} tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
+        {{ COUPLED }} tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-        @COUPLED /bin/rm -rf RESTART.${edate}
+        {{ COUPLED }} /bin/rm -rf RESTART.${edate}
 endif
 
 
@@ -1362,36 +1362,36 @@ foreach collection ( $collections )
    /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
 end
 
-@COUPLED # MOM-Specific Output Files
-@COUPLED # -------------------------
-@MOM5 set dsets="ocean_month"
-@MOM6 set dsets="ocean_state prog_z sfc_ave forcing"
-@MOM5  foreach dset ( $dsets )
-@MOM5  set num = `/bin/ls -1 $dset.nc | wc -l`
-@MOM5  if($num != 0) then
-@MOM5     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-@MOM5     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-@MOM5  endif
-@MOM5  end
-@MOM6  foreach dset ( $dsets )
-@MOM6  set num = `/bin/ls -1 $dset.nc | wc -l`
-@MOM6  if($num != 0) then
-@MOM6     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
-@MOM6     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
-@MOM6  endif
-@MOM6  end
+{{ COUPLED }} # MOM-Specific Output Files
+{{ COUPLED }} # -------------------------
+{{ MOM5 }} set dsets="ocean_month"
+{{ MOM6 }} set dsets="ocean_state prog_z sfc_ave forcing"
+{{ MOM5 }} foreach dset ( $dsets )
+{{ MOM5 }} set num = `/bin/ls -1 $dset.nc | wc -l`
+{{ MOM5 }} if($num != 0) then
+{{ MOM5 }}    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+{{ MOM5 }}    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+{{ MOM5 }} endif
+{{ MOM5 }} end
+{{ MOM6 }} foreach dset ( $dsets )
+{{ MOM6 }} set num = `/bin/ls -1 $dset.nc | wc -l`
+{{ MOM6 }} if($num != 0) then
+{{ MOM6 }}    if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
+{{ MOM6 }}    /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
+{{ MOM6 }} endif
+{{ MOM6 }} end
 
-@CICE6 # CICE6-Specific Output Files
-@CICE6 # -------------------------
-@CICE6 set dsets="iceh"
-@CICE6 foreach dset ( $dsets )
-@CICE6  set num = `/bin/ls -1 $dset.*.nc | wc -l`
-@CICE6  if($num != 0) then
-@CICE6     if(! -e $EXPDIR/CICE_Output) mkdir -p $EXPDIR/CICE_Output
-@CICE6     /bin/mv $SCRDIR/$dset.*.nc $EXPDIR/CICE_Output/
-@CICE6  endif
-@CICE6 end
-@CICE6
+{{ CICE6 }} # CICE6-Specific Output Files
+{{ CICE6 }} # -------------------------
+{{ CICE6 }} set dsets="iceh"
+{{ CICE6 }} foreach dset ( $dsets )
+{{ CICE6 }}  set num = `/bin/ls -1 $dset.*.nc | wc -l`
+{{ CICE6 }}  if($num != 0) then
+{{ CICE6 }}     if(! -e $EXPDIR/CICE_Output) mkdir -p $EXPDIR/CICE_Output
+{{ CICE6 }}     /bin/mv $SCRDIR/$dset.*.nc $EXPDIR/CICE_Output/
+{{ CICE6 }}  endif
+{{ CICE6 }} end
+{{ CICE6 }}
 #######################################################################
 #                 Run Post-Processing and Forecasts
 #######################################################################
@@ -1470,13 +1470,13 @@ else
      endif
 endif
 
-@COUPLED cp -rf RESTART $EXPDIR
+{{ COUPLED }} cp -rf RESTART $EXPDIR
 
 if ( $rc == 0 ) then
       cd  $HOMDIR
       if ( $GCMEMIP == TRUE ) then
-          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
+          if( $capdate < $enddate ) {{ BATCH_CMD }} $HOMDIR/gcm_run.j$RSTDATE
           else
-          if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
+          if( $capdate < $enddate ) {{ BATCH_CMD }} $HOMDIR/gcm_run.j
       endif
 endif

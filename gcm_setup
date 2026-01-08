@@ -586,7 +586,7 @@ if( $OGCM == TRUE ) then
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OGRIDTYP  = "M6TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -1419,7 +1419,7 @@ if( $SITE == 'NAS' ) then
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               else
-                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
+                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/realtime/${SSTNAME}/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
               endif
               if (${OGRIDTYP} == "MITLLC") then
                 setenv SSTDIR /nobackupp2/estrobac/geos5/SSTDIR
@@ -1469,7 +1469,7 @@ else if( $SITE == 'NCCS' ) then
               if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
                    setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               else
-                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
+                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/${SSTNAME}/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
               endif
               setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
@@ -1513,7 +1513,7 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
 
               setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
 
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
+              setenv SSTDIR     ${BOUNDARY_DIR}/${SSTNAME}/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                   # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean        # Coupled Ocean/Atmos Forcing
@@ -1554,7 +1554,7 @@ else
 
               setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
 
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
+              setenv SSTDIR     ${BOUNDARY_DIR}/${SSTNAME}/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
               setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                  # user work directory
               setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
@@ -1977,220 +1977,221 @@ endif
 #######################################################################
 
 cat >      $HOMDIR/sedfile << EOF
-/@SETENVS/ {
+/{{ SETENVS }}/ {
 t success
 : success
 r $HOMDIR/SETENV.commands
 d
 }
 
-s?@GCMVER?$GCMVER?g
-s?@EXPSRC?$GEOSTAG?g
-s?@EXPID?$EXPID?g
-s?@RUN_N?$RUN_N?g
-s?@RUN_FN?$RUN_FN?g
-s?@RUN_FT?$RUN_FT?g
-s?@RUN_T?$RUN_T?g
-s?@RUN_P?$RUN_P?g
-s?@RUN_FP?$RUN_FP?g
-s?@RUN_Q?$RUN_Q?g
-s?@REGRESS_P?$REGRESS_P?g
-s?@POST_N?$POST_N?g
-s?@POST_T?$POST_T?g
-s?@POST_P?$POST_P?g
-s?@POST_Q?$POST_Q?g
-s?@MOVE_N?$MOVE_N?g
-s?@PLOT_N?$PLOT_N?g
-s?@PLOT_T?$PLOT_T?g
-s?@PLOT_P?$PLOT_P?g
-s?@PLOT_Q?$PLOT_Q?g
-s?@MOVE_Q?$MOVE_Q?g
-s?@MOVE_P?$MOVE_P?g
-s?@ARCHIVE_N?$ARCHIVE_N?g
-s?@ARCHIVE_T?$ARCHIVE_T?g
-s?@ARCHIVE_P?$ARCHIVE_P?g
-s?@ARCHIVE_Q?$ARCHIVE_Q?g
-s?@REGRESS_N?$REGRESS_N?g
-s?@BCSDIR?$BCSDIR?g
-s?@SSTDIR?$SSTDIR?g
-s?@SSTNAME?$SSTNAME?g
-s?@OCEANOUT?$OCEANOUT?g
-s?@LSMBCS?$LSM_BCS?g
-s?@EMIP_BCS_IN?$EMIP_BCS_IN?g
-s?@EMIP_MERRA2?$EMIP_MERRA2?g
-s?@BCSTAG?$OCEAN_TAG?g
-s?@SSTFILE?$SSTFILE?g
-s?@ICEFILE?$ICEFILE?g
-s?@KPARFILE?$KPARFILE?g
-s?@CHMDIR?$CHMDIR?g
-s?@COUPLEDIR?$COUPLEDIR?g
-s?@GWDRSDIR?$GWDRSDIR?g
-s?@NCAR_NRDG?$NCAR_NRDG?g
-s?@EXPDIR?$EXPDIR?g
-s?@EXPDSC?$EXPDSC?g
-s?@HOMDIR?$HOMDIR?g
-s?@BATCH_GROUP?${BATCH_GROUP}${GROUP}?g
-s?@BATCH_TIME?$BATCH_TIME?g
-s?@BATCH_CMD?$BATCH_CMD?g
-s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
-s?@BATCH_OUTPUTNAME?$BATCH_OUTPUTNAME?g
-s?@BATCH_JOINOUTERR?$BATCH_JOINOUTERR?g
-s?@SITE?$SITE?g
-s?@GEOSDIR?$GEOSDIR?g
-s?@GEOSSRC?$GEOSSRC?g
-s?@GEOSBIN?$GEOSBIN?g
-s?@GEOSETC?$GEOSETC?g
-s?@GEOSUTIL?$GEOSUTIL?g
-s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
-s?@NATIVE_BUILD?$NATIVE_BUILD?g
-s?@MPT_SHEPHERD?$MPT_SHEPHERD?g
-s?@SINGULARITY_SANDBOX?$SINGULARITY_SANDBOX?g
-s?@REAL_BIND_PATH?$REAL_BIND_PATH?g
-s?@BASE_BIND_PATH?$BASE_BIND_PATH?g
-s?@BC_BASE?$BC_BASE?g
-s?@BOUNDARY_DIR?$BOUNDARY_DIR?g
-s?@BCS_INPUT_BASE?$BCS_INPUT_BASE?g
+s?{{ GCMVER }}?$GCMVER?g
+s?{{ EXPSRC }}?$GEOSTAG?g
+s?{{ EXPID }}?$EXPID?g
+s?{{ RUN_N }}?$RUN_N?g
+s?{{ RUN_FN }}?$RUN_FN?g
+s?{{ RUN_FT }}?$RUN_FT?g
+s?{{ RUN_T }}?$RUN_T?g
+s?{{ RUN_P }}?$RUN_P?g
+s?{{ RUN_FP }}?$RUN_FP?g
+s?{{ RUN_Q }}?$RUN_Q?g
+s?{{ REGRESS_P }}?$REGRESS_P?g
+s?{{ POST_N }}?$POST_N?g
+s?{{ POST_T }}?$POST_T?g
+s?{{ POST_P }}?$POST_P?g
+s?{{ POST_Q }}?$POST_Q?g
+s?{{ MOVE_N }}?$MOVE_N?g
+s?{{ PLOT_N }}?$PLOT_N?g
+s?{{ PLOT_T }}?$PLOT_T?g
+s?{{ PLOT_P }}?$PLOT_P?g
+s?{{ PLOT_Q }}?$PLOT_Q?g
+s?{{ MOVE_Q }}?$MOVE_Q?g
+s?{{ MOVE_P }}?$MOVE_P?g
+s?{{ ARCHIVE_N }}?$ARCHIVE_N?g
+s?{{ ARCHIVE_T }}?$ARCHIVE_T?g
+s?{{ ARCHIVE_P }}?$ARCHIVE_P?g
+s?{{ ARCHIVE_Q }}?$ARCHIVE_Q?g
+s?{{ REGRESS_N }}?$REGRESS_N?g
+s?{{ BCSDIR }}?$BCSDIR?g
+s?{{ SSTDIR }}?$SSTDIR?g
+s?{{ SSTNAME }}?$SSTNAME?g
+s?{{ OCEANOUT }}?$OCEANOUT?g
+s?{{ LSMBCS }}?$LSM_BCS?g
+s?{{ EMIP_BCS_IN }}?$EMIP_BCS_IN?g
+s?{{ EMIP_MERRA2 }}?$EMIP_MERRA2?g
+s?{{ BCSTAG }}?$OCEAN_TAG?g
+s?{{ SSTFILE }}?$SSTFILE?g
+s?{{ ICEFILE }}?$ICEFILE?g
+s?{{ KPARFILE }}?$KPARFILE?g
+s?{{ CHMDIR }}?$CHMDIR?g
+s?{{ COUPLEDIR }}?$COUPLEDIR?g
+s?{{ GWDRSDIR }}?$GWDRSDIR?g
+s?{{ NCAR_NRDG }}?$NCAR_NRDG?g
+s?{{ EXPDIR }}?$EXPDIR?g
+s?{{ EXPDSC }}?$EXPDSC?g
+s?{{ HOMDIR }}?$HOMDIR?g
+s?{{ BATCH_GROUP }}?${BATCH_GROUP}${GROUP}?g
+s?{{ BATCH_TIME }}?$BATCH_TIME?g
+s?{{ BATCH_CMD }}?$BATCH_CMD?g
+s?{{ BATCH_JOBNAME }}?$BATCH_JOBNAME?g
+s?{{ BATCH_OUTPUTNAME }}?$BATCH_OUTPUTNAME?g
+s?{{ BATCH_JOINOUTERR }}?$BATCH_JOINOUTERR?g
+s?{{ SITE }}?$SITE?g
+s?{{ GEOSDIR }}?$GEOSDIR?g
+s?{{ GEOSSRC }}?$GEOSSRC?g
+s?{{ GEOSBIN }}?$GEOSBIN?g
+s?{{ GEOSETC }}?$GEOSETC?g
+s?{{ GEOSUTIL }}?$GEOSUTIL?g
+s?{{ SINGULARITY_BUILD }}?$SINGULARITY_BUILD?g
+s?{{ NATIVE_BUILD }}?$NATIVE_BUILD?g
+s?{{ MPT_SHEPHERD }}?$MPT_SHEPHERD?g
+s?{{ SINGULARITY_SANDBOX }}?$SINGULARITY_SANDBOX?g
+s?{{ REAL_BIND_PATH }}?$REAL_BIND_PATH?g
+s?{{ BASE_BIND_PATH }}?$BASE_BIND_PATH?g
+s?{{ BC_BASE }}?$BC_BASE?g
+s?{{ BOUNDARY_DIR }}?$BOUNDARY_DIR?g
+s?{{ BCS_INPUT_BASE }}?$BCS_INPUT_BASE?g
 
-s?@CHECKPOINT_TYPE?default?g
+s?{{ CHECKPOINT_TYPE }}?default?g
 
-s?@OGCM_NX?$OGCM_NX?g
-s?@OGCM_NY?$OGCM_NY?g
-s?@OGCM_NPROCS?$OGCM_NPROCS?g
+s?{{ OGCM_NX }}?$OGCM_NX?g
+s?{{ OGCM_NY }}?$OGCM_NY?g
+s?{{ OGCM_NPROCS }}?$OGCM_NPROCS?g
 
-s?@OBSERVER_FRQ?0?g
+s?{{ OBSERVER_FRQ }}?0?g
 s?^[ \t]*RECORD_?#RECORD_?g
 
-s?@DASTUNING?#?g
+s?{{ DASTUNING }}?#?g
 
-s?@FORCEDAS?$FORCEDAS?g
-s?@FORCEGCM?$FORCEGCM?g
-s?@COUPLED?$COUPLED?g
-s?@CLDMICRO?$CLDMICRO?g
-s?@MOM5?$MOM5?g
-s?@MOM6?$MOM6?g
-s?@OCNMODEL?$OCNMODEL?g
-s?@CICE4?$CICE4?g
-s?@CICE6?$CICE6?g
-s?@HIST_CICE4?$HIST_CICE4?g
-s?@MIT?$MIT?g
-s?@DATAOCEAN?$DATAOCEAN?g
-s?@OPS_SPECIES?$OPS_SPECIES?g
-s?@CMIP_SPECIES?$CMIP_SPECIES?g
-s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
-s?@FVCUBED?$FVCUBED?g
-s?@HIST_GOCART?$HIST_GOCART?g
-s?@HIST_CATCHCN?$HIST_CATCHCN?g
-s?@GCMRUN_CATCHCN?$GCMRUN_CATCHCN?g
-s?@EMIP_OLDLAND?$EMIP_OLDLAND?g
-s?@EMIP_NEWLAND?$EMIP_NEWLAND?g
-s?@LSM_PARMS?$LSM_PARMS?g
-s?@OCEAN_NAME?$OCEAN_NAME?g
-s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
+s?{{ FORCEDAS }}?$FORCEDAS?g
+s?{{ FORCEGCM }}?$FORCEGCM?g
+s?{{ COUPLED }}?$COUPLED?g
+s?{{ CLDMICRO }}?$CLDMICRO?g
+s?{{ MOM5 }}?$MOM5?g
+s?{{ MOM6 }}?$MOM6?g
+s?{{ OCNMODEL }}?$OCNMODEL?g
+s?{{ CICE4 }}?$CICE4?g
+s?{{ CICE6 }}?$CICE6?g
+s?{{ HIST_CICE4 }}?$HIST_CICE4?g
+s?{{ MIT }}?$MIT?g
+s?{{ DATAOCEAN }}?$DATAOCEAN?g
+s?{{ OPS_SPECIES }}?$OPS_SPECIES?g
+s?{{ CMIP_SPECIES }}?$CMIP_SPECIES?g
+s?{{ MERRA2OX_SPECIES }}?$MERRA2OX_SPECIES?g
+s?{{ FVCUBED }}?$FVCUBED?g
+s?{{ HIST_GOCART }}?$HIST_GOCART?g
+s?{{ HIST_CATCHCN }}?$HIST_CATCHCN?g
+s?{{ GCMRUN_CATCHCN }}?$GCMRUN_CATCHCN?g
+s?{{ EMIP_OLDLAND }}?$EMIP_OLDLAND?g
+s?{{ EMIP_NEWLAND }}?$EMIP_NEWLAND?g
+s?{{ LSM_PARMS }}?$LSM_PARMS?g
+s?{{ OCEAN_NAME }}?$OCEAN_NAME?g
+s?{{ OCEAN_PRELOAD }}?$OCEAN_PRELOAD?g
 
-s?@4DIAUDAS?#DELETE?g
-s?@REGULAR_REPLAY_GMAO?#?g
-s?@REGULAR_REPLAY_NCEP?#DELETE?g
-s?@REGULAR_REPLAY_ECMWF?#DELETE?g
-s?@REGULAR_REPLAY?#?g
+s?{{ _4DIAUDAS }}?#DELETE?g
+s?{{ REGULAR_REPLAY_GMAO }}?#?g
+s?{{ REGULAR_REPLAY_NCEP }}?#DELETE?g
+s?{{ REGULAR_REPLAY_ECMWF }}?#DELETE?g
+s?{{ REGULAR_REPLAY }}?#?g
 s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
-s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
-s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
-s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
+s?{{ REPLAY_ANA_EXPID }}?$REPLAY_ANA_EXPID?g
+s?{{ REPLAY_ANA_LOCATION }}?$REPLAY_ANA_LOCATION?g
+s?{{ M2_REPLAY_ANA_LOCATION }}?$M2_REPLAY_ANA_LOCATION?g
 
-s?@OX_RELAXTIME?$OX_RELAXTIME?g
-s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
+s?{{ OX_RELAXTIME }}?$OX_RELAXTIME?g
+s?{{ PCHEM_CLIM_YEARS }}?$PCHEM_CLIM_YEARS?g
 
-s?@RATS_PROVIDER?$RATS_PROVIDER?g
-s?@AERO_PROVIDER?$AERO_PROVIDER?g
-s?@OANA_PROVIDER?PCHEM?g
-s?@EMISSIONS?$EMISSIONS?g
+s?{{ RATS_PROVIDER }}?$RATS_PROVIDER?g
+s?{{ AERO_PROVIDER }}?$AERO_PROVIDER?g
+s?{{ OANA_PROVIDER }}?PCHEM?g
+s?{{ EMISSIONS }}?$EMISSIONS?g
 
-s?@CH4_PROVIDER?$CH4_PROVIDER?g
-s?@CO2_PROVIDER?$CO2_PROVIDER?g
+s?{{ CH4_PROVIDER }}?$CH4_PROVIDER?g
+s?{{ CO2_PROVIDER }}?$CO2_PROVIDER?g
 
-s^@DYCORE^$DYCORE^g
-s^@AGCM_GRIDNAME^$AGCM_GRIDNAME^g
-s^@OGCM_GRIDNAME^$OGCM_GRIDNAME^g
+s^{{ DYCORE }}^$DYCORE^g
+s^{{ AGCM_GRIDNAME }}^$AGCM_GRIDNAME^g
+s^{{ OGCM_GRIDNAME }}^$OGCM_GRIDNAME^g
 
-s?@OGCM_IS_FCST?$OGCM_IS_FCST?g
-s^@BOOT^YES^g
-s^@BCSRES^$BCSRES^g
-s^@OCEANtag^$OCEAN_RES^g
-s^@ATMOStag^$ATMOS_RES^g
-s^@RES_DATELINE^$RES_DATELINE^g
-s^@TILEDATA^$TILEDATA^g
-s^@TILEBIN^$TILEBIN^g
-s/@DT/$DT/g
-s/@CONV_DT/$CONV_DT/g
-s/@CHEM_DT/$CHEM_DT/g
-s/@SOLAR_DT/$SOLAR_DT/g
-s/@IRRAD_DT/$IRRAD_DT/g
-s/@OCEAN_DT/$OCEAN_DT/g
-s/@NX/$NX/g
-s/@NY/$NY/g
-s/@USE_SHMEM/$USE_SHMEM/g
-s/@USE_IOSERVER/$USE_IOSERVER/g
-s/@NUM_OSERVER_NODES/$NUM_OSERVER_NODES/g
-s/@NUM_BACKEND_PES/$NUM_BACKEND_PES/g
-s/@RESTART_BY_OSERVER/$RESTART_BY_OSERVER/g
-s#@SEVERAL_TRIES#$SEVERAL_TRIES#g
-s/@NCPUS_PER_NODE/$NCPUS_PER_NODE/g
-s/@NUM_READERS/$NUM_READERS/g
-s/@NUM_WRITERS/$NUM_WRITERS/g
-s/@LATLON_AGCM/$LATLON_AGCM/g
-s?@LATLON_OGCM?$LATLON_OGCM?g
-s/@CUBE_AGCM/$CUBE_AGCM/g
-s?@CUBE_OGCM?$CUBE_OGCM?g
-s/@GRID_TYPE/$GRID_TYPE/g
-s/@AGCM_NF/$AGCM_NF/g
-s/@AGCM_IM/$AGCM_IM/g
-s/@AGCM_JM/$AGCM_JM/g
-s/@AGCM_LM/$AGCM_LM/g
-s/@OGCM_IM/$OGCM_IM/g
-s/@OGCM_JM/$OGCM_JM/g
-s/@OGCM_LM/$OGCM_LM/g
-s/@OGCM_NF/$OGCM_NF/g
-s/@OGCM_GRID_TYPE/$OGCM_GRID_TYPE/g
-s/@BEG_DATE/${BEG_DATE}/g
-s/@END_DATE/${END_DATE}/g
-s/@JOB_SGMT/${JOB_SGMT}/g
-s/@NUM_SGMT/${NUM_SGMT}/g
+s?{{ OGCM_IS_FCST }}?$OGCM_IS_FCST?g
+s^{{ BOOT }}^YES^g
+s^{{ BCSRES }}^$BCSRES^g
+s^{{ OCEANtag }}^$OCEAN_RES^g
+s^{{ ATMOStag }}^$ATMOS_RES^g
+s^{{ RES_DATELINE }}^$RES_DATELINE^g
+s^{{ TILEDATA }}^$TILEDATA^g
+s^{{ TILEBIN }}^$TILEBIN^g
+s/{{ DT }}/$DT/g
+s/{{ CONV_DT }}/$CONV_DT/g
+s/{{ CHEM_DT }}/$CHEM_DT/g
+s/{{ SOLAR_DT }}/$SOLAR_DT/g
+s/{{ IRRAD_DT }}/$IRRAD_DT/g
+s/{{ OCEAN_DT }}/$OCEAN_DT/g
+s/{{ NX }}/$NX/g
+s/{{ NY }}/$NY/g
+s/{{ USE_SHMEM }}/$USE_SHMEM/g
+s/{{ USE_IOSERVER }}/$USE_IOSERVER/g
+s/{{ NUM_OSERVER_NODES }}/$NUM_OSERVER_NODES/g
+s/{{ NUM_BACKEND_PES }}/$NUM_BACKEND_PES/g
+s/{{ RESTART_BY_OSERVER }}/$RESTART_BY_OSERVER/g
+s#{{ SEVERAL_TRIES }}#$SEVERAL_TRIES#g
+s/{{ NCPUS_PER_NODE }}/$NCPUS_PER_NODE/g
+s/{{ NUM_READERS }}/$NUM_READERS/g
+s/{{ NUM_WRITERS }}/$NUM_WRITERS/g
+s/{{ LATLON_AGCM }}/$LATLON_AGCM/g
+s?{{ LATLON_OGCM }}?$LATLON_OGCM?g
+s/{{ CUBE_AGCM }}/$CUBE_AGCM/g
+s?{{ CUBE_OGCM }}?$CUBE_OGCM?g
+s/{{ GRID_TYPE }}/$GRID_TYPE/g
+s/{{ AGCM_NF }}/$AGCM_NF/g
+s/{{ AGCM_IM }}/$AGCM_IM/g
+s/{{ AGCM_JM }}/$AGCM_JM/g
+s/{{ AGCM_LM }}/$AGCM_LM/g
+s/{{ OGCM_IM }}/$OGCM_IM/g
+s/{{ OGCM_JM }}/$OGCM_JM/g
+s/{{ OGCM_LM }}/$OGCM_LM/g
+s/{{ OGCM_NF }}/$OGCM_NF/g
+s/{{ OGCM_GRID_TYPE }}/$OGCM_GRID_TYPE/g
+s/{{ BEG_DATE }}/${BEG_DATE}/g
+s/{{ END_DATE }}/${END_DATE}/g
+s/{{ JOB_SGMT }}/${JOB_SGMT}/g
+s/{{ NUM_SGMT }}/${NUM_SGMT}/g
 
-s/@CONUS/${CONUS}/g
-s/@CONVPAR_OPTION/${CONVPAR_OPTION}/g
-s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
+s/{{ CONUS }}/${CONUS}/g
+s/{{ CONVPAR_OPTION }}/${CONVPAR_OPTION}/g
+s/{{ STRETCH_FACTOR }}/${STRETCH_FACTOR}/g
 
-s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
-s/@HIST_IM/$HIST_IM/g
-s/@HIST_JM/$HIST_JM/g
-s/@CLIM_IM/$CLIM_IM/g
-s/@CLIM_JM/$CLIM_JM/g
+s/{{ INTERPOLATE_SST }}/$INTERPOLATE_SST/g
+s/{{ HIST_IM }}/$HIST_IM/g
+s/{{ HIST_JM }}/$HIST_JM/g
+s/{{ CLIM_IM }}/$CLIM_IM/g
+s/{{ CLIM_JM }}/$CLIM_JM/g
 
-s/@ISCCP_SATSIM/1/g
-s/@MODIS_SATSIM/0/g
-s/@RADAR_SATSIM/0/g
-s/@LIDAR_SATSIM/0/g
-s/@MISR_SATSIM/0/g
-s/@SATSIM/0/g
+s/{{ ISCCP_SATSIM }}/1/g
+s/{{ MODIS_SATSIM }}/0/g
+s/{{ RADAR_SATSIM }}/0/g
+s/{{ LIDAR_SATSIM }}/0/g
+s/{{ MISR_SATSIM }}/0/g
+s/{{ SATSIM }}/0/g
 
-s/@USE_SKIN_LAYER/1/g
-s/@ANALYZE_TS/0/g
+s/{{ USE_SKIN_LAYER }}/1/g
+s/{{ ANALYZE_TS }}/0/g
 
-s/@LSM_CHOICE/$LSM_CHOICE/g
+s/{{ LSM_CHOICE }}/$LSM_CHOICE/g
 
-s/@MP_TURN_OFF_WSUB_EXTDATA/$MP_TURN_OFF_WSUB_EXTDATA/g
+s/{{ MP_TURN_OFF_WSUB_EXTDATA }}/$MP_TURN_OFF_WSUB_EXTDATA/g
 
-s?@BACM_1M_?$BACM_1M_?g
-s?@GFDL_1M_?$GFDL_1M_?g
-s?@MGB2_2M_?$MGB2_2M_?g
+s?{{ BACM_1M_ }}?$BACM_1M_?g
+s?{{ GFDL_1M_ }}?$GFDL_1M_?g
+s?{{ MGB2_2M_ }}?$MGB2_2M_?g
 
-s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
-s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
-s?@RUN_CMD?$RUN_CMD?g
+s?{{ PRELOAD_COMMAND }}?$PRELOAD_COMMAND?g
+s?{{ LD_LIBRARY_PATH_CMD }}?$LD_LIBRARY_PATH_CMD?g
+s?{{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}?\{$LD_LIBRARY_PATH_CMD\}?g
+s?{{ RUN_CMD }}?$RUN_CMD?g
 
-s?@MODELATM?$MODELATM?g
-s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
+s?{{ MODELATM }}?$MODELATM?g
+s?{{ USE_DATA_ATM4OCN }}?$USE_DATA_ATM4OCN?g
 
 EOF
 
@@ -2199,10 +2200,10 @@ EOF
 
 cat >> $HOMDIR/sedfile << EOF
 
-s?@FV_SCHMIDT?$SCHMIDT?g
-s?@FV_STRETCH_FAC?$STRETCH_FAC?g
-s?@FV_TARGET_LON?$TARGET_LON?g
-s?@FV_TARGET_LAT?$TARGET_LAT?g
+s?{{ FV_SCHMIDT }}?$SCHMIDT?g
+s?{{ FV_STRETCH_FAC }}?$STRETCH_FAC?g
+s?{{ FV_TARGET_LON }}?$TARGET_LON?g
+s?{{ FV_TARGET_LAT }}?$TARGET_LAT?g
 
 EOF
 
