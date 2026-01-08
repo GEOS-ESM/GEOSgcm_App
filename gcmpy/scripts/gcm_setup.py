@@ -686,7 +686,7 @@ class setup:
 
         # We also need to change the dt in ice_in as well for CICE6
         if self.ocean.seaice_model == 'CICE6':
-            file_path = f"{self.expConfig['exp_dir']}/icein"
+            file_path = f"{self.expConfig['exp_dir']}/ice_in"
             with open(file_path, 'r') as file:
                 content = file.read()
 

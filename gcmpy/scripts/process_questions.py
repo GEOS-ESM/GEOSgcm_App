@@ -17,7 +17,7 @@ class handle:
 
 
     @staticmethod
-    def io_server_defualt(questionDict, i):
+    def io_server_default(questionDict, i):
         if i != 'io_server':
             return
         match questionDict['AM_horizontal_res'].answer:
@@ -199,8 +199,13 @@ def ask_questions():
 
         # if the question properties need to dynamically change at
         # runtime call handle function BEFORE load_question()
-        handle.io_server_defualt(questionDict, i)
-        handle.processor_choices(questionDict, i)
+        handle.io_server_default(questionDict, i)
+        # Only ask processor question if on NAS or NCCS
+        if i == "processor" and envdict['site'] not in ['NAS', 'NCCS']:
+            questionDict[i].answer = None
+            continue
+        else:
+            handle.processor_choices(questionDict, i)
         handle.OM_horizontal_res_default(questionDict, i)
         handle.MIT_hres_choices(questionDict, i)
         handle.MOM_hres_default(questionDict, i)
