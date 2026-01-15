@@ -37,4 +37,6 @@ $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 # investigate further.
 echo "file_weights: @FILE_WEIGHTS" >> extdata.yaml
 
+setenv OMP_NUM_THREADS 1
+
 $RUN_CMD 1 ./GEOSgcm.x --logging_config 'logging.yaml'
