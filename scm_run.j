@@ -39,4 +39,6 @@ cp fvcore_layout.rc input.nml
 # investigate further.
 echo "file_weights: @FILE_WEIGHTS" >> extdata.yaml
 
+setenv OMP_NUM_THREADS 1
+
 $RUN_CMD 1 ./GEOSgcm.x --logging_config 'logging.yaml'
