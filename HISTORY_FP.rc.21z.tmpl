@@ -15,7 +15,8 @@ GRID_LABELS: PC1152x721-DC
              PE90x540-CF
              PC288x181-DC
              PC540x361-DC
- ::
+             PE360x2160-CF
+::
 
 PC1152x721-DC.GRID_TYPE: LatLon
 PC1152x721-DC.IM_WORLD: 1152
@@ -30,6 +31,13 @@ PC576x361-DC.JM_WORLD: 361
 PC576x361-DC.POLE: PC
 PC576x361-DC.DATELINE: DC
 PC576x361-DC.LM: 72
+
+PE360x2160-CF.GRID_TYPE: Cubed-Sphere
+PE360x2160-CF.IM_WORLD: 360
+PE360x2160-CF.JM_WORLD: 2160
+PE360x2160-CF.POLE: PC
+PE360x2160-CF.DATELINE: DC
+PE360x2160-CF.LM: 72
 
 PE180x1080-CF.GRID_TYPE: Cubed-Sphere
 PE180x1080-CF.IM_WORLD: 180
@@ -120,6 +128,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
              'prog.sfc+-'
              'tavg_1hr_bkglfo_c720_x1'
              'inst_1hr_bkglfo_c720_x1'
+#            'bkg_clcv_rst'
 # Trajectory Files
              'asm.eta'
              'prog.eta+-'
@@ -161,7 +170,6 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
 #            'inst3_3d_aiau_Np+-'
 # Constant file
              'const_2d_asm_Nx'
-#            'const_2d_lnd_Nx'
               'inst_30mn_met_c0720sfc-'
               'inst_30mn_met_c0720sfc+-'
               'tavg_1hr_ctm_c0720_v72-'
@@ -842,7 +850,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_lsf_Ne-.end_date:              >>>IOEDATE<<< ,
   tavg3_3d_lsf_Ne-.end_time:              >>>IOETIME<<< ,
   tavg3_3d_lsf_Ne-.fields:               'PLE'  , 'DYN'  ,
-                                         'MZ'   , 'DYN'  , 'MFZ'
+                                         'MZ'   , 'DYN'  , 'MFZ' ,
                                           ::
 
   tavg1_2d_slv_Nx-.format:               'CFIO' ,
@@ -3324,3 +3332,68 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'TS_moist'    , 'MOIST'  , 'TS'    ,
                                          'ctop_moist'  , 'MOIST'  , 'CTOP'  ,
                            ::
+
+
+# The following look like the trajectories for the ADJ model, but
+# its purpose is to generate background files for JEDI; thus unlike
+# the adjoint-trajectory files, these are written out within the
+# background time interval.
+ bkg_clcv_rst.format:     'CFIO' ,
+ bkg_clcv_rst.template:   '%y4%m2%d2_%h2%n2z.nc4',
+ bkg_clcv_rst.nbits:      10     ,
+ bkg_clcv_rst.deflate:    2      ,
+ bkg_clcv_rst.regrid_method:  'BILINEAR_MONOTONIC' ,
+ bkg_clcv_rst.ref_date:    >>>IOBBKGD<<< ,
+ bkg_clcv_rst.ref_time:    >>>IOBBKGT<<< ,
+ bkg_clcv_rst.end_date:    >>>IOEBKGD<<< ,
+ bkg_clcv_rst.end_time:    >>>IOEBKGT<<< ,
+ bkg_clcv_rst.frequency:   010000      ,
+ bkg_clcv_rst.duration:    010000      ,
+ bkg_clcv_rst.mode:       'instantaneous',
+ bkg_clcv_rst.grid_label: PE360x2160-CF ,
+ bkg_clcv_rst.fields:      'U_DGRID;V_DGRID'  , 'DYN'         , 'u;v'        ,
+                           'U;V'              , 'DYN'         , 'ua;va'      ,
+                           'T'                , 'DYN'         , 't'          ,
+                           'TV'               , 'DYN'         , 'tv'         ,
+                           'Q'                , 'MOIST'       , 'q'          ,
+                           'DELP'             , 'DYN'         , 'delp'       ,
+                           'QITOT'            , 'AGCM'        , 'qi'         ,
+                           'QLTOT'            , 'AGCM'        , 'ql'         ,
+                           'QSTOT'            , 'MOIST'       , 'qs'         ,
+                           'QRTOT'            , 'MOIST'       , 'qr'         ,
+                           'O3PPMV'           , 'CHEMISTRY'   , 'o3ppmv'     ,
+                           'GOCART::CO2'      , 'GOCART'      , 'co2'        ,
+                           'QCLSX0'           , 'MOIST'       , 'qls'        ,
+                           'QCCNX0'           , 'MOIST'       , 'qcn'        ,
+                           'CLCNX0'           , 'MOIST'       , 'cfcn'       ,
+                           'PS'               , 'DYN'         , 'ps'         ,
+                           'PHIS'             , 'AGCM'        , 'phis'       ,
+                           'FRLAND'           , 'SURFACE'     , 'frland'     ,
+                           'FRLANDICE'        , 'SURFACE'     , 'frlandice'  ,
+                           'FRLAKE'           , 'SURFACE'     , 'frlake'     ,
+                           'FROCEAN'          , 'SURFACE'     , 'frocean'    ,
+                           'FRACI'            , 'SURFACE'     , 'frseaice'   ,
+                           'KCBL_moist'       , 'MOIST'       , 'kcbl'       ,
+                           'TS_moist'         , 'MOIST'       , 'tsm'        ,
+                           'KHl_moist'        , 'MOIST'       , 'khl'        ,
+                           'KHu_moist'        , 'MOIST'       , 'khu'        ,
+                           'VARFLT'           , 'AGCM'        , 'varflt'     ,
+                           'USTAR'            , 'SURFACE'     , 'ustar'      ,
+                           'BSTAR'            , 'SURFACE'     , 'bstar'      ,
+                           'ZPBL'             , 'TURBULENCE'  , 'zpbl'       ,
+                           'CM'               , 'SURFACE'     , 'cm'         ,
+                           'CT'               , 'SURFACE'     , 'ct'         ,
+                           'CQ'               , 'SURFACE'     , 'cq'         ,
+                           'U10N;V10N'        , 'SURFACE'     , 'u10m;v10m'  ,
+                           'TA'               , 'DYN'         , 'ta'         ,
+                           'TS'               , 'SURFACE'     , 'ts'         ,
+                           'SNOMAS'           , 'SURFACE'     , 'sheleg'     ,
+                           'TSOIL1'           , 'SURFACE'     , 'soilt'      ,
+                           'WET1'             , 'SURFACE'     , 'soilm'      ,
+                           'DCOOL'            , 'SURFACE'     , 'dcool'      ,
+                           'DWARM'            , 'SURFACE'     , 'dwarm'      ,
+                           'TDROP'            , 'SURFACE'     , 'tdrop'      ,
+                           'TS_FOUND'         , 'SURFACE'     , 'ts_found'   ,
+                           'TDEL'             , 'SURFACE'     , 'tdel'       ,
+                           'Z0'               , 'SURFACE'     , 'z0m'        ,
+                            ::
