@@ -1026,8 +1026,13 @@ if ( "$CLDMICRO" == "BACM_1M" ) then
 endif
 
 set GFDL_1M_ = "#"
+set KLID = "0.0"
 if ( "$CLDMICRO" == "GFDL_1M" ) then
    set GFDL_1M_ = ""
+   if ($AGCM_LM >= 181) set KLID = "19.0"
+   if ($AGCM_LM == 137) set KLID = "14.0"
+   if ($AGCM_LM ==  91) set KLID = "13.0"
+   if ($AGCM_LM ==  72) set KLID = "14.0"
 endif
 
 set MGB2_2M_ = "#"
@@ -2185,6 +2190,8 @@ s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
 
+s?@KLID?$KLID?g 
+
 s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
@@ -2503,6 +2510,13 @@ if( $OGCM == TRUE ) then
    endif
 
 endif
+
+if ($DATA_ATMOS == TRUE) then
+   /bin/mv $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+   cat  $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp | sed -e "s/%OCN_RES%/${OGCM_IM}x${OGCM_JM}/g" > $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml
+   /bin/rm $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+endif
+
 
 #######################################################################
 #                       Echo Settings and Messages

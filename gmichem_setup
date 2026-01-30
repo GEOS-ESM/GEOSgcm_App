@@ -1354,21 +1354,41 @@ EMISSIONS:
 endif
 
 if($APNum == 2) then
- set AERO_PROVIDER   = GMICHEM
+   set AERO_PROVIDER    = GMICHEM
 
- set LGOCART2G       = FALSE
- set GOCART          = "#"
- set HIST_GOCART     = "#DELETE"
- set USE_AEROSOL_NN  = "USE_AEROSOL_NN: .FALSE."
+   set LGOCART2G        = FALSE
+   set GOCART           = "#"
+   set HIST_GOCART      = "#"
+   set USE_AEROSOL_NN   = "USE_AEROSOL_NN: .FALSE."
+   set GOKART           = FALSE
+   set DATA_DRIVEN      = FALSE
+   set EMISSIONS        = ""
+# which PCHEM species to use
+# (does not matter, but the run-script may object if PCHEM_CLIM_YEARS == 39)
+   set OPS_SPECIES      = "#"
+   set MERRA2OX_SPECIES = "#"
+   set CMIP_SPECIES     = ''
+   set PCHEM_CLIM_YEARS = 228
+   set OX_RELAXTIME     = 259200.
 endif
 
 if($APNum == 3) then
- set AERO_PROVIDER   = CARMA
+   set AERO_PROVIDER    = CARMA
 
- set LGOCART2G       = FALSE
- set GOCART          = "#"
- set HIST_GOCART     = "#DELETE"
- set USE_AEROSOL_NN  = "USE_AEROSOL_NN: .TRUE."
+   set LGOCART2G        = FALSE
+   set GOCART           = "#"
+   set HIST_GOCART      = "#DELETE"
+   set USE_AEROSOL_NN   = "USE_AEROSOL_NN: .TRUE."
+   set GOKART           = FALSE
+   set DATA_DRIVEN      = FALSE
+   set EMISSIONS        = ""
+# which PCHEM species to use
+# (does not matter, but the run-script may object if PCHEM_CLIM_YEARS == 39)
+   set OPS_SPECIES      = "#"
+   set MERRA2OX_SPECIES = "#"
+   set CMIP_SPECIES     = ''
+   set PCHEM_CLIM_YEARS = 228
+   set OX_RELAXTIME     = 259200.
 endif
 
 
@@ -2904,6 +2924,13 @@ if( $OGCM == TRUE ) then
    endif
 
 endif
+
+if ($DATA_ATMOS == TRUE) then
+   /bin/mv $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+   cat  $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp | sed -e "s/%OCN_RES%/${OGCM_IM}x${OGCM_JM}/g" > $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml
+   /bin/rm $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+endif
+
 
 #######################################################################
 #                       Echo Settings and Messages
