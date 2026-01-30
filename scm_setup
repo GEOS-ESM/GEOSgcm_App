@@ -97,6 +97,9 @@ usage ()
    echo "  Optional argument: "
    echo "    --num_levels: number of levels (default: 181; 72, 71, 91, 132, 137, and 181 allowed)."
    echo
+   echo "  Optional env vars: "
+   echo "    When running on the TBC data, you can set TINYBCS_PATH to point to the dataset or you can answer the prompt."
+   echo
    echo
 }
 
@@ -408,7 +411,9 @@ case $SITE in
    echo "Unknown site $SITE detected."
 
    # 1. Prompt the user for the TinyBCs installation path
-   read -p "Please enter the full path to your TinyBCs installation: " TINYBCS_PATH
+   if [[ ! -d "$TINYBCS_PATH" ]]; then
+      read -p "Please enter the full path to your TinyBCs installation: " TINYBCS_PATH
+   fi
 
    # 2. Verify the path exists and is a directory
    if [[ ! -d "$TINYBCS_PATH" ]]; then
