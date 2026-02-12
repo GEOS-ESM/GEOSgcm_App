@@ -3,9 +3,9 @@
 #######################################################################
 
 VERSION: 1
-EXPID:  f5421_fpp
-EXPDSC: f5421_fpp__GEOSadas-5_42_8__agrid_C720__ogrid_C
-EXPSRC: GEOSadas-5_42_8
+EXPID:  f5430_fp
+EXPDSC: f5430_fp__GEOSadas-5_43_0__agrid_C720__ogrid_C
+EXPSRC: GEOSadas-5_43_0
 Allow_Overwrite: .true.
 IntegerTime: .true.
 
@@ -318,7 +318,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_cld_Nv-.end_time:              >>>IOETIME<<< ,
   tavg3_3d_cld_Nv-.fields:               'PS'        , 'DYN'    ,
                                          'DELP'      , 'DYN'    ,
-                                         'CNV_FRC'   , 'MOIST'  ,
+#                                        'CNV_FRC'   , 'MOIST'  ,
                                          'CNV_MFD'   , 'MOIST'  , 'DTRAIN'  ,
                                          'RH2'       , 'MOIST'  , 'RH'      ,
                                          'QLLS'      , 'MOIST'  ,
@@ -428,7 +428,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'QILS'      , 'MOIST'  ,
                                          'QLCN'      , 'MOIST'  , 'QLAN'  ,
                                          'QICN'      , 'MOIST'  , 'QIAN'  ,
-                                         'CNV_FRC'   , 'MOIST'  ,
+#                                        'CNV_FRC'   , 'MOIST'  ,
                                          'CNV_QC'    , 'MOIST'  , 'QCCU'  ,
                                          'CLLS'      , 'MOIST'  , 'CFLS'  ,
                                          'CLCN'      , 'MOIST'  , 'CFAN'  ,
@@ -448,7 +448,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_mst_Ne-.end_date:              >>>IOEDATE<<< ,
   tavg3_3d_mst_Ne-.end_time:              >>>IOETIME<<< ,
   tavg3_3d_mst_Ne-.fields:               'PLE'       , 'DYN'    ,
-                                         'CNV_FRC'   , 'MOIST'  ,
+#                                        'CNV_FRC'   , 'MOIST'  ,
                                          'CNV_MFC'   , 'MOIST'  , 'CMFMC'    ,
                                          'PFL_CN'    , 'MOIST'  , 'PFLCU'    ,
                                          'PFI_CN'    , 'MOIST'  , 'PFICU'    ,
@@ -493,7 +493,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_mst_Cp-.vvars:                'log(PLE)' , 'DYN' ,
   tavg3_3d_mst_Cp-.levels:                1000 975 950 925 900 875 850 825 800 775 750 725 700 650 600 550 500 450 400 350 300 250 200 150 100 70 50 40 30 20 10 7 5 4 3 2 1 0.7 0.5 0.4 0.3 0.1 ,
   tavg3_3d_mst_Cp-.fields:               'CNV_MFC'     , 'MOIST'  , 'CMFMC'       ,
-                                         'CNV_FRC'     , 'MOIST'  ,
+#                                        'CNV_FRC'     , 'MOIST'  ,
                                          'DQRC'        , 'MOIST'  , 'DQRCU'       ,
                                          'DQRL'        , 'MOIST'  , 'DQRLSAN'     ,
                                          'PFL_CN'      , 'MOIST'  , 'PFLCU'       ,
@@ -721,7 +721,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DQLDT'      , 'MOIST'      , 'DQLDTMST'  ,
                                          'QLLSIT'     , 'PHYSICS'    , 'DQLDTTRB'  ,
                                          'DQLDTDYN'   , 'DYN'        ,
-                                         'DQVDTSCL'   , 'PHYSICS'    ,
+#                                        'DQVDTSCL'   , 'PHYSICS'    ,
                                           ::
 
   tavg3_3d_qdt_Cp-.format:               'CFIO' ,
@@ -751,7 +751,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'DQLDT'      , 'MOIST'      , 'DQLDTMST'  ,
                                          'QLLSIT'     , 'PHYSICS'    , 'DQLDTTRB'  ,
                                          'DQLDTDYN'   , 'DYN'        ,
-                                         'DQVDTSCL'   , 'PHYSICS'    ,
+#                                        'DQVDTSCL'   , 'PHYSICS'    ,
                                           ::
 
   tavg3_3d_odt_Nv-.format:               'CFIO' ,
@@ -956,10 +956,10 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CN_ARF'         , 'MOIST'       , 'FRCCN'     ,
                                          'DFNIR'          , 'SOLAR'       , 'NIRDF'     ,
                                          'DRNIR'          , 'SOLAR'       , 'NIRDR'     ,
-                                         'ICE'            , 'MOIST'       ,
-                                         'FRZR'           , 'MOIST'       ,
-                                         'RAIN'           , 'MOIST'       ,
-                                         'PTYPE'          , 'MOIST'       ,
+#                                        'ICE'            , 'MOIST'       ,
+#                                        'FRZR'           , 'MOIST'       ,
+#                                        'RAIN'           , 'MOIST'       ,
+#                                        'PTYPE'          , 'MOIST'       ,
                                           ::
 
   tavg1_2d_rad_Nx-.format:               'CFIO' ,
@@ -1554,7 +1554,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CA.ocFLUXU'     , 'CA.oc'     , 'OCFLUXU'     ,
                                          'CA.ocFLUXV'     , 'CA.oc'     , 'OCFLUXV'     ,
                                          'NIFLUXU'        , 'NI'        ,
-                                         'NIFLUXV'        , 'NI'        ,
+                                         'NIFLUXV'        , 'NI'        ,                          
                                           ::
 
   tavg3_2d_adg_Nx-.format:     'CFIO' ,
@@ -2299,10 +2299,10 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                          'CN_ARF'         , 'MOIST'       , 'FRCCN'     ,
                                          'DFNIR'          , 'SOLAR'       , 'NIRDF'     ,
                                          'DRNIR'          , 'SOLAR'       , 'NIRDR'     ,
-                                         'ICE'            , 'MOIST'       ,
-                                         'FRZR'           , 'MOIST'       ,
-                                         'RAIN'           , 'MOIST'       ,
-                                         'PTYPE'          , 'MOIST'       ,
+#                                        'ICE'            , 'MOIST'       ,
+#                                        'FRZR'           , 'MOIST'       ,
+#                                        'RAIN'           , 'MOIST'       ,
+#                                        'PTYPE'          , 'MOIST'       ,
                                           ::
 
   tavg1_2d_lnd_Nx+-.format:              'CFIO' ,
