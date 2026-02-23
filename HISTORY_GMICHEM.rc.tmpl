@@ -106,7 +106,7 @@ PC24x13-DC.LM: 72
  
   inst2d_cld_x.format:       'CFIO' ,
   inst2d_cld_x.descr:        '2d,Hourly,Instantaneous,Cloud Fields' ,
-  inst2d_cld_x.conservative: 0  ,
+  inst2d_cld_x.regrid_method: 'BILINEAR'  ,
   inst2d_cld_x.nbits:        12 ,
   inst2d_cld_x.template:     '%y4%m2%d2_%h2%n2z.nc4' ,
   inst2d_cld_x.archive:      '%c/Y%y4' ,
@@ -128,7 +128,7 @@ PC24x13-DC.LM: 72
 
   met_tavg_monthly_g720x361_v72.format:       'CFIO' ,
   met_tavg_monthly_g720x361_v72.descr:        '3d,Monthly,Time-Averaged,Model-Level,Meteorological Fields' ,
-  met_tavg_monthly_g720x361_v72.conservative: 0
+  met_tavg_monthly_g720x361_v72.regrid_method: 'BILINEAR'
   met_tavg_monthly_g720x361_v72.nbits:        12 ,
   met_tavg_monthly_g720x361_v72.template:     '%y4%m2.nc4' ,
   met_tavg_monthly_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -165,7 +165,7 @@ PC24x13-DC.LM: 72
 
   mst_tavg_monthly_g720x361_e73.format:       'CFIO' ,
   mst_tavg_monthly_g720x361_e73.descr:        '3d,Monthly,Time-Averaged,Model-Level Edge,Moist Processes Diagnostics' ,
-  mst_tavg_monthly_g720x361_e73.conservative: 1
+  mst_tavg_monthly_g720x361_e73.regrid_method: 'CONSERVE'
   mst_tavg_monthly_g720x361_e73.nbits:        12 ,
   mst_tavg_monthly_g720x361_e73.template:     '%y4%m2.nc4' ,
   mst_tavg_monthly_g720x361_e73.archive:      '%c/Y%y4/M%m2' ,
@@ -184,7 +184,7 @@ PC24x13-DC.LM: 72
 
   odt_tavg_monthly_g720x361_p44.format:       'CFIO' ,
   odt_tavg_monthly_g720x361_p44.descr:        '3d,Monthly,Time-Averaged,Pressure-Level,Ozone Tendencies' ,
-  odt_tavg_monthly_g720x361_p44.conservative: 0
+  odt_tavg_monthly_g720x361_p44.regrid_method: 'BILINEAR'
   odt_tavg_monthly_g720x361_p44.nbits:        12 ,
   odt_tavg_monthly_g720x361_p44.template:     '%y4%m2.nc4' ,
   odt_tavg_monthly_g720x361_p44.archive:      '%c/Y%y4/M%m2' ,
@@ -221,7 +221,7 @@ PC24x13-DC.LM: 72
 
   dad_tavg_monthly_g1440x721_x1.format:       'CFIO' ,
   dad_tavg_monthly_g1440x721_x1.descr:        '2d,Monthly,Time-Averaged,Single-Level,Monthly Average Diagnostics' ,
-  dad_tavg_monthly_g1440x721_x1.conservative: 0
+  dad_tavg_monthly_g1440x721_x1.regrid_method: 'BILINEAR'
   dad_tavg_monthly_g1440x721_x1.nbits:        12 ,
   dad_tavg_monthly_g1440x721_x1.template:     '%y4%m2.nc4' ,
   dad_tavg_monthly_g1440x721_x1.archive:      '%c/Y%y4/M%m2' ,
@@ -357,7 +357,7 @@ PC24x13-DC.LM: 72
 
   tavg_monthly_2d_emi_Nx.format:       'CFIO' ,
   tavg_monthly_2d_emi_Nx.descr:        '2d,Monthly,Time-Averaged,Single-Level,Monthly Average Emissions' ,
-  tavg_monthly_2d_emi_Nx.conservative: 1
+  tavg_monthly_2d_emi_Nx.regrid_method: 'CONSERVE'
   tavg_monthly_2d_emi_Nx.nbits:        12 ,
   tavg_monthly_2d_emi_Nx.template:     '%y4%m2.nc4' ,
   tavg_monthly_2d_emi_Nx.archive:      '%c/Y%y4/M%m2' ,
@@ -383,7 +383,7 @@ PC24x13-DC.LM: 72
 
   mad_tavg_monthly_g720x361_p44.format:       'CFIO' ,
   mad_tavg_monthly_g720x361_p44.descr:        '3d,Monthly,Time-Averaged,Pressure-Level,Monthly Average Diagnostics' ,
-  mad_tavg_monthly_g720x361_p44.conservative: 0
+  mad_tavg_monthly_g720x361_p44.regrid_method: 'BILINEAR'
   mad_tavg_monthly_g720x361_p44.nbits:        12 ,
   mad_tavg_monthly_g720x361_p44.template:     '%y4%m2.nc4' ,
   mad_tavg_monthly_g720x361_p44.archive:      '%c/Y%y4/M%m2' ,
@@ -436,7 +436,7 @@ PC24x13-DC.LM: 72
 
   bot_inst_1hr_g1440x721_x1.format:       'CFIO' ,
   bot_inst_1hr_g1440x721_x1.descr:        '2d,1-Hourly,Instantaneous,Single-Level,Bottom Layer Diagnostics' ,
-  bot_inst_1hr_g1440x721_x1.conservative: 1
+  bot_inst_1hr_g1440x721_x1.regrid_method: 'CONSERVE'
   bot_inst_1hr_g1440x721_x1.nbits:        12 ,
   bot_inst_1hr_g1440x721_x1.template:     '%y4%m2%d2_%h2%n2z.nc4' ,
   bot_inst_1hr_g1440x721_x1.archive:      '%c/Y%y4/M%m2' ,
@@ -474,7 +474,7 @@ PC24x13-DC.LM: 72
 
   chm_tavg_3hr_g720x361_v72.format:       'CFIO' ,
   chm_tavg_3hr_g720x361_v72.descr:        '3d,3-Hourly,Time-Averaged,Model-Level,3-Hourly Average Chemical Fields' ,
-  chm_tavg_3hr_g720x361_v72.conservative: 1
+  chm_tavg_3hr_g720x361_v72.regrid_method: 'CONSERVE'
   chm_tavg_3hr_g720x361_v72.nbits:        12 ,
   chm_tavg_3hr_g720x361_v72.template:     '%y4%m2%d2_%h2%n2z.nc4' ,
   chm_tavg_3hr_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -494,7 +494,7 @@ PC24x13-DC.LM: 72
 
   chm_tavg_monthly_g720x361_v72.format:       'CFIO' ,
   chm_tavg_monthly_g720x361_v72.descr:        '3d,Monthly,Time-Averaged,Model-Level,Monthly Average Chemical Fields' ,
-  chm_tavg_monthly_g720x361_v72.conservative: 1
+  chm_tavg_monthly_g720x361_v72.regrid_method: 'CONSERVE'
   chm_tavg_monthly_g720x361_v72.nbits:        12 ,
   chm_tavg_monthly_g720x361_v72.template:     '%y4%m2.nc4' ,
   chm_tavg_monthly_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -596,7 +596,7 @@ PC24x13-DC.LM: 72
 
   chm_tavg_monthly_g720x361_p44.format:       'CFIO' ,
   chm_tavg_monthly_g720x361_p44.descr:        '3d,Monthly,Time-Averaged,Pressure-Level,Monthly Average Chemical Fields' ,
-  chm_tavg_monthly_g720x361_p44.conservative: 0
+  chm_tavg_monthly_g720x361_p44.regrid_method: 'BILINEAR'
   chm_tavg_monthly_g720x361_p44.nbits:        12 ,
   chm_tavg_monthly_g720x361_p44.template:     '%y4%m2.nc4' ,
   chm_tavg_monthly_g720x361_p44.archive:      '%c/Y%y4/M%m2' ,
@@ -700,7 +700,7 @@ PC24x13-DC.LM: 72
 
   xcm_tavg_monthly_g720x361_p44.format:       'CFIO' ,
   xcm_tavg_monthly_g720x361_p44.descr:        '3d,Monthly,Time-Averaged,Pressure-Level,Monthly Average Extra Chemical Fields' ,
-  xcm_tavg_monthly_g720x361_p44.conservative: 1
+  xcm_tavg_monthly_g720x361_p44.regrid_method: 'CONSERVE'
   xcm_tavg_monthly_g720x361_p44.nbits:        12 ,
   xcm_tavg_monthly_g720x361_p44.template:     '%y4%m2.nc4' ,
   xcm_tavg_monthly_g720x361_p44.archive:      '%c/Y%y4/M%m2' ,
@@ -788,7 +788,7 @@ PC24x13-DC.LM: 72
 
   dep_tavg_monthly_g720x361_v35.format:       'CFIO' ,
   dep_tavg_monthly_g720x361_v35.descr:        '3d,Monthly,Time-Averaged,Model-Level,Monthly Average Deposition and Scavenging Fields' ,
-  dep_tavg_monthly_g720x361_v35.conservative: 1
+  dep_tavg_monthly_g720x361_v35.regrid_method: 'CONSERVE'
   dep_tavg_monthly_g720x361_v35.nbits:        12 ,
   dep_tavg_monthly_g720x361_v35.template:     '%y4%m2.nc4' ,
   dep_tavg_monthly_g720x361_v35.archive:      '%c/Y%y4/M%m2' ,
@@ -867,7 +867,7 @@ PC24x13-DC.LM: 72
 
   rk2_tavg_monthly_g720x361_v72.format:       'CFIO' ,
   rk2_tavg_monthly_g720x361_v72.descr:        '3d,Monthly,Time-Averaged,Model-Level,Monthly Average Kinetic Reaction Rates' ,
-  rk2_tavg_monthly_g720x361_v72.conservative: 1
+  rk2_tavg_monthly_g720x361_v72.regrid_method: 'CONSERVE'
   rk2_tavg_monthly_g720x361_v72.nbits:        12 ,
   rk2_tavg_monthly_g720x361_v72.template:     '%y4%m2.nc4' ,
   rk2_tavg_monthly_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -906,7 +906,7 @@ PC24x13-DC.LM: 72
 
   rj2_tavg_monthly_g720x361_v72.format:       'CFIO' ,
   rj2_tavg_monthly_g720x361_v72.descr:        '3d,Monthly,Time-Averaged,Model-Level,Monthly Average Photolysis Reaction Rates' ,
-  rj2_tavg_monthly_g720x361_v72.conservative: 1
+  rj2_tavg_monthly_g720x361_v72.regrid_method: 'CONSERVE'
   rj2_tavg_monthly_g720x361_v72.nbits:        12 ,
   rj2_tavg_monthly_g720x361_v72.template:     '%y4%m2.nc4' ,
   rj2_tavg_monthly_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -933,7 +933,7 @@ PC24x13-DC.LM: 72
 
   rrc_tavg_monthly_g720x361_v72.format:       'CFIO' ,
   rrc_tavg_monthly_g720x361_v72.descr:        '3d,Monthly,Time-Averaged,Model-Level,Monthly Average Reaction Rates Combined' ,
-  rrc_tavg_monthly_g720x361_v72.conservative: 1
+  rrc_tavg_monthly_g720x361_v72.regrid_method: 'CONSERVE'
   rrc_tavg_monthly_g720x361_v72.nbits:        12 ,
   rrc_tavg_monthly_g720x361_v72.template:     '%y4%m2.nc4' ,
   rrc_tavg_monthly_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -962,7 +962,7 @@ PC24x13-DC.LM: 72
 
   tnd_tavg_monthly_g720x361_v72.format:       'CFIO' ,
   tnd_tavg_monthly_g720x361_v72.descr:        '3d,Monthly,Time-Averaged,Model-Level,Monthly Average Constituent Tendencies' ,
-  tnd_tavg_monthly_g720x361_v72.conservative: 1
+  tnd_tavg_monthly_g720x361_v72.regrid_method: 'CONSERVE'
   tnd_tavg_monthly_g720x361_v72.nbits:        12 ,
   tnd_tavg_monthly_g720x361_v72.template:     '%y4%m2.nc4' ,
   tnd_tavg_monthly_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -1034,7 +1034,7 @@ PC24x13-DC.LM: 72
 
   tra_tavg_monthly_g720x361_p44.format:       'CFIO' ,
   tra_tavg_monthly_g720x361_p44.descr:        '3d,Monthly,Time-Averaged,Pressure-Level,Monthly Average Tracer Diagnostics' ,
-  tra_tavg_monthly_g720x361_p44.conservative: 1
+  tra_tavg_monthly_g720x361_p44.regrid_method: 'CONSERVE'
   tra_tavg_monthly_g720x361_p44.nbits:        12 ,
   tra_tavg_monthly_g720x361_p44.template:     '%y4%m2.nc4' ,
   tra_tavg_monthly_g720x361_p44.archive:      '%c/Y%y4/M%m2' ,
@@ -1084,7 +1084,7 @@ PC24x13-DC.LM: 72
 
   tra_tavg_monthly_g720x361_v72.format:       'CFIO' ,
   tra_tavg_monthly_g720x361_v72.descr:        '3d,Monthly,Time-Averaged,Pressure-Level,Monthly Average Tracer Diagnostics' ,
-  tra_tavg_monthly_g720x361_v72.conservative: 1
+  tra_tavg_monthly_g720x361_v72.regrid_method: 'CONSERVE'
   tra_tavg_monthly_g720x361_v72.nbits:        12 ,
   tra_tavg_monthly_g720x361_v72.template:     '%y4%m2.nc4' ,
   tra_tavg_monthly_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -1164,7 +1164,7 @@ PC24x13-DC.LM: 72
  
   tavg_monthly_3d_dat_Nv.format:       'CFIO' ,
   tavg_monthly_3d_dat_Nv.descr:        '3d,Monthly,Time-Averaged,Model-Level,Monthly Average Tracer Diagnostics' ,
-  tavg_monthly_3d_dat_Nv.conservative: 1
+  tavg_monthly_3d_dat_Nv.regrid_method: 'CONSERVE'
   tavg_monthly_3d_dat_Nv.nbits:        12 ,
   tavg_monthly_3d_dat_Nv.template:     '%y4%m2.nc4' ,
   tavg_monthly_3d_dat_Nv.archive:      '%c/Y%y4/M%m2' ,
@@ -1214,7 +1214,7 @@ PC24x13-DC.LM: 72
  
   ovp_inst_24hr_g720x361_v72.format:       'CFIO' ,
   ovp_inst_24hr_g720x361_v72.descr:        '3d,Daily,Instantaneous,Model-Level,Daily Satellite Overpass Fields' ,
-  ovp_inst_24hr_g720x361_v72.conservative: 0
+  ovp_inst_24hr_g720x361_v72.regrid_method: 'BILINEAR'
   ovp_inst_24hr_g720x361_v72.nbits:        12 ,
   ovp_inst_24hr_g720x361_v72.template:     '%y4%m2%d2.nc4' ,
   ovp_inst_24hr_g720x361_v72.archive:      '%c/Y%y4/M%m2' ,
@@ -1312,7 +1312,7 @@ PC24x13-DC.LM: 72
                      
   stt_tavg_1hr_g1440x721_x1.format:       'CFIO' ,
   stt_tavg_1hr_g1440x721_x1.descr:        '2d,Hourly,Aggregated Statistics,Single-Level,Single-Level Diagnostics' ,
-  stt_tavg_1hr_g1440x721_x1.conservative: 0
+  stt_tavg_1hr_g1440x721_x1.regrid_method: 'BILINEAR'
   stt_tavg_1hr_g1440x721_x1.nbits:        12 ,
   stt_tavg_1hr_g1440x721_x1.template:     '%y4%m2%d2_%h2%n2z.nc4' ,
   stt_tavg_1hr_g1440x721_x1.archive:      '%c/Y%y4/M%m2' ,
@@ -1338,7 +1338,7 @@ PC24x13-DC.LM: 72
 
   lnd_tavg_monthly_g1440x721_x1.format:       'CFIO' ,
   lnd_tavg_monthly_g1440x721_x1.descr:        '2d,Monthly,Time-Averaged,Single-Level,Land Surface Diagnostics' ,
-  lnd_tavg_monthly_g1440x721_x1.conservative: 1
+  lnd_tavg_monthly_g1440x721_x1.regrid_method: 'CONSERVE'
   lnd_tavg_monthly_g1440x721_x1.template:     '%y4%m2.nc4' ,
   lnd_tavg_monthly_g1440x721_x1.archive:      '%c/Y%y4/M%m2' ,
   lnd_tavg_monthly_g1440x721_x1.mode:         'time-averaged' ,
@@ -1376,7 +1376,7 @@ PC24x13-DC.LM: 72
   aer_tavg_3hr_g1440x721_x1.frequency:       030000,
   aer_tavg_3hr_g1440x721_x1.duration:        240000,
   aer_tavg_3hr_g1440x721_x1.ref_time:        000000,
-  aer_tavg_3hr_g1440x721_x1.conservative:    1,
+  aer_tavg_3hr_g1440x721_x1.regrid_method: 'CONSERVE',
   aer_tavg_3hr_g1440x721_x1.splitField:      1,
   aer_tavg_3hr_g1440x721_x1.fields:         'LWI'         , 'SURFACE'     ,
                                'TOTEXTTAU'   , 'GOCART2G'    ,'TOTEXTTAU470;TOTEXTTAU550;TOTEXTTAU870',
@@ -1566,7 +1566,7 @@ PC24x13-DC.LM: 72
   aer_tavg_24hr_g720x361_p48.mode:           'time-averaged',
 # aer_tavg_24hr_g720x361_p48.monthly:         1 ,
   aer_tavg_24hr_g720x361_p48.frequency:       240000,
-  aer_tavg_24hr_g720x361_p48.conservative:    1,
+  aer_tavg_24hr_g720x361_p48.regrid_method: 'CONSERVE',
   aer_tavg_24hr_g720x361_p48.splitField:      1,
   aer_tavg_24hr_g720x361_p48.vscale:          100.0,
   aer_tavg_24hr_g720x361_p48.vunit:          'hPa',
@@ -1632,7 +1632,7 @@ PC24x13-DC.LM: 72
  aer_inst_24hr_g720x361_v72.nbits:      12,
  aer_inst_24hr_g720x361_v72.chunksize:    720 361 1 1 ,
  aer_inst_24hr_g720x361_v72.deflate:    1,
- aer_inst_24hr_g720x361_v72.conservative: 1,
+ aer_inst_24hr_g720x361_v72.regrid_method: 'CONSERVE',
  aer_inst_24hr_g720x361_v72.splitField: 1,
  aer_inst_24hr_g720x361_v72.fields:       'PS'           ,    'DYN'     , 'PS'      ,
                               'DELP'         ,    'DYN'     , 'delp'    ,
@@ -1669,7 +1669,7 @@ PC24x13-DC.LM: 72
 
   const_2d_mod_Nx.format:       'CFIO' ,
   const_2d_mod_Nx.descr:        '2d,Constant,Time-invariant,Single-Level,Constant Model Parameters' ,
-  const_2d_mod_Nx.conservative: 1
+  const_2d_mod_Nx.regrid_method: 'CONSERVE'
   const_2d_mod_Nx.template:     '%y4%m2%d2.nc4' ,
   const_2d_mod_Nx.archive:      '%c/Y%y4/M%m2' ,
   const_2d_mod_Nx.mode:         'instantaneous' ,
@@ -1693,7 +1693,7 @@ PC24x13-DC.LM: 72
 
   hfc_tavg_monthly_g360x181_v72.format:       'CFIO' ,
   hfc_tavg_monthly_g360x181_v72.descr:        '3d,Monthly,Time-Averaged,Model-Level,Chemical Fields' ,
-  hfc_tavg_monthly_g360x181_v72.conservative: 1
+  hfc_tavg_monthly_g360x181_v72.regrid_method: 'CONSERVE'
 # hfc_tavg_monthly_g360x181_v72.nbits:        12 ,
   hfc_tavg_monthly_g360x181_v72.template:     '%y4%m2.nc4' ,
   hfc_tavg_monthly_g360x181_v72.archive:      '%c/Y%y4/M%m2' ,
