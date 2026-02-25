@@ -134,6 +134,7 @@ if( $AGCM_IM ==  "c180" ) then
            set  NX = $OGCM_NY
            set  NY = $OGCM_NX
         endif
+        set DT = 450
         set OCEAN_DT = $DT
      else
         set  NX = 20
