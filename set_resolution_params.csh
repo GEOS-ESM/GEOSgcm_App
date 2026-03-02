@@ -430,6 +430,6 @@ endif
 if( "$LOCAL_CLDMICRO" == "BACM_1M" ) then
    set DT      = 450
    set CONV_DT = 450
-   set CHEM_DT = 3600
+   set CHEM_DT = 450
 endif
 
