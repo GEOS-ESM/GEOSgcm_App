@@ -2800,6 +2800,7 @@ endif
 if( $AGCM_LM == 72 ) then
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *SNOW_ALBEDO_INFO:/ s/1/0/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+endif
 
 # Turn on GOCART
 # --------------
