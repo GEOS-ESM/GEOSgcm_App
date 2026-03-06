@@ -203,7 +203,7 @@ if ( $NCPUS != NULL ) then
          echo "Specified model nodes: $NUM_MODEL_NODES"
          echo "Specified oserver nodes: $NUM_OSERVER_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
-         exit
+         exit 1
       endif
 
    else
@@ -221,7 +221,7 @@ if ( $NCPUS != NULL ) then
          echo ""
          echo "Specified model nodes: $NUM_MODEL_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
-         exit
+         exit 1
       endif
 
    endif
@@ -330,7 +330,7 @@ if (-z input.nml) then
 endif
 if (-z input.nml) then
    echo "input.nml is zero-length"
-   exit 0
+   exit 2
 endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
@@ -427,7 +427,7 @@ chmod +x linkbcs
 @SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
 @SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
 @SINGULARITY_BUILD    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
-@SINGULARITY_BUILD    exit 1
+@SINGULARITY_BUILD    exit 3
 @SINGULARITY_BUILD endif
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
@@ -482,7 +482,7 @@ chmod +x linkbcs
 @NATIVE_BUILD    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
 @NATIVE_BUILD else
 @NATIVE_BUILD    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
-@NATIVE_BUILD    exit 1
+@NATIVE_BUILD    exit 4
 @NATIVE_BUILD endif
 @NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
@@ -512,7 +512,7 @@ if( $GCMEMIP == TRUE ) then
      foreach rst ( $tile_rsts )
         echo ${rst}_internal_rst
      end
-     exit
+     exit 5
    endif
    if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
@@ -524,7 +524,7 @@ else
      foreach rst ( $tile_rsts )
         echo ${rst}_internal_rst
      end
-     exit
+     exit 5
    endif
    if(-e $EXPDIR/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
@@ -1029,7 +1029,7 @@ if ( $PCHEM_CLIM_YEARS == 39 ) then
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
       echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
-      exit 2
+      exit 8
    endif
 endif
 
@@ -1132,7 +1132,7 @@ endif
 @MIT     echo "If this is a new initialized experiment, delete:"
 @MIT     echo "${EXPDIR}/restarts/MITgcm_restart_dates.txt"
 @MIT     echo "and restart"
-@MIT     exit
+@MIT     exit 9
 @MIT   else
 @MIT     sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
 @MIT   endif
@@ -1186,7 +1186,7 @@ if( -e EGRESS ) then
    set rc = 0
 else
    echo "EGRESS file not found, GEOSgcm.x likely failed"
-   exit 9
+   exit 10
 endif
 echo GEOSgcm Run Status: $rc
 
