@@ -39,10 +39,16 @@ set (programs
    gcm_quickstat.j
    scm_run.j
    construct_extdata_yaml_list.py
+   linkbcs.py
    )
 
 install (
    FILES ${templates}
+   DESTINATION etc
+   )
+
+install (
+   FILES catalog.yaml
    DESTINATION etc
    )
 

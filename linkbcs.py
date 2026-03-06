@@ -182,10 +182,10 @@ class SymlinkCreator:
         paths = {
             "visdf.dat": land_src_dir / f"visdf_{self.agcm_IM}x{self.agcm_JM}.dat",
             "nirdf.dat": land_src_dir / f"nirdf_{self.agcm_IM}x{self.agcm_JM}.dat",
-            "vegdyn.data": land_src_dir / f"vegdyn_{self.agcm_IM}x{self.agcm_JM}.dat", # .dat or .data?
-            "lai_clim.data": land_src_dir / f"lai_clim_{self.agcm_IM}x{self.agcm_JM}.data",
-            "green_clim.data": land_src_dir / f"green_clim_{self.agcm_IM}x{self.agcm_JM}.data",
-            "ndvi_clim.data": land_src_dir / f"ndvi_clim_{self.agcm_IM}x{self.agcm_JM}.data"
+            "vegdyn.data": land_src_dir / f"vegdyn_{self.agcm_IM}x{self.agcm_JM}.dat",
+            "lai.data": land_src_dir / f"lai_clim_{self.agcm_IM}x{self.agcm_JM}.data",
+            "green.data": land_src_dir / f"green_clim_{self.agcm_IM}x{self.agcm_JM}.data",
+            "ndvi.data": land_src_dir / f"ndvi_clim_{self.agcm_IM}x{self.agcm_JM}.data"
         }
 
         return paths
