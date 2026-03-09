@@ -134,7 +134,12 @@ if( $AGCM_IM ==  "c180" ) then
            set  NX = $OGCM_NY
            set  NY = $OGCM_NX
         endif
+        # For coupled runs, set DT to 450
+        set DT = 450
         set OCEAN_DT = $DT
+        # Our other physics times steps must be divisible by DT
+        set CONV_DT = 450
+        set CHEM_DT = 900
      else
         set  NX = 20
         set  NY = `expr $NX \* 6`
