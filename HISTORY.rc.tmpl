@@ -114,8 +114,8 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
              'inst3_3d_aer_Nv-'
 #            'inst3_3d_chm_Nv-'
 #            'inst3_3d_tag_Nv-'
-             'inst1_2d_aer_Nx-'
-             'tavg1_2d_adg_Nx-'
+             'tavg3_2d_adg_Nx-'
+             'tavg3_2d_aer_Nx-'
 #            'tavg3_2d_chm_Nx-'
 #            'tavg3_2d_tag_Nx-'
              'tavg3_3d_ctm_Cv-'
@@ -1397,20 +1397,20 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'NIINC'    , 'GAAS'     ,
                                    ::
 
-  inst1_2d_aer_Nx-.format:        'CFIO' ,
-  inst1_2d_aer_Nx-.descr:         '2d,1-Hourly,Instantaneous,Single-Level,Analysis,Aerosol Diagnostics' ,
-  inst1_2d_aer_Nx-.template:      '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
-  inst1_2d_aer_Nx-.mode:          'instantaneous' ,
-  inst1_2d_aer_Nx-.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
-  inst1_2d_aer_Nx-.conservative:   1 ,
-  inst1_2d_aer_Nx-.splitField:     1 ,
-  inst1_2d_aer_Nx-.frequency:      010000 ,
-  inst1_2d_aer_Nx-.duration:       010000 ,
-  inst1_2d_aer_Nx-.end_date:       >>>IOEDATE<<< ,
-  inst1_2d_aer_Nx-.end_time:       >>>IOETIME<<< ,
-  inst1_2d_aer_Nx-.nbits:          10 ,
-  inst1_2d_aer_Nx-.deflate:    2      ,
-  inst1_2d_aer_Nx-.fields:        'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
+  tavg3_2d_aer_Nx-.format:        'CFIO' ,
+  tavg3_2d_aer_Nx-.descr:         '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics' ,
+  tavg3_2d_aer_Nx-.template:      '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  tavg3_2d_aer_Nx-.mode:          'time-averaged' ,
+  tavg3_2d_aer_Nx-.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+  tavg3_2d_aer_Nx-.regrid_method:  'CONSERVE' ,
+  tavg3_2d_aer_Nx-.splitField:     1 ,
+  tavg3_2d_aer_Nx-.frequency:      030000 ,
+  tavg3_2d_aer_Nx-.duration:       030000 ,
+  tavg3_2d_aer_Nx-.end_date:       >>>IOEDATE<<< ,
+  tavg3_2d_aer_Nx-.end_time:       >>>IOETIME<<< ,
+  tavg3_2d_aer_Nx-.nbits:          10 ,
+  tavg3_2d_aer_Nx-.deflate:    2      ,
+  tavg3_2d_aer_Nx-.fields:        'CA.bcSMASS'     , 'CA.bc'     , 'BCSMASS'     ,
 # Black Carbon
                                   'CA.bcCMASS'     , 'CA.bc'     , 'BCCMASS'     ,
                                   'CA.bcEXTTAU'    , 'CA.bc'     , 'BCEXTTAU'    ,
@@ -1510,20 +1510,20 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'PM'             , 'GOCART2G'  ,
                                    ::
 
-  tavg1_2d_adg_Nx-.format:        'CFIO' ,
-  tavg1_2d_adg_Nx-.descr:         '2d,1-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
-  tavg1_2d_adg_Nx-.template:      '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
-  tavg1_2d_adg_Nx-.mode:          'time-averaged' ,
-  tavg1_2d_adg_Nx-.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
-  tavg1_2d_adg_Nx-.frequency:      010000 ,
-  tavg1_2d_adg_Nx-.duration:       010000 ,
-  tavg1_2d_adg_Nx-.end_date:       >>>IOEDATE<<< ,
-  tavg1_2d_adg_Nx-.end_time:       >>>IOETIME<<< ,
-  tavg1_2d_adg_Nx-.nbits:          10 ,
-  tavg1_2d_adg_Nx-.splitField:     1 ,
-  tavg1_2d_adg_Nx-.conservative:   1 ,
-  tavg1_2d_adg_Nx-.deflate:    2      ,
-  tavg1_2d_adg_Nx-.fields:        'CA.bcEM'      , 'CA.bc'  , 'BCPHOBICEM;BCPHILICEM' ,
+  tavg3_2d_adg_Nx-.format:        'CFIO' ,
+  tavg3_2d_adg_Nx-.descr:         '2d,3-Hourly,Time-Averaged,Single-Level,Analysis,Aerosol Diagnostics (extended)' ,
+  tavg3_2d_adg_Nx-.template:      '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  tavg3_2d_adg_Nx-.mode:          'time-averaged' ,
+  tavg3_2d_adg_Nx-.grid_label:     PC@HIST_IMx@HIST_JM-DC ,
+  tavg3_2d_adg_Nx-.frequency:      030000 ,
+  tavg3_2d_adg_Nx-.duration:       030000 ,
+  tavg3_2d_adg_Nx-.end_date:       >>>IOEDATE<<< ,
+  tavg3_2d_adg_Nx-.end_time:       >>>IOETIME<<< ,
+  tavg3_2d_adg_Nx-.nbits:          10 ,
+  tavg3_2d_adg_Nx-.splitField:     1 ,
+  tavg3_2d_adg_Nx-.regrid_method:  'CONSERVE' ,
+  tavg3_2d_adg_Nx-.deflate:    2      ,
+  tavg3_2d_adg_Nx-.fields:        'CA.bcEM'      , 'CA.bc'  , 'BCPHOBICEM;BCPHILICEM' ,
 # Black Carbon
                                   'CA.bcDP'      , 'CA.bc'  , 'BCPHOBICDP;BCPHILICDP' ,
                                   'CA.bcWT'      , 'CA.bc'  , 'BCPHOBICWT;BCPHILICWT' ,
@@ -2501,7 +2501,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_ext_Np+-.mode:         'time-averaged' ,
   tavg3_3d_ext_Np+-.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
   tavg3_3d_ext_Np+-.splitField:    1 ,
-  tavg3_3d_ext_Np+-.conservative:  1 ,
+  tavg3_3d_ext_Np+-.rerid_method:  'CONSERVE' ,
   tavg3_3d_ext_Np+-.vscale:        100.0 ,
   tavg3_3d_ext_Np+-.vunit:        'hPa' ,
   tavg3_3d_ext_Np+-.vvars:        'log(PLE)'       , 'DYN' ,
@@ -2536,7 +2536,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_aer_Np+-.mode:         'time-averaged' ,
   tavg3_3d_aer_Np+-.grid_label:    PC@HIST_IMx@HIST_JM-DC ,
   tavg3_3d_aer_Np+-.splitField:    1 ,
-  tavg3_3d_aer_Np+-.conservative:  1 ,
+  tavg3_3d_aer_Np+-.regrid_method: 'CONSERVE'  ,
   tavg3_3d_aer_Np+-.vscale:        100.0 ,
   tavg3_3d_aer_Np+-.vunit:        'hPa' ,
   tavg3_3d_aer_Np+-.vvars:        'log(PLE)' , 'DYN' ,
