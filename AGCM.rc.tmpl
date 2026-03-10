@@ -87,6 +87,7 @@ ORBIT_ANAL2B: .TRUE.
 # BACM_1M microphysics options
 # ----------------------------------------
 @BACM_1M_CLDMICR_OPTION: BACM_1M
+@BACM_1M_USE_GF2020: 0
 ###########################################################
 
 ###########################################################
@@ -133,6 +134,11 @@ NCAR_NRDG: @NCAR_NRDG
 # The below settings are only for v14 BCs currently being tested
 #v14 NCAR_EFFGWORO: 0.35
 #v14 NCAR_ORO_TNDMAX: 250
+
+# For BACM_1M we revert to v11 TURB settings
+@BACM_1M_TURBULENCE_LAMBDAH: 160.0
+@BACM_1M_TURBULENCE_LAMBDAM: 160.0
+
 ###########################################################
 
 ###########################################################
