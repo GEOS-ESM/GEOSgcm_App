@@ -1917,6 +1917,9 @@ endif # if NCCS or NAS
 
 else if ( $MPI_STACK == mpich ) then
 
+# This seems to be needed by MPICH as well.
+set RESTART_BY_OSERVER = YES
+
 if ( $SITE == 'NAS' ) then
 
 cat > $HOMDIR/SETENV.commands << EOF
@@ -2155,7 +2158,7 @@ s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
 
-s?@KLID?$KLID?g 
+s?@KLID?$KLID?g
 
 s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
