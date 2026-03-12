@@ -56,7 +56,7 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 /bin/ln -sf $BCSDIR/land/$BCRSLV/green_clim_@AGCM_IMx@AGCM_JM.data green.data
 /bin/ln -sf $BCSDIR/land/$BCRSLV/ndvi_clim_@AGCM_IMx@AGCM_JM.data ndvi.data
 
-@GCMRUN_CATCHCNif ( -f $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data  ) /bin/ln -sf $BCSDIR/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data lnfm.data
+@GCMRUN_CATCHCNif ( -f $BCSDIR/land/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data  ) /bin/ln -sf $BCSDIR/land/$BCRSLV/lnfm_clim_@AGCM_IMx@AGCM_JM.data lnfm.data
 @GCMRUN_CATCHCN/bin/ln -s $BCSDIR/land/shared/CO2_MonthlyMean_DiurnalCycle.nc4
 
 
