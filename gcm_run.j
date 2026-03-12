@@ -33,7 +33,13 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD "${LD_LIBRARY_PATH}:${GEOSDIR}/lib"
+
+# We only prepend to DY/LD_LIBRARY_PATH if it exists
+if ( $?@LD_LIBRARY_PATH_CMD ) then
+   setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
+else
+   setenv @LD_LIBRARY_PATH_CMD "${GEOSDIR}/lib"
+endif
 # We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib"
@@ -879,16 +885,14 @@ if( $EXTDATA2G_TRUE == 1 ) then
 
 endif
 
-# Move GOCART to use RRTMGP Bands
-# -------------------------------
-# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
-#
-set instance_files = `/bin/ls -1 *_instance*.rc`
-foreach instance ($instance_files)
-   /bin/mv $instance $instance.tmp
-   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
-   /bin/rm $instance.tmp
-end
+@RRTMGP_RADIATION # Move GOCART to use RRTMGP Bands
+@RRTMGP_RADIATION # -------------------------------
+@RRTMGP_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
+@RRTMGP_RADIATION foreach instance ($instance_files)
+   @RRTMGP_RADIATION /bin/mv $instance $instance.tmp
+   @RRTMGP_RADIATION cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   @RRTMGP_RADIATION /bin/rm $instance.tmp
+@RRTMGP_RADIATION end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
