@@ -100,6 +100,9 @@ usage ()
    echo "  Optional env vars: "
    echo "    When running on the TBC data, you can set TINYBCS_PATH to point to the dataset or you can answer the prompt."
    echo
+   echo "  Optional env vars: "
+   echo "    When running on the TBC data, you can set TINYBCS_PATH to point to the dataset or you can answer the prompt."
+   echo
    echo
 }
 

@@ -40,6 +40,7 @@ if ( $?@LD_LIBRARY_PATH_CMD ) then
 else
    setenv @LD_LIBRARY_PATH_CMD "${GEOSDIR}/lib"
 endif
+
 # We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib"
