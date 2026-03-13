@@ -97,9 +97,12 @@ class SymlinkCreator:
         self.boundary_dir = Path(catalog.get_value('boundary_dir', 'platform'))
         self.atmos_bcs = catalog.get_value('atmos_bcs', 'platform')
         self.gwdrs_dir = self.boundary_dir / catalog.get_value('gwdrs_dir', 'platform')
-        self.share_dir = catalog.get_value('share_dir', 'platform')
-        self.chem_dir = self.boundary_dir / self.share_dir / catalog.get_value('chem_dir', 'platform')
- 
+
+        # experiment type
+        self.extdata_files = catalog.get_value('extdata_files', 'experiment_type')
+        self.chem_dir = self.boundary_dir / catalog.get_value('chem_dir', 'experiment_type')
+        self.fvInput_dir = catalog.get_value('fvInput_dir', 'experiment_type')
+
         # land
         self.stream = catalog.get_value('stream', 'land_version')
         self.bcs_dir = self.boundary_dir / "bcs_shared/fvInput/ExtData/esm/tiles" / catalog.get_value('lsm_bcs', 'land_version')
@@ -149,9 +152,9 @@ class SymlinkCreator:
 
         # sst_dir
         if not self.coupled and self.ocean_res == "1440x720":
-            self.sst_dir = self.boundary_dir / self.share_dir / f"fvInput/g5gcm/bcs/SST/{self.ocean_res}"
+            self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/SST/{self.ocean_res}"
         elif not self.coupled:
-            self.sst_dir = self.boundary_dir / self.share_dir / f"fvInput/g5gcm/bcs/realtime/{self.sst_name}/{self.ocean_res}"
+            self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/realtime/{self.sst_name}/{self.ocean_res}"
         if self.config['platform'] != "nas" and self.config['platform'] != "nccs" and not self.coupled:
             self.sst_dir = self.boundary_dir / self.sst_name / self.ocean_res
         elif self.coupled:
@@ -198,8 +201,8 @@ class SymlinkCreator:
         extdata = Path("ExtData")
         extdata.mkdir(parents=True, exist_ok=True)
 
-        for item in self.chem_dir.glob("*"):
-            self.create_symlink(extdata / item.name, self.chem_dir / item.name)
+        for file in self.extdata_files:
+            self.create_symlink(extdata / file, self.chem_dir / file)
         
         # exit here if not coupled ocean
         if not self.coupled:
@@ -269,6 +272,7 @@ class SymlinkCreator:
 
     def species_path(self) -> dict:
         path = {"species.data": self.species_data_dir}
+
         return path
 
     def catchcn_paths(self) -> dict:
@@ -369,7 +373,8 @@ class SymlinkCreator:
         paths.update(self.table_paths())
         paths.update(self.seaice_paths())
         paths.update(self.dataocean_paths())
-        #self.print_paths(paths)
+        
+        self.print_paths(paths)
         
         for items in paths:
             self.create_symlink(Path(items), paths[items])
@@ -379,14 +384,15 @@ class SymlinkCreator:
         self.copy_internal_restart()
         self.make_input_dir()
 
-    # helper for testing
+    # returns broken paths and exits (if they exist)
     def print_paths(self, paths):
+        broken_path = False
         for i in paths:
-            if paths[i].exists():
-                print(f"{i}: {paths[i]}")
-            else:
+            if not paths[i].exists():
                 print(f"!!!!!!!{i} does not exist!\n{paths[i]}")
-
+                broken_path = True
+        if broken_path:
+            sys.exit()
 
 
 def main():

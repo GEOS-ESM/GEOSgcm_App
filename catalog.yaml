@@ -2,17 +2,37 @@
 
 platform:
   nccs:
-    boundary_dir: /discover/nobackup/projects/gmao
-    atmos_bcs: ./bcs_shared/make_bcs_inputs/atmosphere
-    chem_dir: fvInput_nc3 
-    gwdrs_dir: osse2/stage/BCS_FILES/GWD_RIDGE
-    share_dir: share/gmao_ops
+    boundary_dir: /discover/nobackup/projects/gmao/share/gmao_ops
+    gwdrs_dir: GWD_RIDGE
   nas:
     boundary_dir: /nobackup/gmao_SIteam/ModelData
-    atmos_bcs: /nas/atmos_bcs/
-    chem_dir: fvInput_nc3
     gwdrs_dir: GWD_RIDGE
-    share_dir: ""
+  atmos_bcs: ./bcs_shared/make_bcs_inputs/atmosphere
+
+
+experiment_type:
+  GCM:
+    extdata_files:
+      - AeroCom
+      - MERRA2
+      - PIESA
+      - chemistry
+      - g5chem
+      - g5gcm
+    chem_dir: fvInput_nc3
+    fvInput_dir: fvInput
+  ADAS:
+    extdata_files:
+      - AeroCom
+      - MERRA2
+      - PIESA
+      - agcmpert
+      - chemistry
+      - g5chem
+      - g5gcm
+    chem_dir: fvInput_4dvar
+    fvInput_dir: fvInput_4dvar
+
 
 
 land_version:
@@ -189,3 +209,6 @@ precip_correction:
   r21c: /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4
   merra-2: /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4
   ops: /gpfsm/dnb51/projects/p15/iau/merra_land/precip_CPCU-CMAP_corrected_MERRA/GEOSdas-2_1_4
+
+
+
