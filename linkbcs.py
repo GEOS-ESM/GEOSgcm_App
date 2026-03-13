@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import yaml, argparse, sys, shutil
 from pathlib import Path
 from datetime import datetime
