@@ -40,6 +40,7 @@ set (programs
    scm_run.j
    construct_extdata_yaml_list.py
    linkbcs.py
+   packtoiso.py
    )
 
 install (
