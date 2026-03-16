@@ -1,12 +1,11 @@
-# inside install/etc/
-
 platform:
   nccs:
     boundary_dir: /discover/nobackup/projects/gmao/share/gmao_ops
-    gwdrs_dir: GWD_RIDGE
   nas:
     boundary_dir: /nobackup/gmao_SIteam/ModelData
-    gwdrs_dir: GWD_RIDGE
+  gmao_desktop:
+    boundary_dir: /ford1/share/gmao_SIteam/ModelData
+  gwdrs_dir: GWD_RIDGE
   atmos_bcs: ./bcs_shared/make_bcs_inputs/atmosphere
 
 
