@@ -49,7 +49,7 @@ def capture_arguments():
 class CatalogManager:
     def __init__(self, config_path: Path):
         self.config = self.import_yaml(config_path)
-        self.catalog = self.import_yaml(Path(self.config['install_dir']) / "etc" / "catalog.yaml")
+        self.catalog = self.import_yaml(Path(self.config['install_dir']) / "etc" / "bcs_catalog.yaml")
 
     def import_yaml(self, yaml_file: Path) -> dict:
         with open(yaml_file, 'r') as f:

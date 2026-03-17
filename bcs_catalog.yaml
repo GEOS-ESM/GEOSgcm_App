@@ -1,3 +1,5 @@
+# inside install/etc/
+
 platform:
   nccs:
     boundary_dir: /discover/nobackup/projects/gmao/share/gmao_ops
