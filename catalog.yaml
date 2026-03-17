@@ -1,0 +1,213 @@
+platform:
+  nccs:
+    boundary_dir: /discover/nobackup/projects/gmao/share/gmao_ops
+  nas:
+    boundary_dir: /nobackup/gmao_SIteam/ModelData
+  gmao_desktop:
+    boundary_dir: /ford1/share/gmao_SIteam/ModelData
+  gwdrs_dir: GWD_RIDGE
+  atmos_bcs: ./bcs_shared/make_bcs_inputs/atmosphere
+
+
+experiment_type:
+  GCM:
+    extdata_files:
+      - AeroCom
+      - MERRA2
+      - PIESA
+      - chemistry
+      - g5chem
+      - g5gcm
+    chem_dir: fvInput_nc3
+    fvInput_dir: fvInput
+  ADAS:
+    extdata_files:
+      - AeroCom
+      - MERRA2
+      - PIESA
+      - agcmpert
+      - chemistry
+      - g5chem
+      - g5gcm
+    chem_dir: fvInput_4dvar
+    fvInput_dir: fvInput_4dvar
+
+
+
+land_version:
+  icarus:
+    lsm_bcs: ICA
+    stream: v1
+  icarus-NLv3:
+    lsm_bcs: NL3
+    stream: v1
+  v12:
+    lsm_bcs: v12
+    stream: v1
+  v14:
+    lsm_bcs: v14
+    stream: v2
+    
+
+agcm_grid:
+  c12:
+    IM: 12
+    JM: 72
+    tag: CF0012x6C
+  c24:
+    IM: 24
+    JM: 144
+    tag: CF0024x6C
+  c48:
+    IM: 48
+    JM: 288
+    tag: CF0048x6C
+  c90:
+    IM: 90
+    JM: 540
+    tag: CF0090x6C
+  c180:
+    IM: 180
+    JM: 1080
+    tag: CF0180x6C
+  c360:
+    IM: 360
+    JM: 2160
+    tag: CF0360x6C
+  c720:
+    IM: 720
+    JM: 4320
+    tag: CF0720x6C
+  c1120:
+    IM: 1120
+    JM: 6720
+    tag: CF1120x6C
+  c1440:
+    IM: 1440
+    JM: 8640
+    tag: CF1440x6C
+  c2880:
+    IM: 2880
+    JM: 17280
+    tag: CF2880x6C
+  c5760:
+    IM: 5760
+    JM: 34560
+    tag: CF5760x6C
+  c270:
+    IM: 270
+    JM: 1620
+    tag: CF0270x6C-SG001
+  c540:
+    IM: 540
+    JM: 3240
+    tag: CF0540x6C-SG001
+  c1080:
+    IM: 1080
+    JM: 4320
+    tag: CF1080x6C-SG001
+  c1536:
+    IM: 1536
+    JM: 9216
+    tag: CF1536x6C-SG002
+  c2160:
+    IM: 2160
+    JM: 12960
+    tag: CF2160x6C-SG001
+  c4320:
+    IM: 4320
+    JM: 25920
+    tag: CF4320x6C
+
+ocean_model:
+  mom6:
+    o72:
+      IM: 76
+      JM: 36
+    o360:
+      IM: 360
+      JM: 210
+    o540:
+      IM: 540
+      JM: 458
+    o720:
+      IM: 720
+      JM: 576
+    o1440:
+      IM: 1440
+      JM: 1080
+    o2880:
+      IM: 2880
+      JM: 2240
+    ogrid_type: M6TP
+  data:
+    reynolds:
+      IM: 360
+      JM: 180
+      ogrid_type: DE
+      sst_name: SST
+      sst_file: dataoceanfile_MERRA_sst_1971-current
+      ice_file: dataoceanfile_MERRA_fraci_1971-current
+      kpar_file: SEAWIFS_KPAR_mon_clim
+    merra-2:
+      IM: 1440
+      JM: 720
+      sst_name: MERRA2
+      ogrid_type: DE
+      sst_file: dataoceanfile_MERRA2_SST
+      ice_file: dataoceanfile_MERRA2_ICE
+      kpar_file: SEAWIFS_KPAR_mon_clim
+      sst_dir: /fvInput/g5gcm/bcs/SST/
+    ostia:
+      IM: 2880
+      JM: 1440
+      ogrid_type: DE
+      sst_name: OSTIA_REYNOLDS
+      sst_file: dataoceanfile_OSTIA_REYNOLDS_SST
+      ice_file: dataoceanfile_OSTIA_REYNOLDS_ICE
+      kpar_file: SEAWIFS_KPAR_mon_clim
+    cubed_sphere_ostia:
+      ogrid_type: CF
+      sst_name: OSTIA_REYNOLDS
+      sst_file: dataoceanfile_OSTIA_REYNOLDS_SST
+      ice_file: dataoceanfile_OSTIA_REYNOLDS_ICE
+      kpar_file: SEAWIFS_KPAR_mon_clim
+    cubed_sphere_ostia_r21c:
+      ogrid_type: CF
+      sst_name: OSTIA_REYNOLDS_ITR21C
+      sst_file: dataoceanfile_OSTIA_REYNOLDS_ITR21C_SST
+      ice_file: dataoceanfile_OSTIA_REYNOLDS_ITR21C_ICE
+      kpar_file: SEAWIFS_KPAR_mon_clim
+
+seaice_model:
+  cice:
+    kmt: cice/kmt_cice.bin
+    grid: cice/grid_cice.bin
+  cice6:
+    kmt: cice6/cice6_kmt.nc
+    grid: cice6/cice6_grid.nc
+    global_bathy: cice6/cice6_global.bathy.nc
+
+pchem_species:
+  ops:
+    # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
+    species_data: PCHEM/pchem.species.Clim_Prod_Loss.z_721x72.nc4
+  cmip:
+    # CMIP-5 Ozone Data (AGCM.rc:  pchem_clim_years = 228-Years)
+    species_data: PCHEM/pchem.species.CMIP-5.1870-2097.z_91x72.nc4
+  s2s:
+    # S2S pre-industrial with prod/loss of stratospheric water vapor
+    # (AGCM.rc:  pchem_clim_years = 3-Years,  and  H2O_ProdLoss: 1 )
+    species_data: Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4
+  merra-2:
+    # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
+    species_data: PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4
+
+# Is this necessary?
+precip_correction:
+  r21c: /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4
+  merra-2: /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4
+  ops: /gpfsm/dnb51/projects/p15/iau/merra_land/precip_CPCU-CMAP_corrected_MERRA/GEOSdas-2_1_4
+
+
+
