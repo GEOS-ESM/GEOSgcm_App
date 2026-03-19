@@ -16,6 +16,16 @@ setenv GEOSUTIL         @INSTALLDIR
 
 source $GEOSBIN/g5_modules
 
+if ( $?USE_DSL ) then
+    if ( $?PYTHONPATH ) then
+        setenv PYTHONPATH       ${GEOSDIR}/lib/Python/:${PYTHONPATH}
+    else
+        setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+    endif
+    setenv PYTHONPATH           ${GEOSDIR}/../src/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSmoist_GridComp/pyMoist:{$PYTHONPATH}
+endif
+
+
 # We only prepend to DY/LD_LIBRARY_PATH if it exists
 if ( $?@LD_LIBRARY_PATH_CMD ) then
    setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
