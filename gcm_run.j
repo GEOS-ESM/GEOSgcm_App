@@ -33,7 +33,12 @@ setenv GEOSETC          {{ GEOSETC }}
 setenv GEOSUTIL         {{ GEOSSRC }}
 
 source $GEOSBIN/g5_modules
-setenv {{ LD_LIBRARY_PATH_CMD }} "${LD_LIBRARY_PATH}:${GEOSDIR}/lib"
+# We only prepend to DY/LD_LIBRARY_PATH if it exists
+if ( $?{{ LD_LIBRARY_PATH_CMD }} ) then
+   setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${GEOSDIR}/lib"
+else
+   setenv {{ LD_LIBRARY_PATH_CMD }} "${GEOSDIR}/lib"
+endif
 # We only add BASEDIR to the {{ LD_LIBRARY_PATH_CMD }} if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib"
@@ -203,7 +208,7 @@ if ( $NCPUS != NULL ) then
          echo "Specified model nodes: $NUM_MODEL_NODES"
          echo "Specified oserver nodes: $NUM_OSERVER_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
-         exit
+         exit 1
       endif
 
    else
@@ -221,7 +226,7 @@ if ( $NCPUS != NULL ) then
          echo ""
          echo "Specified model nodes: $NUM_MODEL_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
-         exit
+         exit 1
       endif
 
    endif
@@ -330,7 +335,7 @@ if (-z input.nml) then
 endif
 if (-z input.nml) then
    echo "input.nml is zero-length"
-   exit 0
+   exit 2
 endif
 
 {{ MOM6 }}cp -f  $HOMDIR/MOM_input .
@@ -427,7 +432,7 @@ chmod +x linkbcs
 {{ SINGULARITY_BUILD }} # Error out if SINGULARITY_SANDBOX is not set
 {{ SINGULARITY_BUILD }} if( $SINGULARITY_SANDBOX == "" ) then
 {{ SINGULARITY_BUILD }}    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
-{{ SINGULARITY_BUILD }}    exit 1
+{{ SINGULARITY_BUILD }}    exit 3
 {{ SINGULARITY_BUILD }} endif
 {{ SINGULARITY_BUILD }}
 {{ SINGULARITY_BUILD }} # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
@@ -482,7 +487,7 @@ chmod +x linkbcs
 {{ NATIVE_BUILD }}    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
 {{ NATIVE_BUILD }} else
 {{ NATIVE_BUILD }}    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
-{{ NATIVE_BUILD }}    exit 1
+{{ NATIVE_BUILD }}    exit 4
 {{ NATIVE_BUILD }} endif
 {{ NATIVE_BUILD }} setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
@@ -512,7 +517,7 @@ if( $GCMEMIP == TRUE ) then
      foreach rst ( $tile_rsts )
         echo ${rst}_internal_rst
      end
-     exit
+     exit 5
    endif
    if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
@@ -524,7 +529,7 @@ else
      foreach rst ( $tile_rsts )
         echo ${rst}_internal_rst
      end
-     exit
+     exit 5
    endif
    if(-e $EXPDIR/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
@@ -879,16 +884,14 @@ if( $EXTDATA2G_TRUE == 1 ) then
 
 endif
 
-# Move GOCART to use RRTMGP Bands
-# -------------------------------
-# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
-#
-set instance_files = `/bin/ls -1 *_instance*.rc`
-foreach instance ($instance_files)
-   /bin/mv $instance $instance.tmp
-   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
-   /bin/rm $instance.tmp
-end
+{{ RRTMGP_RADIATION }} # Move GOCART to use RRTMGP Bands
+{{ RRTMGP_RADIATION }} # -------------------------------
+{{ RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
+{{ RRTMGP_RADIATION }} foreach instance ($instance_files)
+   {{ RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
+   {{ RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   {{ RRTMGP_RADIATION }} /bin/rm $instance.tmp
+{{ RRTMGP_RADIATION }} end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -927,7 +930,7 @@ endif
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
-{{ CICE6 }} #detect exisistence of certain fields in CICE6 restart
+{{ CICE6 }} #detect existence of certain fields in CICE6 restart
 {{ CICE6 }} ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
 {{ CICE6 }} if( $status == 0 ) then
 {{ CICE6 }}    echo 'pond state in restart, turn on restart flag if not already'
@@ -1029,7 +1032,7 @@ if ( $PCHEM_CLIM_YEARS == 39 ) then
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
       echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
-      exit 2
+      exit 8
    endif
 endif
 
@@ -1132,7 +1135,7 @@ endif
 {{ MIT }}     echo "If this is a new initialized experiment, delete:"
 {{ MIT }}     echo "${EXPDIR}/restarts/MITgcm_restart_dates.txt"
 {{ MIT }}     echo "and restart"
-{{ MIT }}     exit
+{{ MIT }}     exit 9
 {{ MIT }}   else
 {{ MIT }}     sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
 {{ MIT }}   endif
@@ -1171,12 +1174,22 @@ endif
 {{ SINGULARITY_BUILD }} {{ OCEAN_PRELOAD }} $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 {{ NATIVE_BUILD }} {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
+# Capture the return code from GEOSgcm.x
+# --------------------------------------
+set run_status = $status
+
+if ($run_status != 0) then
+   echo "GEOSgcm.x failed with return code $run_status"
+   exit $run_status
+endif
+
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( -e EGRESS ) then
    set rc = 0
 else
-   set rc = -1
+   echo "EGRESS file not found, GEOSgcm.x likely failed"
+   exit 10
 endif
 echo GEOSgcm Run Status: $rc
 

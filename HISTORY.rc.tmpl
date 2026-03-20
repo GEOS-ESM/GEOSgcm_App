@@ -1292,11 +1292,11 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                    ::
 
 #######################################################################
-#                    Ldas bkg forcing 
+#                    Ldas bkg forcing
 #######################################################################
 
   bkg.lfo_tavg.format:   'CFIO' ,
-  bkg.lfo_tavg.descr:      '2d,1-Hourly,Time-Averaged,Single-Level,Land Surface Forcings' , 
+  bkg.lfo_tavg.descr:      '2d,1-Hourly,Time-Averaged,Single-Level,Land Surface Forcings' ,
   bkg.lfo_tavg.template:   '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   bkg.lfo_tavg.mode:       'time-averaged' ,
   bkg.lfo_tavg.frequency:  010000 ,
@@ -1402,7 +1402,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   inst1_2d_aer_Nx-.template:      '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
   inst1_2d_aer_Nx-.mode:          'instantaneous' ,
   inst1_2d_aer_Nx-.grid_label:     PC{{ HIST_IM }}x{{ HIST_JM }}-DC ,
-  inst1_2d_aer_Nx-.conservative:   1 ,
+  inst1_2d_aer_Nx-.conservative:   'CONSERVE' ,
   inst1_2d_aer_Nx-.splitField:     1 ,
   inst1_2d_aer_Nx-.frequency:      010000 ,
   inst1_2d_aer_Nx-.duration:       010000 ,
@@ -1521,7 +1521,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg1_2d_adg_Nx-.end_time:       >>>IOETIME<<< ,
   tavg1_2d_adg_Nx-.nbits:          10 ,
   tavg1_2d_adg_Nx-.splitField:     1 ,
-  tavg1_2d_adg_Nx-.conservative:   1 ,
+  tavg1_2d_adg_Nx-.regrid_method: 'CONSERVE' ,
   tavg1_2d_adg_Nx-.deflate:    2      ,
   tavg1_2d_adg_Nx-.fields:        'CA.bcEM'      , 'CA.bc'  , 'BCPHOBICEM;BCPHILICEM' ,
 # Black Carbon
@@ -2278,7 +2278,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                                   'SMLAND'    , 'SURFACE'  ,
                                   'QINFIL'    , 'SURFACE'  , 'QINFILLAND',
                                   'FRUST'     , 'SURFACE'  , 'FRLANDUNST',
-                                  'FRSAT'     , 'SURFACE'  , 'FRLANDSAT' , 
+                                  'FRSAT'     , 'SURFACE'  , 'FRLANDSAT' ,
                                   'ASNOW'     , 'SURFACE'  , 'FRLANDSNO' ,
                                   'FRWLT'     , 'SURFACE'  , 'FRLANDWLT' ,
                                   'DFPARLAND' , 'SURFACE'  , 'PARDFLAND' ,
@@ -2501,7 +2501,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_ext_Np+-.mode:         'time-averaged' ,
   tavg3_3d_ext_Np+-.grid_label:    PC{{ HIST_IM }}x{{ HIST_JM }}-DC ,
   tavg3_3d_ext_Np+-.splitField:    1 ,
-  tavg3_3d_ext_Np+-.conservative:  1 ,
+  tavg3_3d_ext_Np+-.regrid_method: 'CONSERVE' ,
   tavg3_3d_ext_Np+-.vscale:        100.0 ,
   tavg3_3d_ext_Np+-.vunit:        'hPa' ,
   tavg3_3d_ext_Np+-.vvars:        'log(PLE)'       , 'DYN' ,
@@ -2536,7 +2536,7 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
   tavg3_3d_aer_Np+-.mode:         'time-averaged' ,
   tavg3_3d_aer_Np+-.grid_label:    PC{{ HIST_IM }}x{{ HIST_JM }}-DC ,
   tavg3_3d_aer_Np+-.splitField:    1 ,
-  tavg3_3d_aer_Np+-.conservative:  1 ,
+  tavg3_3d_aer_Np+-.regrid_method: 'CONSERVE' ,
   tavg3_3d_aer_Np+-.vscale:        100.0 ,
   tavg3_3d_aer_Np+-.vunit:        'hPa' ,
   tavg3_3d_aer_Np+-.vvars:        'log(PLE)' , 'DYN' ,

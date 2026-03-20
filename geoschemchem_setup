@@ -299,11 +299,27 @@ set LATLON_AGCM = "#DELETE"
 set CUBE_AGCM = ""
 
 echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 181)"
+echo "   NOTE: If you choose 72 levels, your defaults will change to match GEOSgcm v11:"
+echo "         - Microphysics will change to BACM_1M"
+echo "         - Land surface model boundary conditions will change to NL3"
+echo "         - Radiation will be set to RRTMG"
+echo "         - Default heartbeat will be set to 450 seconds"
 set   AGCM_LM = $<
 if( .$AGCM_LM == . ) then
   set AGCM_LM = 181
 endif
 
+#######################################################################
+#                 Set Radiation model
+#######################################################################
+
+if ( $AGCM_LM == 72 ) then
+   set RRTMG_RADIATION = ""
+   set RRTMGP_RADIATION = "#DELETE"
+else
+   set RRTMG_RADIATION = "#DELETE"
+   set RRTMGP_RADIATION = ""
+endif
 
 #######################################################################
 #                 Choose microphysics option
@@ -311,13 +327,18 @@ endif
 
 ASKMP:
 
-echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: GFDL_1M)"
+set DEFAULT_CLDMICRO = "GFDL_1M"
+if ( $AGCM_LM == 72 ) then
+   set DEFAULT_CLDMICRO = "BACM_1M"
+endif
+
+echo "Enter Choice for Atmospheric Model ${C1}Microphysics${CN}: (Default: ${C2}$DEFAULT_CLDMICRO${CN})"
 echo "   ${C2}BACM_1M  --  3-phase 1-moment Bacmeister et al${CN}"
 echo "   ${C2}GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory${CN}"
 echo "   ${C2}MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman${CN}"
 set   CLDMICRO = $<
 if( .$CLDMICRO == . ) then
-   set CLDMICRO = "GFDL_1M"
+   set CLDMICRO = $DEFAULT_CLDMICRO
 else
    set CLDMICRO = `echo $CLDMICRO | tr "[:lower:]" "[:upper:]"`
    if( "$CLDMICRO" != "BACM_1M" & \
@@ -1026,8 +1047,13 @@ if ( "$CLDMICRO" == "BACM_1M" ) then
 endif
 
 set GFDL_1M_ = "#"
+set KLID = "0.0"
 if ( "$CLDMICRO" == "GFDL_1M" ) then
    set GFDL_1M_ = ""
+   if ($AGCM_LM >= 181) set KLID = "19.0"
+   if ($AGCM_LM == 137) set KLID = "14.0"
+   if ($AGCM_LM ==  91) set KLID = "13.0"
+   if ($AGCM_LM ==  72) set KLID = "14.0"
 endif
 
 set MGB2_2M_ = "#"
@@ -1067,9 +1093,18 @@ if ($DATA_ATMOS == TRUE) then
   set GWD_IN_BCS   = "FALSE"
 else
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${C2}NL3${CN} (Icarus-NLv3), ${C2}v14${CN} (v14_BETA) or ${C2}v12${CN} (Default)"
+set DEFAULT_LSM_BCS = "v12"
+set LSM_BCS_V12_DEFAULT_STR = "${C2}v12${CN} (Default)"
+set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3)"
+if ( $AGCM_LM == 72 ) then
+   set DEFAULT_LSM_BCS = "NL3"
+   set LSM_BCS_V12_DEFAULT_STR = "${C2}v12${CN}"
+   set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3, Default)"
+endif
+
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${LSM_BCS_NL3_DEFAULT_STR}, ${C2}v14${CN} (v14_BETA) or ${LSM_BCS_V12_DEFAULT_STR}"
 set   LSM_BCS  = $<
-if( .$LSM_BCS == . ) set LSM_BCS = "v12"
+if( .$LSM_BCS == . ) set LSM_BCS = ${DEFAULT_LSM_BCS}
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
     set LSM_BCS      = "ICA"
     set LSM_PARMS    = "#DELETE"
@@ -2202,12 +2237,17 @@ s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
 
+s?@KLID?$KLID?g
+
 s?@PRELOAD_COMMAND?$PRELOAD_COMMAND?g
 s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
 
 s?@MODELATM?$MODELATM?g
 s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
+
+s?@RRTMG_RADIATION?$RRTMG_RADIATION?g
+s?@RRTMGP_RADIATION?$RRTMGP_RADIATION?g
 
 EOF
 
@@ -2621,6 +2661,11 @@ if( $LSM_BCS == "ICA" ) then
     awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
+if( $AGCM_LM == 72 ) then
+    /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
+    cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *SNOW_ALBEDO_INFO:/ s/1/0/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
+endif
+
 # Enable DATA_DRIVEN GOCART2G
 # ---------------------------
 if( $AERO_PROVIDER == GOCART2G ) then
@@ -2684,6 +2729,13 @@ if( $OGCM == TRUE ) then
    endif
 
 endif
+
+if ($DATA_ATMOS == TRUE) then
+   /bin/mv $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+   cat  $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp | sed -e "s/%OCN_RES%/${OGCM_IM}x${OGCM_JM}/g" > $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml
+   /bin/rm $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+endif
+
 
 #######################################################################
 #                       Echo Settings and Messages
