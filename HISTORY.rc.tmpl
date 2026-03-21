@@ -135,7 +135,9 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
              'vtx.mix'
 #            'vtx.prs'
 #            'prog.sfc+-'
+# Cubed output for JEDI
              'bkg_clcv_rst'
+             'extbkg_clcv_rst'
 # Trajectory Files
              'asm.eta'
 #            'prog.eta+-'
@@ -2938,3 +2940,37 @@ COLLECTIONS: 'inst3_3d_asm_Np-'
                            'TDEL'             , 'SURFACE'     , 'tdel'       ,
                            'Z0'               , 'SURFACE'     , 'z0m'        ,
                             ::
+
+  extbkg_clcv_rst.format:      'CFIO' ,
+  extbkg_clcv_rst.descr:       '3d,3-Hourly,Instantaneous,Model-Level,Analysis,Aerosol Concentrations' ,
+  extbkg_clcv_rst.template:    '%y4%m2%d2_%h2%n2z.>>>NCSUFFIX<<<' ,
+  extbkg_clcv_rst.archive:     '%c/Y%y4/M%m2',
+  extbkg_clcv_rst.ref_date:    >>>IOBBKGD<<< ,
+  extbkg_clcv_rst.ref_time:    >>>IOBBKGT<<< ,
+  extbkg_clcv_rst.end_date:    >>>IOEBKGD<<< ,
+  extbkg_clcv_rst.end_time:    >>>IOEBKGT<<< ,
+  extbkg_clcv_rst.frequency:   030000 ,
+  extbkg_clcv_rst.duration:    030000 ,
+  extbkg_clcv_rst.mode:        'instantaneous' ,
+  extbkg_clcv_rst.grid_label:  PE@BJEDI_IMx@BJEDI_JM-CF ,
+  extbkg_clcv_rst.splitField:  1 ,
+  extbkg_clcv_rst.nbits:      10 ,
+  extbkg_clcv_rst.deflate:    2 ,
+  extbkg_clcv_rst.fields:      'PS'           , 'DYN'      ,
+                               'DELP'         , 'DYN'      ,
+                               'FRLAND'       , 'SURFACE'  ,
+                               'FRLANDICE'    , 'SURFACE'  ,
+                               'FRLAKE'       , 'SURFACE'  ,
+                               'FROCEAN'      , 'SURFACE'  ,
+                               'FRACI'        , 'SURFACE'  , 'FRSEAICE'                       ,
+                               'RH2'          , 'MOIST'    , 'RH'                             ,
+                               'AIRDENS'      , 'CHEMENV'  ,
+                               'DUEXTCOEF'    , 'DU'       , 'DUEXTCOEF470;DUEXTCOEF550;DUEXTCOEF870' ,
+                               'SSEXTCOEF'    , 'SS'       , 'SSEXTCOEF470;SSEXTCOEF550;SSEXTCOEF870' ,
+                               'SUEXTCOEF'    , 'SU'       , 'SUEXTCOEF470;SUEXTCOEF550;SUEXTCOEF870' ,
+                               'NIEXTCOEF'    , 'NI'       , 'NIEXTCOEF470;NIEXTCOEF550;NIEXTCOEF870' ,
+                               'CA.bcEXTCOEF' , 'CA.bc'    , 'BCEXTCOEF470;BCEXTCOEF550;BCEXTCOEF870' ,
+                               'CA.ocEXTCOEF' , 'CA.oc'    , 'OCEXTCOEF470;OCEXTCOEF550;OCEXTCOEF870' ,
+                               'CA.brEXTCOEF' , 'CA.br'    , 'BREXTCOEF470;BREXTCOEF550;BREXTCOEF870' ,
+                               'TOTEXTCOEF'   , 'GOCART2G' , 'TOTEXTCOEF470;TOTEXTCOEF550;TOTEXTCOEF870' ,
+                       ::
