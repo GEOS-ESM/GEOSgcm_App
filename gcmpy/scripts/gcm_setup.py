@@ -151,7 +151,7 @@ class setup:
         model_npes = self.atmos.nx * self.atmos.ny
 
         # Calculate OSERVER nodes based on recommended algorithm
-        if self.expConfig['io_server'] == True:
+        if self.expConfig['io_server']:
 
             # First we calculate the number of model nodes
             n_model_nodes = math.ceil(model_npes / self.num_CPUs)
@@ -182,10 +182,13 @@ class setup:
             n_backend_pes = math.ceil(n_hist_collections / n_oserver_nodes)
 
             # multigroup requires at least two backend pes
-            if (n_backend_pes < 2): n_backend_pes = 2
+            if (n_backend_pes < 2):
+                n_backend_pes = 2
 
             # Calculate the total number of nodes to request from batch
             self.nodes = n_model_nodes + n_oserver_nodes
+            self.n_oserver_nodes = n_oserver_nodes
+            self.n_backend_pes   = n_backend_pes
 
         else:
             self.nodes = math.ceil(model_npes / self.num_CPUs)
