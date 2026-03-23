@@ -647,7 +647,7 @@ class setup:
             file_content = re.sub(r'(LAND_PARAMS:\s*).*', r'\1Icarus', file_content)
             file_content = re.sub(r'(Z0_FORMULATION:\s*).*', r'\1 2', file_content)
 
-        # Let us translate the above csh code to python. If LM=72, we set SNOW_ALBEDO_INFO to 0
+        # If LM=72, we set SNOW_ALBEDO_INFO to 0
         if self.atmos.lm == 72:
             file_content = re.sub(r'(SNOW_ALBEDO_INFO:\s*).*', r'\1 0', file_content)
 
