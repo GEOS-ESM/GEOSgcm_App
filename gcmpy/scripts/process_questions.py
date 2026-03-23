@@ -28,6 +28,23 @@ class handle:
 
 
     @staticmethod
+    def AM_microphysics_default(questionDict, i):
+        if i != 'AM_microphysics':
+            return
+
+        # The default ocean resolution is based on the atmospheric resolution
+        match questionDict['AM_vertical_res'].answer:
+            case '72':
+                questionDict[i].choices = ['BACM_1M  --  3-phase 1-moment Bacmeister et al', \
+                                           'GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory', \
+                                           'MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman']
+            case _:
+                questionDict[i].choices = ['GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory', \
+                                           'BACM_1M  --  3-phase 1-moment Bacmeister et al', \
+                                           'MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman']
+
+
+    @staticmethod
     def processor_choices(questionDict, i):
         if i != "processor":
             return
@@ -56,6 +73,17 @@ class handle:
                                            'o3 (1/8-deg, 2880x1440 OSTIA)',   \
                                            'o1 (1  -deg,  360x180  Reynolds, ends in 2022)']
 
+    @staticmethod
+    def LS_boundary_conditions_default(questionDict, i):
+        if i != 'LS_boundary_conditions':
+            return
+
+        # The default ocean resolution is based on the atmospheric resolution
+        match questionDict['AM_vertical_res'].answer:
+            case '72':
+                questionDict[i].choices = ['NL3', 'v12', 'ICA']
+            case _:
+                questionDict[i].choices = ['v12', 'NL3', 'ICA']
 
     @staticmethod
     def MIT_hres_choices(questionDict, i):
@@ -199,6 +227,7 @@ def ask_questions():
 
         # if the question properties need to dynamically change at
         # runtime call handle function BEFORE load_question()
+        handle.AM_microphysics_default(questionDict, i)
         handle.io_server_default(questionDict, i)
         # Only ask processor question if on NAS or NCCS
         if i == "processor" and envdict['site'] not in ['NAS', 'NCCS']:
@@ -210,6 +239,7 @@ def ask_questions():
         handle.MIT_hres_choices(questionDict, i)
         handle.MOM_hres_default(questionDict, i)
         handle.seaice_choices(questionDict, i)
+        handle.LS_boundary_conditions_default(questionDict, i)
         handle.heartbeat_default(questionDict, i)
         handle.history_template_default(questionDict, i)
         handle.exp_dir_default(questionDict, i)

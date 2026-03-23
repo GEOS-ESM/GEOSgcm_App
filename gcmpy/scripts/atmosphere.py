@@ -36,6 +36,9 @@ class atmosphere:
         atmos.BACM_1M            = "#"
         atmos.GFDL_1M            = "#"
         atmos.MGB2_2M            = "#"
+        atmos.RRTMGP_RADIATION   = ""
+        atmos.RRTMG_RADIATION    = "#DELETE"
+        atmos.KLID               = ""
         atmos.GFDL_hydro         = ".TRUE."
         atmos.GFDL_prog_ccn      = "prog_ccn = .true."
         atmos.GFDL_use_ccn       = "use_ccn = .true."
@@ -365,7 +368,17 @@ class atmosphere:
         if atmos.microphysics == "BACM_1M":
             atmos.BACM_1M = ""
             atmos.conv_dt = 450
-            atmos.chem_dt = 3600
+            atmos.chem_dt = 450
+            atmos.RRTMGP_RADIATION = "#DELETE"
+            atmos.RRTMG_RADIATION  = ""
+            if atmos.lm >= 181:
+                atmos.KLID = "19.0"
+            elif atmos.lm == 137:
+                atmos.KLID = "14.0"
+            elif atmos.lm == 91:
+                atmos.KLID = "13.0"
+            elif atmos.lm == 72:
+                atmos.KLID = "14.0"
         elif atmos.microphysics == "GFDL_1M":
             atmos.GFDL_1M = ""
         elif atmos.microphysics == "MGB2_2M":
