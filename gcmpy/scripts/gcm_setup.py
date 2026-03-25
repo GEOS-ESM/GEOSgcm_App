@@ -151,7 +151,7 @@ class setup:
         model_npes = self.atmos.nx * self.atmos.ny
 
         # Calculate OSERVER nodes based on recommended algorithm
-        if self.expConfig['io_server'] == True:
+        if self.expConfig['io_server']:
 
             # First we calculate the number of model nodes
             n_model_nodes = math.ceil(model_npes / self.num_CPUs)
@@ -182,10 +182,13 @@ class setup:
             n_backend_pes = math.ceil(n_hist_collections / n_oserver_nodes)
 
             # multigroup requires at least two backend pes
-            if (n_backend_pes < 2): n_backend_pes = 2
+            if (n_backend_pes < 2):
+                n_backend_pes = 2
 
             # Calculate the total number of nodes to request from batch
             self.nodes = n_model_nodes + n_oserver_nodes
+            self.n_oserver_nodes = n_oserver_nodes
+            self.n_backend_pes   = n_backend_pes
 
         else:
             self.nodes = math.ceil(model_npes / self.num_CPUs)
@@ -647,6 +650,10 @@ class setup:
             file_content = re.sub(r'(LAND_PARAMS:\s*).*', r'\1Icarus', file_content)
             file_content = re.sub(r'(Z0_FORMULATION:\s*).*', r'\1 2', file_content)
 
+        # If LM=72, we set SNOW_ALBEDO_INFO to 0
+        if self.atmos.lm == 72:
+            file_content = re.sub(r'(SNOW_ALBEDO_INFO:\s*).*', r'\1 0', file_content)
+
         with open(surfacegridcomp, 'w') as file:
             file.write(file_content)
 
@@ -899,6 +906,9 @@ class setup:
             'BACM_1M_': self.atmos.BACM_1M,
             'GFDL_1M_': self.atmos.GFDL_1M,
             'MGB2_2M_': self.atmos.MGB2_2M,
+            'RRTMGP_RADIATION': self.atmos.RRTMGP_RADIATION,
+            'RRTMG_RADIATION': self.atmos.RRTMG_RADIATION,
+            'KLID': self.atmos.KLID,
             'PRELOAD_COMMAND': envdict['preload_command'],
             'LD_LIBRARY_PATH_CMD': envdict['ld_library_path_command'],
             'RUN_CMD': envdict['run_command'],
@@ -1008,6 +1018,7 @@ def main():
 
     if args.yaml:
         expConfig = yaml_input_exp(args.yaml)
+        expConfig['clone_experiment'] = None
     else:
         expConfig = ask_questions()
 
