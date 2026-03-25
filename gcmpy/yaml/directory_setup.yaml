@@ -6,7 +6,7 @@ history_template:
   follows_up:     ''
 
 group_root:
-  type:           'text'
+  type:           'select'
   prompt:         'Enter your GROUP ID for Current EXP:'
   choices:        ''
   default_answer: ''

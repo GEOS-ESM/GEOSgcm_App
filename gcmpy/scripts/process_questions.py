@@ -56,6 +56,16 @@ class handle:
         else:
             exit(1)
 
+    @staticmethod                           
+    def group_id_choices(questionDict, i):  
+        if i != "group_root":               
+            return                          
+            
+        if envdict['site'] in ['NCCS', 'NAS']:
+            questionDict[i].choices = get_all_group_ids()
+        else:
+            exit(1)
+
     @staticmethod
     def OM_horizontal_res_default(questionDict, i):
         if i != 'OM_horizontal_res':
@@ -206,7 +216,25 @@ class handle:
         group_root = groups_output.strip().split()[0]
         questionDict[i].default = group_root
 
-
+def get_all_group_ids() -> list:
+    """
+    Run the Linux groups command to create the list
+    of all the user's group ids.
+ 
+    Returns
+    -------
+    group_ids : list
+      The list of all the user's group ids.
+    """
+    # Use the subprocess module to get all the possible group ids
+    groups_output = subprocess.check_output(["groups"], text=True)
+    groups_output = groups_output.strip().split()
+ 
+    # Only select ids which second to fourth characters are integers
+    # Some of the ids are purely characters and should not be considered.
+    group_ids = [item for item in groups_output if item[1:4].isdigit()]
+ 
+    return group_ids
 
 
 def ask_questions():
@@ -243,7 +271,8 @@ def ask_questions():
         handle.heartbeat_default(questionDict, i)
         handle.history_template_default(questionDict, i)
         handle.exp_dir_default(questionDict, i)
-        handle.group_root_default(questionDict, i)
+        handle.group_id_choices(questionDict, i)
+        #handle.group_root_default(questionDict, i)
 
         # prompts the user with the question
         questionDict[i].load_question(questionDict)
