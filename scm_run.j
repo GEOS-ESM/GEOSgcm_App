@@ -18,11 +18,10 @@ source $GEOSBIN/g5_modules
 
 if ( $?USE_DSL ) then
     if ( $?PYTHONPATH ) then
-        setenv PYTHONPATH       ${GEOSDIR}/lib/Python/:${PYTHONPATH}
+        setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
     else
         setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
     endif
-    setenv PYTHONPATH           ${GEOSDIR}/../src/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSmoist_GridComp/pyMoist:{$PYTHONPATH}
 endif
 
 
