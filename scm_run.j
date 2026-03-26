@@ -15,7 +15,6 @@ setenv GEOSETC          @INSTALLDIR/etc
 setenv GEOSUTIL         @INSTALLDIR
 
 source $GEOSBIN/g5_modules
-
 # We only prepend to DY/LD_LIBRARY_PATH if it exists
 if ( $?@LD_LIBRARY_PATH_CMD ) then
    setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
@@ -37,6 +36,8 @@ setenv EXPDIR  @EXPDIR
 cd $EXPDIR
 
 $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
+
+cp fvcore_layout.rc input.nml
 
 # NOTE: Both reading and writing file_weights seems to fail
 # on macOS. So for now we set to false on Darwin until we can
