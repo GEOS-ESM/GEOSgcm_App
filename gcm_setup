@@ -633,8 +633,9 @@ if( $OGCM == TRUE ) then
         endif
 
     else if ( "$OCNMODEL" == "MOM6" ) then
-       # For MOM6 we currently have only 3 allowed ocean resolutions based on the
-       # atmospheric resolution. The allowed are:
+       # Updated by Sina Khani: 
+       # For MOM6 we currently have only 4 allowed ocean resolutions (1/2, 1/4, 1/8 deg)
+       # based on the atmospheric resolution (c180 and c360). The allowed are:
        #
        # Atm Res  Atm NXxNY  Atm IMxJM  Ocean NXxNY  Ocean IMxJM  Ocean LM
        # -------  ---------  ---------  -----------  -----------  --------
