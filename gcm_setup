@@ -2452,6 +2452,19 @@ endif
 # Enable DATA_DRIVEN GOCART2G
 # ---------------------------
 if( $AERO_PROVIDER == GOCART2G ) then
+
+    # Switch GOCART2G tuning coefficients to L072 values if needed
+    # -------------------------------------------------------------
+    if( $AGCM_LM == 72 ) then
+        foreach file ($EXPDIR/RC/DU2G_instance_DU.rc $EXPDIR/RC/SS2G_instance_SS.rc)
+            /bin/mv $file $EXPDIR/RC/dummy
+            sed -e 's/^\(.*# L181\)/#\1/' \
+                -e 's/^#\(.*# L072\)/\1/' \
+                $EXPDIR/RC/dummy > $file
+        end
+        /bin/rm -f $EXPDIR/RC/dummy
+    endif
+
     if ($DATA_DRIVEN == TRUE ) then
        /bin/mv $EXPDIR/RC/GOCART2G_GridComp.rc $EXPDIR/RC/GOCART2G_GridComp.tmp
        cat $EXPDIR/RC/GOCART2G_GridComp.tmp | \
