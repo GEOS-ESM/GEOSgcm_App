@@ -113,6 +113,7 @@ SHALLOW_OPTION: UW
 # convection scheme options
 # ----------------------------------------
 CONVPAR_OPTION: @CONVPAR_OPTION
+@BACM_1M_USE_GF2020: 0
 # Convective plumes to be activated (1 true, 0 false)
 DEEP: 1
 SHALLOW: 0
@@ -133,6 +134,11 @@ NCAR_NRDG: @NCAR_NRDG
 # The below settings are only for v14 BCs currently being tested
 #v14 NCAR_EFFGWORO: 0.35
 #v14 NCAR_ORO_TNDMAX: 250
+
+# For BACM_1M we revert to v11 TURB settings
+@BACM_1M_TURBULENCE_LAMBDAH: 160.0
+@BACM_1M_TURBULENCE_LAMBDAM: 160.0
+
 ###########################################################
 
 ###########################################################
@@ -924,14 +930,17 @@ HCFC22_FRIENDLIES: DYNAMICS:TURBULENCE:MOIST
 
 # Set RADIATION Parameterizations
 # -------------------------------
-USE_RRTMGP_IRRAD: 1.0
-USE_RRTMGP_SORAD: 1.0
-RRTMGP_GAS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-lw-g128.nc
-RRTMGP_GAS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-sw-g112.nc
-RRTMGP_CLOUD_OPTICS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-lw.nc
-RRTMGP_CLOUD_OPTICS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-sw.nc
+@RRTMGP_RADIATION USE_RRTMGP_IRRAD: 1.0
+@RRTMGP_RADIATION USE_RRTMGP_SORAD: 1.0
+@RRTMGP_RADIATION RRTMGP_GAS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-lw-g128.nc
+@RRTMGP_RADIATION RRTMGP_GAS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-gas-sw-g112.nc
+@RRTMGP_RADIATION RRTMGP_CLOUD_OPTICS_LW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-lw.nc
+@RRTMGP_RADIATION RRTMGP_CLOUD_OPTICS_SW: ExtData/g5gcm/radiation/RRTMGP/v1.8/rrtmgp-clouds-sw.nc
+@RRTMGP_RADIATION SOLAR_LB_MAX_PASSES: 10
 
-SOLAR_LB_MAX_PASSES: 10
+@RRTMG_RADIATION USE_RRTMG_IRRAD: 1.0
+@RRTMG_RADIATION USE_RRTMG_SORAD: 1.0
+
 ISOLVAR: 2
 USE_NRLSSI2: .TRUE.
 SOLAR_CYCLE_FILE_NAME: ExtData/g5gcm/solar/NRLSSI2.txt
