@@ -103,7 +103,7 @@ class setup:
                 self.expConfig['processor'] = 'tur_ath'
                 self.num_CPUs = 240
 
-        elif envdict['site'] == 'AWS' or envdict['site'] == 'AZURE':
+        elif envdict['site'] == 'AWS' or envdict['site'] == 'Azure':
             # Because we do not know the name of the model or the number of CPUs
             # per node. We ask the user to set these variables in the script
             print(color.RED + "\nSince you are running on ",  envdict['site'], \
