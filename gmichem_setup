@@ -2041,6 +2041,8 @@ else if( $SITE == 'NCCS' ) then
                  setenv PLOT_P  "SBATCH --constraint=${MODEL} --nodes=1 --ntasks-per-node=24 --mem=488G"  # PE Configuration for gcm_plot.j
               else if ($MODEL == 'cas') then
                  setenv PLOT_P  "SBATCH --constraint=${MODEL} --nodes=1 --ntasks-per-node=10 --mem=185G"  # PE Configuration for gcm_plot.j
+              else
+                 setenv PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
               endif
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
