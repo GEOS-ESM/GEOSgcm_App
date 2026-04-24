@@ -1,3 +1,9 @@
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+# maybe can add dependency MAPL::MAPL 
+# for include "MAPL_Generic.h"
+  include_directories(${CMAKE_BINARY_DIR}/include/MAPL)
+endif()
+
 ecbuild_add_executable (
   TARGET GEOSgcm.x
   SOURCES GEOSgcm.F90
