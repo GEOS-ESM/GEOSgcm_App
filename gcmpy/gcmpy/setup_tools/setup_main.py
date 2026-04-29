@@ -34,7 +34,7 @@ from gcmpy.geos_settings.node_ops import determine_nodes
 from gcmpy.geos_settings.computing_sites import (
         job_script_header,
         site_nodes_dict
-        }
+        )
 
 # combines all models (Atmos, Ocean, Land, Gocart) into one big one
 class SetupGCM:
@@ -105,7 +105,7 @@ class SetupGCM:
             cores. As 45 is a multiple of 3, it's the best value
             that doesn't waste too much
             '''
-            node_map = site_nodes_dict['NCCS']:
+            node_map = site_nodes_dict['NCCS']
             for proc_type in node_map:
                 self.expConfig['processor'] = proc_type
                 self.num_CPUs = node_map[proc_type]
@@ -116,13 +116,13 @@ class SetupGCM:
                 self.num_CPUs = 120
 
         elif envdict['site'] == 'NAS':
-            node_map = site_nodes_dict['NAS']:
+            node_map = site_nodes_dict['NAS']
             for proc_type in node_map:
-                if proc_type in ['rom', 'mil', 'cas']
+                if proc_type in ['rom', 'mil', 'cas']:
                     self.expConfig['processor'] = f"{proc_type}_ait"
-                elif proc_type in ['bro', 'sky']
+                elif proc_type in ['bro', 'sky']:
                     self.expConfig['processor'] = f"{proc_type}_ele"
-                elif proc_type in ['tur']
+                elif proc_type in ['tur']:
                     self.expConfig['processor'] = f"{proc_type}_ath"
                 else:
                     self.expConfig['processor'] = proc_type
@@ -718,6 +718,7 @@ class SetupGCM:
             'BATCH_OUTPUTNAME': self.batch_outputname,
             'BATCH_JOINOUTERR': self.batch_joinouterr,
             'SITE': envdict['site'],
+            'proc_type': self.expConfig['processor'],
             'GEOSDIR': pathdict['install'],
             'GEOSSRC': pathdict['install'],
             'GEOSBIN': pathdict['bin'],
@@ -865,8 +866,9 @@ class SetupGCM:
         exp_yaml_file_vars = [
                 'SITE', 'EXPDIR', 'GEOSDIR', 
                 "NX", "NY", 
+                'USE_IOSERVER', 
+                'proc_type',
                 'AGCM_IM', 'AGCM_JM', 'AGCM_LM', 'OGCM_IM', 'OGCM_JM', 
-                'USE_IOSERVER', 'NUM_OSERVER_NODES', 'NUM_BACKEND_PES',
                 'DT', 'CONV_DT', 'CHEM_DT', 'SOLAR_DT', 'IRRAD_DT', 'OCEAN_DT'
                 ]
         exp_yaml_fname = Path(self.exp_dir) / f"run_{jinja_dict['EXPID']}.yaml"

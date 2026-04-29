@@ -5,9 +5,9 @@ from gcmpy.utils.color_ops import Color
 from gcmpy.setup_tools.setup_envs import envdict
 from gcmpy.setup_tools.config.load_questions import load_yamls
 from gcmpy.geos_settings.horizontal_resolution import (
-        atmos_horizontal_res
-        mit_horizontal_res
-        heartbeat_dict
+        atmos_horizontal_res,
+        mit_horizontal_res,
+        heartbeat_dict,
         ocean_res_default_dict
         )
 from gcmpy.geos_settings.computing_sites import site_nodes_dict

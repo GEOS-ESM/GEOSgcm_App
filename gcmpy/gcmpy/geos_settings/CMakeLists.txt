@@ -2,6 +2,7 @@
 set (files
 	__init__.py
 	computing_sites.py  
+	node_ops.py
 	horizontal_resolution.py
 	)
 
