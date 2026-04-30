@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 import os
 
-from gcmpy.geos_settings.node_ops import *
+from gcmpy.batch_tools.node_ops import *
 
 history_rc_text = f"""
 COLLECTIONS: 'geosgcm_prog'

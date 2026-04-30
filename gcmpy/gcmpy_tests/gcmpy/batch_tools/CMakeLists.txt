@@ -6,5 +6,5 @@ set (programs
 
 install (
         FILES ${programs}
-        DESTINATION bin/gcmpy/gcmpy_tests/gcmpy/geos_settings
+        DESTINATION bin/gcmpy/gcmpy_tests/gcmpy/batch_tools
         )

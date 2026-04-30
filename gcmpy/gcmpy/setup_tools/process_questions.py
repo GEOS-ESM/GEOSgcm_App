@@ -10,7 +10,7 @@ from gcmpy.geos_settings.horizontal_resolution import (
         heartbeat_dict,
         ocean_res_default_dict
         )
-from gcmpy.geos_settings.computing_sites import site_nodes_dict
+from gcmpy.batch_tools.computing_sites import site_nodes_dict
 
 class Handle:
     '''

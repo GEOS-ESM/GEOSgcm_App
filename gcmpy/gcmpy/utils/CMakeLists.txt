@@ -8,7 +8,6 @@ set (files
 	path_ops.py 
 	regex_ops.py
 	run_cmd_ops.py  
-	slurm_ops.py
 	strip_name.py
 	yaml_ops.py
 	)

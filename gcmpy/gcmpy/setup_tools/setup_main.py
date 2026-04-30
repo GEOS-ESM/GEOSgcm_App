@@ -30,8 +30,8 @@ from gcmpy.utils.yaml_ops import (
         )
 from gcmpy.utils.color_ops import Color
 from gcmpy.utils.regex_ops import search_replace_in_string
-from gcmpy.geos_settings.node_ops import determine_nodes
-from gcmpy.geos_settings.computing_sites import (
+from gcmpy.batch_tools.node_ops import determine_nodes
+from gcmpy.batch_tools.computing_sites import (
         job_script_header,
         site_nodes_dict
         )
@@ -865,9 +865,9 @@ class SetupGCM:
         # of the batch script
         exp_yaml_file_vars = [
                 'SITE', 'EXPDIR', 'GEOSDIR', 
-                "NX", "NY", 
+                'NX', 'NY', 
                 'USE_IOSERVER', 
-                'proc_type',
+                'proc_type', 'NCPUS_PER_NODE', 
                 'AGCM_IM', 'AGCM_JM', 'AGCM_LM', 'OGCM_IM', 'OGCM_JM', 
                 'DT', 'CONV_DT', 'CHEM_DT', 'SOLAR_DT', 'IRRAD_DT', 'OCEAN_DT'
                 ]

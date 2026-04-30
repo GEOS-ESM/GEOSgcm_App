@@ -1,6 +1,6 @@
 add_subdirectory(utils)
 add_subdirectory(run_tools)
-add_subdirectory(geos_settings)
+add_subdirectory(batch_tools)
 
 set (programs
 	__init__.py
