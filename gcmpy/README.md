@@ -11,7 +11,7 @@ etc.
 It consists of a set of interfaces that are accessible to
 users to perform specific tasks:
 
-- `gcm_setup.py`: Create and experiment directory either
+- `run_gcm_setup.py`: Create and experiment directory either
    from scratch or from a YAML configuration file.
 - __More to come...__
 
