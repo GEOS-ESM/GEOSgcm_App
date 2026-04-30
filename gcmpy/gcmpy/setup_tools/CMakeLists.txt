@@ -1,4 +1,4 @@
-add_subdirectory(config)
+add_subdirectory(questions)
 
 set (programs
 	__init__.py

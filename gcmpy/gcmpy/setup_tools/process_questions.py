@@ -3,7 +3,7 @@ import yaml, re, os, subprocess
 from gcmpy.setup_tools.generate_question import Question
 from gcmpy.utils.color_ops import Color
 from gcmpy.setup_tools.setup_envs import envdict
-from gcmpy.setup_tools.config.load_questions import load_yamls
+from gcmpy.setup_tools.questions.load_questions import load_yamls
 from gcmpy.geos_settings.horizontal_resolution import (
         atmos_horizontal_res,
         mit_horizontal_res,

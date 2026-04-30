@@ -110,11 +110,6 @@ class SetupGCM:
                 self.expConfig['processor'] = proc_type
                 self.num_CPUs = node_map[proc_type]
 
-            if self.expConfig['processor'] == 'cas':
-                self.num_CPUs = 40
-            elif self.expConfig['processor'] == 'mil':
-                self.num_CPUs = 120
-
         elif envdict['site'] == 'NAS':
             node_map = site_nodes_dict['NAS']
             for proc_type in node_map:

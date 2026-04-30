@@ -13,5 +13,5 @@ set (files
 
 install (
    FILES ${files}
-   DESTINATION bin/gcmpy/gcmpy/setup_tools/config
+   DESTINATION bin/gcmpy/gcmpy/setup_tools/questions
    )
