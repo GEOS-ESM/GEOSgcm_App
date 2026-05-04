@@ -1502,8 +1502,14 @@ else if( $SITE == 'NCCS' ) then
               setenv    PLOT_Q  "SBATCH --constraint=${MODEL}"                                # batch queue name for gcm_plot.j
               setenv    MOVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_moveplot.j
               setenv ARCHIVE_Q  "SBATCH --partition=datamove"                                 # batch queue name for gcm_archive.j
-              setenv    POST_P  "SBATCH --nodes=${NPCUS} --ntasks-per-node=${NCPUS_PER_NODE}" # PE Configuration for gcm_post.j
-              setenv    PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
+              setenv    POST_P  "SBATCH --nodes=1 --ntasks-per-node=${NCPUS_PER_NODE}"        # PE Configuration for gcm_post.j
+              if      ($MODEL == 'mil') then
+                 setenv PLOT_P  "SBATCH --constraint=${MODEL} --nodes=1 --ntasks-per-node=24 --mem=488G"  # PE Configuration for gcm_plot.j
+              else if ($MODEL == 'cas') then
+                 setenv PLOT_P  "SBATCH --constraint=${MODEL} --nodes=1 --ntasks-per-node=10 --mem=185G"  # PE Configuration for gcm_plot.j
+              else
+                 setenv PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
+              endif
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
@@ -2669,6 +2675,19 @@ endif
 # Enable DATA_DRIVEN GOCART2G
 # ---------------------------
 if( $AERO_PROVIDER == GOCART2G ) then
+
+    # Switch GOCART2G tuning coefficients to L072 values if needed
+    # -------------------------------------------------------------
+    if( $AGCM_LM == 72 ) then
+        foreach file ($EXPDIR/RC/DU2G_instance_DU.rc $EXPDIR/RC/SS2G_instance_SS.rc)
+            /bin/mv $file $EXPDIR/RC/dummy
+            sed -e 's/^\(.*# L181\)/#\1/' \
+                -e 's/^#\(.*# L072\)/\1/' \
+                $EXPDIR/RC/dummy > $file
+        end
+        /bin/rm -f $EXPDIR/RC/dummy
+    endif
+
     if ($DATA_DRIVEN == TRUE ) then
        /bin/mv $EXPDIR/RC/GOCART2G_GridComp.rc $EXPDIR/RC/GOCART2G_GridComp.tmp
        cat $EXPDIR/RC/GOCART2G_GridComp.tmp | \
