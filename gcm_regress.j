@@ -297,29 +297,16 @@ set date = `cat cap_restart`
 set nymd0 = $date[1]
 set nhms0 = $date[2]
 
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 setenv EMISSIONS @EMISSIONS
 if( @EMISSIONS == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       if( $nymd0 < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-       else
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
+    set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $LM == 72 ) then
-        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.yaml .
     else
-        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
         foreach file ($files)
           /bin/rm -f `basename $file`
           /bin/rm -f dummy
@@ -331,36 +318,16 @@ endif
 
 @MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
 @MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+@MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 @MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-       cat $extdata_files > ExtData.rc
-   endif
-endif
-
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
 if( $LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
