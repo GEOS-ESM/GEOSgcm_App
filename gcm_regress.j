@@ -304,9 +304,10 @@ if( @EMISSIONS == AMIP_EMISSIONS ) then
     set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $LM == 72 ) then
+        cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.yaml .
     else
-        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
+        set files = `/bin/ls -1 ${AMIP_EMISSIONS_DIRECTORY}/*.rc ${AMIP_EMISSIONS_DIRECTORY}/*.yaml`
         foreach file ($files)
           /bin/rm -f `basename $file`
           /bin/rm -f dummy
