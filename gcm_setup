@@ -358,6 +358,39 @@ endif
 
 
 #######################################################################
+#   GEOS-MLT Option
+#######################################################################
+
+ASKGEOSMLT:
+
+
+set DEFAULT_GEOSMLT = FALSE
+
+echo "Use ${C1}GEOSMLT Modifications${CN}? (Default: ${C2}${DEFAULT_GEOSMLT}${CN})"
+set   USE_GEOSMLT = $<
+
+if( .$USE_GEOSMLT == . ) then
+   set USE_GEOSMLT = $DEFAULT_GEOSMLT
+else
+   set USE_GEOSMLT = `echo $USE_GEOSMLT | tr "[:lower:]" "[:upper:]"`
+   if(  $USE_GEOSMLT == "Y"     | \
+        $USE_GEOSMLT == "YES"   | \
+        $USE_GEOSMLT == "T"     | \
+        $USE_GEOSMLT == "TRUE"  ) set USE_GEOSMLT = TRUE
+   if(  $USE_GEOSMLT == "N"     | \
+        $USE_GEOSMLT == "NO"    | \
+        $USE_GEOSMLT == "F"     | \
+        $USE_GEOSMLT == "FALSE" ) set USE_GEOSMLT = FALSE
+
+   if( "$USE_GEOSMLT" != "TRUE" & "$USE_GEOSMLT" != "FALSE" ) then
+      echo
+      echo "Use ${C1}GEOS-MLT mods${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
+      goto ASKGEOSMLT
+   endif
+endif
+
+
+#######################################################################
 #            Test to see if you want to use ioserver
 #######################################################################
 
@@ -1011,6 +1044,7 @@ if( $AGCM_IM ==  "c12" ) then
      endif
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1029,6 +1063,7 @@ if( $AGCM_IM ==  "c24" ) then
      set       NX = 4
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1047,6 +1082,7 @@ if( $AGCM_IM ==  "c48" ) then
      set       NX = 4
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = 180
      set HIST_JM  =  91
      set JOB_SGMT = 00000015
@@ -1080,6 +1116,7 @@ if( $AGCM_IM ==  "c90" ) then
         set OCEAN_DT = $IRRAD_DT
      endif
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000032
@@ -1110,6 +1147,7 @@ if( $AGCM_IM ==  "c180" ) then
         set OCEAN_DT = $IRRAD_DT
      endif
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 2
@@ -1129,6 +1167,7 @@ if( $AGCM_IM == "c360" ) then
      set       NX = 12
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 4
@@ -1148,6 +1187,7 @@ if( $AGCM_IM == "c720" ) then
      set       NX = 24
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1168,6 +1208,7 @@ if( $AGCM_IM == "c1440" ) then
      set       NX = 48
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1188,6 +1229,7 @@ if( $AGCM_IM == "c2880" ) then
      set       NX = 96
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1210,6 +1252,7 @@ if( $AGCM_IM == "c5760" ) then
      set       NX = 192
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1235,6 +1278,7 @@ if( $AGCM_IM == "c270" ) then
      set       NX = 8
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1257,6 +1301,7 @@ if( $AGCM_IM == "c540" ) then
      set       NX = 14
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1279,6 +1324,7 @@ if( $AGCM_IM == "c1080" ) then
      set       NX = 22
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1301,6 +1347,7 @@ if( $AGCM_IM == "c1536" ) then
      set       NX = 36
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1323,6 +1370,7 @@ if( $AGCM_IM == "c2160" ) then
      set       NX = 40
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
+     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1406,6 +1454,13 @@ else
    endif
    # Enable FV3_CONFIG: HWT when running non-hydrostatic
    set FV_HWT        = ''
+endif
+
+# Settings for GEOS_MLT
+if ( "$USE_GEOSMLT" == "TRUE" ) then
+   set GEOS_MLT      = "GEOS_MLT    = .T."
+else
+   set GEOS_MLT      = "GEOS_MLT    = .F."
 endif
 
 if ($CONUS == '#') then
@@ -2507,6 +2562,7 @@ EOF
 
 cat >> $HOMDIR/sedfile << EOF
 
+s^@GEOS_MLT^$GEOS_MLT^g
 s^@HYDROSTATIC^$HYDROSTATIC^g
 s?@FV_SCHMIDT?$SCHMIDT?g
 s?@FV_STRETCH_FAC?$STRETCH_FAC?g
