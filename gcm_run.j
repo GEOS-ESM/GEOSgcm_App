@@ -65,6 +65,18 @@ setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
 
 #######################################################################
+#                          DSL configuration
+#######################################################################
+
+if ( $?USE_DSL ) then
+   if ( $?PYTHONPATH ) then
+      setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+   else
+      setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+   endif
+endif
+
+#######################################################################
 #                 Create Experiment Sub-Directories
 #######################################################################
 

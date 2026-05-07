@@ -16,6 +16,15 @@ setenv GEOSUTIL         @INSTALLDIR
 
 source $GEOSBIN/g5_modules
 
+if ( $?USE_DSL ) then
+    if ( $?PYTHONPATH ) then
+        setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+    else
+        setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+    endif
+endif
+
+
 # We only prepend to DY/LD_LIBRARY_PATH if it exists
 if ( $?@LD_LIBRARY_PATH_CMD ) then
    setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
