@@ -688,7 +688,7 @@ CONTAINS
      CUR_M  = BEG_M
      CUR_S  = BEG_S
 
-     UNIT = GETFILE ( "cap_restart", form="formatted", ALL_PES=.true., rc=status )
+     open(newunit=UNIT, file="cap_restart", form="formatted", action="read", iostat=status)
      VERIFY_(STATUS)
 
      rewind(UNIT)
@@ -706,7 +706,7 @@ CONTAINS
 
 999  continue  ! Initialize Current time
 
-     call FREE_FILE (UNIT)
+     close(UNIT)
 
      call ESMF_TimeSet( CurrTime, YY = CUR_YY, &
                                   MM = CUR_MM, &
