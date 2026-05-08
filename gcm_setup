@@ -654,7 +654,7 @@ if( $OGCM == TRUE ) then
         endif
 
     else if ( "$OCNMODEL" == "MOM6" ) then
-       # Updated by Sina Khani: 
+       # Updated by Sina Khani:
        # For MOM6 we currently have only 4 allowed ocean resolutions (1/2, 1/4, 1/8 deg)
        # based on the atmospheric resolution (c180 and c360). The allowed are:
        #
@@ -667,7 +667,7 @@ if( $OGCM == TRUE ) then
        # c360     30x36      180x1080   36x30        1440x1080    75
        # c180     20x36      180x1080   36x20        2880x2240    75
        # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
-  
+
        if ( $AGCM_IM == "c12" ) then
           set OGCM_NX = 3
           set OGCM_NY = 2
@@ -713,7 +713,7 @@ if( $OGCM == TRUE ) then
              set OGCM_NX = 36
              set OGCM_NY = 30
              set OGCM_LM = 75
-          endif 
+          endif
 
        else if ( $AGCM_IM == "c360" ) then
           set OGCM_NX = 36
