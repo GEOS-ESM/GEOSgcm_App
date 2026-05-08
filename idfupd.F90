@@ -25,6 +25,7 @@ program idfupd
 
   use ESMF
   use MAPL
+  use MAPL_PackedTimeMod, only: MAPL_UnpackDateTime => UnpackDateTime
 
   use FVdycore_GridCompMod,   only : FV_SetServices    => SetServices
   use FVdycoreCubed_GridComp, only : FV3_SetServices   => SetServices
