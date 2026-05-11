@@ -10,7 +10,7 @@
 #@RUN_Q
 #@BATCH_GROUP
 #@BATCH_JOINOUTERR
-#@BATCH_NAME -o gcm_run.o@RSTDATE
+#@BATCH_NAME -o gcm_run.o%j
 
 #######################################################################
 #                         System Settings
