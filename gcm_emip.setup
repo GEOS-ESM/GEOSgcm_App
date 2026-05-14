@@ -25,6 +25,7 @@ cat > sedfile << EOF
 s?@RSTDATE?$RSTDATE?g
 s?@GCMEMIP?TRUE?g
 s?@BATCH_NAME?SBATCH?g
+s?gcm_run.o%j?gcm_run.o$RSTDATE?g
 EOF
 sed -f sedfile gcm_run.tmp > gcm_run.j$RSTDATE
 /bin/rm -f sedfile
