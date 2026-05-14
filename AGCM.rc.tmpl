@@ -113,7 +113,6 @@ SHALLOW_OPTION: UW
 # convection scheme options
 # ----------------------------------------
 CONVPAR_OPTION: {{ CONVPAR_OPTION }}
-{{ BACM_1M_ }}USE_GF2020: 0
 # Convective plumes to be activated (1 true, 0 false)
 DEEP: 1
 SHALLOW: 0
@@ -134,11 +133,6 @@ NCAR_NRDG: {{ NCAR_NRDG }}
 # The below settings are only for v14 BCs currently being tested
 #v14 NCAR_EFFGWORO: 0.35
 #v14 NCAR_ORO_TNDMAX: 250
-
-# For BACM_1M we revert to v11 TURB settings
-{{ BACM_1M_ }}TURBULENCE_LAMBDAH: 160.0
-{{ BACM_1M_ }}TURBULENCE_LAMBDAM: 160.0
-
 ###########################################################
 
 ###########################################################
@@ -388,12 +382,12 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #M2 REPLAY_FILE: ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4
 #M2 MKIAU_JCAP: 62
 
-# GEOS-IT Regular REPLAY Configuration
-# --------------------------------------------
+# GEOS-IT Regular REPLAY Configuration (1999-Present)
+# ---------------------------------------------------
 #IT REPLAY_ANA_EXPID: GEOS-IT
-#IT REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos-it/dao_ops/archive/d5294_geosit_jan18
+#IT REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos-it/dao_ops/archive/d5294_geosit_ALL
 #IT REPLAY_MODE: Regular
-#IT REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit_jan18.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#IT REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit.ana.eta.%y4%m2%d2_%h2%n2z.nc4
 #IT MKIAU_JCAP: 62
 
 # 4dvar ANA EXPID and LOCATION used for REPLAY
