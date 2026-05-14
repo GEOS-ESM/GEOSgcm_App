@@ -51,8 +51,32 @@ class Gocart:
             gocart.pchem_clim_years = 39
             gocart.ox_relaxtime = '259200.'
 
+    def ajust_tuning_coefficients(gocart):
+        if  int(gocart.expConfig['AM_vertical_res'] != 72):
+            return
+
+        # Switch GOCART2G tuning coefficients to L072 values if needed
+        # -------------------------------------------------------------
+        file_list = [
+            Path(f"{gocart.expConfig['exp_dir']}/RC/DU2G_instance_DU.rc"),
+            Path(f"{gocart.expConfig['exp_dir']}/RC/SS2G_instance_SS.rc"),
+        ]
+        for file in file_list:
+            with open(filepath, "r") as f:
+                content = f.read()
+
+            # Comment out L181 lines
+            content = re.sub(r"^(.*# L181)", r"#\1", content, flags=re.MULTILINE)
+            # Uncomment L072 lines
+            content = re.sub(r"^#(.*# L072)", r"\1", content, flags=re.MULTILINE)
+
+            with open(filepath, "w") as f:
+                f.write(content)
+
+
 
     def config(gocart):
         gocart.set_gocart()
         gocart.set_emissions()
+        gocart.adjust_tuning_coefficients()
 
