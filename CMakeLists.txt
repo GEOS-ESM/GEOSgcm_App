@@ -78,3 +78,4 @@ endforeach ()
 configure_file(.AGCM_VERSION .AGCM_VERSION @ONLY)
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/.AGCM_VERSION DESTINATION etc)
 
+add_subdirectory(gcmpy)

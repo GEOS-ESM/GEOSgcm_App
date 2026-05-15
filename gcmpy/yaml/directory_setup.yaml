@@ -1,0 +1,16 @@
+history_template:
+  type:           'text'
+  prompt:         'Enter the location of HISTORY template to use (press ENTER for recommended template):'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''
+
+group_root:
+  type:           'text'
+  prompt:         'Enter your GROUP ID for Current EXP:'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''
+
+
+

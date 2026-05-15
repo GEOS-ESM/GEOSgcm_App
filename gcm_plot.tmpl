@@ -4,12 +4,12 @@
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#@BATCH_TIME@PLOT_T
-#@PLOT_P
-#@BATCH_JOBNAME@NAME
-#@PLOT_Q
-#@BATCH_GROUP
-#@BATCH_OUTPUTNAMEOUTPUT
+#{{ BATCH_TIME }}{{ PLOT_T }}
+#{{ PLOT_P }}
+#{{ BATCH_JOBNAME }}@NAME
+#{{ PLOT_Q }}
+#{{ BATCH_GROUP }}
+#{{ BATCH_OUTPUTNAME }}OUTPUT
 
 #######################################################################
 #                  System Environment Variables
@@ -19,9 +19,9 @@ umask 022
 
 limit stacksize unlimited
 
-@SETENVS
+{{ SETENVS }}
 
-@MPT_SHEPHERD
+{{ MPT_SHEPHERD }}
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -29,23 +29,23 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             @SITE
-setenv GEOSBIN          @GEOSBIN
-setenv GEOSUTIL         @GEOSSRC
+setenv SITE             {{ SITE }}
+setenv GEOSBIN          {{ GEOSBIN }}
+setenv GEOSUTIL         {{ GEOSSRC }}
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}
+setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}
 if ( $?BASEDIR ) then
-    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 
 #######################################################################
 #             Experiment Specific Environment Variables
 #######################################################################
 
-setenv    EXPID   @EXPID
-setenv    EXPDIR  @EXPDIR
-setenv    HOMDIR  @HOMDIR
+setenv    EXPID   {{ EXPID }}
+setenv    EXPDIR  {{ EXPDIR }}
+setenv    HOMDIR  {{ HOMDIR }}
 
 #######################################################################
 #                         Quickplot Commands
@@ -64,5 +64,5 @@ endif
 #######################################################################
 
  set MOVE =  `grep PLOT_MOVE: $EXPDIR/plot/plot.rc | cut -d'#' -f1 | cut -d':' -f2`
-if( $MOVE[1] == 'ON' ) @BATCH_CMD $EXPDIR/plot/gcm_moveplot.j
+if( $MOVE[1] == 'ON' ) {{ BATCH_CMD }} $EXPDIR/plot/gcm_moveplot.j
 

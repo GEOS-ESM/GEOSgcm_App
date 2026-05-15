@@ -4,12 +4,12 @@
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#@BATCH_TIME1:00:00
-#@MOVE_P
-#@BATCH_JOBNAME@MOVE_N
-#@MOVE_Q
-#@BATCH_GROUP
-#@BATCH_OUTPUTNAMEgcm_moveplot.o
+#{{ BATCH_TIME }}1:00:00
+#{{ MOVE_P }}
+#{{ BATCH_JOBNAME }}{{ MOVE_N }}
+#{{ MOVE_Q }}
+#{{ BATCH_GROUP }}
+#{{ BATCH_OUTPUTNAME }}gcm_moveplot.o
 
 #######################################################################
 #                  System Environment Variables
@@ -19,9 +19,9 @@ umask 022
 
 limit stacksize unlimited
 
-@SETENVS
+{{ SETENVS }}
 
-@MPT_SHEPHERD
+{{ MPT_SHEPHERD }}
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -29,23 +29,23 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             @SITE
-setenv GEOSBIN          @GEOSBIN
-setenv GEOSUTIL         @GEOSSRC
+setenv SITE             {{ SITE }}
+setenv GEOSBIN          {{ GEOSBIN }}
+setenv GEOSUTIL         {{ GEOSSRC }}
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}
+setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}
 if ( $?BASEDIR ) then
-    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 
 #######################################################################
 #             Experiment Specific Environment Variables
 #######################################################################
 
-setenv    EXPID   @EXPID
-setenv    EXPDIR  @EXPDIR
-setenv    HOMDIR  @HOMDIR
+setenv    EXPID   {{ EXPID }}
+setenv    EXPDIR  {{ EXPDIR }}
+setenv    HOMDIR  {{ HOMDIR }}
 
 #######################################################################
 #                           MOVE Commands
