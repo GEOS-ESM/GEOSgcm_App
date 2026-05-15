@@ -389,6 +389,12 @@ else
    endif
 endif
 
+if ( "$USE_GEOSMLT" == "TRUE" ) then
+   set GEOSMLT = ""
+else
+   set GEOSMLT = "#"
+endif
+# --- awlee
 
 #######################################################################
 #            Test to see if you want to use ioserver
@@ -2407,6 +2413,7 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
+s?@GEOSMLT?$GEOSMLT?g
 s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
 s?@NATIVE_BUILD?$NATIVE_BUILD?g
 s?@MPT_SHEPHERD?$MPT_SHEPHERD?g
