@@ -177,9 +177,9 @@ def convert_timedelta_to_secs(td: dttm.timedelta | int) -> int:
        The total number of seconds.
     """
     if isinstance(td, int):
-        totals_secs = td
+        total_secs = td
     else:
-        totals_secs = int(td.total_seconds())
+        total_secs = int(td.total_seconds())
 
     return total_secs
 

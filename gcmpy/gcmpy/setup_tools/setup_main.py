@@ -529,6 +529,11 @@ class SetupGCM:
             self.templates.append('ice_in')
 
         print(f"{Color.GREEN}Done!{Color.RESET}\n")
+        print()
+        print(f"{60*'-'}")
+        print(f"Succesfully created the experiment directory: \n\t {self.exp_dir}")
+        print(f"{60*'-'}")
+        print()
 
 
 
@@ -764,11 +769,11 @@ class SetupGCM:
             'BATCH_JOINOUTERR': self.batch_joinouterr,
             'SITE': envdict['site'],
             'proc_type': self.expConfig['processor'],
-            'GEOSDIR': pathdict['install'],
-            'GEOSSRC': pathdict['install'],
-            'GEOSBIN': pathdict['bin'],
-            'GEOSETC': pathdict['etc'],
-            'GEOSUTIL': pathdict['install'],
+            'GEOSDIR': str(pathdict['install']),
+            'GEOSSRC': str(pathdict['install']),
+            'GEOSBIN': str(pathdict['bin']),
+            'GEOSETC': str(pathdict['etc']),
+            'GEOSUTIL': str(pathdict['install']),
             'SINGULARITY_BUILD': '#DELETE',
             'NATIVE_BUILD': '',
             'MPT_SHEPHERD': self.ocean.mpt_shepherd,
@@ -824,7 +829,7 @@ class SetupGCM:
             'RES_DATELINE': self.atmos.res_dateline,
             'TILEDATA': self.tile_data,
             'TILEBIN': self.tile_bin,
-            'DT': self.atmos.dt,
+            'DT': int(self.atmos.dt),
             'CONV_DT': convert_timedelta_to_secs(self.atmos.conv_dt),
             'CHEM_DT': convert_timedelta_to_secs(self.atmos.chem_dt),
             'SOLAR_DT': convert_timedelta_to_secs(self.atmos.dt_solar),
@@ -941,6 +946,7 @@ class SetupGCM:
                 ]
         exp_yaml_fname = Path(self.exp_dir) / f"gcm_task_{jinja_dict['EXPID']}.yaml"
         exp_yaml_dict = {k: jinja_dict[k] for k in exp_yaml_file_vars}
+        #exp_yaml_dict['DT'] = int(exp_yaml_dict['DT'])
         write_dict_into_yaml(exp_yaml_fname, exp_yaml_dict)
 
         # remove #DELETE lines
