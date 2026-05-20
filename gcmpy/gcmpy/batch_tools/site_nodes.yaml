@@ -1,0 +1,17 @@
+
+NCCS: 
+  mil: 40
+  cas: 120
+
+NAS: 
+  bro: 24
+  sky: 40
+  cas: 40
+  rom: 120
+  mil: 120
+  tur: 240
+
+AWS: 
+  mil: 40
+  cas: 120
+

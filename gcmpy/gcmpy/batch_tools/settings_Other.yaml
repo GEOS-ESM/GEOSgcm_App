@@ -1,0 +1,61 @@
+# -------------------------------------------------------------------
+# YAML file using Jinja2 templates
+# After reading this file, we need to pass
+# parameters to resolve the templates. The parameters
+# are:
+#   HOME, 
+#   OCEAN_IM, OCEAN_JM,  OCEAN_SST_NAME,
+# They are passed in a dictionary:
+#  data = {
+#     'HOME': os.environ.get('HOME'), 
+#     'OCEAN_IM': self.ocean.IM, 
+#     'OCEAN_JM': self.ocean.JM,  
+#     'OCEAN_SST_NAME': self.ocean.sst_name
+#  }
+# -------------------------------------------------------------------
+{% set BOUNDARY_DIR = "/ford1/share/gmao_SIteam/ModelData" %}
+
+nodes:
+  mil: 40
+  cas: 120
+
+batch_headers:
+  batch_cmd: "sbatch"
+  batch_group: "SBATCH --account="
+  batch_time: "SBATCH --time="
+  batch_jobname: "SBATCH --job-name="
+  batch_outputname: "SBATCH --output="
+  batch_joinouterr: "DELETE"
+  run_ft: "06:00:00"
+  run_t : "12:00:00"
+  post_t: "8:00:00"
+  plot_t: "12:00:00"
+  archive_t: "12:00:00"
+  run_q: "NULL"
+  run_p: "NULL"
+  run_fp: "NULL"
+  regress_p: "NULL"
+  post_q: "NULL"
+  plot_q: "NULL"
+  move_q: "NULL"
+  archive_q: "NULL"
+  post_p: "NULL"
+  plot_p: "NULL"
+  archive_p: "NULL"
+  move_p: "NULL"
+
+  boundary_dir: "{{ BOUNDARY_DIR }}"
+  bc_base: "{{ BOUNDARY_DIR }}/bcs_shared/fvInput/ExtData/esm/tiles"
+  bcs_dir: "{{ BOUNDARY_DIR }}/bcs/{{ LAND_BCS }}/{{ LAND_BCS }}_{{ OCEAN_TAG }}"
+  replay_ana_expID: "REPLAY_UNSUPPORTED"
+  replay_ana_location: "REPLAY_UNSUPPORTED"
+  M2_replay_ana_location: "REPLAY_UNSUPPORTED"
+  bcs_input_base: "{{ BOUNDARY_DIR }}/bcs_shared/make_bcs_inputs/atmosphere"
+
+  sst_dir: "{{ BOUNDARY_DIR }}/{{ OCEAN_SST_NAME }}/{{ OCEAN_IM }}x{{ OCEAN_JM }}"
+  chem_dir: "{{ BOUNDARY_DIR }}/fvInput_nc3"
+  work_dir: "{{ HOME }}"
+  gwdrs_dir: "{{ BOUNDARY_DIR }}/GWD_RIDGE"
+  coupled_dir: "{{ BOUNDARY_DIR }}/aogcm"
+
+

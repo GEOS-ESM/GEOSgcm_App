@@ -2,15 +2,14 @@ import yaml, re, os, subprocess
 
 from gcmpy.setup_tools.generate_question import Question
 from gcmpy.utils.color_ops import Color
+from gcmpy.utils.clock_ops import convert_timedelta_to_secs
 from gcmpy.setup_tools.setup_envs import envdict
 from gcmpy.setup_tools.questions.load_questions import load_yamls
-from gcmpy.geos_settings.horizontal_resolution import (
-        atmos_horizontal_res,
-        mit_horizontal_res,
-        heartbeat_dict,
-        ocean_res_default_dict
-        )
-from gcmpy.batch_tools.computing_sites import site_nodes_dict
+from gcmpy.geos_settings.horizontal_resolution import get_horiz_res_settings
+from gcmpy.batch_tools.computing_sites import get_site_nodes
+
+hres_settings = get_horiz_res_settings()
+site_nodes_dict = get_site_nodes()
 
 class Handle:
     '''
@@ -32,7 +31,7 @@ class Handle:
         if i != 'io_server':
             return
         AM_horizontal_res = question_dict['AM_horizontal_res'].answer
-        if AM_horizontal_res in atmos_horizontal_res:
+        if AM_horizontal_res in hres_settings: #atmos_horizontal_res:
             question_dict[i].default = True
         else:
             question_dict[i].default = False
@@ -82,7 +81,7 @@ class Handle:
 
         # The default ocean resolution is based on the atmospheric resolution
         horizontal_res = question_dict['AM_horizontal_res'].answer
-        question_dict[i].choices = ocean_res_default_dict[horizontal_res]
+        question_dict[i].choices = hres_settings[horizontal_res]["ocean_res_default"] #ocean_res_default_dict[horizontal_res]
 
     @staticmethod
     def LS_boundary_conditions_default(question_dict, i):
@@ -102,7 +101,7 @@ class Handle:
             return
         horizontal_res = question_dict["AM_horizontal_res"].answer
         if horizontal_res in ["c720", "c1440"]:
-            question_dict[i].choices = mit_horizontal_res[horizontal_res]
+            question_dict[i].choices = hres_settings[horizontal_res][mit_horizontal_res] # mit_horizontal_res[horizontal_res]
 
     @staticmethod
     def MOM_hres_default(question_dict, i):
@@ -128,7 +127,9 @@ class Handle:
         '''
         heartbeat = ""
         horizontal_res = question_dict["AM_horizontal_res"].answer
-        heartbeat = heartbeat_dict[horizontal_res]
+        heartbeat = hres_settings[horizontal_res]["heartbeat"]
+        # Make sure that the heartbeat is in seconds
+        heartbeat = convert_timedelta_to_secs(heartbeat)
 
         # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
         if question_dict["AM_microphysics"].answer == "BACM_1M":

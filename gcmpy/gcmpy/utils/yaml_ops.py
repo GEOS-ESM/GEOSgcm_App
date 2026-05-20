@@ -2,6 +2,9 @@
 import logging
 import sys
 import yaml
+import re
+import isodate
+from jinja2 import Template
 from pathlib import Path
 
 from gcmpy.utils.logger_ops import logger_setup
@@ -14,6 +17,48 @@ logger = logger_setup(filename=__name__,
                       file_level=logging.ERROR,
                       stream_handler=False)
 
+# Define a regex pattern that matches 
+# ISO 8601 durations (starts with 'P')
+# This looks for 'P' followed by numbers 
+# and letters like Y, M, D, T, H, S
+iso_duration_pattern = re.compile(r'^P(?=\d|T\d)[a-zA-Z0-9\.]+$')
+
+def read_iso_yaml_file(yaml_fname: str) -> dict:
+    """
+    Read A YAML file into a dictionary.
+    The file contains duration in the ISO format.
+    Any variable with duration setting is set in the format:
+
+       my_timer1: !duration PT5M       # 5 minutes
+       my_timer2: !duration P5DT12H30M # 5 days, 12 hours, 30 minutes
+
+    It is important to note that when the file is read,
+    all the duration values will be in datetime/timedelta
+    format.
+
+    Parameters
+    ----------
+    yaml_fname : str
+        YAML file name
+
+    Returns
+    -------
+    yaml_dict : dict
+        Dictionary of the YAML file settings
+    """
+    # Define the constructor function that tells PyYAML 
+    # what to do with the string
+    def iso_duration_constructor(loader, node):
+        value = loader.construct_scalar(node)
+        return isodate.parse_duration(value)
+
+    # Add the resolver and constructor to the SafeLoader
+    yaml.SafeLoader.add_implicit_resolver('!duration', iso_duration_pattern, None)
+    yaml.SafeLoader.add_constructor('!duration', iso_duration_constructor)
+
+    yaml_dict = read_yaml_file(yaml_fname)
+
+    return yaml_dict
 
 def read_yaml_file(yaml_fname: str) -> dict:
     """
@@ -23,6 +68,7 @@ def read_yaml_file(yaml_fname: str) -> dict:
     ----------
     yaml_fname : str
         YAML file name
+
     Returns
     -------
     yaml_dict : dict
@@ -54,6 +100,7 @@ def read_yaml_file_full(yaml_fname: str) -> dict:
     ----------
     yaml_fname : str
         YAML file name
+
     Returns
     -------
     yaml_dict : dict
@@ -73,6 +120,40 @@ def read_yaml_file_full(yaml_fname: str) -> dict:
         sys.exit()
     else:
         logger.debug(f'Done reading {yaml_fname}')
+
+    return yaml_dict
+
+def read_templated_yaml(yaml_file: str, kwargs: dict=None) -> dict:
+    """
+    Reads a YAML file, renders it with Jinja2 using 
+    the provided kwargs, and returns the parsed Python 
+    dictionary.
+
+    Parameters
+    ----------
+    yaml_fname : str
+        YAML file name
+    kwargs : dict
+
+    Returns
+    -------
+    yaml_dict : dict
+        Dictionary of the YAML file settings
+
+    """
+    # 1. Read the raw template file
+    with open(yaml_file, 'r') as fid:
+        raw_template = fid.read()
+
+    # 2. Render the Jinja2 template with your variables
+    template = Template(raw_template)
+    if kwargs:
+        rendered_yaml = template.render(**kwargs)
+    else:
+        rendered_yaml = template.render()
+
+    # 3. Parse the rendered string as standard YAML
+    yaml_dict = yaml.safe_load(rendered_yaml)
 
     return yaml_dict
 

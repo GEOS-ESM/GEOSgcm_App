@@ -29,11 +29,12 @@ from gcmpy.utils.yaml_ops import (
         write_dict_into_yaml
         )
 from gcmpy.utils.color_ops import Color
+from gcmpy.utils.clock_ops import convert_timedelta_to_secs
 from gcmpy.utils.regex_ops import search_replace_in_string
 from gcmpy.batch_tools.node_ops import determine_nodes
 from gcmpy.batch_tools.computing_sites import (
-        job_script_header,
-        site_nodes_dict
+        get_batch_header,
+        get_site_nodes
         )
 
 # combines all models (Atmos, Ocean, Land, Gocart) into one big one
@@ -97,6 +98,7 @@ class SetupGCM:
     '''
 
     def set_num_CPUs(self):
+        site_nodes_dict = get_site_nodes()
         if envdict['site'] == 'NCCS':
             '''
             NCCS currently recommends that users do not run with
@@ -234,15 +236,26 @@ class SetupGCM:
         '''
 
         if envdict['site'] == "NAS":
-            for key, value in job_script_header['NAS'].items():
+            tmpl_data = dict(
+                    NODES=self.nodes,                      # Total number of nodes
+                    NUM_CPUS=self.num_CPUs,               # Number of cores/node
+                    NCPUS=NPCUS,                          # Total number of cores
+                    PROCESSOR=self.expConfig['processor'] # processor type
+                    )
+            batch_header = get_batch_header('pbs', tmpl_data)
+            for key, value in batch_header['batch_headers'].items():
                 setattr(self, key, value)
 
+            """
             self.run_p            = f"PBS -l select={self.nodes}:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.run_fp           = f"PBS -l select=24:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.regress_p        = f"PBS -l select={self.nodes * 2}:ncpus={self.num_CPUs // 2}:mpiprocs={self.num_CPUs // 2}:model={self.expConfig['processor']}"
             self.post_p           = f"PBS -l select={NPCUS}:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.plot_p           = f"PBS -l select=1:ncpus={self.num_CPUs}:mpiprocs=1:model={self.expConfig['processor']}"
             self.archive_p        = f"PBS -l select=1:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
+            """
+
+
             self.boundary_dir     = "/nobackup/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs}/{self.land.bcs}_{self.ocean.tag}"
@@ -267,9 +280,17 @@ class SetupGCM:
 
 
         elif envdict['site'] == "NCCS":
-            for key, value in job_script_header['NCCS'].items():
+            tmpl_data = dict(
+                    NODES=self.nodes,
+                    NUM_CPUS=self.num_CPUs,
+                    NCPUS=NPCUS,
+                    PROCESSOR=self.expConfig['processor']
+                    )
+            batch_header = get_batch_header('slurm', tmpl_data)
+            for key, value in batch_header['batch_headers'].items():
                 setattr(self, key, value)
 
+            """
             self.run_q            = f"SBATCH --constraint={self.expConfig['processor']}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
@@ -277,6 +298,8 @@ class SetupGCM:
             self.post_q           = f"SBATCH --constraint={self.expConfig['processor']}"
             self.plot_q           = f"SBATCH --constraint={self.expConfig['processor']}"
             self.post_p           = f"SBATCH --nodes={NPCUS} --ntasks-per-node={self.num_CPUs}"
+            """
+
             self.boundary_dir     = "/discover/nobackup/projects/gmao"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.bc_base}/{self.land.bcs}"
@@ -301,6 +324,20 @@ class SetupGCM:
 
 
         elif envdict['site'] == "AWS" or envdict['site'] == "Azure":
+            # TODO: The settings are based on NCCS SLURM.
+            #       We need to verify that they can be used
+            #       as is in AWS. The self.post_p setting
+            #       is different on NCCS and AWS.
+            tmpl_data = dict(
+                    NODES=self.nodes,                      # Total number of nodes
+                    NUM_CPUS=self.num_CPUs,               # Number of cores/node
+                    NCPUS=NCPUS,                          # Total number of cores
+                    PROCESSOR=self.expConfig['processor'] # processor type
+                    )
+            batch_header = get_batch_header('slurm', tmpl_data)
+            for key, value in batch_header['batch_headers'].items():
+                setattr(self, key, value)
+            """
             for key, value in job_script_header['AWS'].items():
                 setattr(self, key, value)
 
@@ -309,6 +346,8 @@ class SetupGCM:
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
             self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={self.num_CPUs // 2}"
             self.post_p           = f"SBATCH --ntasks={post_npes}"
+            """
+
             self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs}_{self.ocean.tag}"
@@ -324,8 +363,19 @@ class SetupGCM:
 
         else:
             # These are defaults for the desktop
+            tmpl_data = dict(
+                    NODES=1,          # Total number of nodes
+                    NUM_CPUS=1,      # Number of cores/node
+                    NCPUS=1,         # Total number of cores
+                    PROCESSOR="NULL" # processor type
+                    )
+            batch_header = get_batch_header('slurm', tmpl_data)
+            for key, value in batch_header['batch_headers'].items():
+                setattr(self, key, value)
+            """
             for key, value in job_script_header['Other'].items():
                 setattr(self, key, value)
+            """
 
             self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
@@ -775,11 +825,11 @@ class SetupGCM:
             'TILEDATA': self.tile_data,
             'TILEBIN': self.tile_bin,
             'DT': self.atmos.dt,
-            'CONV_DT': self.atmos.conv_dt,
-            'CHEM_DT': self.atmos.chem_dt,
-            'SOLAR_DT': self.atmos.dt_solar,
-            'IRRAD_DT': self.atmos.dt_irrad,
-            'OCEAN_DT': self.atmos.dt_ocean,
+            'CONV_DT': convert_timedelta_to_secs(self.atmos.conv_dt),
+            'CHEM_DT': convert_timedelta_to_secs(self.atmos.chem_dt),
+            'SOLAR_DT': convert_timedelta_to_secs(self.atmos.dt_solar),
+            'IRRAD_DT': convert_timedelta_to_secs(self.atmos.dt_irrad),
+            'OCEAN_DT': convert_timedelta_to_secs(self.atmos.dt_ocean),
             'NX': self.atmos.nx,
             'NY': self.atmos.ny,
             'USE_SHMEM': int(self.atmos.use_SHMEM),
@@ -856,19 +906,6 @@ class SetupGCM:
             'REGULAR_REPLAY_ECMWF': '#DELETE'
         }
 
-        # Create YAML file meant to drive the the creation
-        # of the batch script
-        exp_yaml_file_vars = [
-                'SITE', 'EXPDIR', 'GEOSDIR', 
-                'NX', 'NY', 
-                'USE_IOSERVER', 
-                'proc_type', 'NCPUS_PER_NODE', 
-                'AGCM_IM', 'AGCM_JM', 'AGCM_LM', 'OGCM_IM', 'OGCM_JM', 
-                'DT', 'CONV_DT', 'CHEM_DT', 'SOLAR_DT', 'IRRAD_DT', 'OCEAN_DT'
-                ]
-        exp_yaml_fname = Path(self.exp_dir) / f"run_{jinja_dict['EXPID']}.yaml"
-        exp_yaml_dict = {k: jinja_dict[k] for k in exp_yaml_file_vars}
-        write_dict_into_yaml(exp_yaml_fname, exp_yaml_dict)
 
         # this is an edge-case that can't be handled with jinja2
         for file in self.templates:
@@ -889,6 +926,22 @@ class SetupGCM:
             content = template.render(jinja_dict)
             with open(f"{self.exp_dir}/{file}", 'w') as tmpl:
                 tmpl.write(content)
+
+        #------------------------------------------------
+        # --- Create a YAML file meant to drive executing
+        # --- GEOS related tasks (run, plot, post)
+        #------------------------------------------------
+        exp_yaml_file_vars = [
+                'SITE', 'EXPDIR', 'GEOSDIR', 
+                'NX', 'NY', 
+                'USE_IOSERVER', 
+                'proc_type', 'NCPUS_PER_NODE', 
+                'AGCM_IM', 'AGCM_JM', 'AGCM_LM', 'OGCM_IM', 'OGCM_JM', 
+                'DT', 'CONV_DT', 'CHEM_DT', 'SOLAR_DT', 'IRRAD_DT', 'OCEAN_DT'
+                ]
+        exp_yaml_fname = Path(self.exp_dir) / f"gcm_task_{jinja_dict['EXPID']}.yaml"
+        exp_yaml_dict = {k: jinja_dict[k] for k in exp_yaml_file_vars}
+        write_dict_into_yaml(exp_yaml_fname, exp_yaml_dict)
 
         # remove #DELETE lines
         for file in self.templates:

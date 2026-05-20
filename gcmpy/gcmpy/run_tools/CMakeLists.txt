@@ -7,6 +7,7 @@ set (files
 	history_file_ops.py
         restart_file_ops.py
         scratchdir_ops.py
+	rc_parser.py
 	)
 
 install (

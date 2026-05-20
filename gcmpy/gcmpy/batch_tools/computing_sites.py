@@ -1,4 +1,73 @@
 
+from pathlib import Path
+
+from gcmpy.utils.yaml_ops import read_templated_yaml
+from gcmpy.utils.yaml_ops import read_yaml_file
+
+script_dir = Path(__file__).parent.resolve()
+
+def get_site_nodes() -> dict:
+    """
+    Read a YAML file to obtain the list of available
+    types of node at various computing sites.
+    For each type of node, the file provides the number
+    of cores on the node.
+
+    Results
+    -------
+    site_nodes_dict : dict
+       A dictionary which main keys are the site names
+       and the values are the available node types and
+       number of cores on the node.
+    """
+    yaml_file = Path(script_dir) / f"site_nodes.yaml"
+    site_nodes_dict = read_yaml_file(yaml_file)
+
+    return site_nodes_dict
+
+def get_batch_header(batch_system: str, tmpl_data: dict) -> dict:
+    """
+    Read a YAML file to obtain batch (SLURM, PBS) header
+    settings for GEOS on various platforms.
+    The YAML has templated variables that are filled
+    using parameters passed in the dictionary tmpl_data.
+
+    Parameters
+    ----------
+    batch_system : str
+       The system we plan to use.
+       It can take the values: 'slurm', 'pbs'
+    tmpl_data : dict
+       Contain parameters such as:
+       total number of nodes, number of cores/node, etc.
+
+    Results
+    -------
+    batch_header : dict
+       A dictionary containing batch header settings.
+    """
+
+    # Templated YAML file.
+    yaml_file = Path(script_dir) / f"{batch_system}_catalog.yaml"
+
+    # Read the YAML file to obtain a dictionary
+    batch_header = read_templated_yaml(yaml_file, tmpl_data)
+
+    return batch_header
+
+def get_computing_site_settings(site: str, tmpl_data: dict) -> dict:
+    """
+    """
+
+    yaml_file = Path(script_dir) / f"settings_{site}.yaml"
+
+    site_settings = read_templated_yaml(yaml_file, tmpl_data)
+
+    return site_settings
+
+    
+
+"""
 sites_list = ['NCCS', 'NAS']
 
 site_nodes_dict = {
@@ -9,6 +78,7 @@ site_nodes_dict = {
 #        'NCCS': ['mil', 'cas'],
 #        'NAS': ["rom", "mil", "sky", "cas", "bro", "tur"]
 #        }
+"""
 
 """
   As far as possible, define the following parameters:
@@ -33,6 +103,8 @@ site_nodes_dict = {
      move_q                  - Batch queue name for gcm_moveplot.j
      archive_q               - Batch queue name for gcm_archive.j
      move_p                  - PE Configuration for gcm_moveplot.j
+"""
+
 """
 job_script_header = dict()
 job_script_header['NAS'] = dict(
@@ -123,6 +195,7 @@ job_script_header['Other'] = dict(
         move_p = "NULL"
         )
 
+"""
 
 
 

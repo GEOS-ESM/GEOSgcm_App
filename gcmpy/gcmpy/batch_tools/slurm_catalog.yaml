@@ -1,0 +1,39 @@
+# -------------------------------------------------------------------
+# YAML file using Jinja2 templates
+# After reading this file, we need to pass
+# parameters to resolve the templates. The parameters
+# are: #   NODES, NUM_CPUS, NCPUS, PROCESSOR
+# They are passed in a dictionary:
+#  data = {
+#     'NODES': self.nodes,
+#     'NUM_CPUS': self.num_CPUs,
+#     'PROCESSOR': self.expConfig['processor'],
+#     'NCPUS': NCPUS,
+#  }
+# -------------------------------------------------------------------
+
+batch_headers:
+  batch_cmd: "sbatch"
+  batch_group: "SBATCH --account="
+  batch_time: "SBATCH --time="
+  batch_jobname: "SBATCH --job-name="
+  batch_outputname: "SBATCH --output="
+  batch_joinouterr: "DELETE"
+  run_ft: "06:00:00"
+  run_t : "12:00:00"
+  post_t: "8:00:00"
+  plot_t: "12:00:00"
+  archive_t: "2:00:00"
+  move_q: "SBATCH --partition=datamove"
+  archive_q: "SBATCH --partition=datamove"
+  plot_p: "SBATCH --nodes=4 --ntasks=4"
+  archive_p: "SBATCH --ntasks=1"
+  move_p: "SBATCH --ntasks=1"
+
+  run_q: "SBATCH --constraint={{ PROCESSOR }}"
+  run_p: "SBATCH --nodes={{ NODES }} --ntasks-per-node={{ NUM_CPUS }}"
+  run_fp: "SBATCH --nodes={{ NODES }} --ntasks-per-node={{ NUM_CPUS }}"
+  regress_p: "SBATCH --nodes={{ NODES * 2}} --ntasks-per-node={{ NUM_CPUS // 2 }}"
+  post_q: "SBATCH --constraint={{ PROCESSOR }}"
+  plot_q: "SBATCH --constraint={{ PROCESSOR }}"
+  post_p: "SBATCH --nodes={{ NCPUS }} --ntasks-per-node={{ NUM_CPUS}}"

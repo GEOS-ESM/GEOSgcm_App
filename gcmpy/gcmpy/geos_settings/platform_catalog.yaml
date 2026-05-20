@@ -1,0 +1,29 @@
+
+NCCS:
+  nodes:
+    mil: 40
+    cas: 120
+
+  boundary_dir: /discover/nobackup/projects/gmao/share/gmao_ops
+
+NAS:
+  nodes:
+     bro: 24
+     sky: 40
+     cas: 40
+     rom: 120
+     mil: 120
+     tur: 120
+
+AWS:
+  nodes:
+
+  boundary_dir: /ford1/share/gmao_SIteam/ModelData
+
+GMAO_DESKTOP:
+  nodes:
+
+  boundary_dir: /ford1/share/gmao_SIteam/ModelData
+
+
+

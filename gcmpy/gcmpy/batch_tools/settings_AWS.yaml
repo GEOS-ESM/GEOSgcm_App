@@ -1,0 +1,64 @@
+# -------------------------------------------------------------------
+# YAML file using Jinja2 templates
+# After reading this file, we need to pass
+# parameters to resolve the templates. The parameters
+# are:
+#   HOME, 
+#   OCEAN_IM, OCEAN_JM,  OCEAN_SST_NAME, OCEAN_GRIDTYP
+# They are passed in a dictionary:
+#  data = {
+#     'HOME': os.environ.get('HOME'), 
+#     'OCEAN_IM': self.ocean.IM, 
+#     'OCEAN_JM': self.ocean.JM,  
+#     'OCEAN_SST_NAME': self.ocean.sst_name, 
+#     'OCEAN_GRIDTYP': self.ocean.gridtyp
+#  }
+# -------------------------------------------------------------------
+
+nodes:
+  mil: 40
+  cas: 120
+
+batch_headers:
+  batch_cmd: "sbatch"
+  batch_group: "#DELETE"
+  batch_time: "SBATCH --time="
+  batch_jobname: "SBATCH --job-name="
+  batch_outputname: "SBATCH --output="
+  batch_joinouterr: "DELETE"
+  run_ft: "06:00:00"
+  run_t : "12:00:00"
+  post_t: "8:00:00"
+  plot_t: "12:00:00"
+  archive_t: "12:00:00"
+  move_q: "SBATCH --partition=datamove"
+  archive_q: "SBATCH --partition=datamove"
+  post_q: "NULL"
+  plot_q: "NULL"
+  move_q: "NULL"
+  plot_p: "SBATCH --nodes=4 --ntasks=4"
+  archive_p: "SBATCH --ntasks=1"
+  move_p: "SBATCH --ntasks=1"
+
+  run_q: "SBATCH --constraint={{ PROCESSOR }}"
+  run_p: "SBATCH --nodes={{ NODES }} --ntasks-per-node={{ NUM_CPUS }}"
+  run_fp: "SBATCH --nodes={{ NODES }} --ntasks-per-node={{ NUM_CPUS }}"
+  run_regress_P: "SBATCH --nodes={{ NODES * 2}} --ntasks-per-node={{ NUM_CPUS // 2 }}"
+  post_p: "SBATCH --ntasks={{ POST_NPES }}"
+
+  boundary_dir: "/ford1/share/gmao_SIteam/ModelData"
+  bc_base: "{{ boundary_dir }}/bcs_shared/fvInput/ExtData/esm/tiles"
+  bcs_dir: "{{ boundary_dir }}/bcs/{{ LAND_BCS }}_{{ OCEAN_TAG }}"
+  replay_ana_expID: "REPLAY_UNSUPPORTED"
+  replay_ana_location: "REPLAY_UNSUPPORTED"
+  M2_replay_ana_location: "REPLAY_UNSUPPORTED"
+  bcs_input_base: "{{ boundary_dir }}/bcs_shared/make_bcs_inputs/atmosphere"
+
+
+  sst_dir: "{{ boundary_dir }}/{{ OCEAN_SST_NAME }}/{{ OCEAN_IM }}x{{ OCEAN_JM }}"
+  chem_dir: "{{ boundary_dir }}/fvInput_nc3"
+  work_dir: "{{ HOME }}"
+  gwdrs_dir: "{{ boundary_dir }}/GWD_RIDGE"
+  coupled_dir: "{{ boundary_dir }}/aogcm"
+
+

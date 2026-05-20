@@ -9,7 +9,7 @@ def set_env_dicts(root_dir: Path) -> None:
     Set directory and enviriron variable locations directories.
     """
 
-    pathdict['config'] = Path(root_dir, "gcmpy", "setup_tools", "config")
+    pathdict['config'] = Path(root_dir, "gcmpy", "setup_tools", "questions")
     pathdict['gcmpy'] = root_dir
     pathdict['bin'] = Path(pathdict['gcmpy']).parent
     pathdict['install'] = Path(pathdict['bin']).parent

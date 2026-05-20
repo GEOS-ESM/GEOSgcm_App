@@ -10,22 +10,34 @@ General utilities for operations on date & time.
 """
 import datetime as dttm
 
-def parse_iso_time(iso_string: str) -> dttm.datetime:
+def parse_iso_time(iso_date: str) -> dttm.datetime:
     """
     Creates a datetime object from an ISO 8601 
     formatted time string (YYYY-MM-DDThh:mm:ss)
 
     Parameters
     ----------
-    iso_string : str)
-        The ISO formatted time string (e.g., '2026-03-26T14:30:00').
+    iso_date : str)
+        The ISO formatted date string (e.g., '2026-03-26T14:30:00').
 
     Returns
     -------
     clock : dttm.datetime
-        The parsed datetime object.
+        The parsed datetime object, or None if parsing fails
     """
-    clock = dttm.datetime.fromisoformat(iso_string)
+    try:
+        # Python 3.7+ built-in method for ISO 8601 strings
+        clock =  datetime.fromisoformat(iso_date)
+        
+    except ValueError as e:
+        print(f"ValueError: '{iso_date}' is not a valid ISO format. Details: {e}")
+        clock = None
+    except TypeError as e:
+        print(f"TypeError: Expected a string, but got {type(iso_date).__name__}. Details: {e}")
+        clock = None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        clock = None
 
     return clock
 
@@ -148,6 +160,28 @@ def compute_time_vars_finish(clock_s: dttm.datetime,
             nhmsf = nhmse
 
     return dt
+
+def convert_timedelta_to_secs(td: dttm.timedelta | int) -> int:
+    """
+    Convert a datetime/timedelta object into number
+    of seconds.
+
+    Parameters
+    ----------
+    td : dttm.timedelta
+       The timedelta object
+
+    Returns
+    -------
+    total_secs : int
+       The total number of seconds.
+    """
+    if isinstance(td, int):
+        totals_secs = td
+    else:
+        totals_secs = int(td.total_seconds())
+
+    return total_secs
 
 def set_datetime_stamp():
     return dttm.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')

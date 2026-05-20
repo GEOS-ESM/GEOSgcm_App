@@ -1,4 +1,32 @@
 
+from pathlib import Path
+
+from gcmpy.utils.yaml_ops import read_iso_yaml_file
+
+script_dir = Path(__file__).parent.resolve()
+
+def get_horiz_res_settings() -> dict():
+    """
+    Read the YAML file containing the parameter
+    settings for each model horizontal resolution.
+
+    Returns
+    -------
+    hor_res_settings : dict
+       A dictionary which main keys are the model
+       available horizontal resolutions. For each
+       resolution, we provide data on the model heartbeat,
+       the heartbeats for various model components, etc.
+    """
+
+    #yaml_file = Path(script_dir) / "horizontal_res_settings.yaml"
+    yaml_file = Path(script_dir) / "hres_catalog.yaml"
+
+    hor_res_settings = read_iso_yaml_file(yaml_file)
+
+    return hor_res_settings
+
+"""
 
 heartbeat_dict = {
         'c12': 1200,
@@ -310,5 +338,4 @@ atmos_hres_settings['c5760'] = dict(
         convpar_option = 'NONE',
         res = 'CF5760x6C'
         )
-
-
+"""

@@ -1,0 +1,17 @@
+#!/bin/csh -f
+
+#######################################################################
+#                     Batch Parameters for Plot Job 
+#######################################################################
+
+#PBS -N {JOB_NAME}
+#PBS -l walltime={BATCH_TIME}
+#PBS -W group_list={USER_ACCOUNT}
+#PBS -l select={NUM_NODES}:ncpus={NTASKS_PER_NODES}:mpiprocs={NTASKS_PER_NODES}
+#PBS -q {QUEUE_NAME}
+#PBS -o {OUTPUT_FILE}
+
+#######################################################################
+#                  System Environment Variables
+#######################################################################
+

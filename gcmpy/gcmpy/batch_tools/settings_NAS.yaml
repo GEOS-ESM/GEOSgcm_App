@@ -1,0 +1,78 @@
+#--------------------------------------------------------------------
+## YAML file using Jinja2 templates
+# After reading this file, we need to pass
+# parameters to resolve the templates. The parameters
+# are:
+#   NODES, NUM_CPUS, PROCESSOR, NCPUS, LOGNAME,
+#   OCEAN_IM, OCEAN_JM,  OCEAN_SST_NAME, OCEAN_GRIDTYP
+# They are passed in a dictionary:
+#  data = {
+#     'NODES': self.nodes,
+#     'NUM_CPUS': self.num_CPUs,
+#     'PROCESSOR': self.expConfig['processor'],
+#     'NCPUS': NCPUS,
+#     'LOGNAME': os.environ.get('LOGNAME'),
+#     'OCEAN_IM': self.ocean.IM,
+#     'OCEAN_JM': self.ocean.JM,
+#     'OCEAN_SST_NAME': self.ocean.sst_name,
+#     'OCEAN_GRIDTYP': self.ocean.gridtyp
+#  }
+#--------------------------------------------------------------------
+
+nodes:
+  bro: 24
+  sky: 40
+  cas: 40
+  rom: 120
+  mil: 120
+  tur: 120
+
+batch_headers:
+  batch_cmd: "qsub"
+  batch_group: "PBS -W group_list="
+  batch_time: "PBS -l walltime="
+  batch_jobname: "PBS -N"
+  batch_outputname: "PBS -o "
+  batch_joinouterr: "PBS -j oe -k oed"
+  run_ft: "6:00:00"
+  run_t: "8:00:00"
+  post_t: "8:00:00"
+  plot_t: "8:00:00"
+  archive_t: "8:00:00"
+  run_q: "PBS -q normal"
+  post_q: "PBS -q normal"
+  plot_q: "PBS -q normal"
+  move_q: "PBS -q normal"
+  archive_q: "PBS -q normal"
+  move_p: "PBS -l select=1:ncpus=1"
+
+  run_p: "PBS -l select={{ NODES }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+  run_fp: "PBS -l select=24:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+  regress_p: "PBS -l select={{ NODES * 2 }}:ncpus={{ NUM_CPUS // 2 }}:mpiprocs={{ NUM_CPUS // 2 }}:model={{ PROCESSOR }}"
+  post_p: "PBS -l select={{ NPCUS }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+  plot_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs=1:model={{ PROCESSOR }}"
+  archive_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+  boundary_dir: "/nobackup/gmao_SIteam/ModelData"
+  bc_base: "{{ boundary_dir }}/bcs_shared/fvInput/ExtData/esm/tiles"
+  bcs_dir: "{{ boundary_dir }}/bcs/{{ LAND_BCS }}/{{ LAND_BCS }}_{{ OCEAN_TAG }}"
+  replay_ana_expID: "ONLY_MERRA2_SUPPORTED"
+  replay_ana_location: "ONLY_MERRA2_SUPPORTED"
+  M2_replay_ana_location: "{{ boundary_dir }}/merra2/data"
+  bcs_input_base: "{{ boundary_dir }}/bcs_shared/make_bcs_inputs/atmosphere"
+
+  oceanres: "{{ OCEAN_IM }}x{{ OCEAN_JM }}"
+
+  {%- if oceanres == "1440x720" %}
+  sst_dir: "{{ boundary_dir }}/fvInput/g5gcm/bcs/SST/{{ oceanres }}"
+  {%- elif "{{ OCEAN_GRIDTYP }}" == "MITLLC" %}
+  sst_dir: "/nobackupp2/estrobac/geos5/SSTDIR"
+  {%- else %}
+  sst_dir: "{{ boundary_dir }}/fvInput/g5gcm/bcs/realtime/{{ OCEAN_SST_NAME }}/{{ oceanres }}"
+  {%- endif %}
+
+  chem_dir: "{{ bounadry_dir }}/fvInput_nc3"
+  work_dir: "/nobackup/{{ LOGNAME }}"
+  gwdrs_dir: "{{ boundary_dir }}/GWD_RIDGE"
+  coupled_dir: "{{ boundary_dir }}/bcs_shared/make_bcs_inputs/ocean"
+
+

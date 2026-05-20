@@ -2,6 +2,7 @@
 set (files
 	__init__.py
 	horizontal_resolution.py
+	hres_catalog.yaml
 	)
 
 install (

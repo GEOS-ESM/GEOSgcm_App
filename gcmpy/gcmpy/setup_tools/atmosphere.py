@@ -1,5 +1,5 @@
 from gcmpy.utils.color_ops import Color
-from gcmpy.geos_settings.horizontal_resolution import atmos_hres_settings
+from gcmpy.geos_settings.horizontal_resolution import get_horiz_res_settings
 
 class Atmosphere:
     def __init__(atmos, expConfig):
@@ -60,131 +60,42 @@ class Atmosphere:
 
 
     def hres(atmos, ocean_nx, ocean_ny):
-        match atmos.expConfig["AM_horizontal_res"]:
+        hres_value = atmos.expConfig["AM_horizontal_res"]
+        hres_settings = get_horiz_res_settings()
+        hres_settings = hres_settings[hres_value]
+        for key, value in hres_settings.items():
+            setattr(atmos, key, value)
+
+        # Now treat special cases
+        match hres_value:
             case "c12":
-                for key, value in atmos_hres_settings['c12'].items():
-                    setattr(atmos, key, value)
-                atmos.nx = 2
                 if atmos.expConfig["OM_name"] == "MOM6":
                     atmos.nx = 1
-                atmos.ny = atmos.nx * 6
-
-            case "c24":
-                for key, value in atmos_hres_settings['c24'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 4
-                atmos.ny             = atmos.nx * 6
-
-            case "c48":
-                for key, value in atmos_hres_settings['c48'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 6
-                atmos.ny             = atmos.nx * 6
+                    atmos.ny = atmos.nx * 6
 
             case "c90":
-                for key, value in atmos_hres_settings['c90'].items():
-                    setattr(atmos, key, value)
-                atmos.dt_ocean       = atmos.dt
                 if atmos.expConfig['OM_name'] == 'MIT':
-                    atmos.nx     = 10
-                    atmos.ny     = 36
+                    atmos.nx = 10
+                    atmos.ny = 36
+                    atmos.dt_ocean = atmos.dt
                 elif atmos.expConfig['OM_name'] == 'MOM5':
-                    atmos.nx     = ocean_nx
-                    atmos.ny     = ocean_ny
+                    atmos.nx = ocean_nx
+                    atmos.ny = ocean_ny
+                    atmos.dt_ocean = atmos.dt
                 elif atmos.expConfig['OM_name'] == 'MOM6':
-                    atmos.nx     = 5
-                    atmos.ny     = 36
-                else:
-                    atmos.nx     = 10
-                    atmos.ny     = atmos.nx * 6
-                    atmos.dt_ocean = 3600
+                    atmos.nx = 5
+                    atmos.ny = 36
+                    atmos.dt_ocean = atmos.dt
 
             case "c180":
-                for key, value in atmos_hres_settings['c180'].items():
-                    setattr(atmos, key, value)
-                atmos.dt_ocean       = atmos.dt
                 if atmos.expConfig['OM_name'] == 'MOM6':
-                    atmos.nx         = 30
-                    atmos.ny         = 36
+                    atmos.nx = 30
+                    atmos.ny = 36
+                    atmos.dt_ocean = atmos.dt
                 elif atmos.expConfig['OM_name'] == 'MOM5' or atmos.expConfig['OM_name'] == 'MIT':
-                    atmos.nx         = ocean_nx
-                    atmos.ny         = ocean_ny
-                else:
-                    atmos.nx         = 20
-                    atmos.ny         = atmos.nx * 6
-                    atmos.dt_ocean   = 3600
-
-            case "c360":
-                for key, value in atmos_hres_settings['c360'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 30
-                atmos.ny             = atmos.nx * 6
-
-            case "c720":
-                for key, value in atmos_hres_settings['c720'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 40
-                atmos.ny             = atmos.nx * 6
-
-            case "c1120":
-                for key, value in atmos_hres_settings['c1120'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 60
-                atmos.ny             = atmos.nx * 6
-
-            case "c1440":
-                for key, value in atmos_hres_settings['c1440'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6
-
-            case "c2880":
-                for key, value in atmos_hres_settings['c2880'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6
-
-            case "c5760":
-                for key, value in atmos_hres_settings['c5760'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6
-
-            case "c270":
-                for key, value in atmos_hres_settings['c270'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 20
-                atmos.ny             = atmos.nx * 6 * 2
-
-            case "c540":
-                for key, value in atmos_hres_settings['c540'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 30
-                atmos.ny             = atmos.nx * 6 * 2
-
-            case "c1080":
-                for key, value in atmos_hres_settings['c1080'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 40
-                atmos.ny             = atmos.nx * 6 * 2
-
-            case "c1536":
-                for key, value in atmos_hres_settings['c1536'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 60
-                atmos.ny             = atmos.nx * 6
-
-            case "c2160":
-                for key, value in atmos_hres_settings['c2160'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6 * 2
-
-            case 'c4320':
-                for key, value in atmos_hres_settings['c4320'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6 * 2
+                    atmos.nx = ocean_nx
+                    atmos.ny = ocean_ny
+                    atmos.dt_ocean = atmos.dt
 
     def set_microphysics(atmos):
         if atmos.microphysics == "BACM_1M":

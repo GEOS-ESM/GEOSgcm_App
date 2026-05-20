@@ -1,0 +1,19 @@
+#!/bin/csh -f
+
+#######################################################################
+#                Batch Parameters for Post-Processing Job
+#######################################################################
+
+#SBATCH --time={BATCH_TIME}
+#SBATCH --nodes={NUM_NODES} --ntasks-per-node={NTASKS_PER_NODES}
+#SBATCH --job-name={JOB_NAME}
+#SBATCH --constraint-name={NODE_TYPE}
+#SBATCH --account={USER_ACCOUNT}
+#SBATCH --output={OUTPUT_FILE}
+
+#######################################################################
+#                  System Environment Variables
+#######################################################################
+
+
+

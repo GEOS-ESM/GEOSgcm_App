@@ -1,0 +1,349 @@
+
+## Begin defining anchors
+# In YAML, anchors (&) and aliases (*) 
+# are used to define a chunk of configuration 
+# once and reuse it elsewhere, keeping the 
+# file DRY (Don't Repeat Yourself)
+
+ocean_res_1: &idocean1
+- 'o2 (1/4-deg, 1440x720  MERRA-2)'
+- 'o3 (1/8-deg, 2880x1440 OSTIA)'
+- 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+ocean_res_2: &idocean2
+- 'CS (Cubed-Sphere OSTIA)'
+- 'o2 (1/4-deg, 1440x720  MERRA-2)'
+- 'o3 (1/8-deg, 2880x1440 OSTIA)'
+- 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+    
+## End defining anchors
+
+c12:
+  heartbeat: 1200
+  nx: 2
+  ny: 12
+  conv_dt: 1200
+  chem_dt: 3600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  job_sgmt: "00000015" 
+  num_sgmt: 20
+  post_NDS: 4
+  nx_convert: 1
+  ny_convert: 
+  res: 'CF0012x6C'
+  low_res: True
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean1
+
+c24:
+  heartbeat: 1200
+  nx: 4
+  ny: 24
+  conv_dt: 1200
+  chem_dt: 3600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  job_sgmt: "00000015" 
+  num_sgmt: 20
+  post_NDS: 4
+  nx_convert: 1
+  ny_convert: 6
+  res: 'CF0024x6C'
+  low_res: True
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean1
+
+c48:
+  heartbeat: 1200
+  nx: 6
+  ny: 36
+  conv_dt: 1200
+  chem_dt: 3600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  job_sgmt: "00000015" 
+  num_sgmt: 20
+  post_NDS: 4
+  res: 'CF0048x6C'
+  hist_im: 180
+  hist_jm: 91
+  low_res: True
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean1
+
+c90:
+  heartbeat: 900
+  nx: 10
+  ny: 60
+  dt_ocean: 3600
+  conv_dt: 900
+  chem_dt: 1800
+  dt_solar: 3600
+  dt_irrad: 3600
+  job_sgmt: "00000032" 
+  num_sgmt: 4
+  post_NDS: 8
+  res: 'CF0090x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c180:
+  heartbeat: 600
+  nx: 20
+  ny: 120
+  dt_ocean: 3600
+  conv_dt: 600
+  chem_dt: 1200
+  dt_solar: 3600
+  dt_irrad: 3600
+  job_sgmt: "00000016" 
+  num_sgmt: 1
+  post_NDS: 8
+  num_readers: 2
+  res: 'CF0180x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c270:
+  heartbeat: 600
+  nx: 20
+  ny: 240
+  conv_dt: 600
+  chem_dt: 1800
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "00000001" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF0270x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c360:
+  heartbeat: 450
+  nx: 30
+  ny: 180
+  conv_dt: 450
+  chem_dt: 900
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 4
+  job_sgmt: "00000005" 
+  num_sgmt: 1
+  post_NDS: 12
+  nx_convert: 4
+  res: 'CF0360x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c540:
+  heartbeat: 300
+  nx: 30
+  ny: 360
+  conv_dt: 300
+  chem_dt: 900
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "00000001" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF0540x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c720:
+  heartbeat: 300
+  nx: 40
+  ny: 240
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "00000005" 
+  num_sgmt: 1
+  post_NDS: 16
+  nx_convert: 8
+  use_SHMEM: 1
+  res: 'CF0720x6C'
+  mit_horizontal_res: ["llc1080 (1/12-deg, Lat-Lon-Cube)"]
+  ocean_res_default: *idocean2
+
+c1120:
+  heartbeat: 300
+  nx: 60
+  ny: 360
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "00000005" 
+  num_sgmt: 1
+  post_NDS: 16
+  nx_convert: 8
+  use_SHMEM: 1
+  res: 'CF1120x6C'
+  ocean_res_default: *idocean2
+
+c1080:
+  heartbeat: 150
+  nx: 40
+  ny: 480
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 1800
+  dt_irrad: 1800
+  dt_ocean: 1800
+  num_readers: 6
+  job_sgmt: "00000001" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF1080x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c1440:
+  heartbeat: 150
+  nx: 80
+  ny: 480
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 1200
+  dt_irrad: 1200
+  dt_ocean: 1200
+  num_readers: 6
+  job_sgmt: "00000001" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  res: 'CF1440x6C'
+  mit_horizontal_res: ["llc2160 (1/24-deg, Lat-Lon-Cube)"]
+  ocean_res_default: *idocean2
+
+c1536:
+  heartbeat: 75
+  nx: 60
+  ny: 360
+  conv_dt: 300
+  chem_dt: 900
+  dt_solar: 1800
+  dt_irrad: 1800
+  dt_ocean: 1800
+  num_readers: 6
+  job_sgmt: "00000005" 
+  num_sgmt: 1
+  post_NDS: 16
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 3.0
+  res: 'CF1536x6C-SG002'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c2160:
+  heartbeat: 75
+  nx: 80
+  ny: 960
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 900
+  dt_irrad: 900
+  dt_ocean: 900
+  num_readers: 6
+  job_sgmt: "00000005" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF2160x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c2880:
+  heartbeat: 75
+  nx: 80
+  ny: 480
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 900
+  dt_irrad: 900
+  dt_ocean: 900
+  num_readers: 6
+  job_sgmt: "00000001" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: True
+  convpar_option: 'NONE'
+  res: 'CF2880x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+
+c4320:
+  heartbeat: 75
+  nx: 80
+  ny: 960
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 900
+  dt_irrad: 900
+  dt_ocean: 900
+  num_readers: 6
+  job_sgmt: "00000005" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF4320x6C'
+  ocean_res_default: *idocean2
+
+c5760:
+  heartbeat: 75
+  nx: 80
+  ny: 960
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 600
+  dt_irrad: 600
+  dt_ocean: 600
+  num_readers: 6
+  job_sgmt: "00000001" 
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: True
+  convpar_option: 'NONE'
+  res: 'CF5760x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default: *idocean2
+

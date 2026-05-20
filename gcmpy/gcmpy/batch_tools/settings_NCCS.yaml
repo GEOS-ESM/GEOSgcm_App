@@ -1,0 +1,81 @@
+# -------------------------------------------------------------------
+# YAML file using Jinja2 templates
+# After reading this file, we need to pass
+# parameters to resolve the templates. The parameters
+# are:
+#   NODES, NUM_CPUS, NCPUS, PROCESSOR
+#   SHARE, LOGNAME, 
+#   OCEAN_IM, OCEAN_JM,  OCEAN_SST_NAME, OCEAN_GRIDTYP
+# They are passed in a dictionary:
+#  data = {
+#     'NODES': self.nodes,
+#     'NUM_CPUS': self.num_CPUs,
+#     'PROCESSOR': self.expConfig['processor'],
+#     'NCPUS': NCPUS,
+#     'SHARE': os.environ.get('SHARE'), 
+#     'LOGNAME': os.environ.get('LOGNAME'),
+#     'OCEAN_IM': self.ocean.IM, 
+#     'OCEAN_JM': self.ocean.JM,  
+#     'OCEAN_SST_NAME': self.ocean.sst_name, 
+#     'OCEAN_GRIDTYP': self.ocean.gridtyp
+#  }
+# -------------------------------------------------------------------
+{% set BOUNDARY_DIR = "/discover/nobackup/projects/gmao" %}
+
+{% set OCEANRES %}
+{{ OCEAN_IM }}x{{ OCEAN_JM }}
+{% endset %}
+
+nodes:
+  mil: 40
+  cas: 120
+
+batch_headers:
+  batch_cmd: "sbatch"
+  batch_group: "SBATCH --account="
+  batch_time: "SBATCH --time="
+  batch_jobname: "SBATCH --job-name="
+  batch_outputname: "SBATCH --output="
+  batch_joinouterr: "DELETE"
+  run_ft: "06:00:00"
+  run_t : "12:00:00"
+  post_t: "8:00:00"
+  plot_t: "12:00:00"
+  archive_t: "2:00:00"
+  move_q: "SBATCH --partition=datamove"
+  archive_q: "SBATCH --partition=datamove"
+  plot_p: "SBATCH --nodes=4 --ntasks=4"
+  archive_p: "SBATCH --ntasks=1"
+  move_p: "SBATCH --ntasks=1"
+
+  run_q: "SBATCH --constraint={{ PROCESSOR }}"
+  run_p: "SBATCH --nodes={{ NODES }} --ntasks-per-node={{ NUM_CPUS }}"
+  run_fp: "SBATCH --nodes={{ NODES }} --ntasks-per-node={{ NUM_CPUS }}"
+  run_regress_P: "SBATCH --nodes={{ NODES * 2}} --ntasks-per-node={{ NUM_CPUS // 2 }}"
+  post_q: "SBATCH --constraint={{ PROCESSOR }}"
+  plot_q: "SBATCH --constraint={{ PROCESSOR }}"
+  post_p: "SBATCH --nodes={{ NCPUS }} --ntasks-per-node={{ NUM_CPUS}}"
+
+  boundary_dir: "{{ BOUNDARY_DIR }}"
+  bc_base: "{{ BOUNDARY_DIR }}/bcs_shared/fvInput/ExtData/esm/tiles"
+  replay_ana_expID: "x0039"
+  replay_ana_location: "{{ BOUNDARY_DIR }}/g6dev/ltakacs/x0039"
+  M2_replay_ana_location: "{{ BOUNDARY_DIR }}/merra2/data"
+  bcs_input_base: "{{ BOUNDARY_DIR }}/bcs_shared/make_bcs_inputs/atmosphere"
+
+  oceanres: "{{ OCEANRES }}"
+
+  {%- if OCEANRES == "1440x720" %}
+  sst_dir: "{{ SHARE }}/gmao_ops/fvInput/g5gcm/bcs/SST/{{ OCEANRES }}"
+  {%- elif "{{ OCEAN_GRIDTYP }}" == "MITLLC" %}
+  sst_dir: "/discover/nobackup/estrobac/geos5/SSTDIR"
+  {%- else %}
+  sst_dir: "{{ SHARE }}/gmao_ops/fvInput/g5gcm/bcs/realtime/{{ OCEAN_SST_NAME }}/{{ OCEANRES }}"
+  {%- endif %}
+
+  chem_dir: "{{ SHARE }}/gmao_ops/fvInput_nc3"
+  work_dir: "/discover/nobackup/{{ LOGNAME }}"
+  gwdrs_dir: "{{ BOUNDARY_DIR }}/osse2/stage/BCS_FILES/GWD_RIDGE"
+  coupled_dir: "{{ BOUNDARY_DIR }}/bcs_shared/make_bcs_inputs/ocean"
+
+

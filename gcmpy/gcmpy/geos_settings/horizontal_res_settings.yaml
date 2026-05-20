@@ -1,0 +1,456 @@
+# -------------------------------------------------------------------             # YAML file using Jinja2 templates
+# After reading this file, we need to pass
+# parameters to resolve the templates. The parameters
+# are: OM_NAME, OCEAN_NX, OCEAN_NY.
+# They are passed in a dictionary:
+#  data = {
+#     'OM_NAME': atmos.expConfig['OM_name'],
+#     'OCEAN_NX': ocean_nx,
+#     'OCEAN_NY': ocean_ny
+#  }
+# -------------------------------------------------------------------
+
+c12:
+  heartbeat: 1200
+  {%- if "{{ OM_NAME }}" == "MOM6" %}
+  {% set NX = 1 %}
+  {%- else %}
+  {% set NX = 2 %}
+  {%- endif %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 1200
+  chem_dt: 3600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  job_sgmt: "{{ '%08d' | format(15) }}" # f"{15:08}"
+  num_sgmt: 20
+  post_NDS: 4
+  nx_convert: 1
+  ny_convert: 
+  res: 'CF0012x6C'
+  low_res: True
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c24:
+  heartbeat: 1200
+  {% set NX = 4 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 1200
+  chem_dt: 3600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  job_sgmt: "{{ '%08d' | format(15) }}" # f"{15:08}"
+  num_sgmt: 20
+  post_NDS: 4
+  nx_convert: 1
+  ny_convert: 6
+  res: 'CF0024x6C'
+  low_res: True
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c48:
+  heartbeat: 1200
+  {% set NX = 6 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 1200
+  chem_dt: 3600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  job_sgmt: "{{ '%08d' | format(15) }}" # f"{15:08}"
+  num_sgmt: 20
+  post_NDS: 4
+  res: 'CF0048x6C'
+  hist_im: 180
+  hist_jm: 91
+  low_res: True
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c90:
+  heartbeat: 900
+  {%- if "{{ OM_NAME }}" == "MIT" %}
+  nx: 10
+  ny: 36
+  dt_ocean: {{ heartbeat }}
+  {%- elif "{{ OM_NAME }}" == "MOM5" %}
+  nx: {{ OCEAN_NX }}
+  ny: {{ OCEAN_NY }}
+  dt_ocean: {{ heartbeat }}
+  {%- elif "{{ OM_NAME }}" == "MOM6" %}
+  nx: 5
+  ny: 36
+  dt_ocean: {{ heartbeat }}
+  {%- else %}
+  {% set NX = 10 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  dt_ocean: 3600
+  {%- endif %}
+  conv_dt: 900
+  chem_dt: 1800
+  dt_solar: 3600
+  dt_irrad: 3600
+  job_sgmt: "{{ '%08d' | format(32) }}" # f"{32:08}"
+  num_sgmt: 4
+  post_NDS: 8
+  res: 'CF0090x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c180:
+  heartbeat: 600
+  {%- if "{{ OM_NAME }}" == "MOM6" %}
+  nx: 10
+  ny: 36
+  dt_ocean: {{ heartbeat }}
+  {%- elif "{{ OM_NAME }}" == "MOM5" %}
+  nx: {{ OCEAN_NX }}
+  ny: {{ OCEAN_NY }}
+  dt_ocean: {{ heartbeat }}
+  {%- elif "{{ OM_NAME }}" == "MIT" %}
+  nx: {{ OCEAN_NX }}
+  ny: {{ OCEAN_NY }}
+  dt_ocean: {{ heartbeat }}
+  {%- else %}
+  {% set NX = 20 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  dt_ocean: 3600
+  {%- endif %}
+  conv_dt: 600
+  chem_dt: 1200
+  dt_solar: 3600
+  dt_irrad: 3600
+  #dt_ocean: 3600
+  job_sgmt: "{{ '%08d' | format(16) }}" #  f"{16:08}"
+  num_sgmt: 1
+  post_NDS: 8
+  num_readers: 2
+  res: 'CF0180x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c270:
+  heartbeat: 600
+  {% set NX = 20 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 * 2 }}
+  conv_dt: 600
+  chem_dt: 1800
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(1) }}" # f"{1:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF0270x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c360:
+  heartbeat: 450
+  {% set NX = 30 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 450
+  chem_dt: 900
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 4
+  job_sgmt: "{{ '%08d' | format(5) }}" # f"{5:08}"
+  num_sgmt: 1
+  post_NDS: 12
+  nx_convert: 4
+  res: 'CF0360x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c540:
+  heartbeat: 300
+  {% set NX = 30 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 * 2 }}
+  conv_dt: 300
+  chem_dt: 900
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(1) }}" # f"{1:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF0540x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c720:
+  heartbeat: 300
+  {% set NX = 40 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(5) }}" # f"{5:08}"
+  num_sgmt: 1
+  post_NDS: 16
+  nx_convert: 8
+  use_SHMEM: 1
+  res: 'CF0720x6C'
+  mit_horizontal_res: ["llc1080 (1/12-deg, Lat-Lon-Cube)"]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c1120:
+  heartbeat: 300
+  {% set NX = 60 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 3600
+  dt_irrad: 3600
+  dt_ocean: 3600
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(5) }}" # f"{5:08}"
+  num_sgmt: 1
+  post_NDS: 16
+  nx_convert: 8
+  use_SHMEM: 1
+  res: 'CF1120x6C'
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c1080:
+  heartbeat: 150
+  {% set NX = 40 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 * 2 }}
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 1800
+  dt_irrad: 1800
+  dt_ocean: 1800
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(1) }}" # f"{1:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF1080x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c1440:
+  heartbeat: 150
+  {% set NX = 80 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 300
+  chem_dt: 600
+  dt_solar: 1200
+  dt_irrad: 1200
+  dt_ocean: 1200
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(1) }}" # f"{1:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  res: 'CF1440x6C'
+  mit_horizontal_res: ["llc2160 (1/24-deg, Lat-Lon-Cube)"]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c1536:
+  heartbeat: 75
+  {% set NX = 60 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 300
+  chem_dt: 900
+  dt_solar: 1800
+  dt_irrad: 1800
+  dt_ocean: 1800
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(5) }}" # f"{5:08}"
+  num_sgmt: 1
+  post_NDS: 16
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 3.0
+  res: 'CF1536x6C-SG002'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c2160:
+  heartbeat: 75
+  {% set NX = 80 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 * 2 }}
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 900
+  dt_irrad: 900
+  dt_ocean: 900
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(5) }}" # f"{5:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF2160x6C-SG001'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c2880:
+  heartbeat: 75
+  {% set NX = 80 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 900
+  dt_irrad: 900
+  dt_ocean: 900
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(1) }}" # f"{1:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: True
+  convpar_option: 'NONE'
+  res: 'CF2880x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c4320:
+  heartbeat: 75
+  {% set NX = 80 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 * 2 }}
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 900
+  dt_irrad: 900
+  dt_ocean: 900
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(5) }}" # f"{5:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: 1
+  conus: ""
+  stretch_factor: 2.5
+  res: 'CF4320x6C'
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+
+c5760:
+  heartbeat: 75
+  {% set NX = 80 %}
+  nx: {{ NX }}
+  ny: {{ NX * 6 }}
+  conv_dt: 300
+  chem_dt: 300
+  dt_solar: 600
+  dt_irrad: 600
+  dt_ocean: 600
+  num_readers: 6
+  job_sgmt: "{{ '%08d' | format(1) }}" # f"{1:08}"
+  num_sgmt: 1
+  post_NDS: 32
+  nx_convert: 8
+  use_SHMEM: True
+  convpar_option: 'NONE'
+  res: 'CF5760x6C'
+  mit_horizontal_res: [""]
+  ocean_res_default:
+    - 'CS (Cubed-Sphere OSTIA)'
+    - 'o2 (1/4-deg, 1440x720  MERRA-2)'
+    - 'o3 (1/8-deg, 2880x1440 OSTIA)'
+    - 'o1 (1  -deg,  360x180  Reynolds, ends in 2022)'
+

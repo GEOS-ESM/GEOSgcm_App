@@ -1,0 +1,41 @@
+#--------------------------------------------------------------------
+## YAML file using Jinja2 templates
+# After reading this file, we need to pass
+# parameters to resolve the templates. The parameters
+# are: NODES, NUM_CPUS, PROCESSOR, NCPUS
+# They are passed in a dictionary:
+#  data = {
+#     'NODES': self.nodes,
+#     'NUM_CPUS': self.num_CPUs,
+#     'PROCESSOR': self.expConfig['processor'],
+#     'NCPUS': NCPUS,
+#  }
+#--------------------------------------------------------------------
+
+batch_headers:
+  batch_cmd: "qsub"
+  batch_group: "PBS -W group_list="
+  batch_time: "PBS -l walltime="
+  batch_jobname: "PBS -N"
+  batch_outputname: "PBS -o "
+  batch_joinouterr: "PBS -j oe -k oed"
+  run_ft: "6:00:00"
+  run_t: "8:00:00"
+  post_t: "8:00:00"
+  plot_t: "8:00:00"
+  archive_t: "8:00:00"
+  run_q: "PBS -q normal"
+  post_q: "PBS -q normal"
+  plot_q: "PBS -q normal"
+  move_q: "PBS -q normal"
+  archive_q: "PBS -q normal"
+  move_p: "PBS -l select=1:ncpus=1"
+
+  run_p: "PBS -l select={{ NODES }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+  run_fp: "PBS -l select=24:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+  regress_p: "PBS -l select={{ NODES * 2 }}:ncpus={{ NUM_CPUS // 2 }}:mpiprocs={{ NUM_CPUS // 2 }}:model={{ PROCESSOR }}"
+  post_p: "PBS -l select={{ NPCUS }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+  plot_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs=1:model={{ PROCESSOR }}"
+  archive_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+
+
