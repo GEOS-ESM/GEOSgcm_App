@@ -29,13 +29,14 @@ def get_number_nodes(exp_dict: dict) -> int:
     io_server = bool(exp_dict['USE_IOSERVER'])
     nx = exp_dict['NX']
     ny = exp_dict['NY']
-    num_cpus = exp_dict['NCPUS_PER_NODE']
+    cpus_per_node = exp_dict['NCPUS_PER_NODE']
 
     EXPDIR = Path(exp_dict['EXPDIR'])
     history_rc_file = f"{EXPDIR}/HISTORY.rc"
 
-    num_nodes, -, - = determine_nodes(io_server,
-                                      nx, ny, history_rc_file)
+    num_nodes, a, b = determine_nodes(io_server,
+                                      nx, ny, cpus_per_node, 
+                                      history_rc_file)
 
     return num_nodes
 
@@ -45,7 +46,7 @@ def define_batch_header(exp_dict: dict) -> str:
             BATCH_TIME="12:00:00",
             NUM_NODES=get_number_nodes(exp_dict),
             NTASKS_PER_NODES=exp_dict['NCPUS_PER_NODE'],
-            JOB_NAME=exp_dict['EXPID']
+            JOB_NAME=exp_dict['EXPID'],
             NODE_TYPE=exp_dict['proc_type'],
             USER_ACCOUNT=exp_dict['USER_ACCOUNT'],
             OUTPUT_FILE="myfile.out",
@@ -64,7 +65,7 @@ def create_batch_file(exp_dict: dict) -> None:
     batch_file_name = f"{exp_dict['EXPDIR']}/gcm_run_{exp_dict['EXPID']}.j"
     batch_header = define_batch_header(exp_dict)
     first_line = " #!/bin/csh -f \n"
-    with open(batch_file_name, "w") fid:
+    with open(batch_file_name, "w") as fid:
         fid.write(first_line)
         fid.write(empty_line)
         fid.write(batch_header)

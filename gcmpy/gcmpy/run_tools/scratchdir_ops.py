@@ -55,11 +55,13 @@ def create_scratchdir(exp_dir: str,
             # So we use $SLURM_JOB_ID and, if defined, the
             # SLURM_ARRAY_TASK_ID environment variable 
             # to create a unique scratch directory.
-            tse_tmpdir_name = all_env_vars["SLURM_JOB_ID"]
-            if "SLURM_ARRAY_TASK_ID" in all_env_vars:
-                tse_tmpdir_name = f"{tse_tmpdir_name}_{all_env_vars['SLURM_ARRAY_TASK_ID']}"
-
-            scratch_dir = f"{all_env_vars['TSE_TMPDIR']}/{tse_tmpdir_name}/{scratch_dir_name}"
+            try:
+                tse_tmpdir_name = all_env_vars["SLURM_JOB_ID"]
+                if "SLURM_ARRAY_TASK_ID" in all_env_vars:
+                    tse_tmpdir_name = f"{tse_tmpdir_name}_{all_env_vars['SLURM_ARRAY_TASK_ID']}"
+                scratch_dir = f"{all_env_vars['TSE_TMPDIR']}/{tse_tmpdir_name}/{scratch_dir_name}"
+            except:
+                scratch_dir = f"{all_env_vars['TSE_TMPDIR']}/{scratch_dir_name}"
 
             if check_dir_exists(dir_name) or Path(dir_name).is_symlink():
                 clean_dir(dir_name)

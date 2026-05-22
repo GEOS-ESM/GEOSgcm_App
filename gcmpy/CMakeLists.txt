@@ -4,6 +4,7 @@ add_subdirectory(gcmpy)
 
 set (programs
 	run_gcm_setup.py
+	run_gcm_run.py
 	README.md
 	)
 
