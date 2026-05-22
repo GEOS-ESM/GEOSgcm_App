@@ -937,6 +937,7 @@ class SetupGCM:
         # --- GEOS related tasks (run, plot, post)
         #------------------------------------------------
         exp_yaml_file_vars = [
+                'EXPID',
                 'SITE', 'EXPDIR', 'GEOSDIR', 
                 'NX', 'NY', 
                 'USE_IOSERVER', 
@@ -946,7 +947,7 @@ class SetupGCM:
                 ]
         exp_yaml_fname = Path(self.exp_dir) / f"gcm_task_{jinja_dict['EXPID']}.yaml"
         exp_yaml_dict = {k: jinja_dict[k] for k in exp_yaml_file_vars}
-        #exp_yaml_dict['DT'] = int(exp_yaml_dict['DT'])
+        exp_yaml_dict.update(dict(USER_ACCOUNT=self.expConfig['group_root']))
         write_dict_into_yaml(exp_yaml_fname, exp_yaml_dict)
 
         # remove #DELETE lines
