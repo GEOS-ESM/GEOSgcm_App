@@ -340,7 +340,7 @@ endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
-@CICE6cp -f  $HOMDIR/ice_in .
+@CICE6cp -f  $HOMDIR/ice_in.tmpl .
 
 if( $GCMEMIP == TRUE ) then
     cp -f  $EXPDIR/restarts/$RSTDATE/cap_restart .
@@ -798,7 +798,6 @@ endif
 @MOM5        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
 @MOM6 sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
 @MOM6        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
-@CICE6 sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
 
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -867,6 +866,44 @@ endif
 #echo $yy
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
+
+@CICE6 set OGCM_NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+@CICE6 set OGCM_NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+
+@CICE6 if( $OGCM_IM % $OGCM_NX != 0 ) then
+@CICE6   echo " number of X grid cells must be divisible by numper of PEs in X"
+@CICE6   exit 1
+@CICE6 endif
+@CICE6 if( $OGCM_JM % $OGCM_NY != 0 ) then
+@CICE6   echo " number of Y grid cells must be divisible by numper of PEs in Y"
+@CICE6   exit 1
+@CICE6 endif
+
+@CICE6   @ BLOCK_X =  $OGCM_IM / $OGCM_NX
+@CICE6   @ BLOCK_Y =  $OGCM_JM / $OGCM_NY
+
+@CICE6 set cice_nymdc = `awk '{print $1}' cap_restart`
+@CICE6 set cice_nhmsc = `awk '{print $2}' cap_restart`
+
+@CICE6 set year   = `echo $cice_nymdc | cut -c1-4`
+@CICE6 set month  = `echo $cice_nymdc | cut -c5-6`
+@CICE6 set day    = `echo $cice_nymdc | cut -c7-8`
+@CICE6 set hour   = `echo $cice_nhmsc | cut -c1-2`
+@CICE6 set minute = `echo $cice_nhmsc | cut -c3-4`
+@CICE6 set sec    = `echo $cice_nhmsc | cut -c5-6`
+
+@CICE6   @ sec_in_day = $sec + 60 * $minute + 3600 * $hour
+
+@CICE6 # dt must be set in ice_in. its value may be different from heartbeat_dt
+@CICE6 sed -e "s/@YEAR_INIT/${year}/g"    \
+@CICE6     -e "s/@MONTH_INIT/${month}/g"  \
+@CICE6     -e "s/@DAY_INIT/${day}/g"      \
+@CICE6     -e "s/@SEC_INIT/${sec_in_day}/g" \
+@CICE6     -e "s/@NPROCS/${MODEL_NPES}/g" \
+@CICE6     -e "s/@BLOCK_SIZE_X/${BLOCK_X}/g" \
+@CICE6     -e "s/@BLOCK_SIZE_Y/${BLOCK_Y}/g" \
+@CICE6     -e "s/@CICE_DT/${HEARTBEAT_DT}/g" ice_in.tmpl > ice_in
+
 
 @CICE6 #detect existence of certain fields in CICE6 restart
 @CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null

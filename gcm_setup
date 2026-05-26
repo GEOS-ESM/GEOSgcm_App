@@ -2327,8 +2327,8 @@ if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
    endif
 
    if ( $SEAICE_NAME == "CICE6" ) then
-      /bin/cp ${ETCDIR}/CICE6/cice6_app/${OGCM_IM}x${OGCM_JM}/ice_in ${TMPOCEANDIR}
-      set FILES = "$FILES ice_in "
+      /bin/cp ${ETCDIR}/CICE6/cice6_app/${OGCM_IM}x${OGCM_JM}/ice_in.tmpl ${TMPOCEANDIR}
+      set FILES = "$FILES ice_in.tmpl  "
    endif
 
    /bin/cp ${GEOSDEF}/coupled_diagnostics/g5lib/plotocn.j ${TMPOCEANDIR}
@@ -2599,10 +2599,6 @@ if( $OGCM == TRUE ) then
              -e "s/dt_atmos = [0-9]*,/dt_atmos = $OCEAN_DT,/g" $HOMDIR/input.nml
    endif
 
-   # We also need to change the dt in ice_in as well for CICE6
-   if ( $SEAICE_NAME == "CICE6" ) then
-      sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
-   endif
 
 endif
 
@@ -2894,7 +2890,7 @@ endif
 
 if ( "$SEAICEMODEL" == "CICE6" ) then
 cat >> $FILES_TO_PROCESS << EOF
-HOMDIR/ice_in
+HOMDIR/ice_in.tmpl
 EOF
 endif
 
