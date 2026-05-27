@@ -18,6 +18,7 @@ concurrency:
 jobs:
   build_gcm:
     strategy:
+      fail-fast: false
       matrix:
         compiler: [ifort, gfortran-14, gfortran-15]
         build-type: [Debug]
@@ -26,6 +27,7 @@ jobs:
       compiler: ${{ matrix.compiler }}
       cmake-build-type: ${{ matrix.build-type }}
       fixture-repo: GEOS-ESM/GEOSgcm
+      fixture-ref: feature/sdrabenh/gcm_v12
 
   spack_build:
     uses: GEOS-ESM/CI-workflows/.github/workflows/spack_gcc_build.yml@project/geosgcm
@@ -34,4 +36,6 @@ jobs:
       BUILDCACHE_TOKEN: ${{ secrets.BUILDCACHE_TOKEN }}
     with:
       fixture-repo: GEOS-ESM/GEOSgcm
+      fixture-ref: feature/sdrabenh/gcm_v12
+      load-fms: true
 
