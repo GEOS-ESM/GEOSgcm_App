@@ -1,20 +1,20 @@
 !  $Id$
 !
-! idfupd.x - ESMF/MAPL application to perform an IDF update to the RST fields 
+! idfupd.x - ESMF/MAPL application to perform an IDF update to the RST fields
 !
 ! 1. Read dynamics, moisture, and pchem restarts.
 ! 2. Read restarts with DFI fields from two integrations: one from the
 !    background; and another from an analysis.
 ! 3. Calculates the difference between the two DFI states, creating
-!    and incremental (IDF) correction that's applied to the fields 
+!    and incremental (IDF) correction that's applied to the fields
 !    of interest.
 !
-! REMARKS: 
+! REMARKS:
 !   a) This program requires an RC file: IDFUPD.rc
 !
 ! Ricardo Todling, August 2012
 !............................................................................
-!  !REVISION_HISTORY:  
+!  !REVISION_HISTORY:
 !   01Aug2012  Trayanov initial coding of handle to internal states of GCM
 !   31Aug2012  Todling  completion of implementation of IDF
 !----------------------------------------------------------------------------
@@ -26,7 +26,6 @@ program idfupd
   use ESMF
   use MAPL
 
-  use FVdycore_GridCompMod,   only : FV_SetServices    => SetServices
   use FVdycoreCubed_GridComp, only : FV3_SetServices   => SetServices
   use GEOS_MoistGridCompMod,  only : Moist_SetServices => SetServices
   use GEOS_PChemGridCompMod,  only : Pchem_SetServices => SetServices
@@ -68,7 +67,7 @@ program idfupd
    real(r4), pointer                  ::  ox_dfib(:,:,:)
 
    call MAIN(Name, AmIRoot, RC)
-   
+
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -118,7 +117,7 @@ CONTAINS
    type(ESMF_Time)              :: CurrTime
    type(ESMF_TimeInterval)      :: Frequency
 
-   
+
 ! ErrLog variables
 !-----------------
 
@@ -178,7 +177,7 @@ CONTAINS
       call MAPL_Set (MAPLOBJ, name='CAP', cf=CONFIG, __RC__ )
    end if
 
-!  Create Clock. This is a private routine that sets the start and 
+!  Create Clock. This is a private routine that sets the start and
 !   end times and the time interval of the clock from the configuration.
 !   The start time is temporarily set to 1 interval before the time in the
 !   configuration. Once the Alarms are set in intialize, the clock will
@@ -196,7 +195,7 @@ CONTAINS
 ! ------------------
 
 
-!  Get configurable info to create HIST 
+!  Get configurable info to create HIST
 !  and the ROOT of the computational hierarchy
 !---------------------------------------------
 
@@ -206,11 +205,11 @@ CONTAINS
    call MAPL_GetResource(MAPLOBJ, ROOT_CF,      "ROOT_CF:", &
                          default="IDFUPD.rc",    __RC__ )
 
-! !xRESOURCE_ITEM: string :: Control Timers 
+! !xRESOURCE_ITEM: string :: Control Timers
    call MAPL_GetResource(MAPLOBJ, enableTimers, "MAPL_ENABLE_TIMERS:", &
                          default='NO',             __RC__ )
 
-! !xRESOURCE_ITEM: string :: Control Memory Diagnostic Utility 
+! !xRESOURCE_ITEM: string :: Control Memory Diagnostic Utility
    call MAPL_GetResource(MAPLOBJ, enableMemUtils, "MAPL_ENABLE_MEMUTILS:", &
                          default='NO',             __RC__ )
 
@@ -238,7 +237,7 @@ CONTAINS
       call ESMF_VMBarrier(VM)
       RETURN_(ESMF_FAILURE)
    end if
-   
+
 
 ! Register the children with MAPL
 !--------------------------------
@@ -249,17 +248,10 @@ CONTAINS
 !----------------------------
    call MAPL_Set(MAPLOBJ, CF=CF_ROOT, __RC__ )
 
-   if ( trim(DYCORE) == 'FV3' ) then
-      DYN = MAPL_AddChild ( MAPLOBJ,     &
-           name       = 'DYN',           &
-           SS         = FV3_SetServices, &
-                                __RC__   )
-   else
-      DYN = MAPL_AddChild ( MAPLOBJ,     &
-           name       = 'DYN',           &
-           SS         = FV_SetServices,  &
-                                __RC__   )
-   endif
+   DYN = MAPL_AddChild ( MAPLOBJ,     &
+        name       = 'DYN',           &
+        SS         = FV3_SetServices, &
+                             __RC__   )
 
    MOIST = MAPL_AddChild ( MAPLOBJ,     &
         name       = 'MOIST',           &
@@ -269,17 +261,17 @@ CONTAINS
    PCHEM = MAPL_AddChild ( MAPLOBJ,     &
         name       = 'PCHEM',           &
         SS         = PCHEM_SetServices, &
-                                __RC__  )  
+                                __RC__  )
 
    DFIA = MAPL_AddChild ( MAPLOBJ,     &
         name       = 'DFIA',           &
         SS         = DFI_SetServices,  &
-                                __RC__ )  
+                                __RC__ )
 
    DFIB = MAPL_AddChild ( MAPLOBJ,     &
         name       = 'DFIB',           &
         SS         = DFI_SetServices,  &
-                                __RC__ )  
+                                __RC__ )
 
 
 !  Query MAPL for the the children's for GCS, IMPORTS, EXPORTS
@@ -304,7 +296,7 @@ CONTAINS
    END DO
 
 ! Get pointers to internal state variables
-   
+
 ! dynamics
    call MAPL_GetObjectFromGC ( GCS(DYN), CHILD_MAPL, __RC__ )
    call MAPL_Get (CHILD_MAPL, INTERNAL_ESMF_STATE=INTERNAL, __RC__ )
@@ -456,7 +448,7 @@ CONTAINS
 
 ! !IROUTINE: MAPL_ClockInit -- Sets the clock
 
-! !INTERFACE: 
+! !INTERFACE:
 
   subroutine MAPL_ClockInit ( MAPLOBJ, Clock, nsteps, rc)
 
@@ -469,10 +461,10 @@ CONTAINS
 
 !  !DESCRIPTION:
 
-!   This is a private routine that sets the start and 
+!   This is a private routine that sets the start and
 !   end times and the time interval of the application clock from the configuration.
 !   This time interal is the ``heartbeat'' of the application.
-!   The Calendar is set to Gregorian by default. 
+!   The Calendar is set to Gregorian by default.
 !   The start time is temporarily set to 1 interval before the time in the
 !   configuration. Once the Alarms are set in intialize, the clock will
 !   be advanced to guarantee it and its alarms are in the same state as they
@@ -676,7 +668,7 @@ CONTAINS
                                     M = END_M , &
                                     S = END_S , &
                     calendar=cal,  rc = STATUS  )
-     VERIFY_(STATUS)  
+     VERIFY_(STATUS)
 
 ! Read CAP Restart File for Current Time
 ! --------------------------------------
