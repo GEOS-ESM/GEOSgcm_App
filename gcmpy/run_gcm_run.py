@@ -7,12 +7,6 @@ from pathlib import Path
 
 from gcmpy.utils.yaml_ops import read_yaml_file
 from gcmpy.utils.color_ops import Color
-from gcmpy.run_tools.scratchdir_ops import create_scratchdir
-from gcmpy.run_tools.history_file_ops import (
-        get_collection_list,
-        get_monthly_collection_list,
-        read_history_rc
-        )
 from gcmpy.utils.path_ops import (
         get_current_dir, 
         get_home_dir,
@@ -23,6 +17,7 @@ from gcmpy.batch_tools.node_ops import determine_nodes
 from gcmpy.batch_tools.templates.read_batch_tmpl import create_batch_header
 
 empty_line = "\n"
+sep_line = "#######################################################################\n"
 
 def get_number_nodes(exp_dict: dict) -> int:
 
@@ -60,58 +55,58 @@ def define_batch_header(exp_dict: dict) -> str:
 
     return batch_header
 
-def create_batch_file(exp_dict: dict) -> None:
+def create_batch_file(yaml_file: str) -> None:
+
+    exp_dict = read_yaml_file(yaml_file)
+
+    SITE = exp_dict['SITE']
+    GEOSDIR = exp_dict['GEOSDIR']
+    GEOSBIN = f"{GEOSDIR}/bin"
+    GEOSETC = f"{GEOSDIR}/etc"
+    GEOSUTIL = f"{GEOSDIR}"
+    GCMPY = f"{GEOSBIN}/gcmpy"
 
     batch_file_name = f"{exp_dict['EXPDIR']}/gcm_run_{exp_dict['EXPID']}.j"
     batch_header = define_batch_header(exp_dict)
     first_line = " #!/bin/csh -f \n"
+
     with open(batch_file_name, "w") as fid:
         fid.write(first_line)
         fid.write(empty_line)
         fid.write(batch_header)
         fid.write(empty_line)
+        fid.write(sep_line)
+        fid.write("#                         System Settings \n")
+        fid.write(sep_line)
+        fid.write(empty_line)
+        fid.write("umask 022 \n")
+        fid.write("limit stacksize unlimited\n")
+        fid.write(empty_line)
+        fid.write(sep_line)
+        fid.write("#           Architecture Specific Environment Variables\n")
+        fid.write(sep_line)
+        fid.write(empty_line)
+        fid.write("setenv ARCH `uname` \n")
+        fid.write(empty_line)
+        fid.write(f"setenv SITE  {SITE} \n")
+        fid.write(f"setenv GEOSDIR  {GEOSDIR} \n")
+        fid.write(f"setenv GEOSBIN  {GEOSBIN} \n")
+        fid.write(f"setenv GEOSETC  {GEOSETC} \n")
+        fid.write(f"setenv GEOSUTIL {GEOSUTIL} \n")
+        fid.write(empty_line)
+        fid.write(sep_line)
+        fid.write("#                     Include gcmpy in PYTHONPATH\n")
+        fid.write(sep_line)
+        fid.write(empty_line)
+        fid.write(f"setenv PYTHONPATH {GCMPY}")
+        fid.write(empty_line)
+        fid.write(sep_line)
+        fid.write("#    Create internal folders in the experiment directory\n")
+        fid.write(sep_line)
+        fid.write(empty_line)
+        fid.write(f"python3 {GCMPY}/gcmpy/run_tools/dir_creation_ops.py -y {yaml_file} \n")
+        fid.write(empty_line)
 
-
-def create_experiment_dirs(exp_dict: dict) -> None:
-    """
-    Create directories (if not already available)
-    needed to run an experiment.
-
-    Parameters
-    ----------
-    exp_dict : dict
-       Contains parameters settings needed to
-       initiate an experiment.
-    """
-
-    EXPDIR = Path(exp_dict['EXPDIR'])
-    GEOSDIR = Path(exp_dict['GEOSDIR'])
-    GEOSUTIL = GEOSDIR
-    GEOSSRC = GEOSDIR
-    GEOSUTIL = GEOSDIR
-    GEOSBIN = GEOSDIR / "bin"
-    GEOSETC = GEOSDIR / "etc"
-
-    dir_list = ["restarts", "holding", "archive", "post", "plot"]
-    for name in dir_list:
-        create_dir(EXPDIR / name)
-
-    history_rc_file = f"{EXPDIR}/HISTORY.rc"
-    history_dict = read_history_rc(history_rc_file)
-    hist_colls = get_collection_list(history_dict)
-    print(f"History collections: \n {hist_colls}")
-    monthly_hist_colls = get_monthly_collection_list(history_dict)
-    print(f"History monthly collections: \n {monthly_hist_colls}")
-
-    scratch_dir_name = "scratch"
-    scratch_dir = create_scratchdir(EXPDIR, scratch_dir_name)
-    change_dir(scratch_dir)
-
-    print(f"Current directory: \n {get_current_dir()}")
-
-    for colls in hist_colls:
-        create_dir(EXPDIR / f"{colls}")
-        create_dir(EXPDIR / f"holding/{colls}")
 
 def main():
     # Parse command line flags
@@ -125,10 +120,8 @@ def main():
     exp_settings = read_yaml_file(yaml_file)
 
     # Create the batch run script
-    create_batch_file(exp_settings)
+    create_batch_file(yaml_file)
 
-    # Creation of directories
-    create_experiment_dirs(exp_settings) 
 
 if __name__ == "__main__":
     main()

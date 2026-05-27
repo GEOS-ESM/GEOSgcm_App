@@ -246,14 +246,12 @@ class SetupGCM:
             for key, value in batch_header['batch_headers'].items():
                 setattr(self, key, value)
 
-            """
             self.run_p            = f"PBS -l select={self.nodes}:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.run_fp           = f"PBS -l select=24:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.regress_p        = f"PBS -l select={self.nodes * 2}:ncpus={self.num_CPUs // 2}:mpiprocs={self.num_CPUs // 2}:model={self.expConfig['processor']}"
             self.post_p           = f"PBS -l select={NPCUS}:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.plot_p           = f"PBS -l select=1:ncpus={self.num_CPUs}:mpiprocs=1:model={self.expConfig['processor']}"
             self.archive_p        = f"PBS -l select=1:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
-            """
 
 
             self.boundary_dir     = "/nobackup/gmao_SIteam/ModelData"
@@ -290,7 +288,7 @@ class SetupGCM:
             for key, value in batch_header['batch_headers'].items():
                 setattr(self, key, value)
 
-            """
+            
             self.run_q            = f"SBATCH --constraint={self.expConfig['processor']}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
@@ -298,7 +296,6 @@ class SetupGCM:
             self.post_q           = f"SBATCH --constraint={self.expConfig['processor']}"
             self.plot_q           = f"SBATCH --constraint={self.expConfig['processor']}"
             self.post_p           = f"SBATCH --nodes={NPCUS} --ntasks-per-node={self.num_CPUs}"
-            """
 
             self.boundary_dir     = "/discover/nobackup/projects/gmao"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
@@ -337,16 +334,12 @@ class SetupGCM:
             batch_header = get_batch_header('slurm', tmpl_data)
             for key, value in batch_header['batch_headers'].items():
                 setattr(self, key, value)
-            """
-            for key, value in job_script_header['AWS'].items():
-                setattr(self, key, value)
 
             self.run_q            = f"SBATCH --constraint={self.expConfig['processor']}"
             self.run_p            = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
             self.run_fp           = f"SBATCH --nodes={self.nodes} --ntasks-per-node={self.num_CPUs}"
             self.regress_p        = f"SBATCH --nodes={self.nodes * 2} --ntasks-per-node={self.num_CPUs // 2}"
             self.post_p           = f"SBATCH --ntasks={post_npes}"
-            """
 
             self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
@@ -372,10 +365,6 @@ class SetupGCM:
             batch_header = get_batch_header('slurm', tmpl_data)
             for key, value in batch_header['batch_headers'].items():
                 setattr(self, key, value)
-            """
-            for key, value in job_script_header['Other'].items():
-                setattr(self, key, value)
-            """
 
             self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"

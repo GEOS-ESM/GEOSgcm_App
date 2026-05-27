@@ -31,11 +31,11 @@ batch_headers:
   archive_q: "PBS -q normal"
   move_p: "PBS -l select=1:ncpus=1"
 
-  run_p: "PBS -l select={{ NODES }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
-  run_fp: "PBS -l select=24:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
-  regress_p: "PBS -l select={{ NODES * 2 }}:ncpus={{ NUM_CPUS // 2 }}:mpiprocs={{ NUM_CPUS // 2 }}:model={{ PROCESSOR }}"
-  post_p: "PBS -l select={{ NPCUS }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
-  plot_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs=1:model={{ PROCESSOR }}"
-  archive_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+    #run_p: "PBS -l select={{ NODES }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+    #run_fp: "PBS -l select=24:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+    #regress_p: "PBS -l select={{ NODES * 2 }}:ncpus={{ NUM_CPUS // 2 }}:mpiprocs={{ NUM_CPUS // 2 }}:model={{ PROCESSOR }}"
+    #post_p: "PBS -l select={{ NPCUS }}:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
+    #plot_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs=1:model={{ PROCESSOR }}"
+    #archive_p: "PBS -l select=1:ncpus={{ NUM_CPUS }}:mpiprocs={{ NUM_CPUS }}:model={{ PROCESSOR }}"
 
 
