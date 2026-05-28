@@ -95,7 +95,7 @@ usage ()
    echo "    --account: account under which to run the job"
    echo
    echo "  Optional argument: "
-   echo "    --num_levels: number of levels (default: 181; 72, 91, 137, and 181 allowed)."
+   echo "    --num_levels: number of levels (default: 72; 72, 91, 137, and 181 allowed)."
    echo
    echo "  Optional env vars: "
    echo "    When running on the TBC data, you can set TINYBCS_PATH to point to the dataset or you can answer the prompt."
@@ -109,7 +109,7 @@ usage ()
 selected_case=NULL
 expdir=NULL
 account=NULL
-nlev=181
+nlev=72
 
 while [ "${1+defined}" ]
 do
