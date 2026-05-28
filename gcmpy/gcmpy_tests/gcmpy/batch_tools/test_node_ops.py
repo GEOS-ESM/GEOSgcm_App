@@ -19,7 +19,7 @@ COLLECTIONS: 'geosgcm_prog'
 ::
 """
 
-@pytest.mark.parametrize("io_server, nx, ny, num_cpus, result",
+@pytest.mark.parametrize("io_server, nx, ny, cpus_per_node, result",
                          [
                              (True, 6, 36, 120, (3, 1, 6)),
                              (False, 6, 36, 120, (2, 0, 0)),
@@ -28,10 +28,10 @@ COLLECTIONS: 'geosgcm_prog'
                              ]
                          )
 def test_determine_nodes(io_server: int, nx: int, ny: int, 
-                         num_cpus: int, result: tuple[int]) -> bool:
+                         cpus_per_node: int, result: tuple[int]) -> bool:
     history_rc_file = "HISTORY.rc"
     Path(history_rc_file).write_text(history_rc_text)
-    answer = determine_nodes(io_server, nx, ny, num_cpus, history_rc_file)
+    answer = determine_nodes(io_server, nx, ny, cpus_per_node, history_rc_file)
     os.remove(history_rc_file)
 
     assert answer == result

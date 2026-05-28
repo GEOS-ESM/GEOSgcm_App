@@ -173,7 +173,7 @@ class SetupGCM:
                 io_server=self.expConfig['io_server'],
                 nx=self.atmos.nx, 
                 ny=self.atmos.ny,
-                num_cpus=self.num_CPUs,
+                cpus_per_node=self.num_CPUs,
                 history_rc_file=f"{pathdict['etc']}/{self.expConfig['history_template']}"
                 )
         self.nodes = node_params[0]
