@@ -6,6 +6,39 @@ from pathlib import Path
 
 script_dir = Path(__file__).parent.resolve()
 
+def create_batch_content(task_type: str, tmpl_data: dict) -> str:
+    """
+    Read a templated file to create the content of batch (SLURM, PBS) script
+    for executing GEOS tasks on various platforms.
+    The file has templated variables that are filled
+    using parameters passed in the dictionary tmpl_data.
+
+    Parameters
+    ----------
+    task_type : str
+       The task we want to execute.
+       It can be: "run", "plot", "post.
+    tmpl_data : dict
+       Contain parameters such as:
+       total number of nodes, number of cores/node, etc.
+
+    Returns
+    -------
+    batch_content : str
+       The content of the batch script for running a GEOS task.
+    """
+
+    # Templated file.
+    in_file = Path(script_dir) / f"gcm_{task_type}_batch_script.j.tmpl"
+
+    # Read the file
+    with open(in_file, 'r') as fid:
+        content = fid.read()
+
+    batch_content = content.format(**tmpl_data)
+
+    return batch_content
+
 def create_batch_header(task_type: str,
                         batch_system: str, 
                        tmpl_data: dict) -> str:
@@ -30,7 +63,7 @@ def create_batch_header(task_type: str,
     Returns
     -------
     batch_header : str
-       The batch header for running GEOS
+       The batch header for running a GEOS related task.
     """
 
     # Templated file.

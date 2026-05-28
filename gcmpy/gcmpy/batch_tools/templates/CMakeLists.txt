@@ -8,6 +8,7 @@ set (files
         gcm_post_slurm.j.tmpl 
 	gcm_run_pbs.j.tmpl
       	gcm_run_slurm.j.tmpl
+	gcm_run_batch_script.j.tmpl
 	)
 
 install (

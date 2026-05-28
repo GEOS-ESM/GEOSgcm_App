@@ -1,0 +1,35 @@
+#!/bin/bash
+
+{BATCH_HEADER}
+
+#######################################################################
+#                         System Settings 
+#######################################################################
+
+umask 022 
+ulimit -s unlimited
+
+#######################################################################
+#           Architecture Specific Environment Variables
+#######################################################################
+
+EXPORT ARCH=`uname`
+
+EXPORT SITE={SITE}
+EXPORT GEOSDIR={GEOSDIR}
+EXPORT GEOSBIN=$GEOSDIR/bin
+EXPORT GEOSETC=$GEOSDIR/etc
+EXPORT GEOSUTIL=$GEOSDIR
+EXPORT GCMPY=$GEOSDIR/bin/gcmpy
+
+#######################################################################
+#                     Include gcmpy in PYTHONPATH
+#######################################################################
+ 
+EXPORT PYTHONPATH=$GCMPY
+
+#######################################################################
+#    Create internal folders in the experiment directory
+#######################################################################
+
+python3 $GCMPY/gcmpy/run_tools/dir_creation_ops.py -y {CONFIG_YAML_FILE}

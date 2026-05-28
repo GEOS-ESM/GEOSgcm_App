@@ -9,15 +9,14 @@ from gcmpy.utils.yaml_ops import read_yaml_file
 from gcmpy.utils.color_ops import Color
 from gcmpy.utils.path_ops import (
         get_current_dir, 
-        get_home_dir,
-        create_dir,
-        change_dir
+        get_home_dir
         )
 from gcmpy.batch_tools.node_ops import determine_nodes
-from gcmpy.batch_tools.templates.read_batch_tmpl import create_batch_header
+from gcmpy.batch_tools.templates.read_batch_tmpl import (
+        create_batch_header,
+        create_batch_content
+        )
 
-empty_line = "\n"
-sep_line = "#######################################################################\n"
 
 def get_number_nodes(exp_dict: dict) -> int:
 
@@ -37,7 +36,7 @@ def get_number_nodes(exp_dict: dict) -> int:
 
 def define_batch_header(exp_dict: dict) -> str:
 
-    tmpl_data = dict(
+    data_tmpl = dict(
             BATCH_TIME="12:00:00",
             NUM_NODES=get_number_nodes(exp_dict),
             NTASKS_PER_NODES=exp_dict['NCPUS_PER_NODE'],
@@ -51,62 +50,29 @@ def define_batch_header(exp_dict: dict) -> str:
     task_type = "run"
     batch_system = "slurm"
 
-    batch_header = create_batch_header(task_type, batch_system, tmpl_data)
+    batch_header = create_batch_header(task_type, batch_system, data_tmpl)
 
     return batch_header
 
-def create_batch_file(yaml_file: str) -> None:
+def create_batch_file(config_yaml_file: str) -> None:
 
-    exp_dict = read_yaml_file(yaml_file)
-
-    SITE = exp_dict['SITE']
-    GEOSDIR = exp_dict['GEOSDIR']
-    GEOSBIN = f"{GEOSDIR}/bin"
-    GEOSETC = f"{GEOSDIR}/etc"
-    GEOSUTIL = f"{GEOSDIR}"
-    GCMPY = f"{GEOSBIN}/gcmpy"
+    exp_dict = read_yaml_file(config_yaml_file)
 
     batch_file_name = f"{exp_dict['EXPDIR']}/gcm_run_{exp_dict['EXPID']}.j"
     batch_header = define_batch_header(exp_dict)
-    first_line = " #!/bin/csh -f \n"
+
+    data_tmpl = dict(
+            SITE=exp_dict['SITE'],
+            GEOSDIR=exp_dict['GEOSDIR'],
+            BATCH_HEADER=batch_header,
+            CONFIG_YAML_FILE=config_yaml_file,
+            )
+
+    task_type = "run"
+    batch_content = create_batch_content(task_type, data_tmpl)
 
     with open(batch_file_name, "w") as fid:
-        fid.write(first_line)
-        fid.write(empty_line)
-        fid.write(batch_header)
-        fid.write(empty_line)
-        fid.write(sep_line)
-        fid.write("#                         System Settings \n")
-        fid.write(sep_line)
-        fid.write(empty_line)
-        fid.write("umask 022 \n")
-        fid.write("limit stacksize unlimited\n")
-        fid.write(empty_line)
-        fid.write(sep_line)
-        fid.write("#           Architecture Specific Environment Variables\n")
-        fid.write(sep_line)
-        fid.write(empty_line)
-        fid.write("setenv ARCH `uname` \n")
-        fid.write(empty_line)
-        fid.write(f"setenv SITE  {SITE} \n")
-        fid.write(f"setenv GEOSDIR  {GEOSDIR} \n")
-        fid.write(f"setenv GEOSBIN  {GEOSBIN} \n")
-        fid.write(f"setenv GEOSETC  {GEOSETC} \n")
-        fid.write(f"setenv GEOSUTIL {GEOSUTIL} \n")
-        fid.write(empty_line)
-        fid.write(sep_line)
-        fid.write("#                     Include gcmpy in PYTHONPATH\n")
-        fid.write(sep_line)
-        fid.write(empty_line)
-        fid.write(f"setenv PYTHONPATH {GCMPY}")
-        fid.write(empty_line)
-        fid.write(sep_line)
-        fid.write("#    Create internal folders in the experiment directory\n")
-        fid.write(sep_line)
-        fid.write(empty_line)
-        fid.write(f"python3 {GCMPY}/gcmpy/run_tools/dir_creation_ops.py -y {yaml_file} \n")
-        fid.write(empty_line)
-
+        fid.write(batch_content)
 
 def main():
     # Parse command line flags
@@ -114,10 +80,9 @@ def main():
     parser.add_argument("--yaml", "-y")
     args = parser.parse_args()
 
-    parent_dir = get_current_dir()
+    #parent_dir = get_current_dir()
 
     yaml_file = args.yaml
-    exp_settings = read_yaml_file(yaml_file)
 
     # Create the batch run script
     create_batch_file(yaml_file)
