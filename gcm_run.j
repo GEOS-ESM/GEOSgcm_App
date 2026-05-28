@@ -10,7 +10,7 @@
 #@RUN_Q
 #@BATCH_GROUP
 #@BATCH_JOINOUTERR
-#@BATCH_NAME -o gcm_run.o@RSTDATE
+#@BATCH_NAME -o gcm_run.o%j
 
 #######################################################################
 #                         System Settings
@@ -61,6 +61,18 @@ setenv  HOMDIR  @HOMDIR
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
+
+#######################################################################
+#                          DSL configuration
+#######################################################################
+
+if ( $?USE_DSL ) then
+   if ( $?PYTHONPATH ) then
+      setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+   else
+      setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+   endif
+endif
 
 #######################################################################
 #                 Create Experiment Sub-Directories

@@ -298,15 +298,17 @@ endif
 set LATLON_AGCM = "#DELETE"
 set CUBE_AGCM = ""
 
-echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 181)"
-echo "   NOTE: If you choose 72 levels, your defaults will change to match GEOSgcm v11:"
-echo "         - Microphysics will change to BACM_1M"
-echo "         - Land surface model boundary conditions will change to NL3"
-echo "         - Radiation will be set to RRTMG"
-echo "         - Default heartbeat will be set to 450 seconds"
+echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 72)"
+echo "   NOTE: For 72 levels, your defaults will match GEOSgcm v11"
+echo "         For 91, 137, or 181 levels, your defaults will change to match GEOSgcm v12:"
+echo "         - Microphysics will change to GFDL_1M"
+echo "         - Convection will change to GF2020"
+echo "         - Land surface model boundary conditions will change to Land v12"
+echo "         - Radiation will change to RRTMGP"
+echo "         - Default heartbeat will be resolution dependent"
 set   AGCM_LM = $<
 if( .$AGCM_LM == . ) then
-  set AGCM_LM = 181
+  set AGCM_LM = 72
 endif
 
 #######################################################################
@@ -1642,16 +1644,17 @@ setenv BOUNDARY_DIR ""
 
 if( $SITE == 'NAS' ) then
               setenv BATCH_CMD "qsub"                 # PBS Batch command
+              setenv BATCH_NAME "DELETE"              # PBS Batch pragma (not needed for NAS)
               setenv BATCH_GROUP "PBS -W group_list=" # PBS Syntax for GROUP
               setenv BATCH_TIME "PBS -l walltime="    # PBS Syntax for walltime
               setenv BATCH_JOBNAME "PBS -N "          # PBS Syntax for job name
               setenv BATCH_OUTPUTNAME "PBS -o "       # PBS Syntax for job output name
               setenv BATCH_JOINOUTERR "PBS -j oe -k oed"  # PBS Syntax for joining output and error
-              setenv     RUN_FT "6:00:00"             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "8:00:00"             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"             # Wallclock Time   for gcm_post.j
+              setenv     RUN_FT "4:00:00"             # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "4:00:00"             # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "4:00:00"             # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "8:00:00"             # Wallclock Time   for gcm_plot.j
-              setenv ARCHIVE_T  "8:00:00"             # Wallclock Time   for gcm_archive.j
+              setenv ARCHIVE_T  "4:00:00"             # Wallclock Time   for gcm_archive.j
               set QTYPE = "normal"                    # Queue to use
 
               @ NPCUS = `echo "($POST_NPES + $NCPUS_PER_NODE - 1)/$NCPUS_PER_NODE" | bc`
@@ -1693,14 +1696,15 @@ if( $SITE == 'NAS' ) then
 
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_NAME "SBATCH"                                               # SLURM Batch pragma
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
               setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
               setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
               setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
-              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv     RUN_FT "4:00:00"                                              # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "4:00:00"                                              # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "4:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "2:00:00"                                              # Wallclock Time   for gcm_archive.j
 
@@ -1749,14 +1753,15 @@ else if( $SITE == 'NCCS' ) then
 
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BATCH_CMD "sbatch"                                                    # SLURM Batch command
+              setenv BATCH_NAME "SBATCH"                                                   # SLURM Batch pragma
               setenv BATCH_GROUP DELETE                                                    # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                           # SLURM Syntax for walltime
               setenv BATCH_JOBNAME "SBATCH --job-name="                                    # SLURM Syntax for job name
               setenv BATCH_OUTPUTNAME "SBATCH --output="                                   # SLURM Syntax for job output name
               setenv BATCH_JOINOUTERR "DELETE"                                             # SLURM joins out and err by default
-              setenv RUN_FT "06:00:00"                                                     # Wallclock Time   for gcm_forecast.j
-              setenv RUN_T  "12:00:00"                                                     # Wallclock Time   for gcm_run.j
-              setenv POST_T  "8:00:00"                                                     # Wallclock Time   for gcm_post.j
+              setenv RUN_FT "4:00:00"                                                      # Wallclock Time   for gcm_forecast.j
+              setenv RUN_T  "4:00:00"                                                      # Wallclock Time   for gcm_run.j
+              setenv POST_T  "4:00:00"                                                     # Wallclock Time   for gcm_post.j
               setenv PLOT_T  "12:00:00"                                                    # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "1:00:00"                                                  # Wallclock Time   for gcm_archive.j
               setenv RUN_Q     "SBATCH --constraint=${MODEL}"                              # batch queue name for gcm_run.j
@@ -1790,14 +1795,15 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
 else
 # These are defaults for the desktop
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
+              setenv BATCH_NAME "SBATCH"                                               # SLURM Batch pragma
               setenv BATCH_GROUP "SBATCH --account="                                   # SLURM Syntax for account name
               setenv BATCH_TIME "SBATCH --time="                                       # SLURM Syntax for walltime
               setenv BATCH_JOBNAME "SBATCH --job-name="                                # SLURM Syntax for job name
               setenv BATCH_OUTPUTNAME "SBATCH --output="                               # SLURM Syntax for job output name
               setenv BATCH_JOINOUTERR "DELETE"                                         # SLURM joins out and err by default
-              setenv     RUN_FT "06:00:00"                                             # Wallclock Time   for gcm_forecast.j
-              setenv     RUN_T  "12:00:00"                                             # Wallclock Time   for gcm_run.j
-              setenv    POST_T  "8:00:00"                                              # Wallclock Time   for gcm_post.j
+              setenv     RUN_FT "4:00:00"                                              # Wallclock Time   for gcm_forecast.j
+              setenv     RUN_T  "4:00:00"                                              # Wallclock Time   for gcm_run.j
+              setenv    POST_T  "4:00:00"                                              # Wallclock Time   for gcm_post.j
               setenv    PLOT_T  "12:00:00"                                             # Wallclock Time   for gcm_plot.j
               setenv ARCHIVE_T  "1:00:00"                                              # Wallclock Time   for gcm_archive.j
               setenv  RUN_Q     "DELETE"                                               # batch queue name for gcm_run.j
@@ -2306,6 +2312,7 @@ s?@HOMDIR?$HOMDIR?g
 s?@BATCH_GROUP?${BATCH_GROUP}${GROUP}?g
 s?@BATCH_TIME?$BATCH_TIME?g
 s?@BATCH_CMD?$BATCH_CMD?g
+s?@BATCH_NAME?$BATCH_NAME?g
 s?@BATCH_JOBNAME?$BATCH_JOBNAME?g
 s?@BATCH_OUTPUTNAME?$BATCH_OUTPUTNAME?g
 s?@BATCH_JOINOUTERR?$BATCH_JOINOUTERR?g
