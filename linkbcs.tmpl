@@ -61,10 +61,45 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 
 
 set MERRA2OX_SPECIES = "#"
-/bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_DYN_ave_@AGCM_IMx@AGCM_JM.data topo_dynave.data
-/bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_GWD_var_@AGCM_IMx@AGCM_JM.data topo_gwdvar.data
-/bin/ln -sf $BCSDIR/TOPO/TOPO_@ATMOStag/smoothed/topo_TRB_var_@AGCM_IMx@AGCM_JM.data topo_trbvar.data
 
+# ----- Topography linking ( GM4 | v1 | v2) -----
+
+set bc_is_gm4 = 0
+if ( "$BCSDIR" =~ */GM4* ) then
+  set bc_is_gm4 = 1
+endif
+set bc_ver_num = `echo "$BCSDIR" | sed -n 's#.*\/v\([0-9][0-9]*\)[^/]*\(\/.*\|$\)#\1#p'`
+if ( "$bc_ver_num" == "" ) set bc_ver_num = 0
+
+if ( $bc_is_gm4 ) then
+  # GM4 stays on legacy tiles layout
+  set topo_src_dir = "$BCSDIR/TOPO/TOPO_@ATMOStag"
+else
+  set stream = v1
+  if ( $bc_ver_num >= 14 ) set stream = v2
+  set topo_src_dir = "@BCS_INPUT_BASE/TOPO/${stream}/@ATMOStag/smoothed"
+endif
+
+set fn_dyn = topo_DYN_ave_@AGCM_IMx@AGCM_JM.data
+set fn_gwd = topo_GWD_var_@AGCM_IMx@AGCM_JM.data
+set fn_trb = topo_TRB_var_@AGCM_IMx@AGCM_JM.data
+
+if ( ! -e ${topo_src_dir}/${fn_dyn} ) then
+  echo "FATAL: ${fn_dyn} not found in ${topo_src_dir}"
+  exit 2
+endif
+
+/bin/ln -sf ${topo_src_dir}/${fn_dyn} topo_dynave.data
+/bin/ln -sf ${topo_src_dir}/${fn_gwd} topo_gwdvar.data
+/bin/ln -sf ${topo_src_dir}/${fn_trb} topo_trbvar.data
+
+# Optional internal restart
+if ( -e ${topo_src_dir}/gwd_internal_rst ) then
+  /bin/cp -vf ${topo_src_dir}/gwd_internal_rst gwd_internal_rst
+else if (-e @GWDRSDIR/gwd_internal_c@AGCM_IM) then
+  /bin/cp -vf @GWDRSDIR/gwd_internal_c@AGCM_IM gwd_internal_rst
+endif
+# ----- end topo gwd linking -----
 
 @COUPLEDcp $HOMDIR/*_table .
 @COUPLEDcp $CPLDIR/@OGCM_IMx@OGCM_JM/INPUT/* INPUT

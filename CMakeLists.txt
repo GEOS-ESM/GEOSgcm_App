@@ -63,6 +63,7 @@ else()
 endif()
 
 set (setup_scripts
+   set_resolution_params.csh
    gcm_setup
    gmichem_setup
    geoschemchem_setup
