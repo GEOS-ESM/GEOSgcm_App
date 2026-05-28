@@ -891,6 +891,7 @@ endif
 @CICE6 set hour   = `echo $cice_nhmsc | cut -c1-2`
 @CICE6 set minute = `echo $cice_nhmsc | cut -c3-4`
 @CICE6 set sec    = `echo $cice_nhmsc | cut -c5-6`
+@CICE6 set OGCM_RUN_DT = `cat AGCM.rc | grep OGCM_RUN_DT: | cut -d: -f2`
 
 @CICE6   @ sec_in_day = $sec + 60 * $minute + 3600 * $hour
 
@@ -902,7 +903,7 @@ endif
 @CICE6     -e "s/@NPROCS/${MODEL_NPES}/g" \
 @CICE6     -e "s/@BLOCK_SIZE_X/${BLOCK_X}/g" \
 @CICE6     -e "s/@BLOCK_SIZE_Y/${BLOCK_Y}/g" \
-@CICE6     -e "s/@CICE_DT/${HEARTBEAT_DT}/g" ice_in.tmpl > ice_in
+@CICE6     -e "s/@CICE_DT/${OGCM_RUN_DT}/g" ice_in.tmpl > ice_in
 
 
 @CICE6 #detect existence of certain fields in CICE6 restart
