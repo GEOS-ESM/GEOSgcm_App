@@ -13,20 +13,20 @@ ulimit -s unlimited
 #           Architecture Specific Environment Variables
 #######################################################################
 
-EXPORT ARCH=`uname`
+export ARCH=`uname`
 
-EXPORT SITE={SITE}
-EXPORT GEOSDIR={GEOSDIR}
-EXPORT GEOSBIN=$GEOSDIR/bin
-EXPORT GEOSETC=$GEOSDIR/etc
-EXPORT GEOSUTIL=$GEOSDIR
-EXPORT GCMPY=$GEOSDIR/bin/gcmpy
+export SITE={SITE}
+export GEOSDIR={GEOSDIR}
+export GEOSBIN=$GEOSDIR/bin
+export GEOSETC=$GEOSDIR/etc
+export GEOSUTIL=$GEOSDIR
+export GCMPY=$GEOSDIR/bin/gcmpy
 
 #######################################################################
 #                     Include gcmpy in PYTHONPATH
 #######################################################################
  
-EXPORT PYTHONPATH=$GCMPY
+export PYTHONPATH=$GCMPY
 
 #######################################################################
 #    Create internal folders in the experiment directory
