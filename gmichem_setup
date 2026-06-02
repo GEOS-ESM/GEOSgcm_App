@@ -298,15 +298,17 @@ endif
 set LATLON_AGCM = "#DELETE"
 set CUBE_AGCM = ""
 
-echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 181)"
-echo "   NOTE: If you choose 72 levels, your defaults will change to match GEOSgcm v11:"
-echo "         - Microphysics will change to BACM_1M"
-echo "         - Land surface model boundary conditions will change to NL3"
-echo "         - Radiation will be set to RRTMG"
-echo "         - Default heartbeat will be set to 450 seconds"
+echo "Enter the Atmospheric Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 72)"
+echo "   NOTE: For 72 levels, your defaults will match GEOSgcm v11"
+echo "         For 91, 137, or 181 levels, your defaults will change to match GEOSgcm v12:"
+echo "         - Microphysics will change to GFDL_1M"
+echo "         - Convection will change to GF2020"
+echo "         - Land surface model boundary conditions will change to Land v12"
+echo "         - Radiation will change to RRTMGP"
+echo "         - Default heartbeat will be resolution dependent"
 set   AGCM_LM = $<
 if( .$AGCM_LM == . ) then
-  set AGCM_LM = 181
+  set AGCM_LM = 72
 endif
 
 #######################################################################
