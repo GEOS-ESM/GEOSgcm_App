@@ -237,7 +237,7 @@ CONTAINS
          print *, "ERROR: inconsistent values of HEATBEAT_DT and RUN_DT"
       end if
       call ESMF_VMBarrier(VM)
-      RETURN_(ESMF_FAILURE)
+      _RETURN(ESMF_FAILURE)
    end if
    
 
@@ -301,7 +301,7 @@ CONTAINS
    DO I = 1, size(GCS)
       call ESMF_GridCompInitialize ( GCS(I), importState=IMPORTS(I), &
            exportState=EXPORTS(I), clock=CLOCK, userRC=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
    END DO
 
 ! Get pointers to internal state variables
@@ -361,7 +361,7 @@ CONTAINS
    DO I = 1, size(GCS)
       call ESMF_GridCompFinalize( GCS(I), importState=IMPORTS(I),&
            exportState=EXPORTS(I), clock=CLOCK, userRC=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
    END DO
 
    if( done_idf .and. STATUS==0 ) then
@@ -376,7 +376,7 @@ CONTAINS
 !  ------------------
    call ESMF_Finalize (__RC__)
 
-   RETURN_(ESMF_SUCCESS)
+   _RETURN(ESMF_SUCCESS)
 
  end subroutine MAIN
 
@@ -543,22 +543,22 @@ CONTAINS
 
 ! !RESOURCE_ITEM: year :: Beginning year (integer)
         call MAPL_GetResource( MAPLOBJ, BEG_YY, label='BEG_YY:', DEFAULT=1, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: month :: Beginning month (integer 1-12)
         call MAPL_GetResource( MAPLOBJ, BEG_MM, label='BEG_MM:', default=1, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: day  :: Beginning day of month (integer 1-31)
         call MAPL_GetResource( MAPLOBJ, BEG_DD, label='BEG_DD:', default=1, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: hour :: Beginning hour of day (integer 0-23)
         call MAPL_GetResource( MAPLOBJ, BEG_H , label='BEG_H:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: minute :: Beginning minute (integer 0-59)
         call MAPL_GetResource( MAPLOBJ, BEG_M , label='BEG_M:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: second :: Beginning second (integer 0-59)
         call MAPL_GetResource( MAPLOBJ, BEG_S , label='BEG_S:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
      end if
 
      call MAPL_GetResource( MAPLOBJ, datetime, label='END_DATE:', rc=STATUS )
@@ -567,22 +567,22 @@ CONTAINS
      else
 ! !RESOURCE_ITEM: year :: Ending year (integer)
         call MAPL_GetResource( MAPLOBJ, END_YY, label='END_YY:', DEFAULT=1, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: month :: Ending month (integer 1-12)
         call MAPL_GetResource( MAPLOBJ, END_MM, label='END_MM:', default=1, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: day  :: Ending day of month (integer 1-31)
         call MAPL_GetResource( MAPLOBJ, END_DD, label='END_DD:', default=1, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: hour :: Ending hour of day (integer 0-23)
         call MAPL_GetResource( MAPLOBJ, END_H , label='END_H:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: minute :: Ending minute (integer 0-59)
         call MAPL_GetResource( MAPLOBJ, END_M , label='END_M:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: second :: Ending second (integer 0-59)
         call MAPL_GetResource( MAPLOBJ, END_S , label='END_S:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
      end if
 
 ! Replace JOB_DURATION with JOB_SGMT as prefered RC parameter
@@ -597,36 +597,36 @@ CONTAINS
      else
 ! !RESOURCE_ITEM: year :: Ending year (integer)
         call MAPL_GetResource( MAPLOBJ, DUR_YY, label='DUR_YY:', DEFAULT=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: month :: Ending month (integer 1-12)
         call MAPL_GetResource( MAPLOBJ, DUR_MM, label='DUR_MM:', default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: day  :: Ending day of month (integer 1-31)
         call MAPL_GetResource( MAPLOBJ, DUR_DD, label='DUR_DD:', default=1, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: hour :: Ending hour of day (integer 0-23)
         call MAPL_GetResource( MAPLOBJ, DUR_H , label='DUR_H:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !RESOURCE_ITEM: minute :: Ending minute (integer 0-59)
         call MAPL_GetResource( MAPLOBJ, DUR_M , label='DUR_M:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
 ! !xRESOURCE_ITEM: second :: Ending second (integer 0-59)
         call MAPL_GetResource( MAPLOBJ, DUR_S , label='DUR_S:' , default=0, rc=STATUS )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
      end if
 
 ! !RESOURCE_ITEM: seconds :: Interval of the application clock (the Heartbeat)
      call MAPL_GetResource( MAPLOBJ, HEARTBEAT_DT, label='HEARTBEAT_DT:',            rc=STATUS )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 ! !RESOURCE_ITEM: 1 :: numerator of decimal fraction of time step
      call MAPL_GetResource( MAPLOBJ, NUM_DT, label='NUM_DT:', default=0, rc=STATUS )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 ! !RESOURCE_ITEM: 1 :: denominator of decimal fraction of time step
      call MAPL_GetResource( MAPLOBJ, DEN_DT, label='DEN_DT:', default=1, rc=STATUS )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 ! !RESOURCE_ITEM: string :: Calendar type
      call MAPL_GetResource( MAPLOBJ, CALENDAR, label='CALENDAR:', default="GREGORIAN", rc=STATUS )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
 !EOR
 
@@ -641,19 +641,19 @@ CONTAINS
 
      if    (CALENDAR=="GREGORIAN") then
         cal = ESMF_CalendarCreate( ESMF_CALKIND_GREGORIAN, name="ApplicationCalendar", rc=status )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
         call ESMF_CalendarSetDefault(ESMF_CALKIND_GREGORIAN, RC=STATUS)
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
      elseif(CALENDAR=="JULIAN"   ) then
         cal = ESMF_CalendarCreate( ESMF_CALKIND_JULIAN, name="ApplicationCalendar", rc=status )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
         call ESMF_CalendarSetDefault(ESMF_CALKIND_JULIAN, RC=STATUS)
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
      elseif(CALENDAR=="NOLEAP"   ) then
         cal = ESMF_CalendarCreate( ESMF_CALKIND_NOLEAP, name="ApplicationCalendar", rc=status )
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
         call ESMF_CalendarSetDefault(ESMF_CALKIND_NOLEAP, RC=STATUS)
-        VERIFY_(STATUS)
+        _VERIFY(STATUS)
      else
         ASSERT_(.false.)
      endif
@@ -668,7 +668,7 @@ CONTAINS
                                     M = BEG_M , &
                                     S = BEG_S , &
                     calendar=cal,  rc = STATUS  )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
      call ESMF_TimeSet(   EndTime, YY = END_YY, &
                                    MM = END_MM, &
@@ -677,7 +677,7 @@ CONTAINS
                                     M = END_M , &
                                     S = END_S , &
                     calendar=cal,  rc = STATUS  )
-     VERIFY_(STATUS)  
+     _VERIFY(STATUS)  
 
 ! Read CAP Restart File for Current Time
 ! --------------------------------------
@@ -690,7 +690,7 @@ CONTAINS
      CUR_S  = BEG_S
 
      open(newunit=UNIT, file="cap_restart", form="formatted", action="read", iostat=status)
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
      rewind(UNIT)
      read(UNIT,100,err=999,end=999) datetime
@@ -716,7 +716,7 @@ CONTAINS
                                    M = CUR_M , &
                                    S = CUR_S , &
                     calendar=cal,  rc = STATUS  )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
 ! initialize final stop time
 ! --------------------------
@@ -729,7 +729,7 @@ CONTAINS
                                     S = DUR_S , &
                                     startTime = currTime, &
                                     rc = STATUS  )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
      stopTime = currTime + duration
 
@@ -737,7 +737,7 @@ CONTAINS
 ! --------------------------
 
      call ESMF_TimeIntervalSet( timeStep, S=HEARTBEAT_DT, sN=NUM_DT, sD=DEN_DT, rc=STATUS )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
      nsteps = duration/timestep
 
@@ -753,12 +753,12 @@ CONTAINS
         clock = ESMF_ClockCreate( name="ApplClock", timeStep=timeStep, &
              startTime=StartTime, stopTime=StopTime, rc=STATUS )
      end if
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
      call ESMF_ClockSet ( clock, CurrTime=CurrTime, rc=status )
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
 
-     RETURN_(ESMF_SUCCESS)
+     _RETURN(ESMF_SUCCESS)
    end subroutine MAPL_ClockInit
 
 end program idfupd
