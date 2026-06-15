@@ -99,7 +99,14 @@ setenv GEOSDIR @GEOSDIR
 setenv GEOSBIN @GEOSBIN
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+
+# We only prepend to DY/LD_LIBRARY_PATH if it exists
+if ( $?@LD_LIBRARY_PATH_CMD ) then
+   setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
+else
+   setenv @LD_LIBRARY_PATH_CMD "${GEOSDIR}/lib"
+endif
+
 # We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
@@ -200,34 +207,6 @@ endif
 if(! -e tile.bin) $GEOSBIN/binarytile.x tile.data tile.bin
 
 #######################################################################
-#                Split Saltwater Restart if detected
-#######################################################################
-
-if ( (-e $EXPDIR/regress/openwater_internal_rst) && (-e $EXPDIR/regress/seaicethermo_internal_rst)) then
-  echo "Saltwater internal state is already split, good to go!"
-else
- if ( -e $EXPDIR/regress/saltwater_internal_rst ) then
-
-   # The splitter script requires an OutData directory
-   # -------------------------------------------------
-   if (! -d OutData ) mkdir -p OutData
-
-   # Run the script
-   # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $EXPDIR/regress/saltwater_internal_rst
-
-   # Move restarts
-   # -------------
-   /bin/mv OutData/openwater_internal_rst OutData/seaicethermo_internal_rst .
-
-   # Remove OutData
-   # --------------
-   /bin/rmdir OutData
-
- endif
-endif
-
-#######################################################################
 #                 Create Simple History for Efficiency
 #######################################################################
 
@@ -318,23 +297,11 @@ set date = `cat cap_restart`
 set nymd0 = $date[1]
 set nhms0 = $date[2]
 
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 setenv EMISSIONS @EMISSIONS
 if( @EMISSIONS == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       if( $nymd0 < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-       else
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
+    set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -352,36 +319,16 @@ endif
 
 @MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
 @MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+@MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 @MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-       cat $extdata_files > ExtData.rc
-   endif
-endif
-
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
 if( $LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -403,16 +350,14 @@ if( $LM  != 72 ) then
     endif
 endif
 
-# Move GOCART to use RRTMGP Bands
-# -------------------------------
-# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
-#
-set instance_files = `/bin/ls -1 *_instance*.rc`
-foreach instance ($instance_files)
-   /bin/mv $instance $instance.tmp
-   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
-   /bin/rm $instance.tmp
-end
+@RRTMGP_RADIATION # Move GOCART to use RRTMGP Bands
+@RRTMGP_RADIATION # -------------------------------
+@RRTMGP_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
+@RRTMGP_RADIATION foreach instance ($instance_files)
+   @RRTMGP_RADIATION /bin/mv $instance $instance.tmp
+   @RRTMGP_RADIATION cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   @RRTMGP_RADIATION /bin/rm $instance.tmp
+@RRTMGP_RADIATION end
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------

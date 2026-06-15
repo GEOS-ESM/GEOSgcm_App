@@ -10,7 +10,7 @@
 #@RUN_Q
 #@BATCH_GROUP
 #@BATCH_JOINOUTERR
-#@BATCH_NAME -o gcm_run.o@RSTDATE
+#@BATCH_NAME -o gcm_run.o%j
 
 #######################################################################
 #                         System Settings
@@ -33,11 +33,16 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+# We only prepend to DY/LD_LIBRARY_PATH if it exists
+if ( $?@LD_LIBRARY_PATH_CMD ) then
+   setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
+else
+   setenv @LD_LIBRARY_PATH_CMD "${GEOSDIR}/lib"
+endif
 # We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
-    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
-    setenv PATH ${PATH}:${BASEDIR}/${ARCH}/bin
+    setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib"
+    setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
 endif
 
 setenv RUN_CMD "@RUN_CMD"
@@ -56,6 +61,18 @@ setenv  HOMDIR  @HOMDIR
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
+
+#######################################################################
+#                          DSL configuration
+#######################################################################
+
+if ( $?USE_DSL ) then
+   if ( $?PYTHONPATH ) then
+      setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+   else
+      setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+   endif
+endif
 
 #######################################################################
 #                 Create Experiment Sub-Directories
@@ -203,7 +220,7 @@ if ( $NCPUS != NULL ) then
          echo "Specified model nodes: $NUM_MODEL_NODES"
          echo "Specified oserver nodes: $NUM_OSERVER_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
-         exit
+         exit 1
       endif
 
    else
@@ -221,7 +238,7 @@ if ( $NCPUS != NULL ) then
          echo ""
          echo "Specified model nodes: $NUM_MODEL_NODES"
          echo "Specified cores per node: $NCPUS_PER_NODE"
-         exit
+         exit 1
       endif
 
    endif
@@ -330,7 +347,7 @@ if (-z input.nml) then
 endif
 if (-z input.nml) then
    echo "input.nml is zero-length"
-   exit 0
+   exit 2
 endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
@@ -427,7 +444,7 @@ chmod +x linkbcs
 @SINGULARITY_BUILD # Error out if SINGULARITY_SANDBOX is not set
 @SINGULARITY_BUILD if( $SINGULARITY_SANDBOX == "" ) then
 @SINGULARITY_BUILD    echo "ERROR: You must set SINGULARITY_SANDBOX to the path to your Singularity sandbox"
-@SINGULARITY_BUILD    exit 1
+@SINGULARITY_BUILD    exit 3
 @SINGULARITY_BUILD endif
 @SINGULARITY_BUILD
 @SINGULARITY_BUILD # If SINGULARITY_SANDBOX is non-empty, then run executable in singularity sandbox
@@ -482,7 +499,7 @@ chmod +x linkbcs
 @NATIVE_BUILD    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
 @NATIVE_BUILD else
 @NATIVE_BUILD    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
-@NATIVE_BUILD    exit 1
+@NATIVE_BUILD    exit 4
 @NATIVE_BUILD endif
 @NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
 
@@ -512,7 +529,7 @@ if( $GCMEMIP == TRUE ) then
      foreach rst ( $tile_rsts )
         echo ${rst}_internal_rst
      end
-     exit
+     exit 5
    endif
    if(-e $EXPDIR/restarts/$RSTDATE/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
@@ -524,7 +541,7 @@ else
      foreach rst ( $tile_rsts )
         echo ${rst}_internal_rst
      end
-     exit
+     exit 5
    endif
    if(-e $EXPDIR/fvcore_internal_face_1_rst) then
      set rst_by_face = YES
@@ -738,37 +755,10 @@ if( @OCEANtag != DE0360xPE0180 ) then
     endif
 endif
 
-# Which ExtData are we using
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 if( ${EMISSIONS} == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       # Before 2000-03-01, we need to use AMIP.20C which has different
-       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
-       # that if you make a change to anything in $EXPDIR/RC/AMIP or
-       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
-       # directory to be consistent. Some files in AMIP.20C are symlinks to
-       # that in AMIP but others are not.
-
-       if( $nymdc < ${AMIP_Transition_Date} ) then
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-            if( $nymdf > ${AMIP_Transition_Date} ) then
-             set nymdf = ${AMIP_Transition_Date}
-             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-             set newstring = "END_DATE: $nymdf $nhmsf"
-             /bin/mv CAP.rc CAP.tmp
-                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-            endif
-       else
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
+    set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $AGCM_LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -831,64 +821,27 @@ if( $AGCM_LM  != 72 ) then
 
 endif
 
-# Rename big ExtData files that are not needed
-# --------------------------------------------
-set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
-if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
-set           GMI_TRUE = `grep -i '^\s*ENABLE_GMICHEM:\s*\.TRUE\.'       GEOS_ChemGridComp.rc | wc -l`
-if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
-set           GCC_TRUE = `grep -i '^\s*ENABLE_GEOSCHEM:\s*\.TRUE\.'      GEOS_ChemGridComp.rc | wc -l`
-if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
-set         CARMA_TRUE = `grep -i '^\s*ENABLE_CARMA:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
-set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
-if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
-set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $ACHEM_TRUE == 0 && -e ACHEM_ExtData.rc              ) /bin/mv              ACHEM_ExtData.rc              ACHEM_ExtData.rc.NOT_USED
-
 @MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
 @MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+@MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 @MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-   cat $extdata_files > ExtData.rc
-   endif
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
-
-# Move GOCART to use RRTMGP Bands
-# -------------------------------
-# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
-#
-set instance_files = `/bin/ls -1 *_instance*.rc`
-foreach instance ($instance_files)
-   /bin/mv $instance $instance.tmp
-   cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
-   /bin/rm $instance.tmp
-end
+@RRTMGP_RADIATION # Move GOCART to use RRTMGP Bands
+@RRTMGP_RADIATION # -------------------------------
+@RRTMGP_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
+@RRTMGP_RADIATION foreach instance ($instance_files)
+   @RRTMGP_RADIATION /bin/mv $instance $instance.tmp
+   @RRTMGP_RADIATION cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   @RRTMGP_RADIATION /bin/rm $instance.tmp
+@RRTMGP_RADIATION end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -927,7 +880,7 @@ endif
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
-@CICE6 #detect exisistence of certain fields in CICE6 restart
+@CICE6 #detect existence of certain fields in CICE6 restart
 @CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
 @CICE6 if( $status == 0 ) then
 @CICE6    echo 'pond state in restart, turn on restart flag if not already'
@@ -936,60 +889,6 @@ endif
 @CICE6    echo 'pond state NOT in restart, turn off restart flag if already on'
 @CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
 @CICE6 endif
-
-#######################################################################
-#                Split Saltwater Restart if detected
-#######################################################################
-
-if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
-  echo "Saltwater internal state is already split, good to go!"
-else
- if ( ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) && ( $counter == 1 ) ) then
-
-   echo "Found Saltwater internal state. Splitting..."
-
-   # If saltwater_internal_rst is in EXPDIR move to SCRDIR
-   # -----------------------------------------------------
-   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/cp $EXPDIR/saltwater_internal_rst $SCRDIR
-
-   # The splitter script requires an OutData directory
-   # -------------------------------------------------
-   if (! -d OutData ) mkdir -p OutData
-
-   # Run the script
-   # --------------
-   @SINGULARITY_BUILD $RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
-   @NATIVE_BUILD $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
-
-   # Move restarts
-   # -------------
-   /bin/mv OutData/openwater_internal_rst OutData/seaicethermo_internal_rst .
-
-   # Remove OutData
-   # --------------
-   /bin/rmdir OutData
-
-   # Make decorated copies for restarts tarball
-   # ------------------------------------------
-   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
-   # Inject decorated copies into restarts tarball
-   # ---------------------------------------------
-   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
-   # Remove the decorated restarts
-   # -----------------------------
-   /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
-   # Remove the saltwater internal restart
-   # -------------------------------------
-   /bin/rm $SCRDIR/saltwater_internal_rst
- else
-   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
-   exit 6
- endif
-endif
 
 # Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
@@ -1029,7 +928,7 @@ if ( $PCHEM_CLIM_YEARS == 39 ) then
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
       echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
-      exit 2
+      exit 8
    endif
 endif
 
@@ -1061,9 +960,6 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      # ---------------------------------------------
      /bin/mv -f GAAS_GridComp_ExtData.yaml GAAS_GridComp_ExtData.yaml.tmpl
      cat GAAS_GridComp_ExtData.yaml.tmpl | sed -e "s?das.aod_?chem/Y%y4/M%m2/${ANA_EXPID}.aod_?g" > GAAS_GridComp_ExtData.yaml
-
-     /bin/mv -f GAAS_GridComp_ExtData.rc GAAS_GridComp_ExtData.rc.tmpl
-     cat GAAS_GridComp_ExtData.rc.tmpl | sed -e "s?das.aod_?chem/Y%y4/M%m2/${ANA_EXPID}.aod_?g" > GAAS_GridComp_ExtData.rc
 
      /bin/ln -sf ${ANA_LOCATION}/chem .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
@@ -1132,7 +1028,7 @@ endif
 @MIT     echo "If this is a new initialized experiment, delete:"
 @MIT     echo "${EXPDIR}/restarts/MITgcm_restart_dates.txt"
 @MIT     echo "and restart"
-@MIT     exit
+@MIT     exit 9
 @MIT   else
 @MIT     sed -i "s/nIter0.*/ nIter0           = ${nIter0},/" data
 @MIT   endif
@@ -1171,12 +1067,22 @@ endif
 @SINGULARITY_BUILD @OCEAN_PRELOAD $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 @NATIVE_BUILD @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
+# Capture the return code from GEOSgcm.x
+# --------------------------------------
+set run_status = $status
+
+if ($run_status != 0) then
+   echo "GEOSgcm.x failed with return code $run_status"
+   exit $run_status
+endif
+
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
 if( -e EGRESS ) then
    set rc = 0
 else
-   set rc = -1
+   echo "EGRESS file not found, GEOSgcm.x likely failed"
+   exit 10
 endif
 echo GEOSgcm Run Status: $rc
 

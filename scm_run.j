@@ -15,13 +15,27 @@ setenv GEOSETC          @INSTALLDIR/etc
 setenv GEOSUTIL         @INSTALLDIR
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
-# We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
-if ( $?BASEDIR ) then
-    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+
+if ( $?USE_DSL ) then
+    if ( $?PYTHONPATH ) then
+        setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+    else
+        setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+    endif
 endif
 
-setenv RUN_CMD "$GEOSBIN/esma_mpirun -np "
+# We only prepend to DY/LD_LIBRARY_PATH if it exists
+if ( $?@LD_LIBRARY_PATH_CMD ) then
+   setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
+else
+   setenv @LD_LIBRARY_PATH_CMD "${GEOSDIR}/lib"
+endif
+# We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
+if ( $?BASEDIR ) then
+   setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib"
+endif
+
+setenv RUN_CMD "@RUN_CMD"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
@@ -34,6 +48,11 @@ $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
 cp fvcore_layout.rc input.nml
 
-echo "file_weights: true" >> extdata.yaml
+# NOTE: Both reading and writing file_weights seems to fail
+# on macOS. So for now we set to false on Darwin until we can
+# investigate further.
+echo "file_weights: @FILE_WEIGHTS" >> extdata.yaml
+
+setenv OMP_NUM_THREADS 1
 
 $RUN_CMD 1 ./GEOSgcm.x --logging_config 'logging.yaml'
