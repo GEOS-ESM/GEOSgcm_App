@@ -104,9 +104,12 @@ ORBIT_ANAL2B: .TRUE.
 ###########################################################
 
 ###########################################################
-# shallow cumulus options
+# turbulence and shallow cumulus options
 # ----------------------------------------
-SHALLOW_OPTION: UW
+@COUPLED SHALLOW_OPTION: NONE
+@COUPLED EDMF_DOMF: 1
+@COUPLED TURBULENCE_DO_SHOC: 1
+@COUPLED PDFSHAPE: 6
 ###########################################################
 
 ###########################################################
