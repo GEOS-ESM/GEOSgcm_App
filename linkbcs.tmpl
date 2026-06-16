@@ -76,7 +76,7 @@ if ( $bc_is_gm4 ) then
   set topo_src_dir = "$BCSDIR/TOPO/TOPO_@ATMOStag"
 else
   set stream = v1
-  if ( $bc_ver_num >= 14 ) set stream = v2
+  if ( $bc_ver_num >= 15 ) set stream = v2
   set topo_src_dir = "@BCS_INPUT_BASE/TOPO/${stream}/@ATMOStag/smoothed"
 endif
 
