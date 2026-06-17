@@ -13,18 +13,14 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
 
 jobs:
   build_gcm:
     strategy:
       fail-fast: false
       matrix:
-        #compiler: [ifort, gfortran-14, gfortran-15]
-        # We remove ifort because for some reason, MAPL3 + ifort + Github CI
-        # is running out of space on the device. For now, CircleCI will
-        # continue to test ifort.
-        compiler: [gfortran-14, gfortran-15]
+        compiler: [ifort, gfortran-15, ifx]
         build-type: [Debug]
     uses: GEOS-ESM/CI-workflows/.github/workflows/geosgcm_build_tests.yml@project/geosgcm
     with:
