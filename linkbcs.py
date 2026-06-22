@@ -16,15 +16,15 @@ def validate_iso_datetime(datetime_string):
 
 def validate_yaml_file(file_path):
     path = Path(file_path)
-    
+
     # Check if file exists
     if not path.exists():
         raise argparse.ArgumentTypeError(f"File does not exist: {file_path}")
-    
+
     # Check file extension
     if path.suffix.lower() not in ['.yaml', '.yml']:
         raise argparse.ArgumentTypeError(f"File must have .yaml or .yml extension: {file_path}")
-    
+
     return file_path
 
 def capture_arguments():
@@ -61,33 +61,33 @@ class CatalogManager:
         return self._search_recursive(target, catalog_section)
 
     # Helper function for recursively searching through catalog
-    def _search_recursive(self, target: str, catalog_section: dict):   
+    def _search_recursive(self, target: str, catalog_section: dict):
         # Found the target we're looking for
         if target in catalog_section:
             return catalog_section[target]
-        
+
         config_values = set(self.config.values())
-        
+
         # Search each subdictionary that matches a config value
         for section_name, section_data in catalog_section.items():
-            
+
             # Skip if not a dictionary
             if not isinstance(section_data, dict):
                 continue
-            
+
             # Skip if this section name doesn't match any config value
             if section_name not in config_values:
                 continue
-            
+
             # Recursively search this matching section
             result = self._search_recursive(target, section_data)
-            
+
             # Return immediately if we found something
             if result is not None:
                 return result
-        
+
         return None
-       
+
 
 class SymlinkCreator:
     def __init__(self, catalog: CatalogManager, year: int):
@@ -109,7 +109,7 @@ class SymlinkCreator:
         self.stream = catalog.get_value('stream', 'land_version')
         self.lsm_bcs = catalog.get_value('lsm_bcs', 'land_version')
         self.bcs_dir = self.boundary_dir / "bcs_shared/fvInput/ExtData/esm/tiles" / self.lsm_bcs
-        
+
         # atmos
         self.atmos_tag = catalog.get_value('tag', 'agcm_grid')
         self.agcm_IM = catalog.get_value('IM', 'agcm_grid')
@@ -119,7 +119,7 @@ class SymlinkCreator:
         if self.config["ocean_model"] != "data":
             self.coupled = True
         else:
-            self.coupled = False 
+            self.coupled = False
         self.ogrid_type = catalog.get_value('ogrid_type', 'ocean_model')
         self.ogcm_IM = catalog.get_value('IM', 'ocean_model')
         self.ogcm_JM = catalog.get_value('JM', 'ocean_model')
@@ -151,7 +151,7 @@ class SymlinkCreator:
             self.bcrslv = f"{self.atmos_tag}_CF{str(self.ogcm_IM).zfill(4)}x6C"
         elif self.config['ocean_model'] == "data":
             self.bcrslv = f"{self.atmos_tag}_DE{str(self.ogcm_IM).zfill(4)}xPE{str(self.ogcm_JM).zfill(4)}"
-        self.topo_src_dir = self.boundary_dir / self.atmos_bcs / "TOPO" / self.stream / self.atmos_tag / "smoothed" 
+        self.topo_src_dir = self.boundary_dir / self.atmos_bcs / "TOPO" / self.stream / self.atmos_tag / "smoothed"
 
         # sst_dir
         if not self.coupled and self.ocean_res == "1440x720":
@@ -212,7 +212,7 @@ class SymlinkCreator:
 
         for file in self.extdata_files:
             self.create_symlink(extdata / file, self.chem_dir / file)
-        
+
         # exit here if not coupled ocean
         if not self.coupled:
             return
@@ -223,7 +223,7 @@ class SymlinkCreator:
 
     def seawifs_path(self) -> dict:
         if not self.coupled:
-            return {} 
+            return {}
         paths = {"SEAWIFS_KPAR_mon_clim.data": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}/SEAWIFS_KPAR_mon_clim.{self.ogcm_IM}x{self.ogcm_JM}"}
         return paths
 
@@ -301,11 +301,11 @@ class SymlinkCreator:
     def copy_internal_restart(self):
         gwd_rst = self.topo_src_dir / "gwd_internal_rst"
         gwd_agcm = self.gwdrs_dir / f"gwd_internal_c{self.agcm_IM}"
-        path = {}
         if gwd_rst.exists():
             shutil.copy(gwd_rst, Path.cwd())
         elif gwd_agcm.exists():
-            shutil.copy(gwd_agcm, Path.cwd())
+            # We need to copy the gwd_internal_c{IM} file to the current working directory as gwd_internal_rst for the model to find it
+            shutil.copy(gwd_agcm, Path.cwd() / "gwd_internal_rst")
 
 
     def table_paths(self) -> dict:
@@ -382,12 +382,12 @@ class SymlinkCreator:
         paths.update(self.table_paths())
         paths.update(self.seaice_paths())
         paths.update(self.dataocean_paths())
-        
+
         self.print_paths(paths)
-        
+
         for items in paths:
             self.create_symlink(Path(items), paths[items])
-        
+
         self.make_restart_dir()
         self.make_extdata_dir()
         self.copy_internal_restart()
@@ -407,7 +407,7 @@ class SymlinkCreator:
 def main():
     args = capture_arguments()
     catalog_manager = CatalogManager(Path(args.config))
-    symlink_creator = SymlinkCreator(catalog_manager, args.timestamp.year) 
+    symlink_creator = SymlinkCreator(catalog_manager, args.timestamp.year)
 
     symlink_creator.make_symlinks()
 
