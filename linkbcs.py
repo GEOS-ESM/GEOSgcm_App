@@ -175,8 +175,14 @@ class SymlinkCreator:
         symlink_name.symlink_to(file_path)
 
     def topo_paths(self) -> dict:
+        fn_dyn = self.topo_src_dir / f"topo_DYN_ave_{self.agcm_IM}x{self.agcm_JM}.data"
+        if not fn_dyn.exists():
+            raise FileNotFoundError(
+                f"FATAL: {fn_dyn.name} not found in {self.topo_src_dir}"
+            )
+
         paths = {
-            "topo_dynave.data": self.topo_src_dir / f"topo_DYN_ave_{self.agcm_IM}x{self.agcm_JM}.data",
+            "topo_dynave.data": fn_dyn,
             "topo_gwdvar.data": self.topo_src_dir / f"topo_GWD_var_{self.agcm_IM}x{self.agcm_JM}.data",
             "topo_trbvar.data": self.topo_src_dir / f"topo_TRB_var_{self.agcm_IM}x{self.agcm_JM}.data"
         }
@@ -283,7 +289,7 @@ class SymlinkCreator:
             return {}
 
         paths = {}
-        lnfm_data = self.bcs_dir / self.bcrslv / f"lnfm_clim_{self.agcm_IM}x{self.agcm_JM}.data"
+        lnfm_data = self.bcs_dir / "land" / self.bcrslv / f"lnfm_clim_{self.agcm_IM}x{self.agcm_JM}.data"
         if lnfm_data.exists():
             paths["lnfm.data"] = lnfm_data
 
