@@ -456,11 +456,6 @@ else
 endif
 wait
 
-# Get proper ridge scheme GWD internal restart
-# --------------------------------------------
-/bin/rm gwd_internal_rst
-/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM} gwd_internal_rst
-
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
@@ -583,37 +578,10 @@ if( @OCEANtag != DE0360xPE0180 ) then
     endif
 endif
 
-# Which ExtData are we using
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 if( ${EMISSIONS} == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       # Before 2000-03-01, we need to use AMIP.20C which has different
-       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
-       # that if you make a change to anything in $EXPDIR/RC/AMIP or
-       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
-       # directory to be consistent. Some files in AMIP.20C are symlinks to
-       # that in AMIP but others are not.
-
-       if( $nymdc < ${AMIP_Transition_Date} ) then
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-            if( $nymdf > ${AMIP_Transition_Date} ) then
-             set nymdf = ${AMIP_Transition_Date}
-             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-             set newstring = "END_DATE: $nymdf $nhmsf"
-             /bin/mv CAP.rc CAP.tmp
-                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-            endif
-       else
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
+    set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $AGCM_LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -630,71 +598,64 @@ if( ${EMISSIONS} == AMIP_EMISSIONS ) then
 
 endif
 
-# Rename big ExtData files that are not needed
-# --------------------------------------------
-set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
-if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
-set           GMI_TRUE = `grep -i '^\s*ENABLE_GMICHEM:\s*\.TRUE\.'       GEOS_ChemGridComp.rc | wc -l`
-if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
-set           GCC_TRUE = `grep -i '^\s*ENABLE_GEOSCHEM:\s*\.TRUE\.'      GEOS_ChemGridComp.rc | wc -l`
-if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
-set         CARMA_TRUE = `grep -i '^\s*ENABLE_CARMA:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
-set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
-if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
-set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $ACHEM_TRUE == 0 && -e ACHEM_ExtData.rc              ) /bin/mv              ACHEM_ExtData.rc              ACHEM_ExtData.rc.NOT_USED
-set   GOCART_DATA_TRUE = `grep -i '^\s*ENABLE_GOCART_DATA:\s*\.TRUE\.'   GEOS_ChemGridComp.rc | wc -l`
-if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
+if( $AGCM_LM  != 72 ) then
+    set files = `/bin/ls  *.yaml`
+    foreach file ($files)
+      cp $file dummy
+      cat dummy | sed -e "s|/L72/|/L${AGCM_LM}/|g" | sed -e "s|z72|z${AGCM_LM}|g" > $file
+    end
+
+    # We have to do something special for L186. By default all of the GOCART emissions have:
+    #   pressure_lid_in_hPa: 0.01
+    # which is the pressure lid in hPa for all other GEOS vertical levels. But L186 has a lid
+    # at 0.00025 Pa. So we need to change this value in the GOCART emissions files for L186.
+    if ( $AGCM_LM == 186 ) then
+       set files = `/bin/ls  *.rc`
+       foreach file ($files)
+          cp $file dummy
+          cat dummy | sed -e '/pressure_lid_in_hPa:/c\pressure_lid_in_hPa: 2.5e-6' > $file
+       end
+    endif
+endif
 
 @MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
 @MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+@MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 @MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-   cat $extdata_files > ExtData.rc
-   endif
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
-
-# Move GOCART to use RRTMGP Bands
-# -------------------------------
-# UNCOMMENT THE LINES BELOW IF RUNNING RRTMGP
-#
-#set instance_files = `/bin/ls -1 *_instance*.rc`
-#foreach instance ($instance_files)
-#   /bin/mv $instance $instance.tmp
-#   cat $instance.tmp | sed -e '/RRTMG/ s#RRTMG#RRTMGP#' > $instance
-#   /bin/rm $instance.tmp
-#end
+@RRTMGP_RADIATION # Move GOCART to use RRTMGP Bands
+@RRTMGP_RADIATION # -------------------------------
+@RRTMGP_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
+@RRTMGP_RADIATION foreach instance ($instance_files)
+   @RRTMGP_RADIATION /bin/mv $instance $instance.tmp
+   @RRTMGP_RADIATION cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   @RRTMGP_RADIATION /bin/rm $instance.tmp
+@RRTMGP_RADIATION end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
 ./linkbcs
+
+if (! -e gwd_internal_rst ) then
+  echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
+  # Now, if the user has already set an NCAR_NRDG value, we need to
+  # change it to 0. If they haven't set it, we need to add it to the
+  # AGCM.rc file.
+  if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
+    echo "NCAR_NRDG: 0" >> AGCM.rc
+  else
+    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+  endif
+endif
 
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
@@ -706,59 +667,6 @@ endif
 #echo $yy
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
 #ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
-
-#######################################################################
-#                Split Saltwater Restart if detected
-#######################################################################
-
-if ( (-e $SCRDIR/openwater_internal_rst) && (-e $SCRDIR/seaicethermo_internal_rst)) then
-  echo "Saltwater internal state is already split, good to go!"
-else
- if ( ( ( -e $SCRDIR/saltwater_internal_rst ) || ( -e $EXPDIR/saltwater_internal_rst) ) && ( $counter == 1 ) ) then
-
-   echo "Found Saltwater internal state. Splitting..."
-
-   # If saltwater_internal_rst is in EXPDIR move to SCRDIR
-   # -----------------------------------------------------
-   if ( -e $EXPDIR/saltwater_internal_rst ) /bin/mv $EXPDIR/saltwater_internal_rst $SCRDIR
-
-   # The splitter script requires an OutData directory
-   # -------------------------------------------------
-   if (! -d OutData ) mkdir -p OutData
-
-   # Run the script
-   # --------------
-   $RUN_CMD 1 $GEOSBIN/SaltIntSplitter tile.data $SCRDIR/saltwater_internal_rst
-
-   # Move restarts
-   # -------------
-   /bin/mv OutData/openwater_internal_rst OutData/seaicethermo_internal_rst .
-
-   # Remove OutData
-   # --------------
-   /bin/rmdir OutData
-
-   # Make decorated copies for restarts tarball
-   # ------------------------------------------
-   cp openwater_internal_rst    $EXPID.openwater_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-   cp seaicethermo_internal_rst $EXPID.seaicethermo_internal_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
-   # Inject decorated copies into restarts tarball
-   # ---------------------------------------------
-   tar rf $EXPDIR/restarts/restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
-   # Remove the decorated restarts
-   # -----------------------------
-   /bin/rm $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}
-
-   # Remove the saltwater internal restart
-   # -------------------------------------
-   /bin/rm $SCRDIR/saltwater_internal_rst
- else
-   echo "Neither saltwater_internal_rst, nor openwater_internal_rst and seaicethermo_internal_rst were found. Abort!"
-   exit 6
- endif
-endif
 
 # Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------

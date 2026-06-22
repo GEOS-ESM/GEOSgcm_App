@@ -13,19 +13,21 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
 
 jobs:
   build_gcm:
     strategy:
+      fail-fast: false
       matrix:
-        compiler: [ifort, gfortran-14, gfortran-15]
+        compiler: [ifort, gfortran-15, ifx]
         build-type: [Debug]
     uses: GEOS-ESM/CI-workflows/.github/workflows/geosgcm_build_tests.yml@project/geosgcm
     with:
       compiler: ${{ matrix.compiler }}
       cmake-build-type: ${{ matrix.build-type }}
       fixture-repo: GEOS-ESM/GEOSgcm
+      run-mepo-develop: true
 
   spack_build:
     uses: GEOS-ESM/CI-workflows/.github/workflows/spack_gcc_build.yml@project/geosgcm
@@ -34,4 +36,6 @@ jobs:
       BUILDCACHE_TOKEN: ${{ secrets.BUILDCACHE_TOKEN }}
     with:
       fixture-repo: GEOS-ESM/GEOSgcm
+      run-mepo-develop: true
+      load-fms: true
 
