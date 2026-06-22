@@ -48,7 +48,7 @@ land_version:
     stream: v1
   v14:
     lsm_bcs: v14
-    stream: v2
+    stream: v1
 
 
 agcm_grid:
