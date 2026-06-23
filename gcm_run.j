@@ -33,18 +33,6 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-# We only prepend to DY/LD_LIBRARY_PATH if it exists
-if ( $?@LD_LIBRARY_PATH_CMD ) then
-   setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
-else
-   setenv @LD_LIBRARY_PATH_CMD "${GEOSDIR}/lib"
-endif
-# We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
-if ( $?BASEDIR ) then
-    setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib"
-    setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
-endif
-
 setenv RUN_CMD "@RUN_CMD"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
@@ -61,6 +49,20 @@ setenv  HOMDIR  @HOMDIR
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
+
+setenv  EXPBINDIR $EXPDIR/install/bin
+setenv  EXPLIBDIR $EXPDIR/install/lib
+
+# We only prepend to DY/LD_LIBRARY_PATH if it exists
+# We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
+if ( $?BASEDIR ) then
+   if ( $?@LD_LIBRARY_PATH_CMD ) then
+      setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib"
+   else
+      setenv @LD_LIBRARY_PATH_CMD "${BASEDIR}/${ARCH}/lib"
+   endif
+   setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
+endif
 
 #######################################################################
 #                          DSL configuration
@@ -471,37 +473,10 @@ chmod +x linkbcs
 @SINGULARITY_BUILD # Set a variable to encapsulate all Singularity details
 @SINGULARITY_BUILD setenv SINGULARITY_RUN "singularity exec $SINGULARITY_BIND_PATH $SINGULARITY_SANDBOX"
 @SINGULARITY_BUILD
-@SINGULARITY_BUILD # Detect if GEOSgcm.x is in the experiment directory
-@SINGULARITY_BUILD if (-e $EXPDIR/GEOSgcm.x) then
-@SINGULARITY_BUILD    echo "Found GEOSgcm.x in $EXPDIR"
-@SINGULARITY_BUILD
-@SINGULARITY_BUILD    # If SINGULARITY_SANDBOX is non-empty and GEOSgcm.x is found in the experiment directory,
-@SINGULARITY_BUILD    # force the use of GEOSgcm.x in the installation directory
-@SINGULARITY_BUILD    if( $SINGULARITY_SANDBOX != "" ) then
-@SINGULARITY_BUILD       echo "NOTE: Testing has shown Singularity only works when running with"
-@SINGULARITY_BUILD       echo "      the GEOSgcm.x executable directly from the installation bin directory"
-@SINGULARITY_BUILD       echo ""
-@SINGULARITY_BUILD       echo "      So, we will *ignore* the local GEOSgcm.x and "
-@SINGULARITY_BUILD       echo "      instead use $GEOSBIN/GEOSgcm.x"
-@SINGULARITY_BUILD       echo ""
-@SINGULARITY_BUILD    else
-@SINGULARITY_BUILD       echo "Using GEOSgcm.x from $GEOSBIN"
-@SINGULARITY_BUILD    endif
-@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-@SINGULARITY_BUILD else
-@SINGULARITY_BUILD    echo "Using GEOSgcm.x from $GEOSBIN"
-@SINGULARITY_BUILD    setenv GEOSEXE $GEOSBIN/GEOSgcm.x
-@SINGULARITY_BUILD endif
+@SINGULARITY_BUILD echo "Using GEOSgcm.x from $GEOSBIN"
+@SINGULARITY_BUILD setenv GEOSEXE $GEOSBIN/GEOSgcm.x
 
-@NATIVE_BUILD if (-e $EXPDIR/GEOSgcm.x) then
-@NATIVE_BUILD    echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
-@NATIVE_BUILD    echo ""
-@NATIVE_BUILD    /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
-@NATIVE_BUILD else
-@NATIVE_BUILD    echo "$EXPDIR/GEOSgcm.x not found. Please link or copy the executable to the experiment directory."
-@NATIVE_BUILD    exit 4
-@NATIVE_BUILD endif
-@NATIVE_BUILD setenv GEOSEXE $SCRDIR/GEOSgcm.x
+@NATIVE_BUILD setenv GEOSEXE $EXPBINDIR/GEOSgcm.x
 
 #######################################################################
 #                         Get RESTARTS
@@ -871,7 +846,7 @@ else
 endif
 
 if (! -e tile.bin) then
-$GEOSBIN/binarytile.x tile.data tile.bin
+$EXPBINDIR/binarytile.x tile.data tile.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -893,11 +868,11 @@ endif
 # Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
 
-if ( -x $GEOSBIN/rs_numtiles.x ) then
+if ( -x $EXPBINDIR/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $EXPBINDIR/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $EXPBINDIR/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."

@@ -453,7 +453,13 @@ SOURCEDIR=$SCMDIR/$selected_case
 
 mkdir -p $expdir
 
-/bin/cp $INSTALLDIR/bin/GEOSgcm.x $expdir
+mkdir -p $expdir/install/bin
+
+/bin/cp $INSTALLDIR/bin/GEOSgcm.x $expdir/install/bin
+
+mkdir -p $expdir/install/lib
+/bin/cp $INSTALLDIR/lib/*.so $expdir/install/lib
+
 /bin/cp $INSTALLDIR/etc/logging.yaml $expdir
 
 /bin/cp $SOURCEDIR/$DATFILE $expdir

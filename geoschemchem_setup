@@ -598,7 +598,7 @@ if( $OGCM == TRUE ) then
     if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
        set OGRIDTYP  = "M5TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$EXPLIBDIR/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
@@ -609,7 +609,7 @@ if( $OGCM == TRUE ) then
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OGRIDTYP  = "M6TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$EXPLIBDIR/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -783,13 +783,13 @@ if( $OGCM == TRUE ) then
     # suffix is different on Linux and macOS. This is set by configure_file()
     if ( $SEAICEMODEL == "CICE4" ) then
        set SEAICE_NAME="CICE4"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set SEAICE_PRELOAD = '$EXPLIBDIR/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE4=""
        set CICE6 = "#DELETE"
        set HIST_CICE4 = ""
     else if ( $SEAICEMODEL == "CICE6" ) then
        set SEAICE_NAME="CICE6"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set SEAICE_PRELOAD = '$EXPLIBDIR/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE6=""
        set CICE4 = "#DELETE"
        set HIST_CICE4 = "#DELETE"
@@ -1880,11 +1880,20 @@ rm -f $EXPDIR/RC/fvcore_layout.rc
 
 # Copy or link GEOSgcm.x if USING_SINGULARITY is FALSE
 if ( $USING_SINGULARITY == FALSE ) then
+
+   # Binaries that might use shared object libraries we build
+   mkdir -p $EXPDIR/install/bin
    if ( $LINKX == "TRUE" ) then
-      if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
+      if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR/install/bin
    else
-      if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
+      if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR/install/bin
    endif
+   cp $GEOSBIN/binarytile.x $EXPDIR/install/bin
+   cp $GEOSBIN/rs_numtiles.x $EXPDIR/install/bin
+
+   # Copy over shared object libraries that might be needed by the binaries
+   mkdir -p $EXPDIR/install/lib
+   cp -RP $GEOSDIR/lib/*.so $EXPDIR/install/lib
 
    # Set a couple variables for sed'ing out bits of the run script
    set SINGULARITY_BUILD = "#DELETE"
@@ -3150,7 +3159,8 @@ sh $COPYSCRIPT
 # ----------------------------------------------------
 
 echo "$NEWHOMDIR" >> $NEWEXPDIR/.HOMDIR
-/bin/cp $OLDEXPDIR/GEOSgcm.x $NEWEXPDIR
+mkdir -p $NEWEXPDIR/install
+/bin/cp -a $OLDEXPDIR/install/* $NEWEXPDIR/install/
 /bin/cp -a $OLDEXPDIR/RC $NEWEXPDIR/RC
 
 # -----------------------------------------------------

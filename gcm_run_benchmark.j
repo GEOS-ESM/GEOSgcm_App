@@ -56,6 +56,9 @@ setenv  HOMDIR  @BENCH_DIR/@EXPID
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
 
+setenv EXPBINDIR $EXPDIR/install/bin
+setenv EXPLIBDIR $EXPDIR/install/lib
+
 #######################################################################
 #                 Create Experiment Sub-Directories
 #######################################################################
@@ -421,8 +424,6 @@ cp  linkbcs $EXPDIR
 #                    Get Executable and RESTARTS
 #######################################################################
 
-cp $EXPDIR/GEOSgcm.x .
-
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
 
@@ -658,8 +659,8 @@ if (! -e gwd_internal_rst ) then
 endif
 
 if (! -e tile.bin) then
-$GEOSBIN/binarytile.x tile.data tile.bin
-@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+$EXPBINDIR/binarytile.x tile.data tile.bin
+@MOM5 $EXPBINDIR/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -671,10 +672,10 @@ endif
 # Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
 
-if ( -x $GEOSBIN/rs_numtiles.x ) then
+if ( -x $EXPBINDIR/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $EXPBINDIR/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -780,7 +781,7 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-$RUN_CMD $NPES ./GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+$RUN_CMD $NPES $EXPBINDIR/GEOSgcm.x $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 
