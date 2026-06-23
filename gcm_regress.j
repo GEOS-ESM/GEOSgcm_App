@@ -206,7 +206,7 @@ if ( ! -e gwd_internal_rst ) then
 endif
 
 
-if(! -e tile.bin) $EXPDIR/binarytile.x tile.data tile.bin
+if(! -e tile.bin) $EXPBINDIR/binarytile.x tile.data tile.bin
 
 #######################################################################
 #                 Create Simple History for Efficiency
