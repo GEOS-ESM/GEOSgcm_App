@@ -1898,7 +1898,9 @@ if ( $USING_SINGULARITY == FALSE ) then
    # CMake makes a file called GEOS_RUNTIME_MANIFEST.sha256 which will
    # be in the installation etc directory. We'll copy it into the EXPDIR/install
    # directory
-   cp $GEOSETC/GEOS_RUNTIME_MANIFEST.sha256 $EXPDIR/install
+    if (-f $GEOSETC/GEOS_RUNTIME_MANIFEST.sha256) then
+       cp $GEOSETC/GEOS_RUNTIME_MANIFEST.sha256 $EXPDIR/install
+    endif
 
    # Set a couple variables for sed'ing out bits of the run script
    set SINGULARITY_BUILD = "#DELETE"
