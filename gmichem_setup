@@ -2073,7 +2073,7 @@ if ( $USING_SINGULARITY == FALSE ) then
 
    # Copy over shared object libraries that might be needed by the binaries
    mkdir -p $EXPDIR/install/lib
-   cp -RP $GEOSDIR/lib/*.so $EXPDIR/install/lib
+   cp -RP $GEOSDIR/lib/*@CMAKE_SHARED_LIBRARY_SUFFIX@ $EXPDIR/install/lib
 
    # CMake makes a file called GEOS_RUNTIME_MANIFEST.sha256 which will
    # be in the installation etc directory. We'll copy it into the EXPDIR/install
