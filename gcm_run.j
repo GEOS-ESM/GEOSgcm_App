@@ -328,7 +328,6 @@ cd $SCRDIR
 /bin/rm -rf *
 cp -f  $EXPDIR/RC/* .
 cp     $EXPDIR/cap_restart .
-cp     $EXPDIR/linkbcs .
 if ($GIGATRAJ != "") then
    cp   $EXPDIR/$GIGATRAJ .
 endif
@@ -406,7 +405,6 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
 @COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
 setenv EMISSIONS @EMISSIONS
-chmod +x linkbcs
 
 @GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
 @GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
@@ -846,7 +844,7 @@ touch ExtData.rc
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
-./linkbcs
+$GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------

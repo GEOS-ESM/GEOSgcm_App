@@ -37,10 +37,10 @@ experiment_type:
 
 
 land_version:
-  icarus:
+  ica:
     lsm_bcs: ICA
     stream: v1
-  icarus-NLv3:
+  nl3:
     lsm_bcs: NL3
     stream: v1
   v12:
@@ -124,7 +124,7 @@ agcm_grid:
 ocean_model:
   mom6:
     o72:
-      IM: 76
+      IM: 72
       JM: 36
     o360:
       IM: 360

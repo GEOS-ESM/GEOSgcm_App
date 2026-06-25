@@ -2310,8 +2310,7 @@ set FILES = "gcm_run.j          \
              CAP.rc.tmpl        \
              AGCM.rc.tmpl       \
              HISTORY.rc.tmpl    \
-             logging.yaml       \
-             linkbcs.tmpl       "
+             logging.yaml"
 set FILES = `echo $FILES`
 
 # We need to make a temporary directory for these files as
@@ -2424,7 +2423,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl linkbcs.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2442,7 +2441,6 @@ chmod   +x $HOMDIR/gcm_forecast.setup
 chmod   +x $HOMDIR/gcm_regress.j
 chmod   +x $HOMDIR/gcm_post.j
 chmod   +x $HOMDIR/gcm_emip.setup
-chmod   +x $HOMDIR/linkbcs.tmpl
 
 #######################################################################
 #         Finalizing Experiment Directories and Chem Registry
@@ -2471,7 +2469,6 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/mv $HOMDIR/gcm_forecast.setup  $EXPDIR/forecasts
 /bin/cp $GEOSUTIL/post/plot.rc      $EXPDIR/plot
 /bin/cp $GEOSUTIL/post/post.rc      $EXPDIR/post
-/bin/mv $HOMDIR/linkbcs.tmpl        $EXPDIR/linkbcs
 
 /bin/mv $HOMDIR/CAP.rc.tmpl         $HOMDIR/CAP.rc
 /bin/mv $HOMDIR/AGCM.rc.tmpl        $HOMDIR/AGCM.rc
@@ -2619,6 +2616,48 @@ if ($DATA_ATMOS == TRUE) then
    /bin/rm $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
 endif
 
+#######################################################################
+#		     Create config yaml for linkbcs.py
+#######################################################################
+if ( $OGCM != TRUE ) then
+    set ocean_model = "data"
+    set SEAICEMODEL = ""
+    set ogcm_grid = `echo "$OCEAN_TAG" | tr '[:upper:]' '[:lower:]'`
+else 
+    set seaice_model_lc = `echo "$SEAICEMODEL" | tr '[:upper:]' '[:lower:]'`
+    set ogcm_grid = o$OGCM_IM
+    if ( $OCNMODEL == MOM6 ) then
+        set ocean_model = "mom6"
+    else if ( $OCNMODEL == MIT ) then
+        set ocean_model = "MIT"
+    endif
+endif
+if ( $OGRIDTYP == CS ) then
+    set OCEAN_TAG = "cubed_sphere_ostia"
+endif
+set pchem_species = "ops"
+if ( $MERRA2OX_SPECIES != "#") then 
+    set pchem_species = "merra-2"
+endif
+if ( $LSM_CHOICE == 1 ) then
+    set catchcn = "False"
+else if ( $LSM_CHOICE == 2 ) then
+    set catchcn = "True"
+endif
+
+cat > /${EXPDIR}/config.yaml << EOF
+platform: `echo "$SITE" | tr '[:upper:]' '[:lower:]'`
+experiment_type: GCM
+agcm_grid: c$AGCM_IM
+land_version: `echo "$LSM_BCS" | tr '[:upper:]' '[:lower:]'`
+ocean_model: $ocean_model
+ogcm_grid: $ogcm_grid
+seaice_model: `echo "$SEAICEMODEL" | tr '[:upper:]' '[:lower:]'`
+precip_correction: False
+catchcn: $catchcn
+pchem_species: $pchem_species 
+install_dir: $GEOSDIR
+EOF
 
 #######################################################################
 #                       Echo Settings and Messages
@@ -2861,7 +2900,6 @@ EXPDIR/forecasts/gcm_forecast.tmpl
 EXPDIR/forecasts/gcm_forecast.setup
 EXPDIR/plot/plot.rc
 EXPDIR/post/post.rc
-EXPDIR/linkbcs
 HOMDIR/CAP.rc
 HOMDIR/AGCM.rc
 HOMDIR/HISTORY.rc
