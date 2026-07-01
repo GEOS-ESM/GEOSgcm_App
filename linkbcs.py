@@ -158,14 +158,14 @@ class SymlinkCreator:
             self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/SST/{self.ocean_res}"
         elif not self.coupled:
             self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/realtime/{self.sst_name}/{self.ocean_res}"
+
         if self.config['platform'] != "nas" and self.config['platform'] != "nccs" and not self.coupled:
-            self.sst_dir = self.boundary_dir / self.sst_name / self.ocean_res
+            self.sst_dir = self.boundary_dir / "SST" / self.ocean_res
         elif self.coupled:
             self.sst_dir = self.coupled_dir / f"SST/MERRA2/{self.ocean_res}/v1"
         else:
             #exception
             pass
-
 
     def create_symlink(self, symlink_name: Path, file_path: Path):
         # remove existing link if it exists (equivalent of -f flag)
