@@ -51,7 +51,7 @@ class Gocart:
             gocart.pchem_clim_years = 39
             gocart.ox_relaxtime = '259200.'
 
-    def ajust_tuning_coefficients(gocart):
+    def adjust_tuning_coefficients(gocart):
         if  int(gocart.expConfig['AM_vertical_res'] != 72):
             return
 

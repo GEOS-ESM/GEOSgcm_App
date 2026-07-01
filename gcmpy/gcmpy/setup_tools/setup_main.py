@@ -858,6 +858,7 @@ class SetupGCM:
 
         # Create YAML file meant to drive the the creation
         # of the batch script
+        '''
         exp_yaml_file_vars = [
                 'SITE', 'EXPDIR', 'GEOSDIR', 
                 'NX', 'NY', 
@@ -866,6 +867,8 @@ class SetupGCM:
                 'AGCM_IM', 'AGCM_JM', 'AGCM_LM', 'OGCM_IM', 'OGCM_JM', 
                 'DT', 'CONV_DT', 'CHEM_DT', 'SOLAR_DT', 'IRRAD_DT', 'OCEAN_DT'
                 ]
+        '''
+        exp_yaml_file_vars = jinja_dict
         exp_yaml_fname = Path(self.exp_dir) / f"run_{jinja_dict['EXPID']}.yaml"
         exp_yaml_dict = {k: jinja_dict[k] for k in exp_yaml_file_vars}
         write_dict_into_yaml(exp_yaml_fname, exp_yaml_dict)
