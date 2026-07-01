@@ -56,11 +56,11 @@ set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
 
 # Test if GEOSgcm.x is here which means we are in the install bin/ directory.
-# This rejects running gcm_setup directly from the source or build tree.
+# This rejects running this script directly from the source or build tree.
 if (! -x ${BINDIR}/GEOSgcm.x) then
    echo "ERROR: $0 must be run from the bin/ directory of an installation."
    echo "       GEOSgcm.x was not found in ${BINDIR}."
-   echo "       Do not run gcm_setup from the source or build tree."
+   echo "       Do not run this script from the source or build tree."
    exit 1
 endif
 
@@ -2299,6 +2299,7 @@ s?@FV_SCHMIDT?$SCHMIDT?g
 s?@FV_STRETCH_FAC?$STRETCH_FAC?g
 s?@FV_TARGET_LON?$TARGET_LON?g
 s?@FV_TARGET_LAT?$TARGET_LAT?g
+s?@FV_RUN_HYDROSTATIC?$RUN_HYDROSTATIC?g
 
 EOF
 
