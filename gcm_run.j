@@ -395,15 +395,11 @@ done:
 #######################################################################
 #                        Link Boundary Datasets
 #######################################################################
-setenv BCSDIR    @BCSDIR
-@DATAOCEANsetenv SSTDIR    @SSTDIR
 setenv BCRSLV    @ATMOStag_@OCEANtag
-@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
-@MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
-@DATAOCEANsetenv BCTAG `basename $BCSDIR`
-@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
+@DATAOCEANsetenv BCTAG @LSMBCS
+@COUPLEDsetenv BCTAG ${OGCM_IM}x${OGCM_JM}
 setenv EMISSIONS @EMISSIONS
 
 @GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
@@ -850,9 +846,12 @@ $GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
 # --------------------------------------------
 if ( $rst_by_face == YES ) then
   echo "WARNING: The generated gwd_internal_face_x_rst are used"
+
+  # NOTE: If you want to run the by face gwd_internal restarts, you must
+  # supply a directory
   #foreach n (1 2 3 4 5 6)
     #/bin/rm gwd_internal_face_${n}_rst
-    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+    #/bin/cp /path/to/by-face-files/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
   #end
 else
   if (! -e gwd_internal_rst) then
@@ -871,6 +870,10 @@ endif
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
 endif
+
+
+#### SHAYON ADD THIS AS A DUAL OCEAN OPTION IN config.yaml
+# MAKE SURE IT just does MERRA2 ocean
 
 # If running in dual ocean mode, link sst and fraci data here
 #set yy  = `cat cap_restart | cut -c1-4`
