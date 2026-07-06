@@ -350,14 +350,14 @@ if( $LM  != 72 ) then
     endif
 endif
 
-@RRTMGP_RADIATION # Move GOCART to use RRTMGP Bands
-@RRTMGP_RADIATION # -------------------------------
-@RRTMGP_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
-@RRTMGP_RADIATION foreach instance ($instance_files)
-   @RRTMGP_RADIATION /bin/mv $instance $instance.tmp
-   @RRTMGP_RADIATION cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
-   @RRTMGP_RADIATION /bin/rm $instance.tmp
-@RRTMGP_RADIATION end
+@RRTMG_RADIATION # Move GOCART to use RRTMG Bands
+@RRTMG_RADIATION # ---------------------------------
+@RRTMG_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
+@RRTMG_RADIATION foreach instance ($instance_files)
+   @RRTMG_RADIATION /bin/mv $instance $instance.tmp
+   @RRTMG_RADIATION cat $instance.tmp | sed -e 's#RRTMGP#RRTMG#g' > $instance
+   @RRTMG_RADIATION /bin/rm $instance.tmp
+@RRTMG_RADIATION end
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
