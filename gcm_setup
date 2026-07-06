@@ -2651,8 +2651,11 @@ endif
 # 2. whatever boundary_dir is at this point, is it non-empty
 # and does it exist? If so, use it, else exit with error
 
+# Create a .dir
+
 cat > /${EXPDIR}/config.yaml << EOF
-platform: `echo "$SITE" | tr '[:upper:]' '[:lower:]'`
+# NOTE: boundary_dir will be overwritten if you are on an unrecognized platform
+boundary_dir: $BOUNDARY_DIR
 experiment_type: GCM
 agcm_grid: c$AGCM_IM
 land_version: `echo "$LSM_BCS" | tr '[:upper:]' '[:lower:]'`
