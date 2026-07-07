@@ -96,7 +96,12 @@ class SymlinkCreator:
         self.year = year
 
         # platform
-        self.boundary_dir = Path(catalog.get_value('boundary_dir', 'platform'))
+        try:
+            with open(f"{self.config['install_dir']}/etc/SITE.rc") as f:
+                self.site = f.readline().partition(":")[2].strip()
+        except FileNotFoundError:
+            self.site = None
+        self.boundary_dir = Path(self.config['boundary_dir'])
         self.atmos_bcs = catalog.get_value('atmos_bcs', 'platform')
         self.gwdrs_dir = self.boundary_dir / catalog.get_value('gwdrs_dir', 'platform')
 
@@ -159,7 +164,7 @@ class SymlinkCreator:
         elif not self.coupled:
             self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/realtime/{self.sst_name}/{self.ocean_res}"
 
-        if self.config['platform'] != "nas" and self.config['platform'] != "nccs" and not self.coupled:
+        if self.site != "NAS" and self.site != "NCCS" and not self.coupled:
             self.sst_dir = self.boundary_dir / "SST" / self.ocean_res
         elif self.coupled:
             self.sst_dir = self.coupled_dir / f"SST/MERRA2/{self.ocean_res}/v1"
@@ -360,6 +365,16 @@ class SymlinkCreator:
 
         return paths
 
+    def dualocean_paths(self) -> dict:
+        if 'dual_ocean' not in self.config or self.config['dual_ocean'] == False:
+            return {}
+        paths = {
+            "sst.data": self.sst_dir / f"dataoceanfile.MERRA2_SST.{self.ogcm_IM}x{self.ogcm_JM}.{self.year}.data",
+            "fraci.data": self.sst_dir / f"dataoceanfile.MERRA2_ICE.{self.ogcm_IM}x{self.ogcm_JM}.{self.year}.data"
+        }
+
+        return paths
+
     def make_symlinks(self):
         paths = {}
         paths.update(self.topo_paths())
@@ -376,6 +391,7 @@ class SymlinkCreator:
         paths.update(self.table_paths())
         paths.update(self.seaice_paths())
         paths.update(self.dataocean_paths())
+        paths.update(self.dualocean_paths())
 
         self.print_paths(paths)
 

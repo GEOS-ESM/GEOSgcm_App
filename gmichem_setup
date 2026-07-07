@@ -1673,26 +1673,11 @@ if( $SITE == 'NAS' ) then
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                  # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
-              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
-              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                                                         # location of Boundary Conditions
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                                                    # Default Analysis Location   for M2 REPLAY
 
-              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
-
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              else
-                   setenv SSTDIR     ${BOUNDARY_DIR}/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM}  # location of SST Boundary Conditions
-              endif
-              if (${OGRIDTYP} == "MITLLC") then
-                setenv SSTDIR /nobackupp2/estrobac/geos5/SSTDIR
-              endif
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /nobackup/$LOGNAME                                     # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
 
 else if( $SITE == 'NCCS' ) then
               setenv BATCH_CMD "sbatch"                                                # SLURM Batch command
@@ -1729,27 +1714,11 @@ else if( $SITE == 'NCCS' ) then
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
-              setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
-              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
-              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                            # location of Boundary Conditions
+              setenv BOUNDARY_DIR /discover/nobackup/projects/gmao/share/gmao_ops
               setenv REPLAY_ANA_EXPID x0039                                                   # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
-
-              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
-
-              if( ${OGCM_IM}x${OGCM_JM} == "1440x720" ) then
-                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/SST/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
-              else
-                   setenv SSTDIR     $SHARE/gmao_ops/fvInput/g5gcm/bcs/realtime/@SSTNAME/${OGCM_IM}x${OGCM_JM} # location of SST Boundary Conditions
-              endif
-              setenv CHMDIR     $SHARE/gmao_ops/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/osse2/stage/BCS_FILES/GWD_RIDGE        # Location of GWD_RIDGE files
-              if (${OGRIDTYP} == "MITLLC") then
-                setenv SSTDIR /discover/nobackup/estrobac/geos5/SSTDIR
-              endif
 
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BATCH_CMD "sbatch"                                                    # SLURM Batch command
@@ -1777,20 +1746,11 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                        # PE Configuration for gcm_archive.j
               setenv MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
-              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
-              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
-              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                      # location of Boundary Conditions
+              setenv BOUNDARY_DIR NULL 
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
-
-              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
-
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}          # location of SST Boundary Conditions
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                             # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                   # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean        # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                               # Location of GWD_RIDGE files
 
 else
 # These are defaults for the desktop
@@ -1819,24 +1779,16 @@ else
               setenv ARCHIVE_P  NULL                                                   # PE Configuration for gcm_archive.j
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
-              setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
-              setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
-              setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                     # location of Boundary Conditions
+              setenv BOUNDARY_DIR NULL
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                            # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
-
-              setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
-
-              setenv SSTDIR     ${BOUNDARY_DIR}/@SSTNAME/${OGCM_IM}x${OGCM_JM}         # location of SST Boundary Conditions
-              setenv CHMDIR     ${BOUNDARY_DIR}/fvInput_nc3                            # locations of Aerosol Chemistry BCs
               setenv WRKDIR     $HOME                                                  # user work directory
-              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean       # Coupled Ocean/Atmos Forcing
-              setenv GWDRSDIR   ${BOUNDARY_DIR}/GWD_RIDGE                              # Location of GWD_RIDGE files
 endif
 
 if( $SITE == 'GMAO.desktop' ) then
    # By default on desktop, just ignore IOSERVER for now
+   setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
    set USE_IOSERVER = 0
    set NUM_OSERVER_NODES = 0
    set NUM_BACKEND_PES = 0
@@ -2291,8 +2243,6 @@ s?@ARCHIVE_T?$ARCHIVE_T?g
 s?@ARCHIVE_P?$ARCHIVE_P?g
 s?@ARCHIVE_Q?$ARCHIVE_Q?g
 s?@REGRESS_N?$REGRESS_N?g
-s?@BCSDIR?$BCSDIR?g
-s?@SSTDIR?$SSTDIR?g
 s?@SSTNAME?$SSTNAME?g
 s?@OCEANOUT?$OCEANOUT?g
 s?@LSMBCS?$LSM_BCS?g
@@ -2302,9 +2252,6 @@ s?@BCSTAG?$OCEAN_TAG?g
 s?@SSTFILE?$SSTFILE?g
 s?@ICEFILE?$ICEFILE?g
 s?@KPARFILE?$KPARFILE?g
-s?@CHMDIR?$CHMDIR?g
-s?@COUPLEDIR?$COUPLEDIR?g
-s?@GWDRSDIR?$GWDRSDIR?g
 s?@NCAR_NRDG?$NCAR_NRDG?g
 s?@EXPDIR?$EXPDIR?g
 s?@EXPDSC?$EXPDSC?g
@@ -2328,9 +2275,7 @@ s?@MPT_SHEPHERD?$MPT_SHEPHERD?g
 s?@SINGULARITY_SANDBOX?$SINGULARITY_SANDBOX?g
 s?@REAL_BIND_PATH?$REAL_BIND_PATH?g
 s?@BASE_BIND_PATH?$BASE_BIND_PATH?g
-s?@BC_BASE?$BC_BASE?g
 s?@BOUNDARY_DIR?$BOUNDARY_DIR?g
-s?@BCS_INPUT_BASE?$BCS_INPUT_BASE?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -3066,8 +3011,22 @@ else if ( $LSM_CHOICE == 2 ) then
     set catchcn = "True"
 endif
 
-cat > /${EXPDIR}/config.yaml << EOF
-platform: `echo "$SITE" | tr '[:upper:]' '[:lower:]'`
+# boundary_dir checking
+set geosconfig_path = $HOME/.GEOSconfig.yaml
+if ($?GEOSCONFIG_FILE) then
+    set geosconfig_path = $?GEOSCONFIG_FILE
+endif
+if (-e $geosconfig_path) then
+    set BOUNDARY_DIR = `awk -F': *' '$1 == "boundary_dir" {print $2}' $geosconfig_path`
+else if ($BOUNDARY_DIR == NULL) then
+    echo "ERROR! Boundary directory unspecified on unrecognized platform!"
+    echo "please specify in /$HOME/.GEOSconfig.yaml or in environment"
+    echo "variable GEOSCONFIG_FILE"
+    exit 2
+endif
+
+cat > /${EXPDIR}/linkbcs_config.yaml << EOF
+# NOTE: boundary_dir will be overwritten if you are on an unrecognized platform
 experiment_type: GCM
 agcm_grid: c$AGCM_IM
 land_version: `echo "$LSM_BCS" | tr '[:upper:]' '[:lower:]'`
@@ -3077,6 +3036,8 @@ seaice_model: `echo "$SEAICEMODEL" | tr '[:upper:]' '[:lower:]'`
 precip_correction: False
 catchcn: $catchcn
 pchem_species: $pchem_species
+dual_ocean: False
+boundary_dir: $BOUNDARY_DIR
 install_dir: $GEOSDIR
 EOF
 

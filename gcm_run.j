@@ -840,7 +840,7 @@ touch ExtData.rc
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
-$GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
+$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------

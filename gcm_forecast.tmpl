@@ -626,7 +626,7 @@ touch ExtData.rc
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
-$GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
+$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
 if ( ! -e gwd_internal_rst ) then
   echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"

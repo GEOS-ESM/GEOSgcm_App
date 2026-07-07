@@ -188,7 +188,7 @@ cp $EXPDIR/cap_restart $EXPDIR/regress
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
 setenv YEAR `cat cap_restart | cut -c1-4`
-$GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
+$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
 if ( ! -e gwd_internal_rst ) then
   echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
@@ -512,7 +512,7 @@ set newstring = "JOB_SGMT: 00000000 ${test_duration_step2}"
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 setenv YEAR `cat cap_restart | cut -c1-4`
-$GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
+$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
@@ -614,7 +614,7 @@ if ($RUN_STARTSTOP == TRUE) then
    cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
    setenv YEAR `cat cap_restart | cut -c1-4`
-   $GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
+   $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
@@ -749,7 +749,7 @@ if ( $RUN_LAYOUT == TRUE) then
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
 
    setenv YEAR `cat cap_restart | cut -c1-4`
-   $GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
+   $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
@@ -872,7 +872,7 @@ if ( $RUN_OPENMP == TRUE) then
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
 
    setenv YEAR `cat cap_restart | cut -c1-4`
-   $GEOSBIN/linkbcs.py --config config.yaml --timestamp $YEAR-01-01T00:00:00
+   $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
