@@ -424,6 +424,19 @@ else
   set TARGET_LAT  = "target_lat  = 39.5"
 endif
 
+# We also need a variable, RUN_HYDROSTATIC, that is TRUE if both of the following are true:
+# 1. AGCM_LM != 72
+# 2. If AGCM_IM <= 720
+#
+# NOTE: We set the false case to an empty string to
+# try and keep current behavior the same
+
+if ( $AGCM_LM != 72 && $AGCM_IM <= 720 ) then
+   set RUN_HYDROSTATIC = 'hydrostatic = .true.'
+else
+   set RUN_HYDROSTATIC = ''
+endif
+
 # Set coarse resolution CLIM output
 set  CLIM_IM  = 576
 set  CLIM_JM  = 361

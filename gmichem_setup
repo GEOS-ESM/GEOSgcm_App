@@ -47,15 +47,20 @@ else
    set LD_LIBRARY_PATH_CMD = 'LD_LIBRARY_PATH'
    set RUN_CMD = '$GEOSBIN/esma_mpirun -np '
 endif
-set BINDIR   = `pwd -L`
+# Derive BINDIR from the script's own location, not the current working directory.
+# pushd/popd converts the relative dirname($0) to an absolute path.
+pushd `dirname $0` > /dev/null
+set BINDIR = `pwd -L`
+popd > /dev/null
 set GEOSDEF  = `dirname $BINDIR`
 set ETCDIR   = ${GEOSDEF}/etc
 
-# Test if GEOSgcm.x is here which means you are in install directory
+# Test if GEOSgcm.x is here which means we are in the install bin/ directory.
+# This rejects running this script directly from the source or build tree.
 if (! -x ${BINDIR}/GEOSgcm.x) then
-   echo "You are trying to run $0 in the Applications/GEOSgcm_App directory"
-   echo "This is no longer supported. Please run from the bin/ directory"
-   echo "in your installation"
+   echo "ERROR: $0 must be run from the bin/ directory of an installation."
+   echo "       GEOSgcm.x was not found in ${BINDIR}."
+   echo "       Do not run this script from the source or build tree."
    exit 1
 endif
 
@@ -2435,6 +2440,7 @@ s?@FV_SCHMIDT?$SCHMIDT?g
 s?@FV_STRETCH_FAC?$STRETCH_FAC?g
 s?@FV_TARGET_LON?$TARGET_LON?g
 s?@FV_TARGET_LAT?$TARGET_LAT?g
+s?@FV_RUN_HYDROSTATIC?$RUN_HYDROSTATIC?g
 
 EOF
 
