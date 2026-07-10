@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-import yaml, argparse, sys, shutil
+import yaml
+import argparse
+import sys
+import shutil
 from pathlib import Path
 from datetime import datetime
 
@@ -215,7 +218,7 @@ class SymlinkCreator:
         # exit here if not coupled ocean
         if not self.coupled:
             return
-        dataatm_dir = self.boundary_dir / f"bcs_shared/make_bcs_inputs/ocean/dataatm"
+        dataatm_dir = self.boundary_dir / "bcs_shared/make_bcs_inputs/ocean/dataatm"
         for item in dataatm_dir.glob("*"):
             self.create_symlink(extdata / item.name, dataatm_dir / item.name)
 
@@ -366,7 +369,7 @@ class SymlinkCreator:
         return paths
 
     def dualocean_paths(self) -> dict:
-        if 'dual_ocean' not in self.config or self.config['dual_ocean'] == False:
+        if 'dual_ocean' not in self.config or not self.config['dual_ocean']:
             return {}
         paths = {
             "sst.data": self.sst_dir / f"dataoceanfile.MERRA2_SST.{self.ogcm_IM}x{self.ogcm_JM}.{self.year}.data",

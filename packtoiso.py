@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import sys, datetime
+import sys
+import datetime
 
 def main():
 	with open(sys.argv[1], 'r') as file:

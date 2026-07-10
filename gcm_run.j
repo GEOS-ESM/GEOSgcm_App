@@ -871,16 +871,6 @@ if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
 endif
 
-
-#### SHAYON ADD THIS AS A DUAL OCEAN OPTION IN config.yaml
-# MAKE SURE IT just does MERRA2 ocean
-
-# If running in dual ocean mode, link sst and fraci data here
-#set yy  = `cat cap_restart | cut -c1-4`
-#echo $yy
-#ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
-#ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
-
 @CICE6 #detect existence of certain fields in CICE6 restart
 @CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
 @CICE6 if( $status == 0 ) then
