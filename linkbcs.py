@@ -242,13 +242,13 @@ class SymlinkCreator:
         return paths
 
     def mapl_tripolar_path(self) -> dict:
-        if self.config["ocean_model"] != "mom":
+        if self.config["ocean_model"] != "mom6":
             return {}
         paths = {"MAPL_Tripolar.nc": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}/MAPL_Tripolar.nc"}
         return paths
 
     def vgrid_path(self) -> dict:
-        if self.config["ocean_model"] != "mom":
+        if self.config["ocean_model"] != "mom6":
             return {}
 
         if self.agcm_IM == 12 or self.agcm_IM == 90:
@@ -258,7 +258,7 @@ class SymlinkCreator:
         else:
             sys.exit("ERROR: must use c12, c90, or c180 with MOM6!")
 
-        paths = {"vgrid.ascii": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}/vgrid{ogcm_LM}_LM.ascii"}
+        paths = {"vgrid.ascii": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}/vgrid{ogcm_LM}.ascii"}
         return paths
 
     def MIT_paths(self) -> dict:
@@ -308,7 +308,7 @@ class SymlinkCreator:
 
 
     def table_paths(self) -> dict:
-        if self.config["ocean_model"] != "mom":
+        if self.config["ocean_model"] != "mom6":
             return {}
         paths = {
             "diag_table": Path(self.config["install_dir"]) / f"etc/MOM6/mom6_app/{self.ogcm_IM}x{self.ogcm_JM}/diag_table",
@@ -341,8 +341,8 @@ class SymlinkCreator:
             }
         elif self.config["seaice_model"] == "cice6":
             paths = {
-                "cice6_grid.nc": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}" / self.kmt_cice,
-                "cice6_kmt.nc": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}" / self.grid_cice,
+                "cice6_grid.nc": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}" / self.grid_cice,
+                "cice6_kmt.nc": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}" / self.kmt_cice,
                 "cice6_global.bathy.nc": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}" / self.global_bathy
             }
         return paths
