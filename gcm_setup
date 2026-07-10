@@ -2608,20 +2608,20 @@ else if ( $LSM_CHOICE == 2 ) then
 endif
 
 # boundary_dir checking
-set geosconfig_path = $HOME/.GEOSconfig.yaml
-if ($?GEOSCONFIG_FILE) then
-    set geosconfig_path = $GEOSCONFIG_FILE
+set geosdefaults_path = $HOME/.GEOSdefaults.yaml
+if ($?GEOSDEFAULTS_FILE) then
+    set geosdefaults_path = $GEOSDEFAULTS_FILE
 endif
 
-if (-e $geosconfig_path) then
+if (-e $geosdefaults_path) then
     # Only run awk if 'boundary_dir' key is present in the config file
-    if (`grep -c "^boundary_dir" $geosconfig_path` > 0) then
-    set BOUNDARY_DIR = `awk -F': *' '$1 == "boundary_dir" {print $2}' $geosconfig_path`
+    if (`grep -c "^boundary_dir" $geosdefaults_path` > 0) then
+    set BOUNDARY_DIR = `awk -F': *' '$1 == "boundary_dir" {print $2}' $geosdefaults_path`
     endif
 else if ($?BOUNDARY_DIR == 0 || $BOUNDARY_DIR == "NULL") then
     echo "ERROR! Boundary directory unspecified on unrecognized platform!"
-    echo "please specify in $HOME/.GEOSconfig.yaml or in environment"
-    echo "variable GEOSCONFIG_FILE"
+    echo "please specify in $HOME/.GEOSdefaults.yaml or in environment"
+    echo "variable GEOSDEFAULTS_FILE"
     exit 2
 endif
 
