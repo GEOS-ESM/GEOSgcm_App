@@ -12,7 +12,7 @@ COLLECTIONS: 'geosgcm_prog'
              'gcc_strat'
              'gcc_col'
              'gcc_emis'
-             'gcc_trop'
+             'gcc_v72'
              'gcc_dep'
              ::
 
@@ -108,17 +108,16 @@ PC@HIST_IMx@HIST_JM-DC.LM: @AGCM_LM
                               'SpeciesConc_NO3'      , 'GEOSCHEMCHEM' , 'NO3'         ,
                               ::
                               
-  gcc_trop.template:  '%y4%m2%d2_%h2%n2z.nc4',
-  gcc_trop.archive:   '%c/Y%y4',
-  gcc_trop.format:    'CFIO',
-  gcc_trop.deflate:    1,
-  gcc_trop.mode:      'instantaneous' ,
-  gcc_trop.frequency:  060000,
-  gcc_trop.ref_time:   210000,
-  gcc_trop.regrid_method:    'BILINEAR',
-  gcc_trop.grid_label:  PC@HIST_IMx@HIST_JM-DC ,
-  gcc_trop.levels:     72,
-  gcc_trop.fields:     'SpeciesConc_NO2'      , 'GEOSCHEMCHEM' , 'NO2'   ,
+  gcc_v72.template:  '%y4%m2%d2_%h2%n2z.nc4',
+  gcc_v72.archive:   '%c/Y%y4',
+  gcc_v72.format:    'CFIO',
+  gcc_v72.deflate:    1,
+  gcc_v72.mode:      'instantaneous' ,
+  gcc_v72.frequency:  060000,
+  gcc_v72.ref_time:   210000,
+  gcc_v72.regrid_method:    'BILINEAR',
+  gcc_v72.grid_label:  PC@HIST_IMx@HIST_JM-DC ,
+  gcc_v72.fields:     'SpeciesConc_NO2'      , 'GEOSCHEMCHEM' , 'NO2'   ,
                               'SpeciesConc_NO'       , 'GEOSCHEMCHEM' , 'NO'    ,
                               'NOy'                  , 'GEOSCHEMCHEM' , 'NOy'   ,
                               'SpeciesConc_HNO3'     , 'GEOSCHEMCHEM' , 'HNO3'  ,
