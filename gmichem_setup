@@ -1678,6 +1678,8 @@ if( $SITE == 'NAS' ) then
               setenv    MOVE_P  "PBS -l select=1:ncpus=1"                                                                  # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
+	      setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean
               setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                                                    # Default Analysis Location   for M2 REPLAY
@@ -1719,10 +1721,13 @@ else if( $SITE == 'NCCS' ) then
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_archive.j
               setenv    MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
-              setenv BOUNDARY_DIR /discover/nobackup/projects/gmao/share/gmao_ops
+              setenv GMAO_PROJECT_DIR /discover/nobackup/projects/gmao
+              setenv BOUNDARY_DIR ${GMAO_PROJECT_DIR}/share/gmao_ops
+              setenv COUPLEDIR  ${GMAO_PROJECT_DIR}/bcs_shared/make_bcs_inputs/ocean
+              setenv BC_BASE ${GMAO_PROJECT_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv REPLAY_ANA_EXPID x0039                                                   # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
+              setenv REPLAY_ANA_LOCATION ${GMAO_PROJECT_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
+              setenv M2_REPLAY_ANA_LOCATION ${GMAO_PROJECT_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
               setenv WRKDIR     /discover/nobackup/$LOGNAME                            # user work directory
 
 else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
@@ -1751,7 +1756,9 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv ARCHIVE_P  "SBATCH --ntasks=1"                                        # PE Configuration for gcm_archive.j
               setenv MOVE_P  "SBATCH --ntasks=1"                                           # PE Configuration for gcm_moveplot.j
 
-              setenv BOUNDARY_DIR NULL 
+              setenv BOUNDARY_DIR NULL
+              setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean
+              setenv BC_BASE EMIP_UNSUPPORTED
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
@@ -1785,6 +1792,8 @@ else
               setenv    MOVE_P  NULL                                                   # PE Configuration for gcm_moveplot.j
 
               setenv BOUNDARY_DIR NULL
+	      setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean
+              setenv BC_BASE EMIP_UNSUPPORTED
               setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                            # Default Analysis Experiment for REPLAY
               setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
               setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
@@ -1794,6 +1803,7 @@ endif
 if( $SITE == 'GMAO.desktop' ) then
    # By default on desktop, just ignore IOSERVER for now
    setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
+   setenv COUPLEDIR  ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/ocean
    set USE_IOSERVER = 0
    set NUM_OSERVER_NODES = 0
    set NUM_BACKEND_PES = 0
@@ -2281,6 +2291,8 @@ s?@SINGULARITY_SANDBOX?$SINGULARITY_SANDBOX?g
 s?@REAL_BIND_PATH?$REAL_BIND_PATH?g
 s?@BASE_BIND_PATH?$BASE_BIND_PATH?g
 s?@BOUNDARY_DIR?$BOUNDARY_DIR?g
+s?@COUPLEDIR?$COUPLEDIR?g
+s?@BC_BASE?$BC_BASE?g
 
 s?@CHECKPOINT_TYPE?default?g
 
@@ -3018,16 +3030,20 @@ else if ( $LSM_CHOICE == 2 ) then
 endif
 
 # boundary_dir checking
-set geosconfig_path = $HOME/.GEOSconfig.yaml
-if ($?GEOSCONFIG_FILE) then
-    set geosconfig_path = $?GEOSCONFIG_FILE
+set geosdefaults_path = $HOME/.GEOSdefaults.yaml
+if ($?GEOSDEFAULTS_FILE) then
+    set geosdefaults_path = $GEOSDEFAULTS_FILE
 endif
-if (-e $geosconfig_path) then
-    set BOUNDARY_DIR = `awk -F': *' '$1 == "boundary_dir" {print $2}' $geosconfig_path`
-else if ($BOUNDARY_DIR == NULL) then
+
+if (-e $geosdefaults_path) then
+    # Only run awk if 'boundary_dir' key is present in the config file
+    if (`grep -c "^boundary_dir" $geosdefaults_path` > 0) then
+    set BOUNDARY_DIR = `awk -F': *' '$1 == "boundary_dir" {print $2}' $geosdefaults_path`
+    endif
+else if ($?BOUNDARY_DIR == 0 || $BOUNDARY_DIR == "NULL") then
     echo "ERROR! Boundary directory unspecified on unrecognized platform!"
-    echo "please specify in /$HOME/.GEOSconfig.yaml or in environment"
-    echo "variable GEOSCONFIG_FILE"
+    echo "please specify in $HOME/.GEOSdefaults.yaml or in environment"
+    echo "variable GEOSDEFAULTS_FILE"
     exit 2
 endif
 
