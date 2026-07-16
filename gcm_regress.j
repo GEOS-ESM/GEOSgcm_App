@@ -94,6 +94,17 @@ set argv = ()
 
 setenv ARCH `uname`
 
+if ($ARCH == Darwin) then
+   set GSED = `which gsed`
+   if ( "$GSED" != "" ) then
+      set ISED = ( $GSED -i )
+   else
+      set ISED = ( sed -i.bak )
+   endif
+else
+   set ISED = ( sed -i )
+endif
+
 setenv SITE    @SITE
 setenv GEOSDIR @GEOSDIR
 setenv GEOSBIN @GEOSBIN
@@ -198,7 +209,7 @@ if ( ! -e gwd_internal_rst ) then
   if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
     echo "NCAR_NRDG: 0" >> AGCM.rc
   else
-    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+    $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
   endif
 endif
 
@@ -354,7 +365,7 @@ endif
 @RRTMGP_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
 @RRTMGP_RADIATION foreach instance ($instance_files)
    @RRTMGP_RADIATION /bin/mv $instance $instance.tmp
-   @RRTMGP_RADIATION cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   @RRTMGP_RADIATION cat $instance.tmp | sed -E -e 's/(^|[^[:alnum:]_])RRTMG([^[:alnum:]_]|$)/\1RRTMGP\2/' > $instance
    @RRTMGP_RADIATION /bin/rm $instance.tmp
 @RRTMGP_RADIATION end
 
@@ -605,7 +616,7 @@ if ($RUN_STARTSTOP == TRUE) then
    @MOM6# When you restart in MOM6 mode, you must change input_filename
    @MOM6# in the input.nml file from 'n' to 'r'
    @MOM6 /bin/cp input.nml input.nml.orig
-   @MOM6 sed -i -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
+   @MOM6 $ISED -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
 
    ./strip CAP.rc
    set oldstring = `cat CAP.rc | grep JOB_SGMT:`
@@ -624,7 +635,7 @@ if ($RUN_STARTSTOP == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+         $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -759,7 +770,7 @@ if ( $RUN_LAYOUT == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+          $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -818,7 +829,7 @@ if ( $RUN_OPENMP == TRUE) then
      echo KMP_AFFINITY     $KMP_AFFINITY
      echo OMP_NUM_THREADS $OMP_NUM_THREADS
      ./strip GWD_GridComp.rc
-     sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
+      $ISED -e "s|FALSE|TRUE|g" GWD_GridComp.rc
    endif
 
    # Copy Original Restarts to Regress directory
@@ -882,7 +893,7 @@ if ( $RUN_OPENMP == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+          $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -921,7 +932,7 @@ if ( $RUN_OPENMP == TRUE) then
    # Reset OpenMP Threads to 1
    setenv OMP_NUM_THREADS 1
    ./strip GWD_GridComp.rc
-   sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
+    $ISED -e "s|TRUE|FALSE|g" GWD_GridComp.rc
 
 endif
 
