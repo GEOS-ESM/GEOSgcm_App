@@ -1876,7 +1876,6 @@ mkdir -p  $EXPDIR/RC
               GAAS_GridComp_ExtData.yaml \
               GAAS_GridComp.rc           \
               GEOSachem_ExtData.yaml     \
-              HEMCO_Config.rc            \
               Chem_Registry.rc           )
 
     /bin/mv -f $EXPDIR/RC/CF.$i $EXPDIR/RC/$i
