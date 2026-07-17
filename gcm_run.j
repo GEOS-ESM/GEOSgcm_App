@@ -337,7 +337,6 @@ chmod +x linkbcs
 @GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
 @GCMRUN_CATCHCNendif
 
-# +++ awlee
 #######################################################################
 #         PythonBridge / GEOSpyD environment for GEOS-MLT
 #######################################################################
@@ -377,7 +376,24 @@ chmod +x linkbcs
 @GEOSMLT python -c "import geos_mlrad_driver; print('GEOS_MLRAD_DRIVER_IMPORT_OK')"
 @GEOSMLT echo "### PYBRIDGE SANITY CHECK END ###"
 
-# --- awlee
+#######################################################################
+#         NRLMSIS for GEOS-MLT
+#######################################################################
+
+@GEOSMLT set MSIS_DIR = ${SRCTOP}/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSsuperdyn_GridComp/@FVdycoreCubed_GridComp/@fvdycore/NRL_MSIS
+
+@GEOSMLT if ( ! -r ${MSIS_DIR}/msis21.parm ) then
+@GEOSMLT   echo "ERROR: Missing ${MSIS_DIR}/msis21.parm"
+@GEOSMLT   exit 2
+@GEOSMLT endif
+
+@GEOSMLT if ( ! -r ${MSIS_DIR}/F107_ap_appended.txt ) then
+@GEOSMLT   echo "ERROR: Missing ${MSIS_DIR}/F107_ap_appended.txt"
+@GEOSMLT   exit 2
+@GEOSMLT endif
+
+@GEOSMLT /bin/ln -sf ${MSIS_DIR}/msis21.parm .
+@GEOSMLT /bin/ln -sf ${MSIS_DIR}/F107_ap_appended.txt .
 
 #######################################################################
 #                  Setup executable
