@@ -374,7 +374,7 @@ if ( $SITE == 'NCCS' ) then
 
       if ($MODEL == 'mil') then
          # We save a couple processes for the kernel
-         set NCPUS_PER_NODE = 126
+         set NCPUS_PER_NODE = 120
       endif
    else
       echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
@@ -635,12 +635,12 @@ else
     # OGCM = FALSE (Data Ocean Resolution)
     # ------------------------------------
     DORSLV:
-    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds) Default"
+    echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds)"
     echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)"
-    echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
+    echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA) Default"
     echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)"
     set   HRCODE = `echo $<`
-    if( .$HRCODE == . ) set HRCODE = o1
+    if( .$HRCODE == . ) set HRCODE = o3
     set   HRCODE = `echo $HRCODE | tr "[:upper:]" "[:lower:]"`
 
     if( $HRCODE != 'o1' & \
@@ -866,7 +866,7 @@ if( $AGCM_IM ==  "c90" ) then
           set  NY = $OGCM_NX
      set OCEAN_DT = $DT
      else
-          set  NX = 15
+          set  NX = 10
           set  NY = `expr $NX \* 6`
      set OCEAN_DT = $IRRAD_DT
      endif
@@ -1243,10 +1243,10 @@ set HIST_GOCART     = ""
 # --------------
 EMISSIONS:
      set   EMISSIONS = ''
-     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} (Default) or ${C2}OPS${CN}:"
+     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} or ${C2}OPS${CN} (Default):"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = AMIP
+     set   EMISSIONS = OPS
      else
      set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
      if(  $EMISSIONS != OPS & $EMISSIONS != AMIP) then
@@ -1262,12 +1262,20 @@ EMISSIONS:
 
      # Fix up the linkbcs species.data
      # NOTE: If OPS is selected, EMISSIONS is blanked
-     if(  $EMISSIONS == OPS_EMISSIONS ) then
-        set OPS_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 1
-     else
-        set CMIP_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 228
+   #   if(  $EMISSIONS == OPS_EMISSIONS ) then
+   #      set OPS_SPECIES = ''
+   #      set PCHEM_CLIM_YEARS = 1
+   #   else
+         set CMIP_SPECIES = ''
+         set PCHEM_CLIM_YEARS = 228
+   #   endif
+
+     # Make it clear that AMIP requires more work
+     if(  $EMISSIONS != OPS_EMISSIONS ) then
+        echo
+        echo "   >>>  ${C1}NOTE: You must customize files under RC/AMIP/ since they are outside the scope of this script${CN}"
+        echo
+        echo
      endif
 
 # AERO Provider
@@ -1360,7 +1368,7 @@ while( $check == FALSE )
 
   echo "Enter the filename of the ${C1}HISTORY template${CN} to use"
   echo "-----------------------------------------------------------"
-  echo "As ${OCNMODEL} was chosen, the default HISTORY Template is ${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}"
+  echo "The default HISTORY Template is ${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}"
   echo "  1. Hit ENTER to use the default HISTORY template (${C2}${DEFAULT_HISTORY_TEMPLATE}${CN}) or"
   echo "  2. Type the full path of the HISTORY template to use"
 
@@ -1855,6 +1863,25 @@ mkdir -p  $EXPDIR/RC
   # Copy over all files and subdirs in install/etc, keeping symlinks
   cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 
+  # Overwrite certain resource files with custom versions
+  foreach i ( CH4_GridComp_ExtData.yaml  \
+              CH4_GridComp.rc            \
+              CO2_GridComp_ExtData.yaml  \
+              CO2_GridComp.rc            \
+              CA2G_GridComp_ExtData.yaml \
+              DU2G_GridComp_ExtData.yaml \
+              NI2G_GridComp_ExtData.yaml \
+              SS2G_GridComp_ExtData.yaml \
+              SU2G_GridComp_ExtData.yaml \
+              GAAS_GridComp_ExtData.yaml \
+              GAAS_GridComp.rc           \
+              GEOSachem_ExtData.yaml     \
+              HEMCO_Config.rc            \
+              Chem_Registry.rc           )
+
+    /bin/mv -f $EXPDIR/RC/CF.$i $EXPDIR/RC/$i
+  end
+
   # Remove templated files in RC as they are unneeded and confusing for experiments
   rm -f $EXPDIR/RC/*.tmpl
   rm -f $EXPDIR/RC/fvcore_layout.rc
@@ -2014,6 +2041,9 @@ cat >> $HOMDIR/SETENV.commands << EOF
 
 setenv I_MPI_FABRICS shm:ofi
 setenv I_MPI_OFI_PROVIDER psm3
+setenv I_MPI_ADJUST_ALLREDUCE 12
+setenv I_MPI_ADJUST_GATHERV 3
+
 EOF
 endif # built on SLES15
 
@@ -2596,6 +2626,9 @@ if( $AGCM_LM != 72 ) then
     /bin/rm -f       $EXPDIR/RC/dummy
 endif
 
+setenv CHEMREG_OPS  $EXPDIR/RC/Chem_Registry.rc
+setenv CHEMREG_AMIP $EXPDIR/RC/AMIP/Chem_Registry.rc
+
 # Turn on GEOS-Chem
 # -----------------
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
@@ -2609,14 +2642,15 @@ sed -i 's/BEG_DATE.*/BEG_DATE:     19500101 000000/' $HOMDIR/CAP.rc
 
 if( $RUN_GSI == 1 ) then
    sed -i 's/SkipReplayGCC: 1/SkipReplayGCC: 0/' $EXPDIR/RC/GEOSCHEMchem_GridComp.rc
+   sed -i 's/nspecies: 0/nspecies: 1/'           $EXPDIR/RC/geoschem_analysis.yml
 endif
 
-# Turn on PCHEM
-# -------------
-if( $RATS_PROVIDER == PCHEM ) then
+# Turn off PCHEM
+# --------------
+if( $RATS_PROVIDER != PCHEM ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_PCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    awk '{ if ($1~"ENABLE_PCHEM:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
     /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 endif
 
@@ -2629,11 +2663,11 @@ if( $AERO_PROVIDER == GOCART.data ) then
     /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 endif
 
-# Turn on TR GridComp
+# Turn off TR GridComp
 # -------------------
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    awk '{ if ($1~"ENABLE_TR:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
     /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
 # Update LAND_PARAMS Choices
@@ -2654,7 +2688,7 @@ else
     awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
-# Turn on GOCART
+# Turn on GOCART  -- this must be refactored to account for GOCART2G
 # --------------
 if( $GOKART == TRUE ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
@@ -2666,17 +2700,38 @@ if( $GOKART == TRUE ) then
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
     /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
+
+#   ACHEM is ENABLED by default
+#   /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+#   cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+#   awk '{ if ($1~"ENABLE_ACHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+#   /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp    
 else
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
     /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{ if ( $1 ~ "doing" ) { sub(/yes/, "no" ) }; print }' > $EXPDIR/RC/Chem_Registry.rc
-    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
+#    /bin/mv $CHEMREG_OPS  $CHEMREG_OPS.tmp
+#    cat     $CHEMREG_OPS.tmp  | awk '{ if ( $1 ~ "doing:" ) { sub(/yes/, "no " ) }; print }' > $CHEMREG_OPS
+#    /bin/rm $CHEMREG_OPS.tmp
+#
+#    /bin/mv $CHEMREG_AMIP $CHEMREG_AMIP.tmp
+#    cat     $CHEMREG_AMIP.tmp | awk '{ if ( $1 ~ "doing:" ) { sub(/yes/, "no " ) }; print }' > $CHEMREG_AMIP
+#    /bin/rm $CHEMREG_AMIP.tmp
 endif
+
+# Turn on GAAS
+# ------------
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GAAS:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
+
+    set      FILE = $EXPDIR/RC/GAAS_GridComp_ExtData.yaml
+    /bin/mv $FILE $FILE.tmp
+    cat           $FILE.tmp | sed -e "s/>>>DT<<</${DT}/g" > $FILE
+    /bin/rm -f    $FILE.tmp
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
 # ------------------------------------------------------------------
@@ -2684,21 +2739,26 @@ endif
     cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.?aod/Y%y4/M%m2/@ANA_EXPID.?g' > $EXPDIR/RC/GAAS_GridComp.rc
 
 
-# Turn on RATS_PROVIDER
-# ---------------------
-if( $RATS_PROVIDER == PCHEM ) then
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "PC") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
-    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
+# Turn off PCHEM if it's not  RATS_PROVIDER
+# -----------------------------------------
+if( $RATS_PROVIDER != PCHEM ) then
+    /bin/mv $CHEMREG_OPS  $CHEMREG_OPS.tmp
+    cat     $CHEMREG_OPS.tmp  | awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no " ) }; print }' > $CHEMREG_OPS
+    /bin/rm $CHEMREG_OPS.tmp
+
+    /bin/mv $CHEMREG_AMIP $CHEMREG_AMIP.tmp
+    cat     $CHEMREG_AMIP.tmp | awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no " ) }; print }' > $CHEMREG_AMIP
+    /bin/rm $CHEMREG_AMIP.tmp
 endif
 
-# Turn on TR GridComp
-# ---------------------
-    /bin/mv $EXPDIR/RC/Chem_Registry.rc $EXPDIR/RC/Chem_Registry.tmp
-    cat $EXPDIR/RC/Chem_Registry.tmp | \
-    awk '{if ( $1 ~ "doing") { if ( $1 ~ "TR") sub(/no/, "yes" ); print;} else print }' > $EXPDIR/RC/Chem_Registry.rc
-    /bin/rm $EXPDIR/RC/Chem_Registry.tmp
+# Turn off GEOS-Chem analysis
+# ---------------------------
+if ( $RUN_GSI == 0 ) then
+    setenv TARGET $EXPDIR/RC/geoschem_analysis.yml
+    /bin/mv $TARGET  $TARGET.tmp
+    cat     $TARGET.tmp  | awk '{ if ( $1 ~ "nspecies:" ) { sub(/3/, "0" ) }; print }' > $TARGET
+    /bin/rm $TARGET.tmp
+endif
 
 
 #######################################################################
@@ -2721,17 +2781,6 @@ else
      echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
      echo " "
 endif
-echo " "
-echo "If these files are not required, move or rename them (in RC/): "
-echo "-------------------------------------------------------------- "
-echo "  CARMAchem_GridComp_ExtData.rc"
-echo "  CFC_GridComp_ExtData.rc"
-echo "  CH4_GridComp_ExtData.rc"
-echo "  DNA_ExtData.rc"
-echo "  GEOSachem_ExtData.rc"
-echo "  MAM7_ExtData.rc"
-echo "  O3_GridComp_ExtData.rc"
-echo "  Rn_GridComp_ExtData.rc"
 echo " "
 echo "You must now copy your ${C1}Initial Conditions${CN} into: "
 echo "----------------------------------------------- "
