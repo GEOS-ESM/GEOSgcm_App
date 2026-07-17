@@ -180,7 +180,8 @@ class SymlinkCreator:
         if symlink_name.is_symlink():
             symlink_name.unlink()
 
-        symlink_name.symlink_to(file_path)
+        if file_path.exists():
+            symlink_name.symlink_to(file_path)
 
     def topo_paths(self) -> dict:
         paths = {
