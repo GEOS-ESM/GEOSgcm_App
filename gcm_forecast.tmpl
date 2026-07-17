@@ -628,6 +628,13 @@ touch ExtData.rc
 setenv YEAR $yearc
 $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
+
 if ( ! -e gwd_internal_rst ) then
   echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
   # Now, if the user has already set an NCAR_NRDG value, we need to

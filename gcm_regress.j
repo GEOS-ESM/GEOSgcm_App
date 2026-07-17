@@ -201,6 +201,13 @@ cp $EXPDIR/cap_restart $EXPDIR/regress
 setenv YEAR `cat cap_restart | cut -c1-4`
 $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
+
 if ( ! -e gwd_internal_rst ) then
   echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
   # Now, if the user has already set an NCAR_NRDG value, we need to
@@ -524,6 +531,13 @@ cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
+
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
@@ -626,6 +640,13 @@ if ($RUN_STARTSTOP == TRUE) then
 
    setenv YEAR `cat cap_restart | cut -c1-4`
    $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+   set linkbcs_status = $status
+
+   if ($linkbcs_status != 0) then
+      echo "linkbcs.py failed with return code $linkbcs_status"
+      exit $linkbcs_status
+   endif
+
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
@@ -762,6 +783,13 @@ if ( $RUN_LAYOUT == TRUE) then
    setenv YEAR `cat cap_restart | cut -c1-4`
    $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
+   set linkbcs_status = $status
+
+   if ($linkbcs_status != 0) then
+      echo "linkbcs.py failed with return code $linkbcs_status"
+      exit $linkbcs_status
+   endif
+
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
       # Now, if the user has already set an NCAR_NRDG value, we need to
@@ -884,6 +912,13 @@ if ( $RUN_OPENMP == TRUE) then
 
    setenv YEAR `cat cap_restart | cut -c1-4`
    $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+
+   set linkbcs_status = $status
+
+   if ($linkbcs_status != 0) then
+      echo "linkbcs.py failed with return code $linkbcs_status"
+      exit $linkbcs_status
+   endif
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"

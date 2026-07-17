@@ -853,6 +853,13 @@ touch ExtData.rc
 setenv YEAR $yearc
 $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
 
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
+
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
 if ( $rst_by_face == YES ) then
