@@ -37,12 +37,19 @@ setenv ARCH `uname -s`
 setenv NODE `uname -n`
 
 if ($ARCH == Darwin) then
+   set GSED = `which gsed`
+   if ( "$GSED" != "" ) then
+      set ISED = ( $GSED -i )
+   else
+      set ISED = ( sed -i.bak )
+   endif
    set PRELOAD_COMMAND = 'DYLD_INSERT_LIBRARIES'
    set LD_LIBRARY_PATH_CMD = 'DYLD_LIBRARY_PATH'
    # On macOS we seem to need to call mpirun directly and not use esma_mpirun
    # For some reason SIP does not let the libraries be preloaded
    set RUN_CMD = 'mpirun -np '
 else
+   set ISED = ( sed -i )
    set PRELOAD_COMMAND = 'LD_PRELOAD'
    set LD_LIBRARY_PATH_CMD = 'LD_LIBRARY_PATH'
    set RUN_CMD = '$GEOSBIN/esma_mpirun -np '
@@ -2265,6 +2272,7 @@ s?@FV_SCHMIDT?$SCHMIDT?g
 s?@FV_STRETCH_FAC?$STRETCH_FAC?g
 s?@FV_TARGET_LON?$TARGET_LON?g
 s?@FV_TARGET_LAT?$TARGET_LAT?g
+s?@FV_RUN_HYDROSTATIC?$RUN_HYDROSTATIC?g
 
 EOF
 
@@ -2673,8 +2681,12 @@ if( $OGCM == TRUE ) then
       # and change MOM_override to match. NOTE: This sed
       # assumes floating point number with a decimal
 
-      sed -i -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
+       $ISED -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
+
+   # We also need to change the dt in ice_in as well for CICE6
+   if ( $SEAICE_NAME == "CICE6" ) then
+       $ISED -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
    endif
 
 endif
@@ -3030,7 +3042,7 @@ cat > $SEDFILE << EOF
 EOF
 
 foreach file (`cat $NEWEXPFILES`)
-   sed -i -f $SEDFILE $file
+    $ISED -f $SEDFILE $file
 end
 
 # ------------------------------------------
@@ -3039,13 +3051,13 @@ end
 # ------------------------------------------
 
 #sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${NEWEXPID}_clonedfrom_${OLDEXPID}_by_${OLDUSER}#" $NEWHOMDIR/HISTORY.rc
- sed -i -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${EXPDSC}#" $NEWHOMDIR/HISTORY.rc
- sed -i -e "/^EXPID:/ s#\(EXPID: \)\(.*\)#\1${NEWEXPID}#" $NEWHOMDIR/HISTORY.rc
+  $ISED -e "/^EXPDSC:/ s#\(EXPDSC: \)\(.*\)#\1${EXPDSC}#" $NEWHOMDIR/HISTORY.rc
+  $ISED -e "/^EXPID:/ s#\(EXPID: \)\(.*\)#\1${NEWEXPID}#" $NEWHOMDIR/HISTORY.rc
 
 # Change OLDEXPID to NEWEXPID in __init__.py if it exists
 # -------------------------------------------------------
 if ( -e $NEWHOMDIR/__init__.py ) then
-   sed -i -e "/$OLDEXPID/ s#$OLDEXPID#$NEWEXPID#" $NEWHOMDIR/__init__.py
+    $ISED -e "/$OLDEXPID/ s#$OLDEXPID#$NEWEXPID#" $NEWHOMDIR/__init__.py
 endif
 
 # -------------------------
@@ -3071,7 +3083,7 @@ sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$PLOT_N#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$PLOT_N#"    $NEWEXPDIR/plot/gcm_plot.tmpl
 
 if ( -e $NEWEXPDIR/plot/gcm_moveplot.j ) then
-   sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$MOVE_N#"    \
+   $ISED -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$MOVE_N#"    \
           -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$MOVE_N#" $NEWEXPDIR/plot/gcm_moveplot.j
 endif
 
