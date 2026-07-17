@@ -414,6 +414,8 @@ class SymlinkCreator:
                 # We print an error if the missing file is *not* tile.bin
                 if i != "tile.bin":
                     print(f"ERROR: {i} does not exist at: \n{paths[i]}")
+                else:
+                    print(f"WARNING: {i} does not exist at: \n{paths[i]}")
 
         if missing_files:
             # We must allow for the one case that is only tile.bin is in missing_files,
