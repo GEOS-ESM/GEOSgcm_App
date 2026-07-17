@@ -2,6 +2,7 @@
  @FV_HYDRO
  range_warn = .T.
  fv_debug = .F.
+ GEOS_MLT = @GEOS_MLT
  @FV_SCHMIDT
  @FV_STRETCH_FAC
  @FV_TARGET_LON

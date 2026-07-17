@@ -1050,7 +1050,6 @@ if( $AGCM_IM ==  "c12" ) then
      endif
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1069,7 +1068,6 @@ if( $AGCM_IM ==  "c24" ) then
      set       NX = 4
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000015
@@ -1088,7 +1086,6 @@ if( $AGCM_IM ==  "c48" ) then
      set       NX = 4
      set       NY = `expr $NX \* 6`
      set   HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = 180
      set HIST_JM  =  91
      set JOB_SGMT = 00000015
@@ -1122,7 +1119,6 @@ if( $AGCM_IM ==  "c90" ) then
         set OCEAN_DT = $IRRAD_DT
      endif
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set JOB_SGMT = 00000032
@@ -1153,7 +1149,6 @@ if( $AGCM_IM ==  "c180" ) then
         set OCEAN_DT = $IRRAD_DT
      endif
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 2
@@ -1173,7 +1168,6 @@ if( $AGCM_IM == "c360" ) then
      set       NX = 12
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 4
@@ -1193,7 +1187,6 @@ if( $AGCM_IM == "c720" ) then
      set       NX = 24
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1214,7 +1207,6 @@ if( $AGCM_IM == "c1440" ) then
      set       NX = 48
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1235,7 +1227,6 @@ if( $AGCM_IM == "c2880" ) then
      set       NX = 96
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1258,7 +1249,6 @@ if( $AGCM_IM == "c5760" ) then
      set       NX = 192
      set       NY = `expr $NX \* 6`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1284,7 +1274,6 @@ if( $AGCM_IM == "c270" ) then
      set       NX = 8
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1307,7 +1296,6 @@ if( $AGCM_IM == "c540" ) then
      set       NX = 14
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1330,7 +1318,6 @@ if( $AGCM_IM == "c1080" ) then
      set       NX = 22
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1353,7 +1340,6 @@ if( $AGCM_IM == "c1536" ) then
      set       NX = 36
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1376,7 +1362,6 @@ if( $AGCM_IM == "c2160" ) then
      set       NX = 40
      set       NY = `expr $NX \* 6 \* 2`
      set HYDROSTATIC = $USE_HYDROSTATIC
-     set GEOS_MLT = $USE_GEOSMLT
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 6
@@ -1464,9 +1449,9 @@ endif
 
 # Settings for GEOS_MLT
 if ( "$USE_GEOSMLT" == "TRUE" ) then
-   set GEOS_MLT      = "GEOS_MLT    = .T."
+   set GEOS_MLT = ".TRUE."
 else
-   set GEOS_MLT      = "GEOS_MLT    = .F."
+   set GEOS_MLT = ".FALSE."
 endif
 
 if ($CONUS == '#') then
