@@ -2575,6 +2575,7 @@ if( $OGCM == TRUE ) then
 
        $ISED -e "s/DT = [0-9]*\.[0-9]*/DT = $OCEAN_DT/g" \
              -e "s/DT_THERM = [0-9]*\.[0-9]*/DT_THERM = $OCEAN_DT/g" $HOMDIR/MOM_override
+   endif
 
    # We also need to change the dt in ice_in as well for CICE6
    if ( $SEAICE_NAME == "CICE6" ) then
