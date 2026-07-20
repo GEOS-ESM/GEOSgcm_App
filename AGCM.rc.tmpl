@@ -573,9 +573,10 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #         Years 1979-2014: d5_merra/Y%y4/M%m2/d5_merra.tavg1_2d_lfo_Nx_corr.%y4%m2%d2_%h230z.nc
 #         ---------------
 #
-# Possible REPLAY PRECIP Files:
+# Possible REPLAY PRECIP Files (can use at most one of PRECIP_FILE or PRECIP_FILE_CLIMSCALE):
 # -----------------------------
-#PRECIP_FILE: ExtData/PCP/@PRECIP_FILE
+#PRECIP_FILE:           ExtData/PCP/@PRECIP_FILE
+#PRECIP_FILE_CLIMSCALE: ExtData/PCP/@PRECIP_FILE_CLIMSCALE
 #
 # Latitudinal Tapering between 42.5 and 62.5 degrees mimics NCEP's approach of using GCM-based precip at high latitudes
 # --------------------
