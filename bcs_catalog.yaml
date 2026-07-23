@@ -199,11 +199,8 @@ pchem_species:
     # MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
     species_data: PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4
 
-# Is this necessary?
+# we symlink the entire directory, it's up to the user to select the specfic files they want
 precip_correction:
-  r21c: /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4
-  merra-2: /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4
-  ops: /gpfsm/dnb51/projects/p15/iau/merra_land/precip_CPCU-CMAP_corrected_MERRA/GEOSdas-2_1_4
-
-
+  m21c: /discover/nobackup/projects/gmao/share/dao_ops/fvInput/precip_correction
+  merra-2: /discover/nobackup/projects/gmao/share/dao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/
 

@@ -151,7 +151,8 @@ class SymlinkCreator:
         self.species_data_dir = self.bcs_dir / catalog.get_value('species_data', 'pchem_species')
 
         # precip correction
-        self.precip_dir = Path(self.catalog.get_value('merra-2', 'precip_correction'))
+        self.m21c_dir = Path(catalog.get_value('m21c', 'precip_correction'))
+        self.merra2_dir = Path(catalog.get_value('merra-2', 'precip_correction'))
 
         # misc
         self.bcrslv = f"{self.atmos_tag}_{self.ogrid_type}{str(self.ogcm_IM).zfill(4)}x{str(self.ogcm_JM).zfill(4)}"
@@ -277,8 +278,8 @@ class SymlinkCreator:
     def precip_path(self) -> dict:
         if not self.config["precip_correction"]:
             return {}
-        paths = {"ExtData/PCP": self.precip_dir}
-        return paths
+        path = {"ExtData/PCP": self.precip_dir}
+        return path
 
     def species_path(self) -> dict:
         path = {"species.data": self.species_data_dir}
