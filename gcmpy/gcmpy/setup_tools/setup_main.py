@@ -714,11 +714,11 @@ class SetupGCM:
             'BATCH_JOINOUTERR': self.batch_joinouterr,
             'SITE': envdict['site'],
             'proc_type': self.expConfig['processor'],
-            'GEOSDIR': pathdict['install'],
-            'GEOSSRC': pathdict['install'],
-            'GEOSBIN': pathdict['bin'],
-            'GEOSETC': pathdict['etc'],
-            'GEOSUTIL': pathdict['install'],
+            'GEOSDIR': str(pathdict['install']),
+            'GEOSSRC': str(pathdict['install']),
+            'GEOSBIN': str(pathdict['bin']),
+            'GEOSETC': str(pathdict['etc']),
+            'GEOSUTIL': str(pathdict['install']),
             'SINGULARITY_BUILD': '#DELETE',
             'NATIVE_BUILD': '',
             'MPT_SHEPHERD': self.ocean.mpt_shepherd,
@@ -858,7 +858,6 @@ class SetupGCM:
 
         # Create YAML file meant to drive the the creation
         # of the batch script
-        '''
         exp_yaml_file_vars = [
                 'SITE', 'EXPDIR', 'GEOSDIR', 
                 'NX', 'NY', 
@@ -866,11 +865,12 @@ class SetupGCM:
                 'proc_type', 'NCPUS_PER_NODE', 
                 'AGCM_IM', 'AGCM_JM', 'AGCM_LM', 'OGCM_IM', 'OGCM_JM', 
                 'DT', 'CONV_DT', 'CHEM_DT', 'SOLAR_DT', 'IRRAD_DT', 'OCEAN_DT'
-                ]
-        '''
-        exp_yaml_file_vars = jinja_dict
+        ]
+        #_exclude = {'SETENVS', 'GCMVER', 'EXPSRC'}
+        #exp_yaml_dict = {k: v for k, v in jinja_dict.items() if k not in _exclude}
         exp_yaml_fname = Path(self.exp_dir) / f"run_{jinja_dict['EXPID']}.yaml"
         exp_yaml_dict = {k: jinja_dict[k] for k in exp_yaml_file_vars}
+
         write_dict_into_yaml(exp_yaml_fname, exp_yaml_dict)
 
         # this is an edge-case that can't be handled with jinja2
