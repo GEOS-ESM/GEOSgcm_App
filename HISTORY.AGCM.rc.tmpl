@@ -27,6 +27,7 @@ COLLECTIONS: 'geosgcm_prog'
 #             'geosgcm_iau'
 #             'geosgcm_conv'
 #             'goswim_catch'
+#             'goswim_route'
 #             'goswim_land'
 #             'goswim_landice'
 #             'geosgcm_lidar'
@@ -858,6 +859,20 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'Z0'        , 'CATCH'  ,
                                  'SWLAND'    , 'CATCH'  ,
                                  'SWNDSRF'   , 'CATCH'  ,
+                                  ::
+
+  goswim_route.template:         '%y4%m2%d2_%h2%n2z.nc4',
+  goswim_route.archive:          '%c/Y%y4',
+  goswim_route.format:           'CFIO',
+  goswim_route.mode:             'time-averaged',
+  goswim_route.frequency:         240000,
+  goswim_route.ref_time:          210000,
+  goswim_route.fields:           'QSFLOW'      , 'ROUTE' ,
+                                 'QOUTFLOW'    , 'ROUTE' ,
+                                 'QRES'        , 'ROUTE' ,
+                                 'QCAT'        , 'ROUTE' ,
+                                 'QINFLOW'     , 'ROUTE' ,
+                                 'QRUNOFF_CAT' , 'ROUTE' ,
                                   ::
 
   goswim_land.template:          '%y4%m2%d2_%h2%n2z.nc4' ,
