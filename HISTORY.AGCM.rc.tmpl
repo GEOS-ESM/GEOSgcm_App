@@ -37,7 +37,7 @@ COLLECTIONS: 'geosgcm_prog'
 #             'geosgcm_misr'
 #             'tavg6_2d_flx_Nx'
 #             'inst3_2d_asm_Nx'
-#             'tavg6_2d_aer_x'
+#             'tavg3_2d_aer_x'
 #             'geosgcm_tropvar'
              ::
 
@@ -1684,16 +1684,16 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'SNOMAS'      , 'SURFACE'  ,
                                   ::
 
-  tavg6_2d_aer_x.format:         'CFIO' ,
-  tavg6_2d_aer_x.grid_label:      PC@HIST_IMx@HIST_JM-DC ,
-  tavg6_2d_aer_x.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
-  tavg6_2d_aer_x.mode:           'time-averaged' ,
-  tavg6_2d_aer_x.frequency:       060000 ,
-  tavg6_2d_aer_x.duration:        060000 ,
-  tavg6_2d_aer_x.ref_time:        210000 ,
-  tavg6_2d_aer_x.deflate:         1 ,
-  tavg6_2d_aer_x.regrid_method:  'CONSERVE' ,
-  tavg6_2d_aer_x.fields:         'PM25'      , 'GOCART2G' ,
+  tavg3_2d_aer_x.format:         'CFIO' ,
+  tavg3_2d_aer_x.grid_label:      PC@HIST_IMx@HIST_JM-DC ,
+  tavg3_2d_aer_x.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg3_2d_aer_x.mode:           'time-averaged' ,
+  tavg3_2d_aer_x.frequency:       030000 ,
+  tavg3_2d_aer_x.duration:        030000 ,
+  tavg3_2d_aer_x.ref_time:        210000 ,
+  tavg3_2d_aer_x.deflate:         1 ,
+  tavg3_2d_aer_x.regrid_method:  'CONSERVE' ,
+  tavg3_2d_aer_x.fields:         'PM25'      , 'GOCART2G' ,
                                  'TOTEXTTAU' , 'GOCART2G' ,
                                   ::
 
