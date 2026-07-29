@@ -1,0 +1,385 @@
+# Atmosphere catalog derived from atmosphere.py and geos_settings/horizontal_resolution.py
+# Fields that are derived at runtime from AM_horizontal_res (im, jm, gridfile, res,
+# gridname, res_dateline, hist_im, hist_jm) are not repeated here since they are
+# formulaic (e.g. jm = im*6). Only static / lookup data is stored.
+
+defaults:
+  use_SHMEM: 0
+  force_das: '#'
+  force_gcm: '#'
+  num_readers: 1
+  num_writers: 1
+  nx_convert: 2
+  ny_convert: 24
+  nf: 6
+  conus: '#'
+  stretch_factor: ''
+  FV_stretch_fac: ''
+  BACM_1M: '#'
+  GFDL_1M: '#'
+  MGB2_2M: '#'
+  RRTMGP_RADIATION: ''
+  RRTMG_RADIATION: '#DELETE'
+  KLID: ''
+  GFDL_hydro: '.TRUE.'
+  GFDL_prog_ccn: 'prog_ccn = .true.'
+  GFDL_use_ccn: 'use_ccn = .true.'
+  convpar_option: GF
+  low_res: false
+  latlon: '#DELETE'
+  cube: ''
+
+resolutions:
+  c12:
+    conv_dt: 1200
+    chem_dt: 3600
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    job_sgmt: '00000015'
+    num_sgmt: 20
+    post_NDS: 4
+    nx_convert: 1
+    ny_convert: 6
+    res: CF0012x6C
+    low_res: true
+    # nx/ny by ocean model:
+    nx:
+      MOM6: 1
+      default: 2
+    ny:
+      MOM6: 6   # nx*6
+      default: 12  # nx*6
+
+  c24:
+    conv_dt: 1200
+    chem_dt: 3600
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    job_sgmt: '00000015'
+    num_sgmt: 20
+    post_NDS: 4
+    nx_convert: 1
+    ny_convert: 6
+    res: CF0024x6C
+    low_res: true
+    nx: 4
+    ny: 24  # nx*6
+
+  c48:
+    conv_dt: 1200
+    chem_dt: 3600
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    job_sgmt: '00000015'
+    num_sgmt: 20
+    post_NDS: 4
+    res: CF0048x6C
+    low_res: true
+    nx: 6
+    ny: 36  # nx*6
+
+  c90:
+    conv_dt: 900
+    chem_dt: 1800
+    dt_solar: 3600
+    dt_irrad: 3600
+    job_sgmt: '00000032'
+    num_sgmt: 4
+    post_NDS: 8
+    res: CF0090x6C
+    # dt_ocean and nx/ny depend on coupled ocean model:
+    nx:
+      MIT: 10
+      MOM6: 5
+      default: 10   # data ocean; dt_ocean overridden to 3600
+    ny:
+      MIT: 36
+      MOM6: 36
+      default: 60   # nx*6
+    dt_ocean:
+      MIT: 900    # same as heartbeat (set via atmos.dt)
+      MOM6: 900
+      default: 3600
+
+  c180:
+    conv_dt: 600
+    chem_dt: 1200
+    dt_solar: 3600
+    dt_irrad: 3600
+    job_sgmt: '00000016'
+    num_sgmt: 1
+    post_NDS: 8
+    num_readers: 2
+    res: CF0180x6C
+    # dt_ocean and nx/ny depend on coupled ocean model:
+    nx:
+      MOM6: 30
+      MIT: null   # taken from ocean_nx at runtime
+      default: 20   # data ocean; dt_ocean overridden to 3600
+    ny:
+      MOM6: 36
+      MIT: null   # taken from ocean_ny at runtime
+      default: 120  # nx*6
+    dt_ocean:
+      MOM6: 600   # same as heartbeat
+      MIT: 600
+      default: 3600
+
+  c270:
+    conv_dt: 600
+    chem_dt: 1800
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    num_readers: 6
+    job_sgmt: '00000001'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: 1
+    conus: ''       # CONUS stretch grid — enabled by default
+    stretch_factor: 2.5
+    res: CF0270x6C-SG001
+    nx: 20
+    ny: 240  # nx*6*2
+
+  c360:
+    conv_dt: 450
+    chem_dt: 900
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    num_readers: 4
+    job_sgmt: '00000005'
+    num_sgmt: 1
+    post_NDS: 12
+    nx_convert: 4
+    res: CF0360x6C
+    nx: 30
+    ny: 180  # nx*6
+
+  c540:
+    conv_dt: 300
+    chem_dt: 900
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    num_readers: 6
+    job_sgmt: '00000001'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: 1
+    conus: ''
+    stretch_factor: 2.5
+    res: CF0540x6C-SG001
+    nx: 30
+    ny: 360  # nx*6*2
+
+  c720:
+    conv_dt: 300
+    chem_dt: 600
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    num_readers: 6
+    job_sgmt: '00000005'
+    num_sgmt: 1
+    post_NDS: 16
+    nx_convert: 8
+    use_SHMEM: 1
+    res: CF0720x6C
+    nx: 40
+    ny: 240  # nx*6
+
+  c1080:
+    conv_dt: 300
+    chem_dt: 600
+    dt_solar: 1800
+    dt_irrad: 1800
+    dt_ocean: 1800
+    num_readers: 6
+    job_sgmt: '00000001'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: 1
+    conus: ''
+    stretch_factor: 2.5
+    res: CF1080x6C-SG001
+    nx: 40
+    ny: 480  # nx*6*2
+
+  c1120:
+    conv_dt: 300
+    chem_dt: 600
+    dt_solar: 3600
+    dt_irrad: 3600
+    dt_ocean: 3600
+    num_readers: 6
+    job_sgmt: '00000005'
+    num_sgmt: 1
+    post_NDS: 16
+    nx_convert: 8
+    use_SHMEM: 1
+    res: CF1120x6C
+    nx: 60
+    ny: 360  # nx*6
+
+  c1440:
+    conv_dt: 300
+    chem_dt: 600
+    dt_solar: 1200
+    dt_irrad: 1200
+    dt_ocean: 1200
+    num_readers: 6
+    job_sgmt: '00000001'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: 1
+    res: CF1440x6C
+    nx: 80
+    ny: 480  # nx*6
+
+  c1536:
+    conv_dt: 300
+    chem_dt: 900
+    dt_solar: 1800
+    dt_irrad: 1800
+    dt_ocean: 1800
+    num_readers: 6
+    job_sgmt: '00000005'
+    num_sgmt: 1
+    post_NDS: 16
+    nx_convert: 8
+    use_SHMEM: 1
+    conus: ''
+    stretch_factor: 3.0
+    res: CF1536x6C-SG002
+    nx: 60
+    ny: 360  # nx*6
+
+  c2160:
+    conv_dt: 300
+    chem_dt: 300
+    dt_solar: 900
+    dt_irrad: 900
+    dt_ocean: 900
+    num_readers: 6
+    job_sgmt: '00000005'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: 1
+    conus: ''
+    stretch_factor: 2.5
+    res: CF2160x6C-SG001
+    nx: 80
+    ny: 960  # nx*6*2
+
+  c2880:
+    conv_dt: 300
+    chem_dt: 300
+    dt_solar: 900
+    dt_irrad: 900
+    dt_ocean: 900
+    num_readers: 6
+    job_sgmt: '00000001'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: true
+    convpar_option: NONE
+    res: CF2880x6C
+    nx: 80
+    ny: 480  # nx*6
+
+  c4320:
+    conv_dt: 300
+    chem_dt: 300
+    dt_solar: 900
+    dt_irrad: 900
+    dt_ocean: 900
+    num_readers: 6
+    job_sgmt: '00000005'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: 1
+    conus: ''
+    stretch_factor: 2.5
+    res: CF4320x6C
+    nx: 80
+    ny: 480  # nx*6*2 (but ny=nx*6 in code — kept as coded)
+
+  c5760:
+    conv_dt: 300
+    chem_dt: 300
+    dt_solar: 600
+    dt_irrad: 600
+    dt_ocean: 600
+    num_readers: 6
+    job_sgmt: '00000001'
+    num_sgmt: 1
+    post_NDS: 32
+    nx_convert: 8
+    use_SHMEM: true
+    convpar_option: NONE
+    res: CF5760x6C
+    nx: 80
+    ny: 480  # nx*6
+
+microphysics:
+  BACM_1M:
+    BACM_1M: ''
+    GFDL_1M: '#'
+    MGB2_2M: '#'
+    conv_dt: 450
+    chem_dt: 450
+    RRTMGP_RADIATION: '#DELETE'
+    RRTMG_RADIATION: ''
+    # KLID by vertical level count:
+    KLID:
+      181+: '19.0'
+      137: '14.0'
+      91: '13.0'
+      72: '14.0'
+  GFDL_1M:
+    BACM_1M: '#'
+    GFDL_1M: ''
+    MGB2_2M: '#'
+  MGB2_2M:
+    BACM_1M: '#'
+    GFDL_1M: '#'
+    MGB2_2M: ''
+
+wsub_extdata:
+  # BACM_1M and GFDL_1M keep the wsub extdata entry; MGB2_2M deletes it
+  BACM_1M:
+    mp_turn_off_wsub_extdata: ''
+    MP_turnoff_wsub: ''
+  GFDL_1M:
+    mp_turn_off_wsub_extdata: ''
+    MP_turnoff_wsub: ''
+  MGB2_2M:
+    mp_turn_off_wsub_extdata: '#DELETE#'
+    MP_turnoff_wsub: '#DELETE'
+
+conus:
+  disabled:
+    conus: '#'
+    schmidt: 'do_schmidt  = .false.'
+    FV_stretch_fac: 'stretch_fac = 1.0'
+    target_lon: 'target_lon  = 0.0'
+    target_lat: 'target_lat  = -90.0'
+    FV_hwt: null
+  enabled:
+    # stretch_factor is set from the resolution entry above
+    schmidt: 'do_schmidt  = .true.'
+    target_lon: 'target_lon  = -98.35'
+    target_lat: 'target_lat  = 39.5'
+    FV_hwt: ''

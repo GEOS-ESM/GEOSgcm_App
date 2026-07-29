@@ -3,7 +3,9 @@ add_subdirectory(gcmpy_tests)
 add_subdirectory(gcmpy)
 
 set (programs
-	run_gcm_setup.py
+	gcm_configure.py
+	gcm_create.py
+	gcm_setup.py
 	README.md
 	)
 

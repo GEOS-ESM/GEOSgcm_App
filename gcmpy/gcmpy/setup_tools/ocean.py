@@ -1,5 +1,4 @@
 from datetime import date
-from gcmpy.utils.color_ops import Color
 
 class Ocean:
     def __init__(ocean, expConfig):
@@ -32,35 +31,11 @@ class Ocean:
     def set_coupled(ocean):
         # NOTE: We use a CMake variable here because the shared library
         # suffix is different on Linux and macOS. This is set by configure_file()
-        if ocean.model == 'MOM5':
-            ocean.name = 'MOM'
-            ocean.gridtyp = 'M5TP'
-            ocean.grid_type = 'Tripolar'
-            ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.MOM5 = ''
-            ocean.MOM6 = '#DELETE'
-            ocean.MIT = '#DELETE'
-            MOM5_warning = (
-                "######################################################\n"
-                "You have chosen to set up a coupled model experiment with MOM5.\n"
-                "Be aware that such a set up is _known_ to have problems. See following for more details:\n"
-                "https://github.com/GEOS-ESM/MOM5/issues/19\n"
-                "If your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\n"
-                "Otherwise, until this above issue is _fixed_ you are on your own with above choice.\n"
-                "######################################################"
-            )
-            print(Color.GREEN + MOM5_warning + Color.RESET)
-            ocean.NX = 36
-            ocean.NY = 10
-            resolution = ocean.expConfig['OM_MOM_horizontal_res'].split()
-            ocean.IM = int(resolution[0])
-            ocean.JM = int(resolution[1])
-        elif ocean.model == 'MOM6':
+        if ocean.model == 'MOM6':
             ocean.name = 'MOM6'
             ocean.gridtyp = 'M6TP'
             ocean.grid_type = 'Tripolar'
             ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.MOM5 = '#DELETE'
             ocean.MOM6 = ''
             ocean.MIT = '#DELETE'
             ocean.set_MOM6_resolution()
@@ -68,7 +43,6 @@ class Ocean:
             ocean.name = 'MIT'
             ocean.grid_type = 'llc'
             ocean.gridtyp = 'MITLLC'
-            ocean.MOM5 = '#DELETE'
             ocean.MOM6 = '#DELETE'
             ocean.MIT = ''
             ocean.JM = 15
@@ -179,7 +153,6 @@ class Ocean:
         ocean.preload = ''
         ocean.LM = 34
         ocean.coupled = '#DELETE'
-        ocean.MOM5 = '#DELETE'
         ocean.MOM6 = '#DELETE'
         ocean.MIT = '#DELETE'
         ocean.CICE4 = '#DELETE'

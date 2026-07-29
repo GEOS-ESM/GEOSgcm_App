@@ -1,0 +1,40 @@
+# Fields derived at runtime from expConfig (aerosol name, emissions string) are
+# not repeated here — only the output values set by set_gocart() and set_emissions().
+
+defaults:
+  ops_species: '#'
+  cmip_species: '#'
+  MERRA2OX_species: '#'
+  pchem_clim_years: ''
+  ox_relaxtime: null
+  gocart: ''
+  gocart_hist: null
+  aero_provider: GOCART2G
+  rats_provider: PCHEM
+  ch4_provider: none
+  c02_provider: none
+
+aerosol:
+  Actual:
+    data_driven: false
+    gocart: ''
+    gocart_hist: ''
+  Climatological:
+    data_driven: true
+    gocart: '#'
+    gocart_hist: '#DELETE'
+
+emissions:
+  OPS:
+    ops_species: ''
+    pchem_clim_years: 1
+    ox_relaxtime: '0.00'
+  AMIP:
+    MERRA2OX_species: ''
+    pchem_clim_years: 39
+    ox_relaxtime: '259200.'
+
+data_atmos_defaults:
+  # When OM_data_atmos is true, GOCART questions are skipped and these values are used
+  aerosol: Actual
+  emissions: OPS

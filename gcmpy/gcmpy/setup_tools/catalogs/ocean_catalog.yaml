@@ -1,0 +1,175 @@
+coupled:
+  coupled:
+  tag: Reynolds
+  sst_name: '#DELETE'
+  sst_file: '#DELETE'
+  ice_file: '#DELETE'
+  ostia: '#DELETE'
+  out: '#DELETE'
+  latlon:
+  cube: '#DELETE'
+  data: '#DELETE'
+  NF: 1
+
+  MOM6:
+    name: MOM6
+    gridtyp: M6TP
+    grid_type: Tripolar
+    preload: env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@
+    MOM6:
+    MIT: '#DELETE'
+    resolution:
+      o72:
+        NX: 3
+        NY: 2
+        IM: 72
+        JM: 36
+        LM: 50
+        IMO: '0072'
+        JMO: '0036'
+        res: M6TP0072x0036
+        kpar_file: SEAWIFS_KPAR_mon_clim.72x36
+        gridname: PE72x36-M6TP
+        nprocs: 6
+      o540:
+        NX: 90
+        NY: 2
+        IM: 540
+        JM: 458
+        LM: 50
+        IMO: '0540'
+        JMO: '0458'
+        res: M6TP0540x0458
+        kpar_file: SEAWIFS_KPAR_mon_clim.540x458
+        gridname: PE540x458-M6TP
+        nprocs: 180
+      o1440:
+        NX: 36
+        NY: 30
+        IM: 1440
+        JM: 1080
+        LM: 75
+        IMO: '1440'
+        JMO: '1080'
+        res: M6TP1440x1080
+        kpar_file: SEAWIFS_KPAR_mon_clim.1440x1080
+        gridname: PE1440x1080-M6TP
+        nprocs: 1080
+
+  MIT:
+    name: MIT
+    gridtyp: MITLLC
+    grid_type: llc
+    MOM6: '#DELETE'
+    MIT:
+    IM: 5400
+    JM: 15
+    NX: 360
+    NY: 1
+    IMO: '5400'
+    JMO: '0015'
+    res: MITLLC5400x0015
+    kpar_file: SEAWIFS_KPAR_mon_clim.5400x15
+    gridname: MITLLC5400x15-MITLLC
+    nprocs: 360
+
+seaice:
+  CICE4:
+    seaice_preload: $GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@
+    CICE4:
+    CICE6: '#DELETE'
+    hist_CICE4:
+  CICE6:
+    seaice_preload: $GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@
+    CICE4: '#DELETE'
+    CICE6:
+    hist_CICE4: '#DELETE'
+
+data_atmosphere:
+  true:
+    modelatm: '#DELETE'
+    use_data_ATM4OCN: '.TRUE.'
+  false:
+    modelatm:
+    use_data_ATM4OCN: '.FALSE.'
+
+uncoupled:
+  name: ''
+  preload: ''
+  LM: 34
+  coupled: '#DELETE'
+  MOM6: '#DELETE'
+  MIT: '#DELETE'
+  CICE4: '#DELETE'
+  CICE6: '#DELETE'
+  hist_CICE4: '#DELETE'
+  NX: ''
+  NY: ''
+  nprocs: ''
+
+  o1:
+    IM: 360
+    JM: 180
+    grid_type: LatLon
+    NF: 1
+    tag: Reynolds
+    sst_name: SST
+    out: 360x180
+    gridtyp: DE
+    latlon:
+    cube: '#DELETE'
+    ostia: '#DELETE'
+    data:
+    IMO: '0360'
+    JMO: '0180'
+    res: DE0360xPE0180
+    gridname: PE360x180-DE
+
+  o2:
+    IM: 1440
+    JM: 720
+    grid_type: LatLon
+    NF: 1
+    tag: MERRA-2
+    sst_name: MERRA2
+    out: 1440x720
+    gridtyp: DE
+    latlon:
+    cube: '#DELETE'
+    ostia:
+    data:
+    IMO: '1440'
+    JMO: '0720'
+    res: DE1440xPE0720
+    gridname: PE1440x720-DE
+
+  o3:
+    IM: 2880
+    JM: 1440
+    grid_type: LatLon
+    NF: 1
+    tag: Ostia
+    sst_name: OSTIA_REYNOLDS
+    out: 2880x1440
+    gridtyp: DE
+    latlon:
+    cube: '#DELETE'
+    ostia: ''
+    data: ''
+    IMO: '2880'
+    JMO: '1440'
+    res: DE2880xPE1440
+    gridname: PE2880x1440-DE
+
+  CS:
+    # IM and JM are derived at runtime from AM_horizontal_res
+    grid_type: Cubed-Sphere
+    NF: 6
+    tag: Ostia
+    sst_name: OSTIA_REYNOLDS
+    out: CS
+    gridtyp: CF
+    latlon: '#DELETE'
+    cube: ''
+    ostia: ''
+    data: ''
