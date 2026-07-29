@@ -233,8 +233,12 @@ class SymlinkCreator:
 
     def tile_paths(self) -> dict:
         tile_data = self.bcs_dir / "geometry" / self.bcrslv / f"{self.bcrslv}-Pfafstetter.til"
-        tile_bin = self. bcs_dir / "geometry" / self.bcrslv / f"{self.bcrslv}-Pfafstetter.til.bin"
+        tile_bin = self.bcs_dir / "geometry" / self.bcrslv / f"{self.bcrslv}-Pfafstetter.til.bin"
+        tile_nc4 = self.bcs_dir / "geometry" / self.bcrslv / f"{self.bcrslv}-Pfafstetter.nc4"
         paths = {"tile.data": tile_data, "tile.bin": tile_bin}
+        
+        if tile_nc4.exists():
+            paths["tile.nc4"] = tile_nc4
 
         return paths
 
