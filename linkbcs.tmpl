@@ -31,6 +31,10 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 @DATAOCEANif(     -e  $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
 @DATAOCEAN/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
 @DATAOCEANendif
+@DATAOCEANif(     -e  $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.nc4) then
+@DATAOCEAN/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.nc4  tile.nc4
+@DATAOCEANendif
+
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
