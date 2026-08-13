@@ -1039,14 +1039,20 @@ endif
 @MIT # End MITgcm restarts - before running GEOSgcm.x
 @MIT # ---------------------------------------------------
 
-# Set OMP_NUM_THREADS
-# -------------------
+# Establish OpenMP threads and bindings
+# -----------------------------------------------
 setenv OMP_NUM_THREADS 1
 if ($OMP_NUM_THREADS > 1) then
   setenv OMP_STACKSIZE 16M
-  setenv KMP_AFFINITY compact
+    
+  # Universal OpenMP binding (Works perfectly on Milan, and modern Intel)
+  setenv OMP_PLACES cores
+  setenv OMP_PROC_BIND close
+  
   echo OMP_STACKSIZE    $OMP_STACKSIZE
-  echo KMP_AFFINITY     $KMP_AFFINITY
+  echo OMP_PLACES       $OMP_PLACES
+  echo OMP_PROC_BIND    $OMP_PROC_BIND
+
   ./strip GWD_GridComp.rc
   sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
 endif
