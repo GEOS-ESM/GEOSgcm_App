@@ -8,6 +8,7 @@ EXPDSC: @EXPDSC
 
 GRID_LABELS: PC@HIST_IMx@HIST_JM-DC
              PE@APERT_IMx@APERT_JM-CF
+             PE90x540-CF
 #            PC1152x721-DC
              PC288x181-DC
              PC540x361-DC
@@ -26,6 +27,13 @@ PE@APERT_IMx@APERT_JM-CF.JM_WORLD: @APERT_JM
 PE@APERT_IMx@APERT_JM-CF.POLE: PC
 PE@APERT_IMx@APERT_JM-CF.DATELINE: DC
 PE@APERT_IMx@APERT_JM-CF.LM: 72
+
+PE90x@540-CF.GRID_TYPE: Cubed-Sphere
+PE90x@540-CF.IM_WORLD: 90
+PE90x@540-CF.JM_WORLD: 540
+PE90x@540-CF.POLE: PC
+PE90x@540-CF.DATELINE: DC
+PE90x@540-CF.LM: 72
 
 #PC1152x721-DC.GRID_TYPE: LatLon
 #PC1152x721-DC.IM_WORLD: 1152
@@ -50,9 +58,10 @@ PC288x181-DC.LM: 72
  
 COLLECTIONS: 'prog.eta'
              'prog.sfc'
+             'prog.ceta'
 # Forecast Files
              'inst1_2d_asm_Nx'
-             'inst3_3d_asm_Np'
+#            'inst3_3d_asm_Np'
 #            'inst3_3d_asm_Nv'
 #            'tavg1_2d_slv_Nx'
 #            'tavg1_2d_flx_Nx'
@@ -1054,3 +1063,67 @@ COLLECTIONS: 'prog.eta'
                        'PV'     , 'DYN'      ,
                        'EPV'    , 'DYN'      ,
                        ::
+
+
+# The following look like the trajectories for the ADJ model, but
+# its purpose is to generate background files for JEDI; thus unlike
+# the adjoint-trajectory files, these are written out within the
+# background time interval.
+  prog.ceta.format:         'CFIO' ,
+  prog.ceta.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
+  prog.ceta.nbits:          10 ,
+  prog.ceta.deflate:        2 ,
+  prog.ceta.regrid_method:  'BILINEAR_MONOTONIC' ,
+  prog.ceta.frequency:      060000 ,
+  prog.ceta.duration:       060000 ,
+  prog.ceta.ref_time:       000000 ,
+  prog.ceta.mode:           'instantaneous' ,
+  prog.ceta.grid_label:     PE90x540-CF ,
+# prog.ceta.grid_label:     PE180x1080-CF ,
+  prog.ceta.fields:         'U_DGRID;V_DGRID'  , 'DYN'         , 'u;v'        ,
+                               'U;V'              , 'DYN'         , 'ua;va'      ,
+                               'T'                , 'DYN'         , 't'          ,
+                               'TV'               , 'DYN'         , 'tv'         ,
+                               'Q'                , 'MOIST'       , 'q'          ,
+                               'DELP'             , 'DYN'         , 'delp'       ,
+                               'QITOT'            , 'AGCM'        , 'qi'         ,
+                               'QLTOT'            , 'AGCM'        , 'ql'         ,
+                               'QSTOT'            , 'MOIST'       , 'qs'         ,
+                               'QRTOT'            , 'MOIST'       , 'qr'         ,
+                               'O3PPMV'           , 'CHEMISTRY'   , 'o3ppmv'     ,
+                               'GOCART::CO2'      , 'GOCART'      , 'co2'        ,
+                               'QCLSX0'           , 'MOIST'       , 'qls'        ,
+                               'QCCNX0'           , 'MOIST'       , 'qcn'        ,
+                               'CLCNX0'           , 'MOIST'       , 'cfcn'       ,
+                               'PS'               , 'DYN'         , 'ps'         ,
+                               'PHIS'             , 'AGCM'        , 'phis'       ,
+                               'FRLAND'           , 'SURFACE'     , 'frland'     ,
+                               'FRLANDICE'        , 'SURFACE'     , 'frlandice'  ,
+                               'FRLAKE'           , 'SURFACE'     , 'frlake'     ,
+                               'FROCEAN'          , 'SURFACE'     , 'frocean'    ,
+                               'FRACI'            , 'SURFACE'     , 'frseaice'   ,
+                               'KCBL_moist'       , 'MOIST'       , 'kcbl'       ,
+                               'TS_moist'         , 'MOIST'       , 'tsm'        ,
+                               'KHl_moist'        , 'MOIST'       , 'khl'        ,
+                               'KHu_moist'        , 'MOIST'       , 'khu'        ,
+                               'VARFLT'           , 'AGCM'        , 'varflt'     ,
+                               'USTAR'            , 'SURFACE'     , 'ustar'      ,
+                               'BSTAR'            , 'SURFACE'     , 'bstar'      ,
+                               'ZPBL'             , 'TURBULENCE'  , 'zpbl'       ,
+                               'CM'               , 'SURFACE'     , 'cm'         ,
+                               'CT'               , 'SURFACE'     , 'ct'         ,
+                               'CQ'               , 'SURFACE'     , 'cq'         ,
+                               'U10N;V10N'        , 'SURFACE'     , 'u10m;v10m'  ,
+                               'TA'               , 'DYN'         , 'ta'         ,
+                               'TS'               , 'SURFACE'     , 'ts'         ,
+                               'SNOMAS'           , 'SURFACE'     , 'sheleg'     ,
+                               'TSOIL1'           , 'SURFACE'     , 'soilt'      ,
+                               'WET1'             , 'SURFACE'     , 'soilm'      ,
+                               'DCOOL'            , 'SURFACE'     , 'dcool'      ,
+                               'DWARM'            , 'SURFACE'     , 'dwarm'      ,
+                               'TDROP'            , 'SURFACE'     , 'tdrop'      ,
+                               'TS_FOUND'         , 'SURFACE'     , 'ts_found'   ,
+                               'TDEL'             , 'SURFACE'     , 'tdel'       ,
+                               'Z0'               , 'SURFACE'     , 'z0m'        ,
+                              ::
+
