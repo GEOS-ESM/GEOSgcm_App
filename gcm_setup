@@ -1307,7 +1307,7 @@ EMISSIONS:
         set OX_RELAXTIME = 0.00
      else
         set MERRA2OX_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 39
+        set PCHEM_CLIM_YEARS = 47
         set OX_RELAXTIME = 259200.
      endif
 

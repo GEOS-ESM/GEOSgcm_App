@@ -485,7 +485,7 @@ mkdir -p $expdir/ExtData
 /bin/cp $SOURCEDIR/HISTORY.rc $expdir
 
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 $expdir/species.data
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 $expdir/species.data
+/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-202512.z_91x72.nc4 $expdir/species.data
 
 /bin/cp $INSTALLDIR/etc/*.rc $expdir
 

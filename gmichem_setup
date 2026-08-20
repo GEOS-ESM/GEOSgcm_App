@@ -1434,7 +1434,7 @@ EMISSIONS:
         set OX_RELAXTIME = 0.00
      else
         set MERRA2OX_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 39
+        set PCHEM_CLIM_YEARS = 47
         set OX_RELAXTIME = 259200.
      endif
 
@@ -1451,7 +1451,7 @@ if($APNum == 2) then
    set DATA_DRIVEN      = FALSE
    set EMISSIONS        = ""
 # which PCHEM species to use
-# (does not matter, but the run-script may object if PCHEM_CLIM_YEARS == 39)
+# (does not matter, but the run-script may object if PCHEM_CLIM_YEARS == 47)
    set OPS_SPECIES      = "#"
    set MERRA2OX_SPECIES = "#"
    set CMIP_SPECIES     = ''
@@ -1470,7 +1470,7 @@ if($APNum == 3) then
    set DATA_DRIVEN      = FALSE
    set EMISSIONS        = ""
 # which PCHEM species to use
-# (does not matter, but the run-script may object if PCHEM_CLIM_YEARS == 39)
+# (does not matter, but the run-script may object if PCHEM_CLIM_YEARS == 47)
    set OPS_SPECIES      = "#"
    set MERRA2OX_SPECIES = "#"
    set CMIP_SPECIES     = ''
