@@ -56,12 +56,12 @@ if ( $?BASEDIR ) then
     setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
 endif
 
-# Spack preserves macOS DYLD paths under SPACK_DYLD_* because SIP strips them from child processes.
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
 if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
-    if ( $?@LD_LIBRARY_PATH_CMD ) then
-        setenv @LD_LIBRARY_PATH_CMD "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${@LD_LIBRARY_PATH_CMD}"
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
     else
-        setenv @LD_LIBRARY_PATH_CMD "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
     endif
 endif
 
