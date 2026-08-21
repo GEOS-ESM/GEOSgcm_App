@@ -35,6 +35,6 @@ emissions:
     ox_relaxtime: '259200.'
 
 data_atmos_defaults:
-  # When OM_data_atmos is true, GOCART questions are skipped and these values are used
+  # When OCEAN_data_atmosphere is true, GOCART questions are skipped and these values are used
   aerosol: Actual
   emissions: OPS

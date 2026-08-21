@@ -4,12 +4,12 @@ class Gocart:
     def __init__(gocart, expConfig):
         gocart.expConfig = expConfig
         # Gocart questions are skipped if data atmosphere is turned on. Use defaults
-        if gocart.expConfig['OM_data_atmos'] == True:
+        if gocart.expConfig['OCEAN_data_atmosphere'] == True:
             gocart.aerosol = 'Actual'
             gocart.emissions = 'OPS_EMISSIONS'
         else:
-            gocart.aerosol = gocart.expConfig["gocart_aerosols"]
-            gocart.emissions = f"{gocart.expConfig['gocart_emission']}_EMISSIONS"
+            gocart.aerosol = gocart.expConfig["GOCART_aerosols"]
+            gocart.emissions = f"{gocart.expConfig['GOCART_emission']}_EMISSIONS"
         gocart.data_driven        = None
         gocart.ops_species        = '#'
         gocart.cmip_species       = '#'
@@ -52,7 +52,7 @@ class Gocart:
             gocart.ox_relaxtime = '259200.'
 
     def adjust_tuning_coefficients(gocart):
-        if  int(gocart.expConfig['AM_vertical_res'] != 72):
+        if  int(gocart.expConfig['AGCM_LM'] != 72):
             return
 
         # Switch GOCART2G tuning coefficients to L072 values if needed

@@ -46,6 +46,6 @@ models:
     GCMRUN_catchment: ''
 
 data_atmos_defaults:
-  # When OM_data_atmos is true, land questions are skipped and these values are used
+  # When OCEAN_data_atmosphere is true, land questions are skipped and these values are used
   model: Catchment
   bcs: NL3

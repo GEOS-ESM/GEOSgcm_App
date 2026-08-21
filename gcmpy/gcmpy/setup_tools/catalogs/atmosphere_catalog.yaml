@@ -1,5 +1,5 @@
 # Atmosphere catalog derived from atmosphere.py and geos_settings/horizontal_resolution.py
-# Fields that are derived at runtime from AM_horizontal_res (im, jm, gridfile, res,
+# Fields that are derived at runtime from AGCM_grid (im, jm, gridfile, res,
 # gridname, res_dateline, hist_im, hist_jm) are not repeated here since they are
 # formulaic (e.g. jm = im*6). Only static / lookup data is stored.
 

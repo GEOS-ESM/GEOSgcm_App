@@ -4,12 +4,12 @@ class Land:
     def __init__(land, expConfig):
         land.expConfig = expConfig
         # If data atmosphere is enabled, land questions are skipped. Use default values.
-        if land.expConfig['OM_data_atmos'] == True:
+        if land.expConfig['OCEAN_data_atmosphere'] == True:
             land.model = "Catchment"
             land.bcs = "NL3"
         else:
-            land.model              = land.expConfig["LS_model"]
-            land.bcs                = land.expConfig["LS_boundary_conditions"]
+            land.model              = land.expConfig["LAND_model"]
+            land.bcs                = land.expConfig["LAND_bcs"]
         land.parameters         = ''
         land.emip_bcs_in        = ''
         land.emip_oldland       = ''

@@ -13,13 +13,13 @@ class Atmosphere:
         atmos.dt_solar           = None
         atmos.dt_irrad           = None
         atmos.dt_ocean           = atmos.expConfig['heartbeat']
-        atmos.lm                 = int(atmos.expConfig['AM_vertical_res'])
-        atmos.im                 = int(atmos.expConfig['AM_horizontal_res'][1:])
+        atmos.lm                 = int(atmos.expConfig['AGCM_LM'])
+        atmos.im                 = int(atmos.expConfig['AGCM_grid'][1:])
         atmos.jm                 = atmos.im * 6
         atmos.nx                 = None
         atmos.ny                 = None
         atmos.nf                 = 6
-        atmos.microphysics       = atmos.expConfig["AM_microphysics"]
+        atmos.microphysics       = atmos.expConfig["MOIST_version"]
         atmos.hist_im            = atmos.im * 4
         atmos.hist_jm            = atmos.im * 2 + 1
         atmos.gridfile           = f"Gnomonic_c{atmos.im}.dat"
@@ -60,12 +60,12 @@ class Atmosphere:
 
 
     def hres(atmos, ocean_nx, ocean_ny):
-        match atmos.expConfig["AM_horizontal_res"]:
+        match atmos.expConfig["AGCM_grid"]:
             case "c12":
                 for key, value in atmos_hres_settings['c12'].items():
                     setattr(atmos, key, value)
                 atmos.nx = 2
-                if atmos.expConfig["OM_name"] == "MOM6":
+                if atmos.expConfig["OCEAN_type"] == "MOM6":
                     atmos.nx = 1
                 atmos.ny = atmos.nx * 6
 
@@ -85,13 +85,13 @@ class Atmosphere:
                 for key, value in atmos_hres_settings['c90'].items():
                     setattr(atmos, key, value)
                 atmos.dt_ocean       = atmos.dt
-                if atmos.expConfig['OM_name'] == 'MIT':
+                if atmos.expConfig['OCEAN_type'] == 'MIT':
                     atmos.nx     = 10
                     atmos.ny     = 36
-                elif atmos.expConfig['OM_name'] == 'MOM5':
+                elif atmos.expConfig['OCEAN_type'] == 'MOM5':
                     atmos.nx     = ocean_nx
                     atmos.ny     = ocean_ny
-                elif atmos.expConfig['OM_name'] == 'MOM6':
+                elif atmos.expConfig['OCEAN_type'] == 'MOM6':
                     atmos.nx     = 5
                     atmos.ny     = 36
                 else:
@@ -103,10 +103,10 @@ class Atmosphere:
                 for key, value in atmos_hres_settings['c180'].items():
                     setattr(atmos, key, value)
                 atmos.dt_ocean       = atmos.dt
-                if atmos.expConfig['OM_name'] == 'MOM6':
+                if atmos.expConfig['OCEAN_type'] == 'MOM6':
                     atmos.nx         = 30
                     atmos.ny         = 36
-                elif atmos.expConfig['OM_name'] == 'MOM5' or atmos.expConfig['OM_name'] == 'MIT':
+                elif atmos.expConfig['OCEAN_type'] == 'MOM5' or atmos.expConfig['OCEAN_type'] == 'MIT':
                     atmos.nx         = ocean_nx
                     atmos.ny         = ocean_ny
                 else:

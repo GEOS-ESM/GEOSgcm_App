@@ -18,43 +18,42 @@ coupled:
     preload: env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@
     MOM6:
     MIT: '#DELETE'
-    resolution:
-      o72:
-        NX: 3
-        NY: 2
-        IM: 72
-        JM: 36
-        LM: 50
-        IMO: '0072'
-        JMO: '0036'
-        res: M6TP0072x0036
-        kpar_file: SEAWIFS_KPAR_mon_clim.72x36
-        gridname: PE72x36-M6TP
-        nprocs: 6
-      o540:
-        NX: 90
-        NY: 2
-        IM: 540
-        JM: 458
-        LM: 50
-        IMO: '0540'
-        JMO: '0458'
-        res: M6TP0540x0458
-        kpar_file: SEAWIFS_KPAR_mon_clim.540x458
-        gridname: PE540x458-M6TP
-        nprocs: 180
-      o1440:
-        NX: 36
-        NY: 30
-        IM: 1440
-        JM: 1080
-        LM: 75
-        IMO: '1440'
-        JMO: '1080'
-        res: M6TP1440x1080
-        kpar_file: SEAWIFS_KPAR_mon_clim.1440x1080
-        gridname: PE1440x1080-M6TP
-        nprocs: 1080
+    c12:
+      NX: 3
+      NY: 2
+      IM: 72
+      JM: 36
+      LM: 50
+      IMO: '0072'
+      JMO: '0036'
+      res: M6TP0072x0036
+      kpar_file: SEAWIFS_KPAR_mon_clim.72x36
+      gridname: PE72x36-M6TP
+      nprocs: 6
+    c90:
+      NX: 90
+      NY: 2
+      IM: 540
+      JM: 458
+      LM: 50
+      IMO: '0540'
+      JMO: '0458'
+      res: M6TP0540x0458
+      kpar_file: SEAWIFS_KPAR_mon_clim.540x458
+      gridname: PE540x458-M6TP
+      nprocs: 180
+    c180:
+      NX: 36
+      NY: 30
+      IM: 1440
+      JM: 1080
+      LM: 75
+      IMO: '1440'
+      JMO: '1080'
+      res: M6TP1440x1080
+      kpar_file: SEAWIFS_KPAR_mon_clim.1440x1080
+      gridname: PE1440x1080-M6TP
+      nprocs: 1080
 
   MIT:
     name: MIT
@@ -86,10 +85,10 @@ seaice:
     hist_CICE4: '#DELETE'
 
 data_atmosphere:
-  true:
+  'true':
     modelatm: '#DELETE'
     use_data_ATM4OCN: '.TRUE.'
-  false:
+  'false':
     modelatm:
     use_data_ATM4OCN: '.FALSE.'
 
