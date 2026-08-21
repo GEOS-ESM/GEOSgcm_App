@@ -1,247 +1,196 @@
-from gcmpy.utils.color_ops import Color
-from gcmpy.geos_settings.horizontal_resolution import atmos_hres_settings
-
-class Atmosphere:
-    def __init__(atmos, expConfig):
-        atmos.expConfig          = expConfig
-        atmos.use_SHMEM          = 0
-        atmos.force_das          = "#"
-        atmos.force_gcm          = "#"
-        atmos.num_readers        = 1
-        atmos.num_writers        = 1
-        atmos.dt                 = atmos.expConfig['heartbeat']
-        atmos.dt_solar           = None
-        atmos.dt_irrad           = None
-        atmos.dt_ocean           = atmos.expConfig['heartbeat']
-        atmos.lm                 = int(atmos.expConfig['AGCM_LM'])
-        atmos.im                 = int(atmos.expConfig['AGCM_grid'][1:])
-        atmos.jm                 = atmos.im * 6
-        atmos.nx                 = None
-        atmos.ny                 = None
-        atmos.nf                 = 6
-        atmos.microphysics       = atmos.expConfig["MOIST_version"]
-        atmos.hist_im            = atmos.im * 4
-        atmos.hist_jm            = atmos.im * 2 + 1
-        atmos.gridfile           = f"Gnomonic_c{atmos.im}.dat"
-        atmos.job_sgmt           = None
-        atmos.num_sgmt           = None
-        atmos.res                = f"CF{atmos.im:04}x6C"
-        atmos.post_NDS           = None
-        atmos.nx_convert         = 2
-        atmos.ny_convert         = 24
-        atmos.conus              = '#'
-        atmos.stretch_factor     = ''
-        atmos.FV_stretch_fac     = ''
-        atmos.gridname           = f"PE{atmos.im}x{atmos.jm}-CF"
-        atmos.res_dateline       = f"{atmos.im}x{atmos.jm}"
-        atmos.BACM_1M            = "#"
-        atmos.GFDL_1M            = "#"
-        atmos.MGB2_2M            = "#"
-        atmos.RRTMGP_RADIATION   = ""
-        atmos.RRTMG_RADIATION    = "#DELETE"
-        atmos.KLID               = ""
-        atmos.GFDL_hydro         = ".TRUE."
-        atmos.GFDL_prog_ccn      = "prog_ccn = .true."
-        atmos.GFDL_use_ccn       = "use_ccn = .true."
-        atmos.MP_turnoff_wsub    = None
-        atmos.FV_make_NH         = None
-        atmos.FV_hydro           = None
-        atmos.FV_hwt             = None
-        atmos.schmidt            = None
-        atmos.target_lon         = None
-        atmos.target_lat         = None
-        atmos.convpar_option     = 'GF'
-        atmos.mp_turn_off_wsub_extdata = None
-        atmos.low_res            = False
-
-        # These are superfluous for GCM, but are needed SCM (considered latlon)
-        atmos.latlon             = '#DELETE'
-        atmos.cube               = ''
+from pathlib import Path
+import yaml
 
 
-    def hres(atmos, ocean_nx, ocean_ny):
-        match atmos.expConfig["AGCM_grid"]:
-            case "c12":
-                for key, value in atmos_hres_settings['c12'].items():
-                    setattr(atmos, key, value)
-                atmos.nx = 2
-                if atmos.expConfig["OCEAN_type"] == "MOM6":
-                    atmos.nx = 1
-                atmos.ny = atmos.nx * 6
+CATALOG_PATH = Path(__file__).parent / "catalogs" / "atmosphere_catalog.yaml"
 
-            case "c24":
-                for key, value in atmos_hres_settings['c24'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 4
-                atmos.ny             = atmos.nx * 6
+# Sentinel to distinguish "found with value None" from "key not found".
+_NOT_FOUND = object()
 
-            case "c48":
-                for key, value in atmos_hres_settings['c48'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 6
-                atmos.ny             = atmos.nx * 6
 
-            case "c90":
-                for key, value in atmos_hres_settings['c90'].items():
-                    setattr(atmos, key, value)
-                atmos.dt_ocean       = atmos.dt
-                if atmos.expConfig['OCEAN_type'] == 'MIT':
-                    atmos.nx     = 10
-                    atmos.ny     = 36
-                elif atmos.expConfig['OCEAN_type'] == 'MOM5':
-                    atmos.nx     = ocean_nx
-                    atmos.ny     = ocean_ny
-                elif atmos.expConfig['OCEAN_type'] == 'MOM6':
-                    atmos.nx     = 5
-                    atmos.ny     = 36
-                else:
-                    atmos.nx     = 10
-                    atmos.ny     = atmos.nx * 6
-                    atmos.dt_ocean = 3600
+class AtmosCatalog:
+    """
+    Loads atmosphere_catalog.yaml and provides catalog lookups driven by expConfig.
 
-            case "c180":
-                for key, value in atmos_hres_settings['c180'].items():
-                    setattr(atmos, key, value)
-                atmos.dt_ocean       = atmos.dt
-                if atmos.expConfig['OCEAN_type'] == 'MOM6':
-                    atmos.nx         = 30
-                    atmos.ny         = 36
-                elif atmos.expConfig['OCEAN_type'] == 'MOM5' or atmos.expConfig['OCEAN_type'] == 'MIT':
-                    atmos.nx         = ocean_nx
-                    atmos.ny         = ocean_ny
-                else:
-                    atmos.nx         = 20
-                    atmos.ny         = atmos.nx * 6
-                    atmos.dt_ocean   = 3600
+    Uses the same recursive search pattern as OceanCatalog: config values are used
+    as navigation keys to descend into matching sub-dicts. Structural grouping keys
+    (e.g. 'resolutions', 'microphysics') that are not config values are treated as
+    transparent pass-throughs in the second pass.
+    """
 
-            case "c360":
-                for key, value in atmos_hres_settings['c360'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 30
-                atmos.ny             = atmos.nx * 6
+    def __init__(self, expConfig: dict, catalog_path: Path = CATALOG_PATH):
+        self.config = expConfig
+        self.catalog = self._load_yaml(catalog_path)
 
-            case "c720":
-                for key, value in atmos_hres_settings['c720'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 40
-                atmos.ny             = atmos.nx * 6
+    def _load_yaml(self, path: Path) -> dict:
+        with open(path, 'r') as f:
+            return yaml.safe_load(f)
 
-            case "c1120":
-                for key, value in atmos_hres_settings['c1120'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 60
-                atmos.ny             = atmos.nx * 6
+    def get_value(self, target: str, section: str):
+        """Return the value for target by searching recursively through catalog[section]."""
+        result = self._search_recursive(target, self.catalog[section])
+        return None if result is _NOT_FOUND else result
 
-            case "c1440":
-                for key, value in atmos_hres_settings['c1440'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6
+    def _search_recursive(self, target: str, catalog_section: dict):
+        config_values = set(str(v) for v in self.config.values())
 
-            case "c2880":
-                for key, value in atmos_hres_settings['c2880'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6
+        if target in catalog_section:
+            value = catalog_section[target]
+            # Scalar leaf — return directly.
+            if not isinstance(value, dict):
+                return value
+            # Value-lookup dict (e.g. nx: {MOM6: 5, MIT: 10, data_ocean: 10}):
+            # try to resolve via a matching config value, then fall back to data_ocean.
+            for k, v in value.items():
+                if str(k) in config_values:
+                    return v
+            if 'data_ocean' in value:
+                return value['data_ocean']
+            return _NOT_FOUND
 
-            case "c5760":
-                for key, value in atmos_hres_settings['c5760'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6
+        # First pass: descend into sub-dicts whose key matches a config value.
+        for section_name, section_data in catalog_section.items():
+            if not isinstance(section_data, dict):
+                continue
+            if section_name not in config_values:
+                continue
+            result = self._search_recursive(target, section_data)
+            if result is not _NOT_FOUND:
+                return result
 
-            case "c270":
-                for key, value in atmos_hres_settings['c270'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 20
-                atmos.ny             = atmos.nx * 6 * 2
+        # Second pass: transparent pass-through for structural grouping keys
+        # (e.g. 'resolutions', 'microphysics') that are not config values.
+        for section_name, section_data in catalog_section.items():
+            if not isinstance(section_data, dict):
+                continue
+            if section_name in config_values:
+                continue
+            result = self._search_recursive(target, section_data)
+            if result is not _NOT_FOUND:
+                return result
 
-            case "c540":
-                for key, value in atmos_hres_settings['c540'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 30
-                atmos.ny             = atmos.nx * 6 * 2
+        return _NOT_FOUND
 
-            case "c1080":
-                for key, value in atmos_hres_settings['c1080'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 40
-                atmos.ny             = atmos.nx * 6 * 2
 
-            case "c1536":
-                for key, value in atmos_hres_settings['c1536'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 60
-                atmos.ny             = atmos.nx * 6
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
 
-            case "c2160":
-                for key, value in atmos_hres_settings['c2160'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6 * 2
+def _build_defaults(atmos: dict, catalog: AtmosCatalog):
+    """Apply all defaults from the catalog onto the atmos dict."""
+    for key, value in catalog.catalog['defaults'].items():
+        atmos[key] = value
 
-            case 'c4320':
-                for key, value in atmos_hres_settings['c4320'].items():
-                    setattr(atmos, key, value)
-                atmos.nx             = 80
-                atmos.ny             = atmos.nx * 6 * 2
 
-    def set_microphysics(atmos):
-        if atmos.microphysics == "BACM_1M":
-            atmos.BACM_1M = ""
-            atmos.conv_dt = 450
-            atmos.chem_dt = 450
-            atmos.RRTMGP_RADIATION = "#DELETE"
-            atmos.RRTMG_RADIATION  = ""
-            if atmos.lm >= 181:
-                atmos.KLID = "19.0"
-            elif atmos.lm == 137:
-                atmos.KLID = "14.0"
-            elif atmos.lm == 91:
-                atmos.KLID = "13.0"
-            elif atmos.lm == 72:
-                atmos.KLID = "14.0"
-        elif atmos.microphysics == "GFDL_1M":
-            atmos.GFDL_1M = ""
-        elif atmos.microphysics == "MGB2_2M":
-            atmos.MGB2_2M = ""
+def _build_resolution(atmos: dict, catalog: AtmosCatalog, expConfig: dict,
+                      ocean_nx=None, ocean_ny=None):
+    """Apply resolution-specific fields from the catalog, plus runtime-only fields."""
 
-    def set_turnoff_wsub(atmos):
-        if atmos.microphysics == "MGB2_2M":
-            atmos.MP_turnoff_wsub = "#DELETE"
+    # Runtime-only fields — not in catalog
+    atmos['dt']          = expConfig['heartbeat']
+    atmos['lm']          = int(expConfig['AGCM_LM'])
+    atmos['microphysics'] = expConfig['MOIST_version']
+
+    # All other resolution fields come from the catalog.
+    # Recursive search navigates: resolutions -> AGCM_grid -> [OCEAN_type sub-dicts]
+    res_fields = [
+        'im', 'jm', 'hist_im', 'hist_jm',
+        'gridfile', 'gridname', 'res_dateline',
+        'conv_dt', 'chem_dt', 'dt_solar', 'dt_irrad', 'dt_ocean',
+        'job_sgmt', 'num_sgmt', 'post_NDS', 'res',
+        'nx_convert', 'ny_convert', 'num_readers',
+        'use_SHMEM', 'conus', 'stretch_factor', 'low_res', 'convpar_option',
+        'nx', 'ny',
+    ]
+    for field in res_fields:
+        atmos[field] = catalog.get_value(field, 'resolutions')
+
+    # MIT at c180: nx/ny are null in catalog — use runtime ocean values.
+    if atmos.get('nx') is None:
+        atmos['nx'] = ocean_nx
+    if atmos.get('ny') is None:
+        atmos['ny'] = ocean_ny
+
+
+def _build_microphysics(atmos: dict, catalog: AtmosCatalog, expConfig: dict):
+    """Apply microphysics fields from the catalog."""
+    micro_fields = [
+        'BACM_1M', 'GFDL_1M', 'MGB2_2M',
+        'RRTMGP_RADIATION', 'RRTMG_RADIATION',
+        'conv_dt', 'chem_dt',
+    ]
+    for field in micro_fields:
+        value = catalog.get_value(field, 'microphysics')
+        if value is not None:
+            atmos[field] = value
+
+    # KLID: only set for BACM_1M; keyed by lm in catalog
+    if expConfig['MOIST_version'] == 'BACM_1M':
+        lm = atmos['lm']
+        if lm >= 181:
+            klid_key = '181+'
+        elif lm == 137:
+            klid_key = '137'
+        elif lm == 91:
+            klid_key = '91'
         else:
-            atmos.MP_turnoff_wsub = ""
+            klid_key = '72'
+        atmos['KLID'] = catalog.catalog['microphysics']['BACM_1M']['KLID'][klid_key]
 
-    def set_conus(atmos):
-        if atmos.conus == "#":
-            atmos.schmidt        = "do_schmidt  = .false."
-            atmos.FV_stretch_fac = "stretch_fac = 1.0"
-            atmos.target_lon     = "target_lon  = 0.0"
-            atmos.target_lat     = "target_lat  = -90.0"
-        else:
-            atmos.schmidt        = "do_schmidt  = .true."
-            atmos.FV_stretch_fac = f"stretch_fac = {atmos.stretch_factor}"
-            atmos.target_lon     = "target_lon  = -98.35"
-            atmos.target_lat     = "target_lat  = 39.5"
-            atmos.FV_hwt         = ''
 
-    def set_wsub_extdata(atmos):
-        if atmos.microphysics == 'BACM_1M' or atmos.microphysics == 'GFDL_1M':
-            atmos.mp_turn_off_wsub_extdata = ''
-        else:
-            atmos.mp_turn_off_wsub_extdata = '#DELETE#'
+def _build_wsub(atmos: dict, catalog: AtmosCatalog, expConfig: dict):
+    """Apply wsub extdata fields from the catalog."""
+    for field in ['mp_turn_off_wsub_extdata', 'MP_turnoff_wsub']:
+        atmos[field] = catalog.get_value(field, 'wsub_extdata')
 
-    # Set coarse resolution CLIM output
-    def set_CLIM(atmos):
-        atmos.CLIM_IM = 576
-        atmos.CLIM_JM = 361
-        if (atmos.CLIM_IM > atmos.hist_im):
-            atmos.CLIM_IM = atmos.hist_im
-            atmos.CLIM_JM = atmos.hist_jm
 
-    def config(atmos, ocean_nx, ocean_ny):
-        atmos.hres(ocean_nx, ocean_ny)
-        atmos.set_microphysics()
-        atmos.set_conus()
-        atmos.set_wsub_extdata()
-        atmos.set_CLIM()
+def _build_conus(atmos: dict, catalog: AtmosCatalog):
+    """Apply conus/stretch grid fields from the catalog."""
+    section = 'disabled' if atmos['conus'] == '#' else 'enabled'
+    for key, value in catalog.catalog['conus'][section].items():
+        atmos[key] = value
+
+    # FV_stretch_fac for enabled case incorporates the runtime stretch_factor value
+    if section == 'enabled':
+        atmos['FV_stretch_fac'] = f"stretch_fac = {atmos['stretch_factor']}"
+
+
+def _build_clim(atmos: dict):
+    """Set coarse resolution CLIM output dimensions."""
+    atmos['CLIM_IM'] = min(576, atmos['hist_im'])
+    atmos['CLIM_JM'] = 361 if atmos['CLIM_IM'] == 576 else atmos['hist_jm']
+
+
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+
+def get_atmos_config(expConfig: dict, ocean_nx=None, ocean_ny=None) -> dict:
+    """
+    Build and return the atmosphere configuration dictionary.
+
+    Parameters
+    ----------
+    expConfig : dict
+        Experiment configuration dictionary.
+    ocean_nx : int, optional
+        Ocean NX — only needed for MIT coupled at c180.
+    ocean_ny : int, optional
+        Ocean NY — only needed for MIT coupled at c180.
+
+    Returns
+    -------
+    dict
+        Flat atmosphere configuration dictionary.
+    """
+    catalog = AtmosCatalog(expConfig)
+    atmos = {}
+
+    _build_defaults(atmos, catalog)
+    _build_resolution(atmos, catalog, expConfig, ocean_nx, ocean_ny)
+    _build_microphysics(atmos, catalog, expConfig)
+    _build_wsub(atmos, catalog, expConfig)
+    _build_conus(atmos, catalog)
+    _build_clim(atmos)
+
+    return atmos
