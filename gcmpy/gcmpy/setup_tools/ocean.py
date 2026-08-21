@@ -40,11 +40,23 @@ class OceanCatalog:
 
         config_values = set(str(v) for v in self.config.values())
 
-        # Descend into sub-dicts whose key matches any expConfig value
+        # First pass: descend into sub-dicts whose key matches a config value.
         for section_name, section_data in catalog_section.items():
             if not isinstance(section_data, dict):
                 continue
             if section_name not in config_values:
+                continue
+            result = self._search_recursive(target, section_data)
+            if result is not _NOT_FOUND:
+                return result
+
+        # Second pass: transparent pass-through for structural grouping keys
+        # (e.g. 'resolution') that are not config values but contain sub-dicts
+        # that may be navigated by config values one level deeper.
+        for section_name, section_data in catalog_section.items():
+            if not isinstance(section_data, dict):
+                continue
+            if section_name in config_values:
                 continue
             result = self._search_recursive(target, section_data)
             if result is not _NOT_FOUND:
