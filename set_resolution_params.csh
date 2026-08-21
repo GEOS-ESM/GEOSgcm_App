@@ -2,7 +2,7 @@
 #
 # set_resolution_params.csh
 #
-# Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>
+# Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> [<OGCM_IM>]
 # Example: source set_resolution_params.csh c180 GFDL_1M FALSE MOM6
 #
 # NOTE: If OGCM is FALSE, the OCNMODEL doesn't matter
@@ -10,7 +10,7 @@
 
 # Require all four arguments
 if ( $#argv < 4 ) then
-    echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>"
+    echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> [<OGCM_IM>]"
     exit 1
 endif
 
@@ -22,6 +22,14 @@ set AGCM_IM        = $argv[1]
 set LOCAL_CLDMICRO = $argv[2]
 set LOCAL_OGCM     = $argv[3]
 set LOCAL_OCNMODEL = $argv[4]
+
+if ( $#argv >= 5 ) then
+   set LOCAL_OGCM_IM = $argv[5]
+else if ( $?OGCM_IM ) then
+   set LOCAL_OGCM_IM = $OGCM_IM
+else
+   set LOCAL_OGCM_IM = ""
+endif
 
 # Default Run Parameters
 # ----------------------
@@ -127,9 +135,15 @@ if( $AGCM_IM ==  "c180" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $LOCAL_OGCM == TRUE ) then
         if ( "$LOCAL_OCNMODEL" == "MOM6") then
-           # For MOM6 c180 means atm NXxNY = 30x36
-           set  NX = 30
-           set  NY = 36
+           if ( "$LOCAL_OGCM_IM" == "2880" || "$LOCAL_OGCM_IM" == "o2880" ) then
+              # For MOM6 c180 at o2880 (2880x2240), atm NXxNY = 14x72 to match ocean 36x28 (1008 cores)
+              set  NX = 14
+              set  NY = 72
+           else
+              # For MOM6 c180 (o720, o1440) means atm NXxNY = 30x36
+              set  NX = 30
+              set  NY = 36
+           endif
         else
            set  NX = $OGCM_NY
            set  NY = $OGCM_NX
