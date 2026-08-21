@@ -129,8 +129,8 @@ if( $AGCM_IM ==  "c180" ) then
      if( $LOCAL_OGCM == TRUE ) then
         if ( "$LOCAL_OCNMODEL" == "MOM6") then
            if ( "$LOCAL_OGCM_IM" == "2880" || "$LOCAL_OGCM_IM" == "o2880" ) then
-              # For MOM6 c180 at o2880 (2880x2240), atm NXxNY = 14x72 to match ocean 36x28 (1008 cores)
-              set  NX = 14
+              # For MOM6 c180 at o2880 (2880x2240), atm NXxNY = 28x72 to match ocean 72x28 (2016 cores)
+              set  NX = 28
               set  NY = 72
            else
               # For MOM6 c180 (o720, o1440) means atm NXxNY = 30x36
