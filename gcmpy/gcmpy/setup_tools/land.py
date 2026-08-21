@@ -1,42 +1,30 @@
 from pathlib import Path
-import yaml
+
+from gcmpy.utils.catalog_ops import load_catalog
 
 
 CATALOG_PATH = Path(__file__).parent / "catalogs" / "land_catalog.yaml"
-
-
-class LandCatalog:
-    """
-    Loads land_catalog.yaml and provides direct catalog lookups.
-    """
-
-    def __init__(self, catalog_path: Path = CATALOG_PATH):
-        self.catalog = self._load_yaml(catalog_path)
-
-    def _load_yaml(self, path: Path) -> dict:
-        with open(path, 'r') as f:
-            return yaml.safe_load(f)
 
 
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
 
-def _build_defaults(land: dict, catalog: LandCatalog):
+def _build_defaults(land: dict, catalog: dict):
     """Apply all defaults from the catalog onto the land dict."""
-    for key, value in catalog.catalog['defaults'].items():
+    for key, value in catalog['defaults'].items():
         land[key] = value
 
 
-def _build_bcs(land: dict, catalog: LandCatalog, bcs: str):
+def _build_bcs(land: dict, catalog: dict, bcs: str):
     """Apply bcs fields from the catalog."""
-    for key, value in catalog.catalog['bcs'][bcs].items():
+    for key, value in catalog['bcs'][bcs].items():
         land[key] = value
 
 
-def _build_model(land: dict, catalog: LandCatalog, model: str):
+def _build_model(land: dict, catalog: dict, model: str):
     """Apply model fields from the catalog."""
-    for key, value in catalog.catalog['models'][model].items():
+    for key, value in catalog['models'][model].items():
         land[key] = value
 
 
@@ -58,13 +46,13 @@ def get_land_config(expConfig: dict) -> dict:
     dict
         Flat land configuration dictionary.
     """
-    catalog = LandCatalog()
+    catalog = load_catalog(CATALOG_PATH)
     land = {}
 
-    # Determine bcs and model — use data_atmos_defaults if data atmosphere is on
+    # Determine bcs and model -- use data_atmos_defaults if data atmosphere is on
     if expConfig['OCEAN_data_atmosphere'] == True:
-        bcs   = catalog.catalog['data_atmos_defaults']['bcs']
-        model = catalog.catalog['data_atmos_defaults']['model']
+        bcs   = catalog['data_atmos_defaults']['bcs']
+        model = catalog['data_atmos_defaults']['model']
     else:
         bcs   = expConfig['LAND_bcs']
         model = expConfig['LAND_model']
