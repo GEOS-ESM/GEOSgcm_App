@@ -1,58 +1,79 @@
-from gcmpy.utils.color_ops import Color
-
-class Land:
-    def __init__(land, expConfig):
-        land.expConfig = expConfig
-        # If data atmosphere is enabled, land questions are skipped. Use default values.
-        if land.expConfig['OCEAN_data_atmosphere'] == True:
-            land.model = "Catchment"
-            land.bcs = "NL3"
-        else:
-            land.model              = land.expConfig["LAND_model"]
-            land.bcs                = land.expConfig["LAND_bcs"]
-        land.parameters         = ''
-        land.emip_bcs_in        = ''
-        land.emip_oldland       = ''
-        land.emip_newland       = ''
-        land.emip_MERRA2        = ''
-        land.HIST_catchment     = ''
-        land.GCMRUN_catchment   = ''
-
-    def set_bcs(land):
-        if land.bcs == "ICA":
-            land.parameters         = "#DELETE"
-            land.emip_bcs_in        = "GM4"
-            land.emip_oldland       = ""
-            land.emip_newland       = "#DELETE"
-            land.emip_MERRA2        = "MERRA2"
-            land.gwd_in_bcs         = False
-        elif land.bcs == "NL3":
-            land.parameters         = ""
-            land.emip_bcs_in        = "NL3"
-            land.emip_oldland       = "#DELETE"
-            land.emip_newland       = ""
-            land.emip_MERRA2        = "MERRA2_NewLand"
-            land.gwd_in_bcs         = False
-        elif land.bcs == "v12":
-            land.parameters         = ""
-            land.emip_bcs_in        = "NL3"
-            land.emip_oldland       = "#DELETE"
-            land.emip_newland       = ""
-            land.emip_MERRA2        = "MERRA2_NewLand"
-            land.gwd_in_bcs         = True
+from pathlib import Path
+import yaml
 
 
-    def set_catchment(land):
-        if land.model == "Catchment":
-            land.model              = 1
-            land.HIST_catchment     = "#DELETE"
-            land.GCMRUN_catchment   = "#DELETE"
-        elif land.model == "CatchmentCN-CLM4.0":
-            land.model              = 2
-            land.HIST_catchment     = ""
-            land.GCMRUN_catchment   = ""
+CATALOG_PATH = Path(__file__).parent / "catalogs" / "land_catalog.yaml"
 
-    def config(land):
-        land.set_bcs()
-        land.set_catchment()
 
+class LandCatalog:
+    """
+    Loads land_catalog.yaml and provides direct catalog lookups.
+    """
+
+    def __init__(self, catalog_path: Path = CATALOG_PATH):
+        self.catalog = self._load_yaml(catalog_path)
+
+    def _load_yaml(self, path: Path) -> dict:
+        with open(path, 'r') as f:
+            return yaml.safe_load(f)
+
+
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+def _build_defaults(land: dict, catalog: LandCatalog):
+    """Apply all defaults from the catalog onto the land dict."""
+    for key, value in catalog.catalog['defaults'].items():
+        land[key] = value
+
+
+def _build_bcs(land: dict, catalog: LandCatalog, bcs: str):
+    """Apply bcs fields from the catalog."""
+    for key, value in catalog.catalog['bcs'][bcs].items():
+        land[key] = value
+
+
+def _build_model(land: dict, catalog: LandCatalog, model: str):
+    """Apply model fields from the catalog."""
+    for key, value in catalog.catalog['models'][model].items():
+        land[key] = value
+
+
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+
+def get_land_config(expConfig: dict) -> dict:
+    """
+    Build and return the land configuration dictionary.
+
+    Parameters
+    ----------
+    expConfig : dict
+        Experiment configuration dictionary.
+
+    Returns
+    -------
+    dict
+        Flat land configuration dictionary.
+    """
+    catalog = LandCatalog()
+    land = {}
+
+    # Determine bcs and model — use data_atmos_defaults if data atmosphere is on
+    if expConfig['OCEAN_data_atmosphere'] == True:
+        bcs   = catalog.catalog['data_atmos_defaults']['bcs']
+        model = catalog.catalog['data_atmos_defaults']['model']
+    else:
+        bcs   = expConfig['LAND_bcs']
+        model = expConfig['LAND_model']
+
+    land['bcs']   = bcs
+    land['model'] = model
+
+    _build_defaults(land, catalog)
+    _build_bcs(land, catalog, bcs)
+    _build_model(land, catalog, model)
+
+    return land
