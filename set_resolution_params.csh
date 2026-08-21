@@ -2,15 +2,15 @@
 #
 # set_resolution_params.csh
 #
-# Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> [<OGCM_IM>]
-# Example: source set_resolution_params.csh c180 GFDL_1M FALSE MOM6
+# Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> <OGCM_IM>
+# Example: source set_resolution_params.csh c180 GFDL_1M FALSE MOM6 1440
 #
-# NOTE: If OGCM is FALSE, the OCNMODEL doesn't matter
+# NOTE: If OGCM is FALSE, the OCNMODEL and OGCM_IM don't matter
 #
 
-# Require all four arguments
-if ( $#argv < 4 ) then
-    echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> [<OGCM_IM>]"
+# Require all five arguments
+if ( $#argv < 5 ) then
+    echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> <OGCM_IM>"
     exit 1
 endif
 
@@ -22,14 +22,7 @@ set AGCM_IM        = $argv[1]
 set LOCAL_CLDMICRO = $argv[2]
 set LOCAL_OGCM     = $argv[3]
 set LOCAL_OCNMODEL = $argv[4]
-
-if ( $#argv >= 5 ) then
-   set LOCAL_OGCM_IM = $argv[5]
-else if ( $?OGCM_IM ) then
-   set LOCAL_OGCM_IM = $OGCM_IM
-else
-   set LOCAL_OGCM_IM = ""
-endif
+set LOCAL_OGCM_IM  = $argv[5]
 
 # Default Run Parameters
 # ----------------------
