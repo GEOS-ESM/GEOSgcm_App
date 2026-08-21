@@ -679,7 +679,7 @@ if( $OGCM == TRUE ) then
        # c180     30x36      180x1080   36x30        1440x1080    75
        # c180     30x36      180x1080   45x24        720x576      75
        # c360     30x36      180x1080   36x30        1440x1080    75
-       # c180     30x36      180x1080   36x20        2880x2240    75
+       # c180     28x72      180x1080   72x28        2880x2240    75
        # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
 
        if ( $AGCM_IM == "c12" ) then
@@ -718,8 +718,8 @@ if( $OGCM == TRUE ) then
           else if ( $HRCODE == "o2880" ) then
              set OGCM_IM = 2880
              set OGCM_JM = 2240
-             set OGCM_NX = 36
-             set OGCM_NY = 20
+             set OGCM_NX = 72
+             set OGCM_NY = 28
              set OGCM_LM = 75
           else if ( $HRCODE == "o1440" ) then
              set OGCM_IM = 1440
