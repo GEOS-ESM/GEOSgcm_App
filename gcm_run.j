@@ -1282,7 +1282,7 @@ end
 @COUPLED # MOM-Specific Output Files
 @COUPLED # -------------------------
 @MOM5 set dsets="ocean_month"
-@MOM6 set dsets="ocean_state prog_z sfc_ave forcing"
+@MOM6 set dsets="sfc_ave ocean_daily ocean_daily_2 ocean_daily_4D"
 @MOM5  foreach dset ( $dsets )
 @MOM5  set num = `/bin/ls -1 $dset.nc | wc -l`
 @MOM5  if($num != 0) then
