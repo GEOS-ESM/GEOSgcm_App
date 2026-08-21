@@ -1,82 +1,103 @@
-from gcmpy.utils.color_ops import Color
+from pathlib import Path
+import re
 
-class Gocart:
-    def __init__(gocart, expConfig):
-        gocart.expConfig = expConfig
-        # Gocart questions are skipped if data atmosphere is turned on. Use defaults
-        if gocart.expConfig['OCEAN_data_atmosphere'] == True:
-            gocart.aerosol = 'Actual'
-            gocart.emissions = 'OPS_EMISSIONS'
-        else:
-            gocart.aerosol = gocart.expConfig["GOCART_aerosols"]
-            gocart.emissions = f"{gocart.expConfig['GOCART_emission']}_EMISSIONS"
-        gocart.data_driven        = None
-        gocart.ops_species        = '#'
-        gocart.cmip_species       = '#'
-        gocart.MERRA2OX_species   = '#'
-        gocart.pchem_clim_years   = ''
-        gocart.ox_relaxtime       = None
-        gocart.gocart             = ''
-        gocart.gocart_hist        = None
-        gocart.aero_provider      = 'GOCART2G'
-        gocart.rats_provider      = 'PCHEM'
-
-        # Additional RATS settings for specific GHGs
-        gocart.ch4_provider       = 'none'
-        gocart.c02_provider       = 'none'
-
-    # for debugging purposes
-    def print_vars(gocart):
-        all_vars = vars(gocart)
-        for var_name, var_value in all_vars.items():
-            print(f"{color.BLUE}{var_name}: {var_value}{color.RESET}")
-
-    def set_gocart(gocart):
-        if gocart.aerosol == 'Actual':
-            gocart.data_driven    = False
-            gocart.gocart         = ''
-            gocart.gocart_hist    = ''
-        elif gocart.aerosol == 'Climatological':
-            gocart.data_driven    = True
-            gocart.gocart         = '#'
-            gocart.gocart_hist    = '#DELETE'
-
-    def set_emissions(gocart):
-        if gocart.emissions.split('_')[0] == 'OPS':
-            gocart.ops_species      = '' 
-            gocart.pchem_clim_years = 1
-            gocart.ox_relaxtime = '0.00'
-        elif gocart.emissions.split('_')[0] == 'AMIP':
-            gocart.MERRA2OX_species = ''
-            gocart.pchem_clim_years = 39
-            gocart.ox_relaxtime = '259200.'
-
-    def adjust_tuning_coefficients(gocart):
-        if  int(gocart.expConfig['AGCM_LM'] != 72):
-            return
-
-        # Switch GOCART2G tuning coefficients to L072 values if needed
-        # -------------------------------------------------------------
-        file_list = [
-            Path(f"{gocart.expConfig['exp_dir']}/RC/DU2G_instance_DU.rc"),
-            Path(f"{gocart.expConfig['exp_dir']}/RC/SS2G_instance_SS.rc"),
-        ]
-        for file in file_list:
-            with open(filepath, "r") as f:
-                content = f.read()
-
-            # Comment out L181 lines
-            content = re.sub(r"^(.*# L181)", r"#\1", content, flags=re.MULTILINE)
-            # Uncomment L072 lines
-            content = re.sub(r"^#(.*# L072)", r"\1", content, flags=re.MULTILINE)
-
-            with open(filepath, "w") as f:
-                f.write(content)
+from gcmpy.utils.catalog_ops import load_catalog
 
 
+CATALOG_PATH = Path(__file__).parent / "catalogs" / "gocart_catalog.yaml"
 
-    def config(gocart):
-        gocart.set_gocart()
-        gocart.set_emissions()
-        gocart.adjust_tuning_coefficients()
 
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+def _build_defaults(gocart: dict, catalog: dict):
+    """Apply all defaults from the catalog onto the gocart dict."""
+    for key, value in catalog['defaults'].items():
+        gocart[key] = value
+
+
+def _build_aerosol(gocart: dict, catalog: dict, aerosol: str):
+    """Apply aerosol fields from the catalog."""
+    for key, value in catalog['aerosol'][aerosol].items():
+        gocart[key] = value
+
+
+def _build_emissions(gocart: dict, catalog: dict, emission_key: str):
+    """Apply emissions fields from the catalog."""
+    for key, value in catalog['emissions'][emission_key].items():
+        gocart[key] = value
+
+
+# ---------------------------------------------------------------------------
+# Public entry points
+# ---------------------------------------------------------------------------
+
+def get_gocart_config(expConfig: dict) -> dict:
+    """
+    Build and return the gocart configuration dictionary.
+
+    Note: adjust_tuning_coefficients() is a separate function and must be
+    called explicitly by the caller after the experiment RC files exist.
+
+    Parameters
+    ----------
+    expConfig : dict
+        Experiment configuration dictionary.
+
+    Returns
+    -------
+    dict
+        Flat gocart configuration dictionary.
+    """
+    catalog = load_catalog(CATALOG_PATH)
+    gocart = {}
+
+    # Determine aerosol and emission_key -- use data_atmos_defaults if data atmosphere is on
+    if expConfig['OCEAN_data_atmosphere'] == True:
+        aerosol      = catalog['data_atmos_defaults']['aerosol']
+        emission_key = catalog['data_atmos_defaults']['emissions']
+    else:
+        aerosol      = expConfig['GOCART_aerosols']
+        emission_key = expConfig['GOCART_emission']
+
+    gocart['aerosol']   = aerosol
+    gocart['emissions'] = f"{emission_key}_EMISSIONS"
+
+    _build_defaults(gocart, catalog)
+    _build_aerosol(gocart, catalog, aerosol)
+    _build_emissions(gocart, catalog, emission_key)
+
+    return gocart
+
+
+def adjust_tuning_coefficients(expConfig: dict):
+    """
+    Switch GOCART2G tuning coefficients to L072 values if AGCM_LM == 72.
+
+    Edits DU2G and SS2G RC files in the experiment directory in-place.
+    Must be called after the experiment RC files have been created.
+
+    Parameters
+    ----------
+    expConfig : dict
+        Experiment configuration dictionary. Must contain 'AGCM_LM' and 'exp_dir'.
+    """
+    if int(expConfig['AGCM_LM']) != 72:
+        return
+
+    file_list = [
+        Path(f"{expConfig['exp_dir']}/RC/DU2G_instance_DU.rc"),
+        Path(f"{expConfig['exp_dir']}/RC/SS2G_instance_SS.rc"),
+    ]
+    for file in file_list:
+        with open(file, 'r') as f:
+            content = f.read()
+
+        # Comment out L181 lines
+        content = re.sub(r"^(.*# L181)", r"#\1", content, flags=re.MULTILINE)
+        # Uncomment L072 lines
+        content = re.sub(r"^#(.*# L072)", r"\1", content, flags=re.MULTILINE)
+
+        with open(file, 'w') as f:
+            f.write(content)

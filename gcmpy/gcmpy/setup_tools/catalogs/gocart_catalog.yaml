@@ -1,5 +1,5 @@
 # Fields derived at runtime from expConfig (aerosol name, emissions string) are
-# not repeated here — only the output values set by set_gocart() and set_emissions().
+# not repeated here -- only the output values set by set_gocart() and set_emissions().
 
 defaults:
   ops_species: '#'
