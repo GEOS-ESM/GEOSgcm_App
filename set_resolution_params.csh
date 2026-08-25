@@ -2,18 +2,17 @@
 #
 # set_resolution_params.csh
 #
-# Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> <OGCM_IM>
-# Example: source set_resolution_params.csh c180 GFDL_1M FALSE MOM6 1440
+# Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>
+# Example: source set_resolution_params.csh c180 GFDL_1M FALSE MOM6
 #
-# NOTE: If OGCM is FALSE, the OCNMODEL and OGCM_IM don't matter
+# NOTE: If OGCM is FALSE, the OCNMODEL doesn't matter
 #
 
-# Require all five arguments
-if ( $#argv < 5 ) then
-    echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL> <OGCM_IM>"
+# Require all four arguments
+if ( $#argv < 4 ) then
+    echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>"
     exit 1
 endif
-
 # Input from argument
 # NOTE: We use LOCALs for OCNMODEL and CLDMICRO to avoid
 #       overwriting any global variables.
@@ -22,7 +21,6 @@ set AGCM_IM        = $argv[1]
 set LOCAL_CLDMICRO = $argv[2]
 set LOCAL_OGCM     = $argv[3]
 set LOCAL_OCNMODEL = $argv[4]
-set LOCAL_OGCM_IM  = $argv[5]
 
 # Default Run Parameters
 # ----------------------
@@ -128,15 +126,9 @@ if( $AGCM_IM ==  "c180" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $LOCAL_OGCM == TRUE ) then
         if ( "$LOCAL_OCNMODEL" == "MOM6") then
-           if ( "$LOCAL_OGCM_IM" == "2880" || "$LOCAL_OGCM_IM" == "o2880" ) then
-              # For MOM6 c180 at o2880 (2880x2240), atm NXxNY = 28x72 to match ocean 72x28 (2016 cores)
-              set  NX = 28
-              set  NY = 72
-           else
-              # For MOM6 c180 (o720, o1440) means atm NXxNY = 30x36
-              set  NX = 30
-              set  NY = 36
-           endif
+           # Use one 1920-rank atmosphere layout for all C180 MOM6 grids.
+           set  NX = 20
+           set  NY = 96
         else
            set  NX = $OGCM_NY
            set  NY = $OGCM_NX
@@ -169,8 +161,14 @@ if( $AGCM_IM == "c360" ) then
      set OCEAN_DT = 3600
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
-     set       NY = `expr $NX \* 6`
+     if( $LOCAL_OGCM == TRUE && "$LOCAL_OCNMODEL" == "MOM6" ) then
+        # Match the 1920-rank o1440 MOM6 layout.
+        set       NX = 20
+        set       NY = 96
+     else
+        set       NX = 30
+        set       NY = `expr $NX \* 6`
+     endif
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 4
@@ -457,4 +455,3 @@ if( "$LOCAL_CLDMICRO" == "BACM_1M" ) then
    set CONV_DT = 450
    set CHEM_DT = 450
 endif
-
