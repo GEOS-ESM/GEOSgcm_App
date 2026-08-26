@@ -38,6 +38,7 @@ COLLECTIONS: 'geosgcm_prog'
 #             'tavg6_2d_flx_Nx'
 #             'inst3_2d_asm_Nx'
 #             'geosgcm_tropvar'
+#             'tavg1_2d_prcp'
              ::
 
 ##################################################
@@ -1695,3 +1696,23 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'TPREC' , 'MOIST'   , 'PRECTOT'  ,
                                  'OLR'   , 'IRRAD'   ,
                                   ::
+
+  tavg1_2d_prcp.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg1_2d_prcp.archive:        '%c/Y%y4' ,
+  tavg1_2d_prcp.format:         'CFIO' ,
+  tavg1_2d_prcp.deflate:         1 ,
+  tavg1_2d_prcp.grid_label:      PC@CLIM_IMx@CLIM_JM-DC ,
+  tavg1_2d_prcp.regrid_method:  'CONSERVE' ,
+  tavg1_2d_prcp.mode:           'time-averaged' ,
+  tavg1_2d_prcp.acc_ref_time:    210000 ,
+  tavg1_2d_prcp.frequency:       010000 ,
+  tavg1_2d_prcp.duration:        010000 ,
+  tavg1_2d_prcp.acc_interval:    010000 ,
+  tavg1_2d_prcp.timestampEnd:    .true. ,
+  tavg1_2d_prcp.fields:         'PRECTOTAL'    , 'MOIST'   , 'PRCP_TOT'  , 'ACCUMULATE' ,
+                                'SNOWTOTAL'    , 'MOIST'   , 'SNOW_TOT'  , 'ACCUMULATE' ,
+                                'TPREC'        , 'MOIST'   , 'PCP_RATE'  ,
+                                'CN_PRCP'      , 'MOIST'   , 'CON_RATE'  ,
+                                'LS_PRCP'      , 'MOIST'   , 'LSC_RATE'  ,
+                                'SNO'          , 'MOIST'   , 'SNO_RATE'  ,
+                                ::
