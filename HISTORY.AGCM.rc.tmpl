@@ -37,6 +37,7 @@ COLLECTIONS: 'geosgcm_prog'
 #             'geosgcm_misr'
 #             'tavg6_2d_flx_Nx'
 #             'inst3_2d_asm_Nx'
+#             'tavg3_2d_aer_x'
 #             'geosgcm_tropvar'
 #             'tavg1_2d_prcp'
              ::
@@ -1631,6 +1632,10 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'TBRB15RG'    , 'IRRAD'    ,
                                  'TBISCCP'     , 'SATSIM'   ,
                                  'CAPE'        , 'MOIST'    ,
+                                 'CLDTT'       , 'SOLAR'    ,
+                                 'MUCAPE'      , 'MOIST'    ,
+                                 'MUCIN'       , 'MOIST'    ,
+                                 'CLDBASEHGT'  , 'MOIST'    ,
                                  'DBZ_MAX'     , 'MOIST'    ,
                                  'DBZ_TOP'     , 'MOIST'    ,
                                  'DBZ_1KM'     , 'MOIST'    ,
@@ -1678,6 +1683,19 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'NIEXTTAU'    , 'NI'       ,
                                  'FRACI'       , 'SURFACE'  , 'frseaice' ,
                                  'SNOMAS'      , 'SURFACE'  ,
+                                  ::
+
+  tavg3_2d_aer_x.format:         'CFIO' ,
+  tavg3_2d_aer_x.grid_label:      PC@HIST_IMx@HIST_JM-DC ,
+  tavg3_2d_aer_x.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg3_2d_aer_x.mode:           'time-averaged' ,
+  tavg3_2d_aer_x.frequency:       030000 ,
+  tavg3_2d_aer_x.duration:        030000 ,
+  tavg3_2d_aer_x.ref_time:        210000 ,
+  tavg3_2d_aer_x.deflate:         1 ,
+  tavg3_2d_aer_x.regrid_method:  'CONSERVE' ,
+  tavg3_2d_aer_x.fields:         'PM25'      , 'GOCART2G' ,
+                                 'TOTEXTTAU' , 'GOCART2G' ,
                                   ::
 
   geosgcm_tropvar.template:      '%y4%m2%d2_%h2%n2z.nc4' ,
