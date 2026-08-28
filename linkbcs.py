@@ -505,9 +505,9 @@ class SymlinkCreator:
 
 
 def main():
+    args = capture_arguments()
     recorder = ProvenanceRecorder()
     try:
-        args = capture_arguments()
         recorder.timestamp = args.timestamp.isoformat()
         catalog_manager = CatalogManager(Path(args.config))
         recorder.config = catalog_manager.config
