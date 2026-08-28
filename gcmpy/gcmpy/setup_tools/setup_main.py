@@ -11,10 +11,10 @@ import argparse
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
-from gcmpy.setup_tools.ocean import Ocean
-from gcmpy.setup_tools.atmosphere import Atmosphere as Atmos
-from gcmpy.setup_tools.land import Land
-from gcmpy.setup_tools.gocart import Gocart
+from gcmpy.setup_tools.ocean import get_ocean_config
+from gcmpy.setup_tools.atmosphere import get_atmos_config
+from gcmpy.setup_tools.land import get_land_config
+from gcmpy.setup_tools.gocart import get_gocart_config, adjust_tuning_coefficients
 from gcmpy.setup_tools.geos_ops import copy_src_tarfile
 from gcmpy.setup_tools.setup_envs import envdict, pathdict
 from gcmpy.setup_tools.process_questions import ask_questions
@@ -67,18 +67,12 @@ class SetupGCM:
                                    'logging.yaml',
                                    'fvcore_layout.rc',
                                    'linkbcs.tmpl']
-    def initialize_models(self):
-        self.ocean = Ocean(self.expConfig)
-        self.atmos = Atmos(self.expConfig)
-        self.land = Land(self.expConfig)
-        self.gocart = Gocart(self.expConfig)
-
     def config_models(self):
-        self.ocean.config()
-        self.atmos.config(self.ocean.NX, self.ocean.NY)
-        self.land.config()
-        self.gocart.config()
-        self.templates.append(self.ocean.history_template)
+        self.ocean  = get_ocean_config(self.expConfig)
+        self.atmos  = get_atmos_config(self.expConfig, self.ocean['NX'], self.ocean['NY'])
+        self.land   = get_land_config(self.expConfig)
+        self.gocart = get_gocart_config(self.expConfig)
+        self.templates.append(self.ocean['history_template'])
 
     '''
     def check_flags(self):
@@ -155,22 +149,22 @@ class SetupGCM:
 
 
     def set_atmos_params(self):
-        if self.atmos.hist_im >= self.ocean.IM:
+        if self.atmos['hist_im'] >= self.ocean['IM']:
             self.interpolate_sst = True
         else:
             self.interpolate_sst = False
-        self.bcs_res    = f"{self.atmos.res}_{self.ocean.res}"
-        self.tile_data  = f"{self.atmos.res}_{self.ocean.res}_Pfafstetter.til"
-        self.tile_bin   = f"{self.atmos.res}_{self.ocean.res}_Pfafstetter.TIL"
-        self.job_sgmt   = f"{self.atmos.job_sgmt} 000000"
+        self.bcs_res    = f"{self.atmos['res']}_{self.ocean['res']}"
+        self.tile_data  = f"{self.atmos['res']}_{self.ocean['res']}_Pfafstetter.til"
+        self.tile_bin   = f"{self.atmos['res']}_{self.ocean['res']}_Pfafstetter.TIL"
+        self.job_sgmt   = f"{self.atmos['job_sgmt']} 000000"
 
 
     # setup experiment nodes
     def set_nodes(self):
         node_params = determine_nodes(
                 io_server=self.expConfig['io_server'],
-                nx=self.atmos.nx, 
-                ny=self.atmos.ny,
+                nx=self.atmos['nx'], 
+                ny=self.atmos['ny'],
                 num_cpus=self.num_CPUs,
                 history_rc_file=f"{pathdict['etc']}/{self.expConfig['history_template']}"
                 )
@@ -192,7 +186,7 @@ class SetupGCM:
 
         # Here we need to convert POST_NDS to total tasks. Using 16 cores
         # per task as a good default
-        post_npes = self.atmos.post_NDS * 16
+        post_npes = self.atmos['post_NDS'] * 16
         NPCUS = math.ceil((post_npes + self.num_CPUs - 1)/self.num_CPUs)
 
         '''
@@ -245,20 +239,20 @@ class SetupGCM:
             self.archive_p        = f"PBS -l select=1:ncpus={self.num_CPUs}:mpiprocs={self.num_CPUs}:model={self.expConfig['processor']}"
             self.boundary_dir     = "/nobackup/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
-            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs}/{self.land.bcs}_{self.ocean.tag}"
+            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land['bcs']}/{self.land['bcs']}_{self.ocean['tag']}"
             self.replay_ana_expID        = "ONLY_MERRA2_SUPPORTED"
             self.replay_ana_location     = "ONLY_MERRA2_SUPPORTED"
             self.M2_replay_ana_location  = f"{self.boundary_dir}/merra2/data"
             self.bcs_input_base = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
 
             # defines location of SST Boundary Conditions
-            oceanres = f"{self.ocean.IM}x{self.ocean.JM}"
+            oceanres = f"{self.ocean['IM']}x{self.ocean['JM']}"
             if oceanres == "1440x720":
                 self.sst_dir = f"{self.boundary_dir}/fvInput/g5gcm/bcs/SST/{oceanres}"
-            elif self.ocean.gridtyp == "MITLLC":
+            elif self.ocean['gridtyp'] == "MITLLC":
                 self.sst_dir = "/nobackupp2/estrobac/geos5/SSTDIR"
             else:
-                self.sst_dir = f"{self.boundary_dir}/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
+                self.sst_dir = f"{self.boundary_dir}/fvInput/g5gcm/bcs/realtime/{self.ocean['sst_name']}/{oceanres}"
 
             self.chem_dir         = f"{self.boundary_dir}/fvInput_nc3"
             self.work_dir         = f"/nobackup/{os.environ.get('LOGNAME')}"
@@ -279,20 +273,20 @@ class SetupGCM:
             self.post_p           = f"SBATCH --nodes={NPCUS} --ntasks-per-node={self.num_CPUs}"
             self.boundary_dir     = "/discover/nobackup/projects/gmao"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
-            self.bcs_dir          = f"{self.bc_base}/{self.land.bcs}"
+            self.bcs_dir          = f"{self.bc_base}/{self.land['bcs']}"
             self.replay_ana_expID       = "x0039"
             self.replay_ana_location    = f"{self.boundary_dir}/g6dev/ltakacs/x0039"
             self.M2_replay_ana_location = f"{self.boundary_dir}/merra2/data"
             self.bcs_input_base = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
 
             # define location of SST Boundary Conditions
-            oceanres    = f"{self.ocean.IM}x{self.ocean.JM}"
+            oceanres    = f"{self.ocean['IM']}x{self.ocean['JM']}"
             if oceanres == "1440x720":
                 self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/SST/{oceanres}"
-            elif self.ocean.gridtyp == "MITLLC":
+            elif self.ocean['gridtyp'] == "MITLLC":
                 self.sst_dir = "/discover/nobackup/estrobac/geos5/SSTDIR"
             else:
-                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/{self.ocean.sst_name}/{oceanres}"
+                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/{self.ocean['sst_name']}/{oceanres}"
 
             self.chem_dir         = f"{os.environ.get('SHARE')}/gmao_ops/fvInput_nc3"
             self.work_dir         = f"/discover/nobackup/{os.environ.get('LOGNAME')}"
@@ -311,12 +305,12 @@ class SetupGCM:
             self.post_p           = f"SBATCH --ntasks={post_npes}"
             self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
-            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs}_{self.ocean.tag}"
+            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land['bcs']}_{self.ocean['tag']}"
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
             self.bcs_input_base   = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
-            self.sst_dir          = f"{self.boundary_dir}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
+            self.sst_dir          = f"{self.boundary_dir}/{self.ocean['sst_name']}/{self.ocean['IM']}x{self.ocean['JM']}"
             self.chem_dir         = f"{self.boundary_dir}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME')
             self.gwdrs_dir        = f"{self.boundary_dir}/GWD_RIDGE"
@@ -329,12 +323,12 @@ class SetupGCM:
 
             self.boundary_dir     = "/ford1/share/gmao_SIteam/ModelData"
             self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
-            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land.bcs} /{self.land.bcs}_{self.ocean.tag}"
+            self.bcs_dir          = f"{self.boundary_dir}/bcs/{self.land['bcs']} /{self.land['bcs']}_{self.ocean['tag']}"
             self.replay_ana_expID       = "REPLAY_UNSUPPORTED"
             self.replay_ana_location    = "REPLAY_UNSUPPORTED"
             self.M2_replay_ana_location = "REPLAY_UNSUPPORTED"
             self.bcs_input_base   = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
-            self.sst_dir          = f"{self.boundary_dir}/{self.ocean.sst_name}/{self.ocean.IM}x{self.ocean.JM}"
+            self.sst_dir          = f"{self.boundary_dir}/{self.ocean['sst_name']}/{self.ocean['IM']}x{self.ocean['JM']}"
             self.chem_dir         = f"{self.boundary_dir}/fvInput_nc3"
             self.work_dir         = os.environ.get('HOME')
             self.gwdrs_dir        = f"{self.boundary_dir}/GWD_RIDGE"
@@ -342,8 +336,8 @@ class SetupGCM:
 
         if envdict['site'] == 'GMAO.desktop':
             # By default on desktop, just ignore IOSERVER for now
-            self.atmos.NX = 1
-            self.atmos.NY = 6
+            self.atmos['nx'] = 1
+            self.atmos['ny'] = 6
             self.expConfig["io_server"] = False
             self.n_oserver_nodes = 0
             self.n_backend_pes = 0
@@ -385,6 +379,8 @@ class SetupGCM:
         else:
             shutil.copy(geosgcmx_path, self.exp_dir)
 
+        adjust_tuning_coefficients(self.expConfig)
+
 
     #######################################################################
     #               Set Recommended MPI Stack Settings
@@ -410,8 +406,8 @@ class SetupGCM:
             # Testing at NAS shows that coupled runs *require* MPI_SHEPHERD=true
             # to run. We believe this is due to LD_PRELOAD. For now we only set
             # this for coupled runs.
-            if self.ocean.running_ocean:
-                self.ocean.mpt_shepherd = "setenv MPI_SHEPHERD true"
+            if self.ocean['running_ocean']:
+                self.ocean['mpt_shepherd'] = "setenv MPI_SHEPHERD true"
 
             # Also, for low res runs (c12, c24, c48) at NAS with MPT,
             # MPT has an issue with writing restarts on a single node
@@ -419,7 +415,7 @@ class SetupGCM:
             # this by having the oserver write the restarts. But
             # we only need to do this for single-node runs. For simplicity,
             # we assume LOW_ATM_RES = TRUE means single-node
-            if self.atmos.low_res:
+            if self.atmos['low_res']:
                 self.restart_by_oserver = 'YES'
 
         if envdict['mpi'] == 'intelmpi' and (envdict['site'] == 'NCCS' or envdict['site'] == 'NAS'):
@@ -429,8 +425,8 @@ class SetupGCM:
         # For ICA and NL3 the gwd files are in a non-bcs location
         # and may or may not exist. If they don't we set NCAR_NRDG to 0
         self.NCAR_NRDG = 16
-        if not self.land.gwd_in_bcs and \
-           not os.path.exists(f"{self.gwdrs_dir}/gwd_internal_c{self.atmos.im}"):
+        if not self.land['gwd_in_bcs'] and \
+           not os.path.exists(f"{self.gwdrs_dir}/gwd_internal_c{self.atmos['im']}"):
             self.NCAR_NRDG = 0
 
 
@@ -449,33 +445,25 @@ class SetupGCM:
         copy_file(f"{pathdict['install']}/post/post.rc", f"{self.exp_dir}/post.rc", "post.rc")
 
         # These files will be added if user chose to run coupled, regardless of ocean model selected.
-        if self.ocean.running_ocean == True and self.ocean.model != 'MIT':
+        if self.ocean['running_ocean'] == True and self.ocean['model'] != 'MIT':
             copy_file(f"{pathdict['install']}/coupled_diagnostics/g5lib/plotocn.j", f"{self.exp_dir}/plotocn.j", "plotocn.j")
             copy_file(f"{pathdict['install']}/coupled_diagnostics/g5lib/confocn.py", f"{self.exp_dir}/__init__.py", "confocn.py")
             self.templates.extend(['input.nml', 'diag_table','plotocn.j', '__init__.py'])
 
-        if self.ocean.model == 'MOM5':
-            self.templates.append('field_table')
-            copy_file(f"{pathdict['etc']}/MOM5/geos5/{self.ocean.IM}x{self.ocean.JM}/INPUT/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
-            MOM5_path = os.path.join(pathdict['etc'], 'MOM5', 'geos5', f"{self.ocean.IM}x{self.ocean.JM}", 'INPUT', '*table')
-            files = glob.glob(MOM5_path)
-            for file in files:
-                file_name = os.path.basename(file)
-                copy_file(file, f"{self.exp_dir}/{file_name}", file_name)
-        elif self.ocean.model == 'MOM6':
+        if self.ocean['model'] == 'MOM6':
             self.templates.extend(['MOM_input', 'MOM_override', 'data_table'])
 
-            copy_file(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
-            copy_file(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
-            copy_file(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean.IM}x{self.ocean.JM}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
-            MOM6_path = os.path.join(pathdict['etc'], 'MOM6', 'mom6_app', f"{self.ocean.IM}x{self.ocean.JM}", '*table')
+            copy_file(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean['IM']}x{self.ocean['JM']}/MOM_input", f"{self.exp_dir}/MOM_input", "MOM_input")
+            copy_file(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean['IM']}x{self.ocean['JM']}/MOM_override", f"{self.exp_dir}/MOM_override", "MOM_override")
+            copy_file(f"{pathdict['etc']}/MOM6/mom6_app/{self.ocean['IM']}x{self.ocean['JM']}/input.nml", f"{self.exp_dir}/input.nml", "input.nml")
+            MOM6_path = os.path.join(pathdict['etc'], 'MOM6', 'mom6_app', f"{self.ocean['IM']}x{self.ocean['JM']}", '*table')
             files = glob.glob(MOM6_path)
             for file in files:
                 file_name = os.path.basename(file)
                 copy_file(file, f"{self.exp_dir}/{file_name}", file_name)
 
-        if self.ocean.seaice_model == 'CICE6':
-            copy_file(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean.IM}x{self.ocean.JM}/ice_in", f"{self.exp_dir}/ice_in", "ice_in")
+        if self.ocean['seaice_model'] == 'CICE6':
+            copy_file(f"{pathdict['etc']}/CICE6/cice6_app/{self.ocean['IM']}x{self.ocean['JM']}/ice_in", f"{self.exp_dir}/ice_in", "ice_in")
             self.templates.append('ice_in')
 
         print(f"{Color.GREEN}Done!{Color.RESET}\n")
@@ -515,7 +503,7 @@ class SetupGCM:
     #      Modify RC Directory for LM and GOCART.data/GOCART Options
     #######################################################################
     def mod_RC_dir_for_pchem(self):
-        if self.atmos.lm == 72:
+        if self.atmos['lm'] == 72:
             return
 
         rc_dir = f"{self.expConfig['exp_dir']}/RC"
@@ -532,16 +520,16 @@ class SetupGCM:
             with open(file_path, 'r') as file:
                 file_content = file.read()
 
-            file_content = file_content.replace("/L72/", f"/L{self.atmos.lm}/")
-            file_content = file_content.replace("z72", f"z{self.atmos.lm}")
-            file_content = file_content.replace("_72_", f"_{self.atmos.lm}_")
+            file_content = file_content.replace("/L72/", f"/L{self.atmos['lm']}/")
+            file_content = file_content.replace("z72", f"z{self.atmos['lm']}")
+            file_content = file_content.replace("_72_", f"_{self.atmos['lm']}_")
 
             with open(file_path, 'w') as file:
                 file.write(file_content)
 
     # configure pchem and TR in GEOS_ChemGridComp.rc
     def config_chemGridComp(self):
-        if self.gocart.rats_provider == 'PCHEM':
+        if self.gocart['rats_provider'] == 'PCHEM':
             pchem = 'TRUE'
         else:
             pchem = 'FALSE'
@@ -565,15 +553,15 @@ class SetupGCM:
             file_content = file.read()
 
         file_content = search_replace_in_string(r'# GEOSagcm=>', r'            ', file_content)
-        if self.land.model == 'CatchmentCN-CLM4.0':
+        if self.land['model'] == 'CatchmentCN-CLM4.0':
             file_content = search_replace_in_string(r'(LAND_PARAMS:\s*).*', r'\1CN_CLM40', file_content)
 
-        if self.land.bcs == 'ICA':
+        if self.land['bcs'] == 'ICA':
             file_content = search_replace_in_string(r'(LAND_PARAMS:\s*).*', r'\1Icarus', file_content)
             file_content = search_replace_in_string(r'(Z0_FORMULATION:\s*).*', r'\1 2', file_content)
 
         # If LM=72, we set SNOW_ALBEDO_INFO to 0
-        if self.atmos.lm == 72:
+        if self.atmos['lm'] == 72:
             file_content = search_replace_in_string(r'(SNOW_ALBEDO_INFO:\s*).*', r'\1 0', file_content)
 
         with open(surfacegridcomp, 'w') as file:
@@ -585,7 +573,7 @@ class SetupGCM:
         with open(gocartgridcomp, 'r') as file:
             file_content = file.read()
 
-        if self.gocart.data_driven == True:
+        if self.gocart['data_driven'] == True:
             file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_DU:\s*)DU', r'\1DU.data', file_content)
             file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_SS:\s*)SS', r'\1SS.data', file_content)
             file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_SU:\s*)SU', r'\1SU.data', file_content)
@@ -600,26 +588,13 @@ class SetupGCM:
 
     # Modify MOM input files to match HEARTBEAT
     def config_heartbeat(self):
-        # With MOM5 we need to change dt lines in input.nml to
-        # use $OCEAN_DT instead. NOTE: This regex assumes integer followed by comma
-        if self.ocean.model == 'MOM5':
-
-            with open(f"{self.expConfig['exp_dir']}/input.nml", 'r') as file:
-                file_content = file.read()
-
-            file_content = search_replace_in_string(r'dt_cpld\s*=\s*.*(,)', rf"dt_cpld = {self.atmos.dt_ocean}\1", file_content)
-            file_content = search_replace_in_string(r'dt_atmos\s*=\s*.*(,)', rf"dt_atmos = {self.atmos.dt_ocean}\1", file_content)
-
-            with open(f"{self.expConfig['exp_dir']}/input.nml", 'w') as file:
-                file.write(file_content)
-
-        # We also need to change the dt in ice_in as well for CICE6
-        if self.ocean.seaice_model == 'CICE6':
+        # We need to change the dt in ice_in for CICE6
+        if self.ocean['seaice_model'] == 'CICE6':
             file_path = f"{self.expConfig['exp_dir']}/ice_in"
             with open(file_path, 'r') as file:
                 content = file.read()
 
-            file_content = search_replace_in_string(r"^(\s*dt\s*=\s*)[0-9]+(\.[0-9]+)?", r"\1" + self.atmos.dt_ocean, content)
+            file_content = search_replace_in_string(r"^(\s*dt\s*=\s*)[0-9]+(\.[0-9]+)?", r"\1" + self.atmos['dt_ocean'], content)
 
             with open(file_path, 'w') as file:
                 file.write(file_content)
@@ -629,12 +604,12 @@ class SetupGCM:
         # have consistent DTs with the AGCM. So we use OCEAN_DT
         # and change MOM_override to match. NOTE: This assumes
         # floating point number with a decimal
-        if self.ocean.model == 'MOM6':
+        if self.ocean['model'] == 'MOM6':
             with open(f"{self.expConfig['exp_dir']}/MOM_override", 'r') as file:
                 file_content = file.read()
 
-            file_content = search_replace_in_string(r'DT\s*=\s*.*', rf"DT = {self.atmos.dt_ocean}", file_content)
-            file_content = search_replace_in_string(r'DT_THERM\s*=\s*.*', rf"DT_THERM = {self.atmos.dt_ocean}", file_content)
+            file_content = search_replace_in_string(r'DT\s*=\s*.*', rf"DT = {self.atmos['dt_ocean']}", file_content)
+            file_content = search_replace_in_string(r'DT_THERM\s*=\s*.*', rf"DT_THERM = {self.atmos['dt_ocean']}", file_content)
 
             with open(f"{self.expConfig['exp_dir']}/MOM_override", 'w') as file:
                 file.write(file_content)
@@ -642,7 +617,7 @@ class SetupGCM:
 
     # We create a RESTART dir if running ocean
     def make_RESTART_dir(self):
-        if self.ocean.running_ocean == True:
+        if self.ocean['running_ocean'] == True:
             os.makedirs(f"{self.exp_dir}/RESTART", exist_ok=True)
 
 
@@ -690,15 +665,15 @@ class SetupGCM:
             'REGRESS_N': self.regress_n,
             'BCSDIR': self.bcs_dir,
             'SSTDIR': self.sst_dir,
-            'SSTNAME': self.ocean.sst_name,
-            'OCEANOUT': self.ocean.out,
-            'LSMBCS': self.land.bcs,
-            'EMIP_BCS_IN': self.land.emip_bcs_in,
-            'EMIP_MERRA2': self.land.emip_MERRA2,
-            'BCSTAG': self.ocean.tag,
-            'SSTFILE': self.ocean.sst_file,
-            'ICEFILE': self.ocean.ice_file,
-            'KPARFILE': self.ocean.kpar_file,
+            'SSTNAME': self.ocean['sst_name'],
+            'OCEANOUT': self.ocean['out'],
+            'LSMBCS': self.land['bcs'],
+            'EMIP_BCS_IN': self.land['emip_bcs_in'],
+            'EMIP_MERRA2': self.land['emip_MERRA2'],
+            'BCSTAG': self.ocean['tag'],
+            'SSTFILE': self.ocean['sst_file'],
+            'ICEFILE': self.ocean['ice_file'],
+            'KPARFILE': self.ocean['kpar_file'],
             'CHMDIR': self.chem_dir,
             'COUPLEDIR': self.coupled_dir,
             'GWDRSDIR': self.gwdrs_dir,
@@ -721,7 +696,7 @@ class SetupGCM:
             'GEOSUTIL': str(pathdict['install']),
             'SINGULARITY_BUILD': '#DELETE',
             'NATIVE_BUILD': '',
-            'MPT_SHEPHERD': self.ocean.mpt_shepherd,
+            'MPT_SHEPHERD': self.ocean['mpt_shepherd'],
             'SINGULARITY_SANDBOX': '',
             'REAL_BIND_PATH': '',
             'BASE_BIND_PATH': '',
@@ -729,93 +704,92 @@ class SetupGCM:
             'BOUNDARY_DIR': self.boundary_dir,
             'BCS_INPUT_BASE': self.bcs_input_base,
             'CHECKPOINT_TYPE': 'default',
-            'OGCM_NX': self.ocean.NX,
-            'OGCM_NY': self.ocean.NY,
-            'OGCM_NPROCS': self.ocean.nprocs,
+            'OGCM_NX': self.ocean['NX'],
+            'OGCM_NY': self.ocean['NY'],
+            'OGCM_NPROCS': self.ocean['nprocs'],
             'OBSERVER_FRQ': 0,
             'DASTUNING': '#',
-            'COUPLED': self.ocean.coupled,
-            'CLDMICRO': self.atmos.microphysics,
-            'MOM5': self.ocean.MOM5,
-            'MOM6': self.ocean.MOM6,
-            'OCNMODEL': self.ocean.model,
-            'CICE4': self.ocean.CICE4,
-            'CICE6': self.ocean.CICE6,
-            'HIST_CICE4': self.ocean.hist_CICE4,
-            'MIT': self.ocean.MIT,
-            'DATAOCEAN': self.ocean.data,
-            'OPS_SPECIES': self.gocart.ops_species,
-            'CMIP_SPECIES': self.gocart.cmip_species,
-            'MERRA2OX_SPECIES': self.gocart.MERRA2OX_species,
-            'HIST_GOCART': self.gocart.gocart_hist,
-            'LSM_PARMS': self.land.parameters,
-            'OCEAN_NAME': self.ocean.name,
-            'OCEAN_PRELOAD': self.ocean.preload,
+            'COUPLED': self.ocean['coupled'],
+            'CLDMICRO': self.atmos['microphysics'],
+            'MOM6': self.ocean['MOM6'],
+            'OCNMODEL': self.ocean['model'],
+            'CICE4': self.ocean['CICE4'],
+            'CICE6': self.ocean['CICE6'],
+            'HIST_CICE4': self.ocean['hist_CICE4'],
+            'MIT': self.ocean['MIT'],
+            'DATAOCEAN': self.ocean['data'],
+            'OPS_SPECIES': self.gocart['ops_species'],
+            'CMIP_SPECIES': self.gocart['cmip_species'],
+            'MERRA2OX_SPECIES': self.gocart['MERRA2OX_species'],
+            'HIST_GOCART': self.gocart['gocart_hist'],
+            'LSM_PARMS': self.land['parameters'],
+            'OCEAN_NAME': self.ocean['name'],
+            'OCEAN_PRELOAD': self.ocean['preload'],
             'ana4replay.eta.%y4%m2%d2_%h2z.nc4': '/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g',
             'REPLAY_ANA_EXPID': self.replay_ana_expID,
             'REPLAY_ANA_LOCATION': self.replay_ana_location,
             'M2_REPLAY_ANA_LOCATION': self.M2_replay_ana_location,
-            'OX_RELAXTIME': self.gocart.ox_relaxtime,
-            'PCHEM_CLIM_YEARS': self.gocart.pchem_clim_years,
-            'RATS_PROVIDER': self.gocart.rats_provider,
-            'AERO_PROVIDER': self.gocart.aero_provider,
+            'OX_RELAXTIME': self.gocart['ox_relaxtime'],
+            'PCHEM_CLIM_YEARS': self.gocart['pchem_clim_years'],
+            'RATS_PROVIDER': self.gocart['rats_provider'],
+            'AERO_PROVIDER': self.gocart['aero_provider'],
             'OANA_PROVIDER': 'PCHEM',
-            'EMISSIONS': self.gocart.emissions,
-            'CH4_PROVIDER': self.gocart.ch4_provider,
-            'CO2_PROVIDER': self.gocart.c02_provider,
+            'EMISSIONS': self.gocart['emissions'],
+            'CH4_PROVIDER': self.gocart['ch4_provider'],
+            'CO2_PROVIDER': self.gocart['c02_provider'],
             'DYCORE': 'FV3',
-            'AGCM_GRIDNAME': self.atmos.gridname,
-            'OGCM_GRIDNAME': self.ocean.gridname,
+            'AGCM_GRIDNAME': self.atmos['gridname'],
+            'OGCM_GRIDNAME': self.ocean['gridname'],
             'OGCM_IS_FCST': '0',
             'BOOT': 'YES',
             'BCSRES': self.bcs_res,
-            'OCEANtag': self.ocean.res,
-            'ATMOStag': self.atmos.res,
-            'RES_DATELINE': self.atmos.res_dateline,
+            'OCEANtag': self.ocean['res'],
+            'ATMOStag': self.atmos['res'],
+            'RES_DATELINE': self.atmos['res_dateline'],
             'TILEDATA': self.tile_data,
             'TILEBIN': self.tile_bin,
-            'DT': self.atmos.dt,
-            'CONV_DT': self.atmos.conv_dt,
-            'CHEM_DT': self.atmos.chem_dt,
-            'SOLAR_DT': self.atmos.dt_solar,
-            'IRRAD_DT': self.atmos.dt_irrad,
-            'OCEAN_DT': self.atmos.dt_ocean,
-            'NX': self.atmos.nx,
-            'NY': self.atmos.ny,
-            'USE_SHMEM': int(self.atmos.use_SHMEM),
+            'DT': self.atmos['dt'],
+            'CONV_DT': self.atmos['conv_dt'],
+            'CHEM_DT': self.atmos['chem_dt'],
+            'SOLAR_DT': self.atmos['dt_solar'],
+            'IRRAD_DT': self.atmos['dt_irrad'],
+            'OCEAN_DT': self.atmos['dt_ocean'],
+            'NX': self.atmos['nx'],
+            'NY': self.atmos['ny'],
+            'USE_SHMEM': int(self.atmos['use_SHMEM']),
             'USE_IOSERVER': int(self.expConfig['io_server']),
             'NUM_OSERVER_NODES': self.n_oserver_nodes,
             'NUM_BACKEND_PES': self.n_backend_pes,
             'RESTART_BY_OSERVER': self.restart_by_oserver,
             'NCPUS_PER_NODE': self.num_CPUs,
-            'NUM_READERS': self.atmos.num_readers,
-            'NUM_WRITERS': self.atmos.num_writers,
-            'LATLON_AGCM': self.atmos.latlon,
-            'LATLON_OGCM': self.ocean.latlon,
-            'CUBE_AGCM': self.atmos.cube,
-            'CUBE_OGCM': self.ocean.cube,
+            'NUM_READERS': self.atmos['num_readers'],
+            'NUM_WRITERS': self.atmos['num_writers'],
+            'LATLON_AGCM': self.atmos['latlon'],
+            'LATLON_OGCM': self.ocean['latlon'],
+            'CUBE_AGCM': self.atmos['cube'],
+            'CUBE_OGCM': self.ocean['cube'],
             'GRID_TYPE': 'Cubed-Sphere',
-            'AGCM_NF': self.atmos.nf,
-            'AGCM_IM': self.atmos.im,
-            'AGCM_JM': self.atmos.jm,
-            'AGCM_LM': self.atmos.lm,
-            'OGCM_IM': self.ocean.IM,
-            'OGCM_JM': self.ocean.JM,
-            'OGCM_LM': self.ocean.LM,
-            'OGCM_NF': self.ocean.NF,
-            'OGCM_GRID_TYPE': self.ocean.grid_type,
+            'AGCM_NF': self.atmos['nf'],
+            'AGCM_IM': self.atmos['im'],
+            'AGCM_JM': self.atmos['jm'],
+            'AGCM_LM': self.atmos['lm'],
+            'OGCM_IM': self.ocean['IM'],
+            'OGCM_JM': self.ocean['JM'],
+            'OGCM_LM': self.ocean['LM'],
+            'OGCM_NF': self.ocean['NF'],
+            'OGCM_GRID_TYPE': self.ocean['grid_type'],
             'BEG_DATE': self.begin_date,
             'END_DATE': self.end_date,
             'JOB_SGMT': self.job_sgmt,
-            'NUM_SGMT': self.atmos.num_sgmt,
-            'CONUS': self.atmos.conus,
-            'CONVPAR_OPTION': self.atmos.convpar_option,
-            'STRETCH_FACTOR': self.atmos.stretch_factor,
+            'NUM_SGMT': self.atmos['num_sgmt'],
+            'CONUS': self.atmos['conus'],
+            'CONVPAR_OPTION': self.atmos['convpar_option'],
+            'STRETCH_FACTOR': self.atmos['stretch_factor'],
             'INTERPOLATE_SST': self.interpolate_sst,
-            'HIST_IM': self.atmos.hist_im,
-            'HIST_JM': self.atmos.hist_jm,
-            'CLIM_IM': self.atmos.CLIM_IM,
-            'CLIM_JM': self.atmos.CLIM_JM,
+            'HIST_IM': self.atmos['hist_im'],
+            'HIST_JM': self.atmos['hist_jm'],
+            'CLIM_IM': self.atmos['CLIM_IM'],
+            'CLIM_JM': self.atmos['CLIM_JM'],
             'ISCCP_SATSIM': 1,
             'MODIS_SATSIM': 0,
             'RADAR_SATSIM': 0,
@@ -824,30 +798,30 @@ class SetupGCM:
             'SATSIM': 0,
             'USE_SKIN_LAYER': 1,
             'ANALYZE_TS': 0,
-            'LSM_CHOICE': self.land.model,
-            'MP_TURN_OFF_WSUB_EXTDATA': self.atmos.mp_turn_off_wsub_extdata,
-            'BACM_1M_': self.atmos.BACM_1M,
-            'GFDL_1M_': self.atmos.GFDL_1M,
-            'MGB2_2M_': self.atmos.MGB2_2M,
-            'RRTMGP_RADIATION': self.atmos.RRTMGP_RADIATION,
-            'RRTMG_RADIATION': self.atmos.RRTMG_RADIATION,
-            'KLID': self.atmos.KLID,
+            'LSM_CHOICE': self.land['model'],
+            'MP_TURN_OFF_WSUB_EXTDATA': self.atmos['mp_turn_off_wsub_extdata'],
+            'BACM_1M_': self.atmos['BACM_1M'],
+            'GFDL_1M_': self.atmos['GFDL_1M'],
+            'MGB2_2M_': self.atmos['MGB2_2M'],
+            'RRTMGP_RADIATION': self.atmos['RRTMGP_RADIATION'],
+            'RRTMG_RADIATION': self.atmos['RRTMG_RADIATION'],
+            'KLID': self.atmos['KLID'],
             'PRELOAD_COMMAND': envdict['preload_command'],
             'LD_LIBRARY_PATH_CMD': envdict['ld_library_path_command'],
             'RUN_CMD': envdict['run_command'],
-            'MODELATM': self.ocean.modelatm,
-            'USE_DATA_ATM4OCN': self.ocean.use_data_ATM4OCN,
-            'FV_SCHMIDT': self.atmos.schmidt,
-            'FV_STRETCH_FAC': self.atmos.FV_stretch_fac,
-            'FV_TARGET_LON': self.atmos.target_lon,
-            'FV_TARGET_LAT': self.atmos.target_lat,
-            'FORCEDAS': self.atmos.force_das,
-            'FORCEGCM': self.atmos.force_gcm,
+            'MODELATM': self.ocean['modelatm'],
+            'USE_DATA_ATM4OCN': self.ocean['use_data_ATM4OCN'],
+            'FV_SCHMIDT': self.atmos['schmidt'],
+            'FV_STRETCH_FAC': self.atmos['FV_stretch_fac'],
+            'FV_TARGET_LON': self.atmos['target_lon'],
+            'FV_TARGET_LAT': self.atmos['target_lat'],
+            'FORCEDAS': self.atmos['force_das'],
+            'FORCEGCM': self.atmos['force_gcm'],
             'FVCUBED': '',
-            'HIST_CATCHCN': self.land.HIST_catchment,
-            'GCMRUN_CATCHCN': self.land.GCMRUN_catchment,
-            'EMIP_OLDLAND': self.land.emip_oldland,
-            'EMIP_NEWLAND': self.land.emip_newland,
+            'HIST_CATCHCN': self.land['HIST_catchment'],
+            'GCMRUN_CATCHCN': self.land['GCMRUN_catchment'],
+            'EMIP_OLDLAND': self.land['emip_oldland'],
+            'EMIP_NEWLAND': self.land['emip_newland'],
             '_4DIAUDAS': '#DELETE',
             'SEVERAL_TRIES': self.several_tries,
             'REGULAR_REPLAY': '#',
@@ -937,7 +911,7 @@ class SetupGCM:
         # rename tmpl files
         os.rename(f"{exp_dir}/CAP.rc.tmpl", f"{exp_dir}/CAP.rc")
         os.rename(f"{exp_dir}/AGCM.rc.tmpl", f"{exp_dir}/AGCM.rc")
-        os.rename(f"{exp_dir}/{self.ocean.history_template}", f"{exp_dir}/HISTORY.rc")
+        os.rename(f"{exp_dir}/{self.ocean['history_template']}", f"{exp_dir}/HISTORY.rc")
         os.rename(f"{exp_dir}/linkbcs.tmpl", f"{exp_dir}/linkbcs")
 
         # update file permissions
