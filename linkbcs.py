@@ -2,10 +2,61 @@
 
 import yaml
 import argparse
+import logging
 import sys
 import shutil
 from pathlib import Path
 from datetime import datetime
+
+
+class ProvenanceRecorder:
+    def __init__(self):
+        self.log_path = Path.cwd() / "linkbcs.log"
+        self.manifest_path = Path.cwd() / "linkbcs_manifest.yaml"
+        self.actions = []
+        self.config = None
+        self.timestamp = None
+        self.success = False
+        self.error = None
+
+        self.logger = logging.getLogger("linkbcs")
+        self.logger.setLevel(logging.INFO)
+        self.logger.handlers.clear()
+        formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        for handler in (logging.FileHandler(self.log_path, mode="w"), logging.StreamHandler()):
+            handler.setFormatter(formatter)
+            self.logger.addHandler(handler)
+
+    def record(self, action, destination=None, source=None, **details):
+        entry = {"action": action}
+        if destination is not None:
+            entry["destination"] = str(Path(destination).resolve())
+        if source is not None:
+            entry["source"] = str(Path(source).resolve())
+        entry.update({key: str(value) if isinstance(value, Path) else value for key, value in details.items()})
+        self.actions.append(entry)
+
+        description = action
+        if destination is not None:
+            description += f" {entry['destination']}"
+        if source is not None:
+            description += f" -> {entry['source']}"
+        if details:
+            description += " " + ", ".join(f"{key}={value}" for key, value in details.items())
+        self.logger.info(description)
+
+    def write_manifest(self):
+        manifest = {
+            "generated_at": datetime.now().astimezone().isoformat(),
+            "working_directory": str(Path.cwd().resolve()),
+            "config": self.config,
+            "timestamp": self.timestamp,
+            "success": self.success,
+            "error": self.error,
+            "actions": self.actions,
+        }
+        with open(self.manifest_path, "w") as f:
+            yaml.safe_dump(manifest, f, sort_keys=False)
 
 def validate_iso_datetime(datetime_string):
     try:
@@ -93,10 +144,11 @@ class CatalogManager:
 
 
 class SymlinkCreator:
-    def __init__(self, catalog: CatalogManager, year: int):
+    def __init__(self, catalog: CatalogManager, year: int, recorder: ProvenanceRecorder):
         self.catalog = catalog
         self.config = catalog.config
         self.year = year
+        self.recorder = recorder
 
         # platform
         try:
@@ -180,9 +232,13 @@ class SymlinkCreator:
         # remove existing link if it exists (equivalent of -f flag)
         if symlink_name.is_symlink():
             symlink_name.unlink()
+            self.recorder.record("remove_symlink", symlink_name)
 
         if file_path.exists():
             symlink_name.symlink_to(file_path)
+            self.recorder.record("create_symlink", symlink_name, file_path)
+        else:
+            self.recorder.record("skip_missing_source", symlink_name, file_path)
 
     def topo_paths(self) -> dict:
         paths = {
@@ -208,11 +264,16 @@ class SymlinkCreator:
 
     def make_restart_dir(self):
         if self.coupled != "data":
-            Path("RESTART").mkdir(parents=True, exist_ok=True)
+            restart_dir = Path("RESTART")
+            existed = restart_dir.exists()
+            restart_dir.mkdir(parents=True, exist_ok=True)
+            self.recorder.record("create_directory", restart_dir, existed=existed)
 
     def make_extdata_dir(self):
         extdata = Path("ExtData")
+        existed = extdata.exists()
         extdata.mkdir(parents=True, exist_ok=True)
+        self.recorder.record("create_directory", extdata, existed=existed)
 
         for file in self.extdata_files:
             self.create_symlink(extdata / file, self.chem_dir / file)
@@ -309,9 +370,13 @@ class SymlinkCreator:
         gwd_agcm = self.gwdrs_dir / f"gwd_internal_c{self.agcm_IM}"
         if gwd_rst.exists():
             shutil.copy(gwd_rst, Path.cwd())
+            self.recorder.record("copy_file", Path.cwd() / gwd_rst.name, gwd_rst)
         elif gwd_agcm.exists():
             # We need to copy the gwd_internal_c{IM} file to the current working directory as gwd_internal_rst for the model to find it
             shutil.copy(gwd_agcm, Path.cwd() / "gwd_internal_rst")
+            self.recorder.record("copy_file", Path.cwd() / "gwd_internal_rst", gwd_agcm)
+        else:
+            self.recorder.record("skip_missing_internal_restart", source=gwd_rst, fallback_source=gwd_agcm)
 
 
     def table_paths(self) -> dict:
@@ -331,12 +396,15 @@ class SymlinkCreator:
         target_dir = Path("INPUT")
 
         # make input dir if it doesn't already exist
-        Path("INPUT").mkdir(parents=True, exist_ok=True)
+        existed = target_dir.exists()
+        target_dir.mkdir(parents=True, exist_ok=True)
+        self.recorder.record("create_directory", target_dir, existed=existed)
 
         for file_path in src_dir.glob("*"):
             if file_path.is_file():
                 # copy2 preserves file metadata
                 shutil.copy2(file_path, target_dir / file_path.name)
+                self.recorder.record("copy_file", target_dir / file_path.name, file_path)
 
     def seaice_paths(self) -> dict:
         if not self.coupled:
@@ -418,26 +486,43 @@ class SymlinkCreator:
                 missing_files.append(i)
                 # We print an error if the missing file is *not* tile.bin
                 if i != "tile.bin":
-                    print(f"ERROR: {i} does not exist at: \n{paths[i]}")
+                    self.recorder.record("missing_required_source", Path(i), paths[i])
+                    self.recorder.logger.error("%s does not exist at: %s", i, paths[i])
                 else:
-                    print(f"WARNING: {i} does not exist at: \n{paths[i]}")
+                    self.recorder.record("missing_optional_source", Path(i), paths[i])
+                    self.recorder.logger.warning("%s does not exist at: %s", i, paths[i])
 
         if missing_files:
             # We must allow for the one case that is only tile.bin is in missing_files,
             # in which case gcm_run.j will make tile.bin from tile.data
             if len(missing_files) == 1 and missing_files[0] == "tile.bin":
-                print("WARNING: tile.bin is missing, but tile.data exists. The model can still run with tile.data.")
+                self.recorder.logger.warning(
+                    "tile.bin is missing, but tile.data exists. The model can still run with tile.data."
+                )
             else:
-                print("One or more paths are broken. Please check the warnings above.")
+                self.recorder.logger.error("One or more paths are broken. Please check the warnings above.")
                 sys.exit(1)
 
 
 def main():
-    args = capture_arguments()
-    catalog_manager = CatalogManager(Path(args.config))
-    symlink_creator = SymlinkCreator(catalog_manager, args.timestamp.year)
-
-    symlink_creator.make_symlinks()
+    recorder = ProvenanceRecorder()
+    try:
+        args = capture_arguments()
+        recorder.timestamp = args.timestamp.isoformat()
+        catalog_manager = CatalogManager(Path(args.config))
+        recorder.config = catalog_manager.config
+        recorder.logger.info("Configuration loaded from %s", Path(args.config).resolve())
+        recorder.logger.info("Requested timestamp: %s", recorder.timestamp)
+        symlink_creator = SymlinkCreator(catalog_manager, args.timestamp.year, recorder)
+        symlink_creator.make_symlinks()
+        recorder.success = True
+        recorder.logger.info("linkbcs completed successfully")
+    except (Exception, SystemExit) as error:
+        recorder.error = str(error)
+        recorder.logger.error("linkbcs failed: %s", error)
+        raise
+    finally:
+        recorder.write_manifest()
 
 if __name__ == "__main__":
     main()
