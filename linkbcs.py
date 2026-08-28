@@ -25,9 +25,13 @@ class ProvenanceRecorder:
         self.logger.setLevel(logging.DEBUG)
         self.logger.handlers.clear()
         formatter = logging.Formatter("%(name)s %(levelname)s %(message)s")
-        for handler in (logging.FileHandler(self.log_path, mode="w"), logging.StreamHandler()):
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
+        file_handler = logging.FileHandler(self.log_path, mode="w")
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.WARNING)
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
 
     def _working_directory(self):
         logical_directory = Path(os.environ.get("PWD", Path.cwd()))
