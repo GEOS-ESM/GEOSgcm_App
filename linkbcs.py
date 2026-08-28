@@ -47,18 +47,18 @@ class ProvenanceRecorder:
 
     def record(self, action, destination=None, source=None, **details):
         entry = {"action": action}
-        if destination is not None:
-            entry["destination"] = str(self.absolute_path(destination))
         if source is not None:
             entry["source"] = str(self.absolute_path(source))
+        if destination is not None:
+            entry["destination"] = str(self.absolute_path(destination))
         entry.update({key: str(value) if isinstance(value, Path) else value for key, value in details.items()})
         self.actions.append(entry)
 
         description = action
-        if destination is not None:
-            description += f" {entry['destination']}"
         if source is not None:
-            description += f" -> {entry['source']}"
+            description += f" {entry['source']}"
+        if destination is not None:
+            description += f" -> {entry['destination']}"
         if details:
             description += " " + ", ".join(f"{key}={value}" for key, value in details.items())
         self.logger.debug(description)
