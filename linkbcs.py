@@ -3,6 +3,7 @@
 import yaml
 import argparse
 import logging
+import os
 import sys
 import shutil
 from pathlib import Path
@@ -11,8 +12,9 @@ from datetime import datetime
 
 class ProvenanceRecorder:
     def __init__(self):
-        self.log_path = Path.cwd() / "linkbcs.log"
-        self.manifest_path = Path.cwd() / "linkbcs_manifest.yaml"
+        self.working_directory = self._working_directory()
+        self.log_path = self.working_directory / "linkbcs.log"
+        self.manifest_path = self.working_directory / "linkbcs_manifest.yaml"
         self.actions = []
         self.config = None
         self.timestamp = None
@@ -20,19 +22,31 @@ class ProvenanceRecorder:
         self.error = None
 
         self.logger = logging.getLogger("linkbcs")
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
         self.logger.handlers.clear()
-        formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        formatter = logging.Formatter("%(name)s %(levelname)s %(message)s")
         for handler in (logging.FileHandler(self.log_path, mode="w"), logging.StreamHandler()):
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
 
+    def _working_directory(self):
+        logical_directory = Path(os.environ.get("PWD", Path.cwd()))
+        if logical_directory.exists() and os.path.samefile(logical_directory, Path.cwd()):
+            return logical_directory
+        return Path.cwd()
+
+    def absolute_path(self, path):
+        path = Path(path)
+        if path.is_absolute():
+            return path
+        return self.working_directory / path
+
     def record(self, action, destination=None, source=None, **details):
         entry = {"action": action}
         if destination is not None:
-            entry["destination"] = str(Path(destination).absolute())
+            entry["destination"] = str(self.absolute_path(destination))
         if source is not None:
-            entry["source"] = str(Path(source).absolute())
+            entry["source"] = str(self.absolute_path(source))
         entry.update({key: str(value) if isinstance(value, Path) else value for key, value in details.items()})
         self.actions.append(entry)
 
@@ -43,12 +57,12 @@ class ProvenanceRecorder:
             description += f" -> {entry['source']}"
         if details:
             description += " " + ", ".join(f"{key}={value}" for key, value in details.items())
-        self.logger.info(description)
+        self.logger.debug(description)
 
     def write_manifest(self):
         manifest = {
             "generated_at": datetime.now().astimezone().isoformat(),
-            "working_directory": str(Path.cwd().resolve()),
+            "working_directory": str(self.working_directory),
             "config": self.config,
             "timestamp": self.timestamp,
             "success": self.success,
@@ -511,12 +525,12 @@ def main():
         recorder.timestamp = args.timestamp.isoformat()
         catalog_manager = CatalogManager(Path(args.config))
         recorder.config = catalog_manager.config
-        recorder.logger.info("Configuration loaded from %s", Path(args.config).resolve())
-        recorder.logger.info("Requested timestamp: %s", recorder.timestamp)
+        recorder.logger.debug("Configuration loaded from %s", Path(args.config).resolve())
+        recorder.logger.debug("Requested timestamp: %s", recorder.timestamp)
         symlink_creator = SymlinkCreator(catalog_manager, args.timestamp.year, recorder)
         symlink_creator.make_symlinks()
         recorder.success = True
-        recorder.logger.info("linkbcs completed successfully")
+        recorder.logger.debug("linkbcs completed successfully")
     except (Exception, SystemExit) as error:
         recorder.error = str(error)
         recorder.logger.error("linkbcs failed: %s", error)
