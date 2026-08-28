@@ -120,9 +120,6 @@ cd $ORIGPATH
 #                   Test for Command Line Flags
 #######################################################################
 
-# Set default behavior of switches
-set LINKX = FALSE
-set EXE_VERB = "copied"
 set SINGULARITY_RUN_SITE = ""
 if ($singstat == 1) then
    set USING_SINGULARITY = TRUE
@@ -153,17 +150,6 @@ while ( $#argv > 0 )
       case -[Cc]:
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
-
-      # Symlink GEOSgcm.x
-      case --link:
-         set LINKX = TRUE
-         set EXE_VERB = "linked"
-         breaksw
-
-      # Avoid Symlink GEOSgcm.x
-      case --nolink:
-         set LINKX = FALSE
-         breaksw
 
       # Here any string not above will trigger USAGE
       case -[Hh]:
@@ -2070,16 +2056,12 @@ cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 rm -f $EXPDIR/RC/*.tmpl
 rm -f $EXPDIR/RC/fvcore_layout.rc
 
-# Copy or link GEOSgcm.x if USING_SINGULARITY is FALSE
+# Copy the GEOS runtime into the experiment if USING_SINGULARITY is FALSE
 if ( $USING_SINGULARITY == FALSE ) then
 
    # Binaries that might use shared object libraries we build
    mkdir -p $EXPDIR/install/bin
-   if ( $LINKX == "TRUE" ) then
-      if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR/install/bin
-   else
-      if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR/install/bin
-   endif
+   if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR/install/bin
    cp $GEOSBIN/binarytile.x $EXPDIR/install/bin
    cp $GEOSBIN/rs_numtiles.x $EXPDIR/install/bin
 
@@ -3085,9 +3067,9 @@ if ( $USING_SINGULARITY == TRUE ) then
    echo "      GEOSgcm.x from the installation bin directory."
 else
    echo " "
-   echo "The following executable has been ${EXE_VERB} to your Experiment Directory:"
+   echo "The following executable has been copied to your Experiment Directory:"
    echo "----------------------------------------------------------------------"
-   echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
+   echo "${C2}$EXPDIR/install/bin/GEOSgcm.x${CN}"
    echo " "
 endif
 echo " "
@@ -3592,7 +3574,6 @@ gmichem_setup, a setup script for the GEOS GCM
    Usage: $0:t [optional flag]
 
    -c --color        Set the colors for $0:t
-      --link         Link GEOSgcm.x into experiment directory
    -h --help         Show usage
 
    If invoked alone, the script runs as normal.
