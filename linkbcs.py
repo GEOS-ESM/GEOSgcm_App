@@ -30,9 +30,9 @@ class ProvenanceRecorder:
     def record(self, action, destination=None, source=None, **details):
         entry = {"action": action}
         if destination is not None:
-            entry["destination"] = str(Path(destination).resolve())
+            entry["destination"] = str(Path(destination).absolute())
         if source is not None:
-            entry["source"] = str(Path(source).resolve())
+            entry["source"] = str(Path(source).absolute())
         entry.update({key: str(value) if isinstance(value, Path) else value for key, value in details.items()})
         self.actions.append(entry)
 
