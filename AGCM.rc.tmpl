@@ -111,9 +111,10 @@ CLOSURE_CONGESTUS: 3
 # ------------------------
 @FV_HWT RAYLEIGH_TAU1: 0.0
 
-# GEOS-MLT: Pressure cutoff for gravity wave drag
-# Units: Pa (1.0 Pa = 0.01 hPa). Ignored when GEOS_MLT is .FALSE.
-GWD_TOP_PRESSURE: 0.01 
+# GEOS-MLT: Reference pressure for the upper-atmosphere GWD taper
+# WACCM-X uses 0.006 Pa (6e-5 hPa, approximately 110 km).
+# Ignored when GEOS_MLT is .FALSE.
+GWD_TOP_PRESSURE: 0.006
 ###########################################################
 
 @HIST_GOCART###########################################################
