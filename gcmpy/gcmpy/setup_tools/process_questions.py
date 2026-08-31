@@ -130,12 +130,6 @@ class Handle:
         elif question_dict['AGCM_grid'].answer == "c360":
             question_dict['MOM_resolution'].choices = ['o1440 (1/4-deg, 1440x1080  Tripolar)']
 
-        #match-case version 
-        match question_dict['AGCM_grid'].answer:
-            case "c12":
-                choices = ['o72']
-            case "c90":
-                ...
         question_dict["MOM_resolution"].choices = choices 
 
     @staticmethod
