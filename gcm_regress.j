@@ -94,6 +94,17 @@ set argv = ()
 
 setenv ARCH `uname`
 
+if ($ARCH == Darwin) then
+   set GSED = `which gsed`
+   if ( "$GSED" != "" ) then
+      set ISED = ( $GSED -i )
+   else
+      set ISED = ( sed -i.bak )
+   endif
+else
+   set ISED = ( sed -i )
+endif
+
 setenv SITE    {{ SITE }}
 setenv GEOSDIR {{ GEOSDIR }}
 setenv GEOSBIN {{ GEOSBIN }}
@@ -108,6 +119,14 @@ endif
 # We only add BASEDIR to the {{ LD_LIBRARY_PATH_CMD }} if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib"
+endif
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
 endif
 
 setenv RUN_CMD "{{ RUN_CMD }}"
@@ -197,7 +216,7 @@ if ( ! -e gwd_internal_rst ) then
   if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
     echo "NCAR_NRDG: 0" >> AGCM.rc
   else
-    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+    $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
   endif
 endif
 
@@ -295,23 +314,10 @@ set date = `cat cap_restart`
 set nymd0 = $date[1]
 set nhms0 = $date[2]
 
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 setenv EMISSIONS {{ EMISSIONS }}
 if( {{ EMISSIONS }} == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       if( $nymd0 < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-       else
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
 
     if( $LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -329,36 +335,16 @@ endif
 
 {{ MP_TURN_OFF_WSUB_EXTDATA }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
 {{ MP_TURN_OFF_WSUB_EXTDATA }}# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+{{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+{{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 {{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-       cat $extdata_files > ExtData.rc
-   endif
-endif
-
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
 if( $LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -385,7 +371,7 @@ endif
 {{ RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
 {{ RRTMGP_RADIATION }} foreach instance ($instance_files)
    {{ RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
-   {{ RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   {{ RRTMGP_RADIATION }} cat $instance.tmp | sed -E -e 's/(^|[^[:alnum:]_])RRTMG([^[:alnum:]_]|$)/\1RRTMGP\2/' > $instance
    {{ RRTMGP_RADIATION }} /bin/rm $instance.tmp
 {{ RRTMGP_RADIATION }} end
 
@@ -636,7 +622,7 @@ if ($RUN_STARTSTOP == TRUE) then
    {{ MOM6 }}# When you restart in MOM6 mode, you must change input_filename
    {{ MOM6 }}# in the input.nml file from 'n' to 'r'
    {{ MOM6 }} /bin/cp input.nml input.nml.orig
-   {{ MOM6 }} sed -i -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
+   {{ MOM6 }} $ISED -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
 
    ./strip CAP.rc
    set oldstring = `cat CAP.rc | grep JOB_SGMT:`
@@ -655,7 +641,7 @@ if ($RUN_STARTSTOP == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+         $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -790,7 +776,7 @@ if ( $RUN_LAYOUT == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+          $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -849,7 +835,7 @@ if ( $RUN_OPENMP == TRUE) then
      echo KMP_AFFINITY     $KMP_AFFINITY
      echo OMP_NUM_THREADS $OMP_NUM_THREADS
      ./strip GWD_GridComp.rc
-     sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
+      $ISED -e "s|FALSE|TRUE|g" GWD_GridComp.rc
    endif
 
    # Copy Original Restarts to Regress directory
@@ -913,7 +899,7 @@ if ( $RUN_OPENMP == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+          $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -952,7 +938,7 @@ if ( $RUN_OPENMP == TRUE) then
    # Reset OpenMP Threads to 1
    setenv OMP_NUM_THREADS 1
    ./strip GWD_GridComp.rc
-   sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
+    $ISED -e "s|TRUE|FALSE|g" GWD_GridComp.rc
 
 endif
 

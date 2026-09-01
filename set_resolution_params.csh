@@ -13,7 +13,6 @@ if ( $#argv < 4 ) then
     echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>"
     exit 1
 endif
-
 # Input from argument
 # NOTE: We use LOCALs for OCNMODEL and CLDMICRO to avoid
 #       overwriting any global variables.
@@ -120,16 +119,16 @@ endif
 if( $AGCM_IM ==  "c180" ) then
      set       DT = 600
      set  CONV_DT = 600
-     set  CHEM_DT = 1200
+     set  CHEM_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 180
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $LOCAL_OGCM == TRUE ) then
         if ( "$LOCAL_OCNMODEL" == "MOM6") then
-           # For MOM6 c180 means atm NXxNY = 30x36
-           set  NX = 30
-           set  NY = 36
+           # Use one 1920-rank atmosphere layout for all C180 MOM6 grids.
+           set  NX = 20
+           set  NY = 96
         else
            set  NX = $OGCM_NY
            set  NY = $OGCM_NX
@@ -156,14 +155,20 @@ endif
 if( $AGCM_IM == "c360" ) then
      set       DT = 450
      set  CONV_DT = 450
-     set  CHEM_DT = 900
+     set  CHEM_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
-     set       NY = `expr $NX \* 6`
+     if( $LOCAL_OGCM == TRUE && "$LOCAL_OCNMODEL" == "MOM6" ) then
+        # Match the 1920-rank o1440 MOM6 layout.
+        set       NX = 20
+        set       NY = 96
+     else
+        set       NX = 30
+        set       NY = `expr $NX \* 6`
+     endif
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 4
@@ -175,7 +180,7 @@ endif
 if( $AGCM_IM == "c720" ) then
      set       DT = 300
      set  CONV_DT = 300
-     set  CHEM_DT = 600
+     set  CHEM_DT = 1200
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -195,7 +200,7 @@ endif
 if( $AGCM_IM == "c1120" ) then
      set       DT = 300
      set  CONV_DT = 300
-     set  CHEM_DT = 600
+     set  CHEM_DT = 1200
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -215,10 +220,10 @@ endif
 if( $AGCM_IM == "c1440" ) then
      set       DT = 150
      set  CONV_DT = 300
-     set  CHEM_DT = 600
-     set SOLAR_DT = 1200
-     set IRRAD_DT = 1200
-     set OCEAN_DT = 1200
+     set  CHEM_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set AGCM_IM  = 1440
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -235,10 +240,10 @@ endif
 if( $AGCM_IM == "c2880" ) then
      set       DT = 75
      set  CONV_DT = 300
-     set  CHEM_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
+     set  CHEM_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set AGCM_IM  = 2880
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -257,10 +262,10 @@ endif
 if( $AGCM_IM == "c5760" ) then
      set       DT = 75
      set  CONV_DT = 300
-     set  CHEM_DT = 300
-     set SOLAR_DT = 600
-     set IRRAD_DT = 600
-     set OCEAN_DT = 600
+     set  CHEM_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set AGCM_IM  = 5760
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -304,7 +309,7 @@ endif
 if( $AGCM_IM == "c540" ) then
      set       DT = 300
      set  CONV_DT = 300
-     set  CHEM_DT = 900
+     set  CHEM_DT = 1800
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set OCEAN_DT = 3600
@@ -326,7 +331,7 @@ endif
 if( $AGCM_IM == "c1080" ) then
      set       DT = 150
      set  CONV_DT = 300
-     set  CHEM_DT = 600
+     set  CHEM_DT = 900
      set SOLAR_DT = 1800
      set IRRAD_DT = 1800
      set OCEAN_DT = 1800
@@ -370,10 +375,10 @@ endif
 if( $AGCM_IM == "c2160" ) then
      set       DT = 75
      set  CONV_DT = 300
-     set  CHEM_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
+     set  CHEM_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set AGCM_IM  = 2160
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -392,10 +397,10 @@ endif
 if( $AGCM_IM == "c4320" ) then
      set       DT = 75
      set  CONV_DT = 300
-     set  CHEM_DT = 300
-     set SOLAR_DT = 900
-     set IRRAD_DT = 900
-     set OCEAN_DT = 900
+     set  CHEM_DT = 900
+     set SOLAR_DT = 1800
+     set IRRAD_DT = 1800
+     set OCEAN_DT = 1800
      set AGCM_IM  = 4320
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      set       NX = 80
@@ -424,6 +429,19 @@ else
   set TARGET_LAT  = "target_lat  = 39.5"
 endif
 
+# We also need a variable, RUN_HYDROSTATIC, that is TRUE if both of the following are true:
+# 1. AGCM_LM != 72
+# 2. If AGCM_IM <= 720
+#
+# NOTE: We set the false case to an empty string to
+# try and keep current behavior the same
+
+if ( $AGCM_LM != 72 && $AGCM_IM <= 720 ) then
+   set RUN_HYDROSTATIC = 'hydrostatic = .true.'
+else
+   set RUN_HYDROSTATIC = ''
+endif
+
 # Set coarse resolution CLIM output
 set  CLIM_IM  = 576
 set  CLIM_JM  = 361
@@ -437,4 +455,3 @@ if( "$LOCAL_CLDMICRO" == "BACM_1M" ) then
    set CONV_DT = 450
    set CHEM_DT = 450
 endif
-
