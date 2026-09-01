@@ -23,6 +23,10 @@ ecbuild_add_executable (
 set_target_properties (idfupd.x PROPERTIES LINKER_LANGUAGE Fortran)
 
 set (CMAKE_Fortran_FLAGS_RELEASE "${GEOS_Fortran_FLAGS_VECT}")
+if (GPU_PHYSICS)
+  set (CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${GEOS_Fortran_OpenACC_Flags_Offload_Libs}")
+  set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${GEOS_Fortran_OpenACC_Flags_Offload_Libs}")
+endif ()
 
 file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 
