@@ -4,8 +4,24 @@ import yaml
 import argparse
 import sys
 import shutil
+import logging
 from pathlib import Path
 from datetime import datetime
+
+def setup_logger(timestamp: datetime) -> logging.Logger:
+    timestamp_str = timestamp.strftime("%Y-%m-%dT%H:%M:%S")
+    log_file = Path.cwd() / f"{timestamp_str}_bcs.log"
+
+    logger = logging.getLogger("linkbcs")
+    logger.setLevel(logging.INFO)
+
+    handler = logging.FileHandler(log_file)
+    handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s"))
+    logger.addHandler(handler)
+
+    return logger
+
+
 
 def validate_iso_datetime(datetime_string):
     try:
@@ -93,10 +109,11 @@ class CatalogManager:
 
 
 class SymlinkCreator:
-    def __init__(self, catalog: CatalogManager, year: int):
+    def __init__(self, catalog: CatalogManager, year: int, logger: logging.Logger):
         self.catalog = catalog
         self.config = catalog.config
         self.year = year
+        self.logger = logger
 
         # platform
         try:
@@ -183,6 +200,9 @@ class SymlinkCreator:
 
         if file_path.exists():
             symlink_name.symlink_to(file_path)
+            self.logger.info(f"SYMLINK: {symlink_name} -> {file_path}")
+        else:
+            self.logger.warning(f"SKIPPED SYMLINK: {symlink_name} -> {file_path} (source does not exist)")
 
     def topo_paths(self) -> dict:
         paths = {
@@ -208,11 +228,18 @@ class SymlinkCreator:
 
     def make_restart_dir(self):
         if self.coupled != "data":
-            Path("RESTART").mkdir(parents=True, exist_ok=True)
+            restart = Path("RESTART")
+            if not restart.exists():
+                restart.mkdir(parents=True, exist_ok=True)
+                self.logger.info(f"DIRECTORY CREATED: {restart.resolve()}")
 
     def make_extdata_dir(self):
         extdata = Path("ExtData")
-        extdata.mkdir(parents=True, exist_ok=True)
+        if not extdata.exists():
+            extdata.mkdir(parents=True, exist_ok=True)
+            self.logger.info(f"DIRECTORY CREATED: {extdata.resolve()}")
+        else:
+            extdata.mkdir(parents=True, exist_ok=True)
 
         for file in self.extdata_files:
             self.create_symlink(extdata / file, self.chem_dir / file)
@@ -309,9 +336,11 @@ class SymlinkCreator:
         gwd_agcm = self.gwdrs_dir / f"gwd_internal_c{self.agcm_IM}"
         if gwd_rst.exists():
             shutil.copy(gwd_rst, Path.cwd())
+            self.logger.info(f"FILE COPIED: {gwd_rst} -> {Path.cwd() / gwd_rst.name}")
         elif gwd_agcm.exists():
             # We need to copy the gwd_internal_c{IM} file to the current working directory as gwd_internal_rst for the model to find it
             shutil.copy(gwd_agcm, Path.cwd() / "gwd_internal_rst")
+            self.logger.info(f"FILE COPIED: {gwd_agcm} -> {Path.cwd() / 'gwd_internal_rst'}")
 
 
     def table_paths(self) -> dict:
@@ -331,12 +360,17 @@ class SymlinkCreator:
         target_dir = Path("INPUT")
 
         # make input dir if it doesn't already exist
-        Path("INPUT").mkdir(parents=True, exist_ok=True)
+        if not target_dir.exists():
+            target_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.info(f"DIRECTORY CREATED: {target_dir.resolve()}")
+        else:
+            target_dir.mkdir(parents=True, exist_ok=True)
 
         for file_path in src_dir.glob("*"):
             if file_path.is_file():
                 # copy2 preserves file metadata
                 shutil.copy2(file_path, target_dir / file_path.name)
+                self.logger.info(f"FILE COPIED: {file_path} -> {target_dir / file_path.name}")
 
     def seaice_paths(self) -> dict:
         if not self.coupled:
@@ -434,8 +468,9 @@ class SymlinkCreator:
 
 def main():
     args = capture_arguments()
+    logger = setup_logger(args.timestamp)
     catalog_manager = CatalogManager(Path(args.config))
-    symlink_creator = SymlinkCreator(catalog_manager, args.timestamp.year)
+    symlink_creator = SymlinkCreator(catalog_manager, args.timestamp.year, logger)
 
     symlink_creator.make_symlinks()
 
