@@ -13,7 +13,6 @@ if ( $#argv < 4 ) then
     echo "Usage: source set_resolution_params.csh <AGCM_IM> <CLDMICRO> <OGCM> <OCNMODEL>"
     exit 1
 endif
-
 # Input from argument
 # NOTE: We use LOCALs for OCNMODEL and CLDMICRO to avoid
 #       overwriting any global variables.
@@ -127,9 +126,9 @@ if( $AGCM_IM ==  "c180" ) then
      set AGCM_JM  = `expr $AGCM_IM \* 6`
      if( $LOCAL_OGCM == TRUE ) then
         if ( "$LOCAL_OCNMODEL" == "MOM6") then
-           # For MOM6 c180 means atm NXxNY = 30x36
-           set  NX = 30
-           set  NY = 36
+           # Use one 1920-rank atmosphere layout for all C180 MOM6 grids.
+           set  NX = 20
+           set  NY = 96
         else
            set  NX = $OGCM_NY
            set  NY = $OGCM_NX
@@ -162,8 +161,14 @@ if( $AGCM_IM == "c360" ) then
      set OCEAN_DT = 3600
      set AGCM_IM  = 360
      set AGCM_JM  = `expr $AGCM_IM \* 6`
-     set       NX = 30
-     set       NY = `expr $NX \* 6`
+     if( $LOCAL_OGCM == TRUE && "$LOCAL_OCNMODEL" == "MOM6" ) then
+        # Match the 1920-rank o1440 MOM6 layout.
+        set       NX = 20
+        set       NY = 96
+     else
+        set       NX = 30
+        set       NY = `expr $NX \* 6`
+     endif
      set HIST_IM  = `expr $AGCM_IM \* 4`
      set HIST_JM  = `expr $AGCM_IM \* 2 + 1`
      set NUM_READERS = 4
@@ -450,4 +455,3 @@ if( "$LOCAL_CLDMICRO" == "BACM_1M" ) then
    set CONV_DT = 450
    set CHEM_DT = 450
 endif
-
