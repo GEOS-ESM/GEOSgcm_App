@@ -87,7 +87,7 @@ endif
 if( $AGCM_IM ==  "c90" ) then
      set       DT = 900
      set  CONV_DT = 900
-     set  CHEM_DT = 1800
+     set  CHEM_DT = 900
      set SOLAR_DT = 3600
      set IRRAD_DT = 3600
      set AGCM_IM  = 90
@@ -106,7 +106,7 @@ if( $AGCM_IM ==  "c90" ) then
         endif
         set OCEAN_DT = $DT
      else
-        set  NX = 10
+        set  NX = 15
         set  NY = `expr $NX \* 6`
         set OCEAN_DT = 3600
      endif

@@ -139,7 +139,7 @@ NCAR_NRDG: @NCAR_NRDG
 # Enable wet scavenging diagnostics
 # NOTE: this section should be commented out when running gocart.data
 # 2D mass weighted vertical integrated moist scavenging increments
-@HIST_GOCARTMCHEMTRI_increments::
+MCHEMTRI_increments::
 @HIST_GOCARTDU::DU default
 @HIST_GOCARTSS::SS default
 @HIST_GOCARTSU::SO4 default
@@ -150,7 +150,25 @@ NCAR_NRDG: @NCAR_NRDG
 @HIST_GOCARTPCHEM::OX default
 @HIST_GOCARTNI::NH3 default
 @HIST_GOCARTNI::NH4a default
-@HIST_GOCART::
+GEOSCHEMCHEM::SPC_SO2 default
+GEOSCHEMCHEM::SPC_BCPI default
+GEOSCHEMCHEM::SPC_BCPO default
+GEOSCHEMCHEM::SPC_OCPI default
+GEOSCHEMCHEM::SPC_OCPO default
+GEOSCHEMCHEM::SPC_SOAS default
+GEOSCHEMCHEM::SPC_DST1 default
+GEOSCHEMCHEM::SPC_DST2 default
+GEOSCHEMCHEM::SPC_DST3 default
+GEOSCHEMCHEM::SPC_DST4 default
+GEOSCHEMCHEM::SPC_NH3 default
+GEOSCHEMCHEM::SPC_NH4 default
+GEOSCHEMCHEM::SPC_NIT default
+GEOSCHEMCHEM::SPC_HNO3 default
+GEOSCHEMCHEM::SPC_SALA default
+GEOSCHEMCHEM::SPC_SALC default
+GEOSCHEMCHEM::SPC_SO4 default
+GEOSCHEMCHEM::SPC_CH2O default
+::
 # 3D moist scavenging increments
 @HIST_GOCARTMTRI_increments::
 @HIST_GOCARTDU::DU default

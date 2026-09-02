@@ -964,7 +964,11 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      /bin/ln -sf ${ANA_LOCATION}/chem .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE09_TYPE} .
-
+else
+     # Modify GAAS_GridComp_ExtData
+     # ---------------------------------------------
+     /bin/mv -f GAAS_GridComp_ExtData.yaml GAAS_GridComp_ExtData.yaml.tmpl
+     cat GAAS_GridComp_ExtData.yaml.tmpl | sed -e "s?das.aod_?/discover/nobackup/projects/gmao/merra2/data/chem/d5124_m2_jan10/Y%y4/M%m2/d5124_m2_jan10.aod_?" > GAAS_GridComp_ExtData.yaml
 endif
 
 # Establish safe default number of OpenMP threads

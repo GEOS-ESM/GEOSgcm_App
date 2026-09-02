@@ -850,9 +850,16 @@ else
       set CS_DEFAULT = ' (Default)'
       set DEFAULT_HRCODE = 'CS'
     endif
+
+    # Special for GEOS-Chem: use o3
+      set DEFAULT_HRCODE = 'o3'
+      set O2_DEFAULT = ''
+      set O3_DEFAULT = ' (Default)'
+      set CS_DEFAULT = ''
+
     echo "Enter the ${C1}Data_Ocean Horizontal Resolution ${CN}code: ${C2}o1${CN} (1  -deg,  360x180  Reynolds)"
     echo "                                                 ${C2}o2${CN} (1/4-deg, 1440x720  MERRA-2)${O2_DEFAULT}"
-    echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)"
+    echo "                                                 ${C2}o3${CN} (1/8-deg, 2880x1440 OSTIA)${O3_DEFAULT}"
     echo "                                                 ${C2}CS${CN} (Cubed-Sphere OSTIA)${CS_DEFAULT}"
     # We also note that the Reynolds ocean does not exist past 2022
     echo ""
@@ -1050,6 +1057,11 @@ endif
 # Default Run Parameters
 # ----------------------
 source $BINDIR/set_resolution_params.csh $AGCM_IM $CLDMICRO $OGCM $OCNMODEL
+set CONV_DT_FACTOR = `expr $CONV_DT / $DT`
+set CHEM_DT_FACTOR = `expr $CHEM_DT / $DT`
+
+#set GEOSCHEMCHEM_DT  = `expr $CHEM_DT \* 2`
+ set GEOSCHEMCHEM_DT  = $CHEM_DT
 
 set OGCM_IS_FCST = 0
 set FVCUBED         = ""
@@ -1073,8 +1085,10 @@ else
    set INTERPOLATE_SST = 0
 endif
 
-set BEG_DATE =  '18910301 000000'
-set END_DATE =  '29990302 210000'
+# GEOS-Chem needs a recent BEGIN Date
+# -----------------------------------
+set BEG_DATE =  '20040101 210000'
+set END_DATE =  '20260831 210000'
 set JOB_SGMT = "$JOB_SGMT 000000"
 
 #######################################################################
@@ -1207,18 +1221,88 @@ endif
 endif # DATA_ATMOS
 
 #######################################################################
+#                   Legacy GOCART
+#######################################################################
+
+# We do not run CH4 and CO2 by default
+ set GOKART     = FALSE
+
+# The old GOCART_DATA must always be turned off
+ set GOKARTDATA = FALSE
+
+#######################################################################
 #                   Check for AEROSOL/Chemistry Models
 #######################################################################
 
 # Check for GOCART
 # ----------------
 GOCART:
+#echo
+#echo "------------------------------------"
+#echo "Specify the AERO_PROVIDER by number:"
+#echo "------------------------------------"
+#echo " ${C2}0${CN} none"
+#echo " ${C2}1${CN} GOCART2G (Default)"
+#echo " ${C2}2${CN} GEOS-Chem Chemistry"
+#echo "------------------------------------"
+#
+#set APNum = ''
+#AP:
+#set APNum = $<
+#if( .$APNum == . ) then
+# set APNum = 1
+#else
+# if( $APNum < 0 | $APNum > 2 ) then
+#  echo " Sorry. Invalid choice. Try again."
+#  goto AP
+# endif
+#endif
+
+# For now we use GOCARTG:
+set APNum = 1
+
+set  EMISSIONS       = ""
+
+# Default setup for linkbcs emissions
+set OPS_SPECIES      = "#"
+set CMIP_SPECIES     = "#"
+set MERRA2OX_SPECIES = "#"
+set PCHEM_CLIM_YEARS = ""
+
+if($APNum == 0) then
+ set AERO_PROVIDER   = none
+
+ set GOKART2G   = FALSE
+ set GOCART          = "#"
+ set HIST_GOCART     = "#DELETE"
+ set USE_AEROSOL_NN  = "USE_AEROSOL_NN"
+endif
+
+if($APNum == 1) then
+ set AERO_PROVIDER   = GOCART2G
+
+ set GOKART2G   = TRUE
+ set GOCART          = ""
+ set HIST_GOCART     = ""
+ set USE_AEROSOL_NN  = "#USE_AEROSOL_NN"
+endif
+
+if($APNum == 2) then
+ set AERO_PROVIDER   = GEOSCHEMCHEM
+
+ set GOKART2G   = FALSE
+ set GOCART          = "#"
+ set HIST_GOCART     = "#DELETE"
+ set USE_AEROSOL_NN  = "#USE_AEROSOL_NN"
+endif
+
+
+if( $GOKART2G == TRUE ) then
 
 # If we are running DATA_ATMOS, we can skip the GOCART bits, but we must still fill
 # things out with something. So we use the climatological aerosols settings so
 # the sed scripts don't get confused.
 if ($DATA_ATMOS == TRUE) then
-   set GOKART           = FALSE
    set DATA_DRIVEN      = FALSE
    set AERO_PROVIDER    = GOCART2G
    set EMISSIONS        = ""
@@ -1270,10 +1354,10 @@ endif
 # --------------
 EMISSIONS:
      set   EMISSIONS = ''
-     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} (Default) or ${C2}OPS${CN}:"
+     echo "Enter the GOCART ${C1}Emission Files${CN} to use: ${C2}AMIP${CN} or ${C2}OPS${CN} (Default):"
      set   EMISSIONS = $<
      if( .$EMISSIONS == . ) then
-     set   EMISSIONS = AMIP
+     set   EMISSIONS = OPS
      else
      set   EMISSIONS = `echo   $EMISSIONS | tr "[:lower:]" "[:upper:]"`
      if(  $EMISSIONS != OPS & $EMISSIONS != AMIP) then
@@ -1299,7 +1383,24 @@ EMISSIONS:
         set OX_RELAXTIME = 259200.
      endif
 
+     # For now Viral wants to always use CMIP5
+     set OPS_SPECIES      = "#"
+     set MERRA2OX_SPECIES = "#"
+     set CMIP_SPECIES = ''
+     set PCHEM_CLIM_YEARS = 228
+     set OX_RELAXTIME = 259200.
+
+     # Make it clear that AMIP requires more work
+     if(  $EMISSIONS != OPS_EMISSIONS ) then
+        echo
+        echo "   >>>  ${C1}NOTE: You must customize files under RC/AMIP/ since they are outside the scope of this script${CN}"
+        echo
+        echo
+     endif
+
 endif # DATA_ATMOS
+
+endif # GOKART2G
 
 # RATS Provider
 # -------------
@@ -1308,22 +1409,53 @@ RATSPRO:
      echo "Enter the ${C1}RATS PROVIDER${CN} to use: ${C2}PCHEM${CN} (Default) or ${C2}GEOSCHEMCHEM${CN}:"
      set   RATS_PROVIDER = $<
      if( .$RATS_PROVIDER == . ) then
-     set   RATS_PROVIDER = PCHEM
+       set   RATS_PROVIDER = PCHEM
      else
-     set   RATS_PROVIDER = `echo   $RATS_PROVIDER | tr "[:lower:]" "[:upper:]"`
-     if(  $RATS_PROVIDER != PCHEM & $RATS_PROVIDER != GEOSCHEMCHEM ) then
-     echo
-     echo "${C1}RATS PROVIDER${CN} must be equal to:  ${C2}PCHEM${CN}, or ${C2}GEOSCHEMCHEM${CN}!"
-     goto RATSPRO
-     else
-     echo
-     endif
+       set   RATS_PROVIDER = `echo   $RATS_PROVIDER | tr "[:lower:]" "[:upper:]"`
+       if(  $RATS_PROVIDER != PCHEM & $RATS_PROVIDER != GEOSCHEMCHEM ) then
+         echo
+         echo "${C1}RATS PROVIDER${CN} must be equal to:  ${C2}PCHEM${CN}, or ${C2}GEOSCHEMCHEM${CN}!"
+         goto RATSPRO
+       else
+         echo
+       endif
      endif
 
 # Additional RATS settings for specific GHGs
 # ------------------------------------------
 set CH4_PROVIDER     = none
 set CO2_PROVIDER     = none
+
+#######################################################################
+#                         Check for CDAS
+#######################################################################
+
+goto  SKIP_GSI_1
+CDAS:
+echo "Do you wish to run GSI ${C1}consituent DA${CN}? (Default: ${C2}NO${CN} or ${C2}FALSE${CN})"
+set   RUN_GSI  = $<
+if( .$RUN_GSI == . ) then
+  set   RUN_GSI  = 0
+else
+  set   RUN_GSI  = `echo   $RUN_GSI | tr "[:lower:]" "[:upper:]"`
+  if(  $RUN_GSI == "Y"     | \
+       $RUN_GSI == "YES"   | \
+       $RUN_GSI == "T"     | \
+       $RUN_GSI == "TRUE"  ) set RUN_GSI = 1
+  if(  $RUN_GSI == "N"     | \
+       $RUN_GSI == "NO"    | \
+       $RUN_GSI == "F"     | \
+       $RUN_GSI == "FALSE" ) set RUN_GSI = 0
+
+  if( $RUN_GSI != 0 & $RUN_GSI != 1 ) then
+    echo
+    echo "${C1}GSI DA${CN} must be set equal to TRUE or FALSE!"
+    goto  CDAS
+  else
+    echo
+  endif
+endif
+SKIP_GSI_1:
 
 #######################################################################
 #                  Confirm HEARTBEAT time for the model
@@ -1347,6 +1479,10 @@ else
 endif
 
 set DT = $HEARTBEAT
+set CONV_DT = `expr $DT \* $CONV_DT_FACTOR`
+set CHEM_DT = `expr $DT \* $CHEM_DT_FACTOR`
+#set GEOSCHEMCHEM_DT  = `expr $CHEM_DT \* 2`
+set GEOSCHEMCHEM_DT  = $CHEM_DT
 
 # For now, in a coupled run, the ocean model must have the same time step as the atmosphere
 if( "$OGCM" == "TRUE" ) then
@@ -1874,6 +2010,19 @@ mkdir -p  $EXPDIR/RC
 # Copy over all files and subdirs in install/etc, keeping symlinks
 cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 
+  # Overwrite certain resource files with custom versions
+  foreach i ( CH4_GridComp_ExtData.yaml  \
+              CH4_GridComp.rc            \
+              CO2_GridComp_ExtData.yaml  \
+              CO2_GridComp.rc            \
+              GAAS_GridComp_ExtData.yaml \
+              GAAS_GridComp.rc           \
+              GEOSachem_ExtData.yaml     \
+              Chem_Registry.rc           )
+
+    /bin/mv -f $EXPDIR/RC/CF.$i $EXPDIR/RC/$i
+  end
+
 # Remove templated files in RC as they are unneeded and confusing for experiments
 rm -f $EXPDIR/RC/*.tmpl
 rm -f $EXPDIR/RC/fvcore_layout.rc
@@ -2204,7 +2353,7 @@ s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
 
 s?@RATS_PROVIDER?$RATS_PROVIDER?g
 s?@AERO_PROVIDER?$AERO_PROVIDER?g
-s?@OANA_PROVIDER?PCHEM?g
+s?@OANA_PROVIDER?$RATS_PROVIDER?g
 s?@EMISSIONS?$EMISSIONS?g
 
 s?@CH4_PROVIDER?$CH4_PROVIDER?g
@@ -2262,7 +2411,7 @@ s/@CONUS/${CONUS}/g
 s/@CONVPAR_OPTION/${CONVPAR_OPTION}/g
 s/@STRETCH_FACTOR/${STRETCH_FACTOR}/g
 
-/SATSIM_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT
+/UW_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT
 
 s/@INTERPOLATE_SST/$INTERPOLATE_SST/g
 s/@HIST_IM/$HIST_IM/g
@@ -2404,69 +2553,126 @@ end
 
 /bin/rm -f $TMPHIST
 
-# Add 5 snippets to the run script, specialized for GEOS-Chem
+# Add snippets to the run script, specialized for GEOS-Chem
 # -----------------------------------------------------------
 
-/bin/rm -f $HOMDIR/chemchem_rename.txt
-cat >      $HOMDIR/chemchem_rename.txt << EOF
+goto  SKIP_GSI_2
+# Add GSI stuff:
+# ---------------
+/bin/rm -f $HOMDIR/gsi_cdas_1.txt
+cat >      $HOMDIR/gsi_cdas_1.txt << EOF
 
-#######################################################################
-#                 Special Handling for GEOS-Chem RC files
-#######################################################################
-
-set GEOSCHEM_RCS = ( brc.dat dust.dat FJX_j2j.dat FJX_spec.dat h2so4.dat jv_spec_mie.dat org.dat so4.dat soot.dat ssa.dat ssc.dat input.geos )
-foreach FILE ( \${GEOSCHEM_RCS} )
-  /bin/mv \${FILE}.rc \${FILE}
-end
+# GSI CDAS coupling. Set to 1 to run with GSI in parallel
+set RUN_GSI = ${RUN_GSI}
 EOF
 
-/bin/rm -f $HOMDIR/chemchem_rename2.txt
-cat >      $HOMDIR/chemchem_rename2.txt << EOF
+/bin/rm -f $HOMDIR/gsi_cdas_2.txt
+cat >      $HOMDIR/gsi_cdas_2.txt << EOF
 
-# Rename ExtData file that conflicts w/ GEOS-Chem
-# -----------------------------------------------
-/bin/mv  HEMCOgocart_ExtData.rc  HEMCOgocart_ExtData.rc.NOT_USED
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_ben.txt
-cat >      $HOMDIR/chemchem_ben.txt << EOF
-
-#link to Ben's special tile files:
-/bin/ln -sf /discover/nobackup/bmauer/tile_files/*/* .
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_fastJX.txt
-cat >      $HOMDIR/chemchem_fastJX.txt << EOF
-
-# need FJX_j2j.dat file in scratch
-/bin/cp /discover/nobackup/cakelle2/data/CHEM_INPUTS/FAST_JX/v2018-09/FJX_j2j.dat .
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_noNRT.txt
-cat >      $HOMDIR/chemchem_noNRT.txt << EOF
-
-# don't read NRT QFED data
-sed -i 's/QFED\/NRT/QFED/' ExtData.rc
-sed -i 's/v2.5r1_0.1_deg/v2.5r1\/0.1/' ExtData.rc
-EOF
-
-/bin/rm -f $HOMDIR/chemchem_exit.txt
-cat >      $HOMDIR/chemchem_exit.txt << EOF
-
-if ( \$rc == -1 ) then
-   echo 'GEOS-Chem error: exit'
-   exit
+# submit GSI standalone run, will run in parallel
+if ( \$RUN_GSI == 1 ) then
+   # make sure EXPID is correct
+   /bin/mv gsi_cdas.j gsi_cdas.tmp
+   cat gsi_cdas.tmp | sed -e "s?setenv EXPID.*?setenv EXPID \$EXPID?g" > gsi_cdas.j
+   /bin/rm gsi_cdas.tmp
+   # remove checkpoint file if it already exists
+   set geos_done = "geos_run.done"
+   if ( -e \$SCRDIR/\$geos_done ) then
+      /bin/rm \$SCRDIR/\$geos_done
+   endif
+   echo "submitting gsi job to run in parallel..."
+   sbatch gsi_cdas.j
 endif
+
 EOF
 
+/bin/rm -f $HOMDIR/gsi_cdas_3.txt
+cat >      $HOMDIR/gsi_cdas_3.txt << EOF
+
+#######################################################################
+#                  Setup the Analysis
+#######################################################################
+if ( \$RUN_GSI == 1 ) then
+   # Specify second HISTORY instance to output background files and turn on GSI coupling
+   echo 'REPLAY_HISTORY_RC: HISTORY_predictor.rc' >> AGCM.rc
+   echo ' ' >> AGCM.rc
+   echo 'GSI_COUPLING: 1' >> AGCM.rc
+   echo 'GSI_INTERVAL_SEC: 30' >> AGCM.rc
+   echo 'GSI_MAXCHECKS: 120' >> AGCM.rc
+
+   # Update experiment ID in HISTORY_predictor.rc
+   /bin/mv HISTORY_predictor.rc HISTORY_predictor.tmp
+   cat HISTORY_predictor.tmp | sed -e "s?EXPID:.*?EXPID: \$EXPID?g" > HISTORY_predictor.rc
+   /bin/rm HISTORY_predictor.tmp
+
+   # Update EXPID pattern in all AnaSettings files
+   /bin/mv geoschem_analysis.yml geoschem_analysis.tmp
+   cat geoschem_analysis.tmp | sed -e "s?>>>EXPID<<<?\$EXPID?g" > geoschem_analysis.yml
+   /bin/rm geoschem_analysis.tmp
+   end
+
+   # Create a fake restart entry for the background and increment files
+   echo 'CODAS_BACKGROUND_RESTART_FILE:           codas_background_rst'        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_RESTART_TYPE:           ptar'                        >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_FILE:        codas_background_checkpoint' >> AGCM.rc
+   echo 'CODAS_BACKGROUND_CHECKPOINT_TYPE:        ptar'                        >> AGCM.rc
+
+   echo 'CODAS_INCREMENT_RESTART_FILE:            codas_increment_rst'         >> AGCM.rc
+   echo 'CODAS_INCREMENT_RESTART_TYPE:            pnc4'                        >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_FILE:         codas_increment_checkpoint'  >> AGCM.rc
+   echo 'CODAS_INCREMENT_CHECKPOINT_TYPE:         pnc4'                        >> AGCM.rc
+
+endif
+
+EOF
+
+/bin/rm -f $HOMDIR/gsi_cdas_4.txt
+cat >      $HOMDIR/gsi_cdas_4.txt << EOF
+
+# write geos complete file (this tells the GSI run to stop)
+if ( \$RUN_GSI == 1 ) then
+   touch \${geos_done}
+   echo "written geos checkpoint file: \${geos_done}"
+endif
+
+EOF
+SKIP_GSI_2:
+
+/bin/rm -f $HOMDIR/qfednrt.txt
+cat >      $HOMDIR/qfednrt.txt << EOF
+
+# Somehow the QFED switch from 006 to 061 does not seem to work. Do it manually here:
+set QFED_transition_date = 20211101
+if ( \${QFED_transition_date} <= \$nymdc ) then
+    /bin/mv GEOSCHEMchem_ExtData.yaml GEOSCHEMchem_ExtData.tmp
+    cat GEOSCHEMchem_ExtData.tmp | sed -e "s?006.%y4%m2%d2.nc4?061.%y4%m2%d2.nc4?g" > GEOSCHEMchem_ExtData.yaml
+endif
+
+EOF
+
+# The version that includes GSI:
+#/bin/rm -f $HOMDIR/sedfile
+#cat >      $HOMDIR/sedfile << EOF
+#/echo   VERSION:/                  r $HOMDIR/gsi_cdas_1.txt
+#/rm CAP.tmp/                      { N
+#                                    N
+#                                    r $HOMDIR/gsi_cdas_2.txt
+#                                  }
+#/set USE_SHMEM/                    r $HOMDIR/gsi_cdas_3.txt
+#/exit -1/                          r $HOMDIR/gsi_cdas_4.txt
+#/touch ExtData.rc/                { N
+#                                    N
+#                                    r $HOMDIR/qfednrt.txt
+#                                  }
+#EOF
+
+# The version without GSI:
 /bin/rm -f $HOMDIR/sedfile
 cat >      $HOMDIR/sedfile << EOF
-/set USE_SHMEM/                    r $HOMDIR/chemchem_rename.txt
-/GOCARTdata_ExtData.rc.NOT_USED/   r $HOMDIR/chemchem_rename2.txt
-/\*c2l\*/                          r $HOMDIR/chemchem_ben.txt
-/cp  linkbcs/                      r $HOMDIR/chemchem_fastJX.txt
-/cat \$extdata_files/              r $HOMDIR/chemchem_noNRT.txt
-/echo GEOSgcm Run Status/          r $HOMDIR/chemchem_exit.txt
+/touch ExtData.rc/                { N
+                                    N
+                                    r $HOMDIR/qfednrt.txt
+                                  }
 EOF
 
 /bin/rm -f $HOMDIR/tmpfile
@@ -2474,12 +2680,32 @@ EOF
 
 sed -f $HOMDIR/sedfile   $HOMDIR/tmpfile > $HOMDIR/gcm_run.j
 
+# Add snippets to the AGCM.rc for replay to GEOS-IT
+# -----------------------------------------------------------
+/bin/rm -f $HOMDIR/geosit_tmp.txt
+cat >      $HOMDIR/geosit_tmp.txt << EOF
 
-if(     -e $BINDIR/HISTORY.rc.hold ) then
-/bin/mv -f $BINDIR/HISTORY.rc.hold $BINDIR/HISTORY.rc.tmpl
-else
-/bin/rm -f $BINDIR/HISTORY.rc.tmpl
-endif
+REPLAY_ANA_EXPID:   d5294_geosit_jan18 
+REPLAY_ANA_LOCATION: /home/dao_ops/d5294_geosit_jan18/run/.../archive
+REPLAY_MODE: Regular
+REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit_jan18.ana.eta.%y4%m2%d2_%h200z.nc4
+REPLAY_FILE09: ana/Y%y4/M%m2/d5294_geosit_jan18.ana.eta.%y4%m2%d2_%h200z.nc4
+PREDICTOR_DURATION: 21600
+
+EOF
+
+/bin/rm -f $HOMDIR/sedfile
+cat >      $HOMDIR/sedfile << EOF
+/M2 REPLAY_FILE/                  { N
+                                    N
+                                    r $HOMDIR/geosit_tmp.txt
+                                  }
+EOF
+
+/bin/rm -f $HOMDIR/tmpfile
+/bin/mv -f $HOMDIR/AGCM.rc.tmpl $HOMDIR/tmpfile
+
+sed -f $HOMDIR/sedfile   $HOMDIR/tmpfile > $HOMDIR/AGCM.rc.tmpl
 
 echo $HOMDIR > $EXPDIR/.HOMDIR
 echo " "
@@ -2490,9 +2716,9 @@ echo " "
 
 # Comment or UN-Comment RESTARTS based on EXP Configuration
 # ---------------------------------------------------------
-set LH2O          = FALSE
-set LMAM          = FALSE
-set LCARMA        = FALSE
+set LH2O       = FALSE
+set LMAM       = FALSE
+set LCARMA     = FALSE
 if( $RATS_PROVIDER == PCHEM ) then
   set LPCHEM        = TRUE
 else
@@ -2501,15 +2727,13 @@ endif
 set LSTRATCHEM    = FALSE
 set LGMICHEM      = FALSE
 set LGEOSCHEMCHEM = TRUE
-set LHEMCO     = FALSE
-set LGOCART    = $GOKART
-if( $GOKART == TRUE )  then
- set LGOCART_DATA = FALSE
-else
- set LGOCART_DATA = TRUE
-endif
+set LHEMCO        = TRUE
+set LGOCART2G     = $GOKART2G
+set LGOCART       = $GOKART
+set LGOCART_DATA  = $GOKARTDATA
+set LTR           = FALSE
 
-set RSNAMES = "LH2O LMAM LCARMA LPCHEM LSTRATCHEM LGMICHEM LGEOSCHEMCHEM LHEMCO LGOCART LGOCART_DATA"
+set RSNAMES = "LH2O LMAM LCARMA LPCHEM LSTRATCHEM LGMICHEM LGEOSCHEMCHEM LHEMCO LGOCART LGOCART_DATA LTR"
 set RSTYPES = "INTERNAL IMPORT"
 
 set FILE = AGCM.rc.tmpl
@@ -2546,7 +2770,7 @@ end
 
 # Delete or Enable EXP Configuration Variables
 # --------------------------------------------
-    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_regress.j gcm_post.j gcm_emip.setup gcm_plot.tmpl linkbcs.tmpl"
+    set FILES = "AGCM.rc.tmpl gcm_run.j gcm_forecast.tmpl gcm_forecast.setup HISTORY.rc.tmpl gcm_regress.j gcm_post.j gcm_plot.tmpl linkbcs.tmpl"
 foreach FILE ($FILES)
 
 if( -e $HOMDIR/$FILE ) set LOCDIR = $HOMDIR
@@ -2601,30 +2825,11 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 
 if( $OGCM == TRUE  & "$OCNMODEL" != "MIT" ) /bin/mv $HOMDIR/plotocn.j       $EXPDIR/plot
 
-## Modify AGCM.rc
-## --------------
-#set file = $HOMDIR/AGCM.rc
-#
-## Add GEOS-Chem timestep:
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "/SATSIM_DT/a GEOSCHEMCHEM_DT: $GEOSCHEMCHEM_DT" > $file
-#
-## Change from GF to RAS for now:
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "s/CONVPAR_OPTION: GF/CONVPAR_OPTION: RAS/" > $file
-#
-## (uncomment == turn on the option)
-### Assumes that these lines are in AGCM.rc:
-# UNCOMMENT to guard against negative tracer values in RAS (default: .FALSE.)
-#RAS_NO_NEG: .TRUE.
-###
-#/bin/mv $file $HOMDIR/dummy
-#cat           $HOMDIR/dummy | sed -e "s/#RAS_NO_NEG/RAS_NO_NEG/" > $file
-#
-## For future:  sed commands to insert important GF flags:
-##/CONVPAR_OPTION/a USE_TRACER_TRANSP: 1
-##/CONVPAR_OPTION/a USE_TRACER_SCAVEN: 0
-#/bin/rm -f    $HOMDIR/dummy
+goto  SKIP_GSI_3
+if( $RUN_GSI == 1 ) then
+   /bin/mv $HOMDIR/HISTORY_GEOSCHEMCHEM_predictor.rc  $HOMDIR/HISTORY_predictor.rc
+endif
+SKIP_GSI_3:
 
 #######################################################################
 #       Modify RC Directory for LM and GOCART.data/GOCART Options
@@ -2644,53 +2849,45 @@ if( $AGCM_LM != 72 ) then
     /bin/rm -f       $EXPDIR/RC/dummy
 endif
 
+setenv CHEMREG_OPS  $EXPDIR/RC/Chem_Registry.rc
+setenv CHEMREG_AMIP $EXPDIR/RC/AMIP/Chem_Registry.rc
+
 # Turn on GEOS-Chem
 # -----------------
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_GEOSCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 
-# GEOS-Chem needs a recent BEGIN Date
-# -----------------------------------
-sed -i 's/BEG_DATE.*/BEG_DATE:     19500101 000000/' $HOMDIR/CAP.rc
-
-# GEOS-Chem needs resolution-dependent settings
-# ---------------------------------------------
-
-setenv RES $AGCM_IM
-
-set RES_LINE = "`grep -i '${RES}.*OTD-LIS scaling' $EXPDIR/RC/HEMCO_Config.rc`"
-if ( $#RES_LINE == 1 ) then
-   set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-   sed -i "s/@OTD_LIS_SCALING/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-else
-   echo Expecting exactly 1 line for ${RES} OTD-LIS scaling.
-   echo Please set @OTD_LIS_SCALING in $EXPDIR/RC/HEMCO_Config.rc
+goto  SKIP_GSI_4
+if( $RUN_GSI == 1 ) then
+   sed -i 's/SkipReplayGCC: 1/SkipReplayGCC: 0/' $EXPDIR/RC/GEOSCHEMchem_GridComp.rc
+   sed -i 's/nspecies: 0/nspecies: 1/'           $EXPDIR/RC/geoschem_analysis.yml
 endif
+SKIP_GSI_4:
 
-set RES_LINE = "`grep -i '${RES}.*Mass tuning factor' $EXPDIR/RC/HEMCO_Config.rc`"
-if ( $#RES_LINE == 1 ) then
-   set RES_VAL = `echo $RES_LINE | cut -f2 -d:`
-   sed -i "s/@MASS_TUNING_FACTOR/$RES_VAL/" $EXPDIR/RC/HEMCO_Config.rc
-else
-   echo Expecting exactly 1 line for ${RES} Mass tuning factor.
-   echo Please set @MASS_TUNING_FACTOR in $EXPDIR/RC/HEMCO_Config.rc
-endif
-
-
-# Turn on PCHEM
-# -------------
-if( $RATS_PROVIDER == PCHEM ) then
+# Turn off PCHEM
+# --------------
+if( $RATS_PROVIDER != PCHEM ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_PCHEM:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    awk '{ if ($1~"ENABLE_PCHEM:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
 endif
 
 # Turn on TR GridComp
 # -------------------
+if( $LTR == TRUE ) then
     /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
     cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
     awk '{ if ($1~"ENABLE_TR:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_TR:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
+endif
 
 # Update LAND_PARAMS Choices
 # ------------------------------------------------------------------
@@ -2716,6 +2913,54 @@ if( $AGCM_LM == 72 ) then
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *SNOW_ALBEDO_INFO:/ s/1/0/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
+
+# Turn on GOCART2G
+# ----------------
+if( $LGOCART2G == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART2G:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART2G:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
+# Turn on GOCART
+# --------------
+if( $LGOCART == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
+# Turn on GOCART.data
+# -------------------
+if( $LGOCART_DATA == TRUE ) then
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+else
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+endif
+
+# Turn on GAAS
+# ------------
+    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
+    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
+    awk '{ if ($1~"ENABLE_GAAS:") { sub(/FALSE/,"TRUE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
+    /bin/rm $EXPDIR/RC/GEOS_ChemGridComp.tmp
+
+    set      FILE = $EXPDIR/RC/GAAS_GridComp_ExtData.yaml
+    /bin/mv $FILE $FILE.tmp
+    cat           $FILE.tmp | sed -e "s/>>>DT<<</${DT}/g" > $FILE
+    /bin/rm -f    $FILE.tmp
 
 # Enable DATA_DRIVEN GOCART2G
 # ---------------------------
@@ -2745,9 +2990,6 @@ if( $AERO_PROVIDER == GOCART2G ) then
               -e '/ACTIVE_INSTANCES_CA:/ s/CA.br /CA.br.data /' > $EXPDIR/RC/GOCART2G_GridComp.rc
     endif
 
-    /bin/mv $EXPDIR/RC/GEOS_ChemGridComp.rc $EXPDIR/RC/GEOS_ChemGridComp.tmp
-    cat $EXPDIR/RC/GEOS_ChemGridComp.tmp | \
-    awk '{ if ($1~"ENABLE_GOCART_DATA:") { sub(/TRUE/,"FALSE") }; print }' > $EXPDIR/RC/GEOS_ChemGridComp.rc
 endif
 
 # Remove FVWORK/EXPID syntax from GAAS_GridComp.rc for use in REPLAY
@@ -2756,13 +2998,33 @@ endif
     cat $EXPDIR/RC/GAAS_GridComp.tmp | sed -e 's?${FVWORK}/${EXPID}.?aod/Y%y4/M%m2/@ANA_EXPID.?g' > $EXPDIR/RC/GAAS_GridComp.rc
 
 
-# Turn on RATS_PROVIDER
-# ---------------------
-# (By default, doing_PC is yes in RC/Chem_Registry.rc and RC/AMIP/Chem_Registry.rc)
+# Turn off PCHEM
+# --------------
+if( $LPCHEM == FALSE ) then
+    /bin/mv $CHEMREG_OPS  $CHEMREG_OPS.tmp
+    cat     $CHEMREG_OPS.tmp  | awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no " ) }; print }' > $CHEMREG_OPS
+    /bin/rm $CHEMREG_OPS.tmp
 
-# Turn on TR GridComp
-# ---------------------
-# (By default, ENABLE_TR is TRUE in RC/GEOS_ChemGridComp.rc)
+    /bin/mv $CHEMREG_AMIP $CHEMREG_AMIP.tmp
+    cat     $CHEMREG_AMIP.tmp | awk '{ if ( $1 ~ "doing_PC:" ) { sub(/yes/, "no " ) }; print }' > $CHEMREG_AMIP
+    /bin/rm $CHEMREG_AMIP.tmp
+endif
+
+# Turn off GEOS-Chem analysis
+# ---------------------------
+#if ( $RUN_GSI == 0 ) then         SKIP_GSI
+    setenv TARGET $EXPDIR/RC/geoschem_analysis.yml
+    /bin/mv $TARGET  $TARGET.tmp
+    cat     $TARGET.tmp  | awk '{ if ( $1 ~ "nspecies:" ) { sub(/3/, "0" ) }; print }' > $TARGET
+    /bin/rm $TARGET.tmp
+#endif                             SKIP_GSI
+
+# Don't use GOCART CH4
+# --------------------
+    setenv TARGET $EXPDIR/RC/GEOSCHEMchem_GridComp.rc
+    /bin/mv $TARGET  $TARGET.tmp
+    cat     $TARGET.tmp  | awk '{ if ( $1 ~ "Import_CH4_from_GOCART:" ) { sub(/1/, "0" ) }; print }' > $TARGET
+    /bin/rm $TARGET.tmp
 
 
 #######################################################################
@@ -2822,17 +3084,6 @@ else
    echo " "
 endif
 echo " "
-echo "If these files are not required, move or rename them (in RC/): "
-echo "-------------------------------------------------------------- "
-echo "  CARMAchem_GridComp_ExtData.rc"
-echo "  CFC_GridComp_ExtData.rc"
-echo "  CH4_GridComp_ExtData.rc"
-echo "  DNA_ExtData.rc"
-echo "  ACHEM_ExtData.rc"
-echo "  MAM7_ExtData.rc"
-echo "  O3_GridComp_ExtData.rc"
-echo "  Rn_GridComp_ExtData.rc"
-echo " "
 echo "You must now copy your ${C1}Initial Conditions${CN} into: "
 echo "----------------------------------------------- "
 echo "${C2}${EXPDIR}${CN}"
@@ -2843,14 +3094,12 @@ echo ""
 #                              Clean-Up
 #######################################################################
 
-if( -e $HOMDIR/tmpfile )              /bin/rm $HOMDIR/tmpfile
-if( -e $HOMDIR/sedfile )              /bin/rm $HOMDIR/sedfile
-if( -e $HOMDIR/chemchem_rename.txt )  /bin/rm $HOMDIR/chemchem_rename.txt
-if( -e $HOMDIR/chemchem_rename2.txt ) /bin/rm $HOMDIR/chemchem_rename2.txt
-if( -e $HOMDIR/chemchem_ben.txt )     /bin/rm $HOMDIR/chemchem_ben.txt
-if( -e $HOMDIR/chemchem_fastJX.txt )  /bin/rm $HOMDIR/chemchem_fastJX.txt
-if( -e $HOMDIR/chemchem_noNRT.txt )   /bin/rm $HOMDIR/chemchem_noNRT.txt
-if( -e $HOMDIR/chemchem_exit.txt )    /bin/rm $HOMDIR/chemchem_exit.txt
+if( -e $HOMDIR/tmpfile ) /bin/rm $HOMDIR/tmpfile
+if( -e $HOMDIR/sedfile ) /bin/rm $HOMDIR/sedfile
+ls $HOMDIR/*.txt >& /dev/null
+if ($status == 0) then
+   /bin/rm $HOMDIR/*.txt
+endif
 
 #######################################################################
 #                     Copy over Source Tarfile
