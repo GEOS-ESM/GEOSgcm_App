@@ -427,8 +427,8 @@ if ( $SITE == 'NCCS' ) then
        $MODEL != 'cas' ) goto ASKPROC
 
    if ($MODEL == 'mil') then
-      # For even division, use 120 cores per node
-      set NCPUS_PER_NODE = 120
+      # For even division, use 90 cores per node
+      set NCPUS_PER_NODE = 90
    else if ($MODEL == 'cas') then
       # For even division, use  40 cores per node
       set NCPUS_PER_NODE = 40
