@@ -120,9 +120,6 @@ cd $ORIGPATH
 #                   Test for Command Line Flags
 #######################################################################
 
-# Set default behavior of switches
-set LINKX = FALSE
-set EXE_VERB = "copied"
 set SINGULARITY_RUN_SITE = ""
 if ($singstat == 1) then
    set USING_SINGULARITY = TRUE
@@ -153,17 +150,6 @@ while ( $#argv > 0 )
       case -[Cc]:
       case --[Cc][Oo][Ll][Oo][Rr]:
          goto SETCOLOR
-
-      # Symlink GEOSgcm.x
-      case --link:
-         set LINKX = TRUE
-         set EXE_VERB = "linked"
-         breaksw
-
-      # Avoid Symlink GEOSgcm.x
-      case --nolink:
-         set LINKX = FALSE
-         breaksw
 
       # Here any string not above will trigger USAGE
       case -[Hh]:
@@ -610,7 +596,7 @@ if( $OGCM == TRUE ) then
     if ( "$OCNMODEL" == "MOM5" ) then
        set OCEAN_NAME="MOM"
        set OGRIDTYP  = "M5TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=$EXPLIBDIR/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM5=""
        set MOM6 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM-MOM5.rc.tmpl"
@@ -621,7 +607,7 @@ if( $OGCM == TRUE ) then
     else if ( "$OCNMODEL" == "MOM6" ) then
        set OCEAN_NAME="MOM6"
        set OGRIDTYP  = "M6TP"
-       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set OCEAN_PRELOAD = 'env @PRELOAD_COMMAND=\$EXPLIBDIR/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set MOM6=""
        set MOM5 = "#DELETE"
        set DEFAULT_HISTORY_TEMPLATE="HISTORY.AOGCM.rc.tmpl"
@@ -795,13 +781,13 @@ if( $OGCM == TRUE ) then
     # suffix is different on Linux and macOS. This is set by configure_file()
     if ( $SEAICEMODEL == "CICE4" ) then
        set SEAICE_NAME="CICE4"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set SEAICE_PRELOAD = '$EXPLIBDIR/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE4=""
        set CICE6 = "#DELETE"
        set HIST_CICE4 = ""
     else if ( $SEAICEMODEL == "CICE6" ) then
        set SEAICE_NAME="CICE6"
-       set SEAICE_PRELOAD = '$GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
+       set SEAICE_PRELOAD = '$EXPLIBDIR/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
        set CICE6=""
        set CICE4 = "#DELETE"
        set HIST_CICE4 = "#DELETE"
@@ -1875,13 +1861,25 @@ cp -RP $GEOSDIR/etc/* $EXPDIR/RC
 rm -f $EXPDIR/RC/*.tmpl
 rm -f $EXPDIR/RC/fvcore_layout.rc
 
-# Copy or link GEOSgcm.x if USING_SINGULARITY is FALSE
+# Copy the GEOS runtime into the experiment if USING_SINGULARITY is FALSE
 if ( $USING_SINGULARITY == FALSE ) then
-   if ( $LINKX == "TRUE" ) then
-      if ( -e $GEOSBIN/GEOSgcm.x ) ln -s $GEOSBIN/GEOSgcm.x $EXPDIR
-   else
-      if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR
-   endif
+
+   # Binaries that might use shared object libraries we build
+   mkdir -p $EXPDIR/install/bin
+   if ( -e $GEOSBIN/GEOSgcm.x ) cp $GEOSBIN/GEOSgcm.x $EXPDIR/install/bin
+   cp $GEOSBIN/binarytile.x $EXPDIR/install/bin
+   cp $GEOSBIN/rs_numtiles.x $EXPDIR/install/bin
+
+   # Copy over shared object libraries that might be needed by the binaries
+   mkdir -p $EXPDIR/install/lib
+   cp -RP $GEOSDIR/lib/*@CMAKE_SHARED_LIBRARY_SUFFIX@ $EXPDIR/install/lib
+
+   # CMake makes a file called GEOS_RUNTIME_MANIFEST.sha256 which will
+   # be in the installation etc directory. We'll copy it into the EXPDIR/install
+   # directory
+    if (-f $GEOSETC/GEOS_RUNTIME_MANIFEST.sha256) then
+       cp $GEOSETC/GEOS_RUNTIME_MANIFEST.sha256 $EXPDIR/install
+    endif
 
    # Set a couple variables for sed'ing out bits of the run script
    set SINGULARITY_BUILD = "#DELETE"
@@ -2759,9 +2757,9 @@ if ( $USING_SINGULARITY == TRUE ) then
    echo "      GEOSgcm.x from the installation bin directory."
 else
    echo " "
-   echo "The following executable has been ${EXE_VERB} to your Experiment Directory:"
+   echo "The following executable has been copied to your Experiment Directory:"
    echo "----------------------------------------------------------------------"
-   echo "${C2}$GEOSBIN/GEOSgcm.x${CN}"
+   echo "${C2}$EXPDIR/install/bin/GEOSgcm.x${CN}"
    echo " "
 endif
 echo " "
@@ -3080,7 +3078,8 @@ sh $COPYSCRIPT
 # ----------------------------------------------------
 
 echo "$NEWHOMDIR" >> $NEWEXPDIR/.HOMDIR
-/bin/cp $OLDEXPDIR/GEOSgcm.x $NEWEXPDIR
+mkdir -p $NEWEXPDIR/install
+/bin/cp -a $OLDEXPDIR/install/* $NEWEXPDIR/install/
 /bin/cp -a $OLDEXPDIR/RC $NEWEXPDIR/RC
 
 # -----------------------------------------------------
@@ -3269,7 +3268,6 @@ stratchem_setup, a setup script for the GEOS GCM
    Usage: $0:t [optional flag]
 
    -c --color        Set the colors for $0:t
-      --link         Link GEOSgcm.x into experiment directory
    -h --help         Show usage
 
    If invoked alone, the script runs as normal.

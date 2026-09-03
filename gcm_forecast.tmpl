@@ -32,9 +32,15 @@ setenv GEOSETC          @GEOSETC
 setenv GEOSUTIL         @GEOSSRC
 
 source $GEOSBIN/g5_modules
-setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+
+# We only prepend to DY/LD_LIBRARY_PATH if it exists
+# We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
-   setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+   if ( $?@LD_LIBRARY_PATH_CMD ) then
+      setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+   else
+      setenv @LD_LIBRARY_PATH_CMD ${BASEDIR}/${ARCH}/lib
+   endif
 endif
 # Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
 if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
@@ -58,6 +64,9 @@ echo   VERSION: $GCMVER
 setenv  EXPID   @EXPID
 setenv  EXPDIR  @EXPDIR
 setenv  HOMDIR  @HOMDIR
+
+setenv EXPBINDIR $EXPDIR/install/bin
+setenv EXPLIBDIR $EXPDIR/install/lib
 
 #######################################################################
 #                  Set Forecast Run Parameters
@@ -458,10 +467,7 @@ chmod +x linkbcs
 #                    Get Executable and RESTARTS
 #######################################################################
 
- echo "Copying $EXPDIR/GEOSgcm.x to $SCRDIR"
- echo ""
- /bin/cp $EXPDIR/GEOSgcm.x $SCRDIR/GEOSgcm.x
- setenv GEOSEXE $SCRDIR/GEOSgcm.x
+ setenv GEOSEXE $EXPBINDIR/GEOSgcm.x
 
 set rst_files      = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `grep "RESTART_FILE"    AGCM.rc | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
@@ -651,8 +657,8 @@ if ( ! -e gwd_internal_rst ) then
 endif
 
 if (! -e tile.bin) then
-$GEOSBIN/binarytile.x tile.data tile.bin
-@MOM5 $GEOSBIN/binarytile.x tile_hist.data tile_hist.bin
+$EXPBINDIR/binarytile.x tile.data tile.bin
+@MOM5 $EXPBINDIR/binarytile.x tile_hist.data tile_hist.bin
 endif
 
 # If running in dual ocean mode, link sst and fraci data here
@@ -664,11 +670,11 @@ endif
 # Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
 
-if ( -x $GEOSBIN/rs_numtiles.x ) then
+if ( -x $EXPBINDIR/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $EXPBINDIR/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $EXPBINDIR/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
