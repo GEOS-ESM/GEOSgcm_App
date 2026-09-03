@@ -144,8 +144,6 @@ CONTAINS
    type(ESMF_State)                   :: INTERNAL
    type (MAPL_MetaComp), pointer      :: CHILD_MAPL
 
-   character(len=ESMF_MAXSTR)         :: DYCORE
-
 ! Begin
 !------
 
@@ -241,8 +239,6 @@ CONTAINS
 
 ! Register the children with MAPL
 !--------------------------------
-
-   call ESMF_ConfigGetAttribute(cf_root, value=DYCORE, Label="DYCORE:", __RC__ )
 
 !  Create All of the children
 !----------------------------
