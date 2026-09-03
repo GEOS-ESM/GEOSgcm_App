@@ -261,7 +261,6 @@ endif
 #######################################################################
 
 cp -f  $EXPDIR/RC/* .
-cp     $EXPDIR/linkbcs .
 cp -f  $HOMDIR/*.rc .
 cp -f  $HOMDIR/*.nml .
 cp -f  $HOMDIR/*.yaml .
@@ -447,7 +446,6 @@ setenv BCRSLV    @ATMOStag_@OCEANtag
 @DATAOCEANsetenv BCTAG `basename $BCSDIR`
 @COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
 setenv EMISSIONS @EMISSIONS
-chmod +x linkbcs
 
 @GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
 @GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
@@ -636,7 +634,14 @@ touch ExtData.rc
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
 setenv YEAR $yearc
-./linkbcs
+$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
 
 if ( ! -e gwd_internal_rst ) then
   echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
