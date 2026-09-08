@@ -96,6 +96,16 @@ class LinkApplier:
         else:
             self.logger.warning(f"SKIPPED FILE COPY: {target_name} -> {file_path} (source does not exist)")
 
+    def copy_directory(self, target_dir: Path, source_dir: Path):
+        if not target_dir.exists():
+            self.logger.info(f"DIRECTORY CREATED: {target_dir.resolve()}")
+
+        def logged_copy(src, dst):
+            shutil.copy2(src, dst)
+            self.logger.info(f"FILE COPIED: {src} -> {dst}")
+
+        shutil.copytree(source_dir, target_dir, dirs_exist_ok=True, copy_function=logged_copy)
+
     # returns broken paths and prints warnings for each broken path and exit
     def validate_paths(self, paths):
         missing_files = []
@@ -121,6 +131,20 @@ class LinkApplier:
                 print("One or more paths are broken. Please check the warnings above.")
                 sys.exit(1)
 
+    # returns broken directory sources and exits; no exceptions allowed here
+    def validate_directories(self, paths):
+        missing_dirs = []
+        for i in paths:
+            if not paths[i].is_dir():
+                missing_dirs.append(i)
+                self.logger.error(f"{i} does not exist at: {paths[i]}")
+                print(f"ERROR: {i} does not exist at: \n{paths[i]}")
+
+        if missing_dirs:
+            self.logger.error("One or more directory sources are broken. Please check the errors above.")
+            print("One or more directory sources are broken. Please check the errors above.")
+            sys.exit(1)
+
 def main():
     args = capture_arguments()
     logger = setup_logger(args.timestamp)
@@ -142,16 +166,21 @@ def main():
 
     symlink_paths = resolve_paths(manifest["symlinks"])
     copy_paths = resolve_paths(manifest.get("copy_files") or {})
+    copy_dir_paths = resolve_paths(manifest.get("copy_dirs") or {})
 
     applier = LinkApplier(logger)
     applier.validate_paths(symlink_paths)
     applier.validate_paths(copy_paths)
+    applier.validate_directories(copy_dir_paths)
 
     for name, source in symlink_paths.items():
         applier.create_symlink(Path(name), source)
 
     for name, source in copy_paths.items():
         applier.copy_file(Path(name), source)
+
+    for name, source in copy_dir_paths.items():
+        applier.copy_directory(Path(name), source)
 
 if __name__ == "__main__":
     main()

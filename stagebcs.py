@@ -191,24 +191,19 @@ class SymlinkCreator:
                 restart.mkdir(parents=True, exist_ok=True)
                 self.logger.info(f"DIRECTORY CREATED: {restart.resolve()}")
 
-    def make_extdata_dir(self):
-        extdata = Path("ExtData")
-        if not extdata.exists():
-            extdata.mkdir(parents=True, exist_ok=True)
-            self.logger.info(f"DIRECTORY CREATED: {extdata.resolve()}")
-        else:
-            extdata.mkdir(parents=True, exist_ok=True)
-
+    def extdata_dir_paths(self):
+        paths = {}
         for file in self.extdata_files:
-            self.create_symlink(extdata / file, self.chem_dir / file)
+            paths[f"ExtData/{file}"] = self.chem_dir / file
 
-        # exit here if not coupled ocean
+        # if not coupled ocean, exit
         if not self.coupled:
-            return
+            return paths
+        # else
         dataatm_dir = self.boundary_dir / "bcs_shared/make_bcs_inputs/ocean/dataatm"
         for item in dataatm_dir.glob("*"):
-            self.create_symlink(extdata / item.name, dataatm_dir / item.name)
-
+            paths[f"ExtData/{item.name}"] = dataatm_dir / item.name
+        return paths
 
     def seawifs_path(self) -> dict:
         if not self.coupled:
@@ -313,12 +308,7 @@ class SymlinkCreator:
             return {}
 
         src_dir = self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}/INPUT"
-
-        for file_path in src_dir.glob("*"):
-            if file_path.is_file():
-                # copy2 preserves file metadata
-                shutil.copy2(file_path, target_dir / file_path.name)
-                self.logger.info(f"FILE COPIED: {file_path} -> {target_dir / file_path.name}")
+        return {"INPUT": src_dir}
 
     def seaice_paths(self) -> dict:
         if not self.coupled:
@@ -381,6 +371,7 @@ class SymlinkCreator:
         links.update(self.seaice_paths())
         links.update(self.dataocean_paths())
         links.update(self.dualocean_paths())
+        links.update(self.extdata_dir_paths())
         return links
 
     def compile_files(self):
@@ -388,25 +379,36 @@ class SymlinkCreator:
         files.update(self.internal_restart_file())
         return files
 
+    def compile_dirs(self):
+        dirs = {}
+        dirs.update(self.input_dir())
+        return dirs
+
     def create_bcs_yaml(self):
         links = self.compile_links()
         files = self.compile_files()
+        dirs = self.compile_dirs()
 
-        bcs_yaml = {
-            "symlinks": {
+        bcs_yaml = {}
+        if links:
+            bcs_yaml["symlinks"] = {
                 str(link_name): str(source_path)
                 for link_name, source_path in links.items()
-            },
-            "copy_files": {
-                str(target_name): str(source_path)
-                for target_name, source_path in files.items()
             }
-        }
+        if files:
+            bcs_yaml["copy_files"] = {
+                str(file_name): str(source_path)
+                for file_name, source_path in files.items()
+            }
+        if dirs:
+            bcs_yaml["copy_dirs"] = {
+                str(dir_name): str(source_path)
+                for dir_name, source_path in dirs.items()
+            }
 
         with open(Path.cwd() / "linkbcs.yaml", "w") as f:
             yaml.safe_dump(bcs_yaml, f, sort_keys=False, width=float("inf"))
 
-        # not sure how to handle dirs yet
 
         '''
         self.make_restart_dir()
