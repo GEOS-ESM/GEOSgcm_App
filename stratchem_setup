@@ -1006,6 +1006,7 @@ endif
 #--------------------------
 set DATA_ATMOS = FALSE
 set MODELATM = ""
+set DATAATM = "#DELETE"
 set USE_DATA_ATM4OCN = .FALSE.
 
 if( $OGCM == "TRUE" ) then
@@ -1034,6 +1035,7 @@ DATATMOS:
 
    if ($DATA_ATMOS == TRUE) then
       set MODELATM = "#DELETE"
+      set DATAATM = ""
       set USE_DATA_ATM4OCN = .TRUE.
 
       set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
@@ -2291,6 +2293,7 @@ s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
 
 s?@MODELATM?$MODELATM?g
+s?@DATAATM?$DATAATM?g
 s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 s?@RRTMG_RADIATION?$RRTMG_RADIATION?g
@@ -2345,6 +2348,11 @@ if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml ${TMPOCEANDIR}
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table ${TMPOCEANDIR}
       set FILES = "$FILES MOM_input MOM_override data_table "
+      if ($DATA_ATMOS == TRUE) then
+         /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_saltrestore ${TMPOCEANDIR}
+         /bin/cp ${ETCDIR}/MOM6/mom6_app/common/MOM_dataatm ${TMPOCEANDIR}
+         set FILES = "$FILES MOM_saltrestore MOM_dataatm"
+      endif
    endif
 
    if ( $SEAICE_NAME == "CICE6" ) then
@@ -2733,6 +2741,7 @@ if( $OGCM == TRUE ) then
    # We also need to change the dt in ice_in as well for CICE6
    if ( $SEAICE_NAME == "CICE6" ) then
        $ISED -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${OCEAN_DT}/" "$HOMDIR/ice_in"
+       /bin/rm -f "$HOMDIR/ice_in.bak"
    endif
 
 endif
@@ -2741,6 +2750,7 @@ if ($DATA_ATMOS == TRUE) then
    /bin/mv $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
    cat  $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp | sed -e "s/%OCN_RES%/${OGCM_IM}x${OGCM_JM}/g" > $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml
    /bin/rm $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+   $ISED "/parameter_filename = 'MOM_input',/a\\                              'MOM_dataatm', " $EXPDIR/input.nml
 endif
 
 
@@ -3132,14 +3142,14 @@ endif
 set ARCHIVE_N=`echo $NEWEXPID | cut -b1-199`_ARCH
 set REGRESS_N=`echo $NEWEXPID | cut -b1-199`_RGRS
 
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_N#"     \
+$ISED -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_N#"     \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_N#"     $NEWHOMDIR/gcm_run.j
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
+$ISED -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$RUN_FN#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$RUN_FN#"    $NEWEXPDIR/forecasts/gcm_forecast.tmpl
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$POST_N#"    \
+$ISED -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$POST_N#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$POST_N#" \
        -e "/^setenv BATCHNAME/ s#\(setenv BATCHNAME *\)\(.*\)#\1 $POST_N#"      $NEWEXPDIR/post/gcm_post.j
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$PLOT_N#"    \
+$ISED -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$PLOT_N#"    \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$PLOT_N#"    $NEWEXPDIR/plot/gcm_plot.tmpl
 
 if ( -e $NEWEXPDIR/plot/gcm_moveplot.j ) then
@@ -3147,9 +3157,9 @@ if ( -e $NEWEXPDIR/plot/gcm_moveplot.j ) then
           -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$MOVE_N#" $NEWEXPDIR/plot/gcm_moveplot.j
 endif
 
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$ARCHIVE_N#" \
+$ISED -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$ARCHIVE_N#" \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$ARCHIVE_N#" $NEWEXPDIR/archive/gcm_archive.j
-sed -i -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$REGRESS_N#" \
+$ISED -e "/^#PBS -N/ s#\(PBS -N \)\(.*\)#\1$REGRESS_N#" \
        -e "/^#SBATCH --job-name=/ s#\(SBATCH --job-name=\)\(.*\)#\1$REGRESS_N#" $NEWEXPDIR/regress/gcm_regress.j
 
 # --------------------------
