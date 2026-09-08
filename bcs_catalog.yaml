@@ -201,6 +201,6 @@ pchem_species:
 
 # we symlink the entire directory, it's up to the user to select the specfic files they want
 precip_correction:
-  m21c: /discover/nobackup/projects/gmao/share/dao_ops/fvInput/precip_correction
+  m21c: /discover/nobackup/projects/gmao/share/dao_ops/fvInput/precip_correction/precip_corr_R21C
   merra-2: /discover/nobackup/projects/gmao/share/dao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/
 

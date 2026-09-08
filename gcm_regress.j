@@ -206,8 +206,8 @@ cp $EXPDIR/cap_restart $EXPDIR/regress
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
-setenv YEAR `cat cap_restart | cut -c1-4`
-$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+$GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
 
 set linkbcs_status = $status
 
@@ -537,8 +537,8 @@ set newstring = "JOB_SGMT: 00000000 ${test_duration_step2}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
-setenv YEAR `cat cap_restart | cut -c1-4`
-$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+$GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
 set linkbcs_status = $status
 
 if ($linkbcs_status != 0) then
@@ -646,8 +646,8 @@ if ($RUN_STARTSTOP == TRUE) then
    /bin/mv CAP.rc CAP.tmp
    cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
-   setenv YEAR `cat cap_restart | cut -c1-4`
-   $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+   set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+   $GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
    set linkbcs_status = $status
 
    if ($linkbcs_status != 0) then
@@ -788,8 +788,8 @@ if ( $RUN_LAYOUT == TRUE) then
    @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
 
-   setenv YEAR `cat cap_restart | cut -c1-4`
-   $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+   set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+   $GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
 
    set linkbcs_status = $status
 
@@ -918,8 +918,8 @@ if ( $RUN_OPENMP == TRUE) then
    @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${OGCM_NX0},${OGCM_NY0}#" input.nml
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
 
-   setenv YEAR `cat cap_restart | cut -c1-4`
-   $GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+   set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+   $GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
 
    set linkbcs_status = $status
 

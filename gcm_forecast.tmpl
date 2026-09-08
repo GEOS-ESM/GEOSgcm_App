@@ -633,8 +633,8 @@ touch ExtData.rc
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
-setenv YEAR $yearc
-$GEOSBIN/linkbcs.py --config linkbcs_config.yaml --timestamp $YEAR-01-01T00:00:00
+set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+$GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
 
 set linkbcs_status = $status
 

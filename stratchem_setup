@@ -2763,6 +2763,13 @@ boundary_dir: $BOUNDARY_DIR
 install_dir: $GEOSDIR
 EOF
 
+( cd /${EXPDIR} && $GEOSBIN/stagebcs.py --config /${EXPDIR}/linkbcs_config.yaml )
+set stagebcs_status = $status
+if ($stagebcs_status != 0) then
+   echo "stagebcs.py failed with return code $stagebcs_status"
+   exit $stagebcs_status
+endif
+
 #######################################################################
 #                       Echo Settings and Messages
 #######################################################################
