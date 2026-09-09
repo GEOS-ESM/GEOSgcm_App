@@ -112,15 +112,13 @@ setenv GEOSBIN @GEOSBIN
 source $GEOSBIN/g5_modules
 
 # We only prepend to DY/LD_LIBRARY_PATH if it exists
-if ( $?@LD_LIBRARY_PATH_CMD ) then
-   setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${GEOSDIR}/lib"
-else
-   setenv @LD_LIBRARY_PATH_CMD "${GEOSDIR}/lib"
-endif
-
 # We only add BASEDIR to the @LD_LIBRARY_PATH_CMD if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
-    setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+   if ( $?@LD_LIBRARY_PATH_CMD ) then
+      setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
+   else
+      setenv @LD_LIBRARY_PATH_CMD ${BASEDIR}/${ARCH}/lib
+   endif
 endif
 # Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
 if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
@@ -142,6 +140,9 @@ setenv EXPDIR @EXPDIR
 setenv HOMDIR @HOMDIR
 setenv SCRDIR $EXPDIR/scratch
 
+setenv EXPBINDIR $EXPDIR/install/bin
+setenv EXPLIBDIR $EXPDIR/install/lib
+
 #######################################################################
 #                 Create Clean Regress Sub-Directory
 #######################################################################
@@ -162,7 +163,6 @@ cd $EXPDIR/regress
 
 cp $EXPDIR/RC/*.rc     $EXPDIR/regress
 cp $EXPDIR/RC/*.yaml   $EXPDIR/regress
-cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 cp $EXPDIR/linkbcs     $EXPDIR/regress
 cp $HOMDIR/*.yaml      $EXPDIR/regress
 @COUPLED cp $HOMDIR/*.nml       $EXPDIR/regress
@@ -170,6 +170,8 @@ cp $HOMDIR/*.yaml      $EXPDIR/regress
 @MOM6cp $HOMDIR/MOM_override $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
+
+setenv GEOSEXE $EXPBINDIR/GEOSgcm.x
 
 # Define Atmospheric Resolution
 # -----------------------------
@@ -223,7 +225,7 @@ if ( ! -e gwd_internal_rst ) then
 endif
 
 
-if(! -e tile.bin) $GEOSBIN/binarytile.x tile.data tile.bin
+if(! -e tile.bin) $EXPBINDIR/binarytile.x tile.data tile.bin
 
 #######################################################################
 #                 Create Simple History for Efficiency
@@ -473,7 +475,7 @@ if( $RUN_STARTSTOP == TRUE ) then
 
    echo "=== Running test of duration ${test_duration_step1} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES $GEOSEXE --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde1 = $date[1]
@@ -539,7 +541,7 @@ set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 
 echo "=== Running test of duration ${test_duration_step2} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-@OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+@OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES $GEOSEXE --logging_config 'logging.yaml'
 
 set date = `cat cap_restart`
 set nymde2 = $date[1]
@@ -658,7 +660,7 @@ if ($RUN_STARTSTOP == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step3} with NX = $NX and NY = $NY starting at $nymdb $nhmsb ==="
 
-   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES $GEOSEXE --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde3 = $date[1]
@@ -789,7 +791,7 @@ if ( $RUN_LAYOUT == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step4} with NX = $test_NX and NY = $test_NY starting at $nymd0 $nhms0 ==="
 
-   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES $GEOSEXE --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
@@ -912,7 +914,7 @@ if ( $RUN_OPENMP == TRUE) then
 
    echo "=== Running OpenMP test of duration ${test_duration_step5} with NX = $NX0 and NY = $NY0 starting at $nymd0 $nhms0 ==="
 
-   @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   @OCEAN_PRELOAD $RUN_CMD $NPES $GEOSEXE --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
