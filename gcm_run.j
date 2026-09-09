@@ -348,7 +348,6 @@ cd $SCRDIR
 /bin/rm -rf *
 cp -f  $EXPDIR/RC/* .
 cp     $EXPDIR/cap_restart .
-cp     $EXPDIR/linkbcs .
 if ($GIGATRAJ != "") then
    cp   $EXPDIR/$GIGATRAJ .
 endif
@@ -416,17 +415,12 @@ done:
 #######################################################################
 #                        Link Boundary Datasets
 #######################################################################
-setenv BCSDIR    @BCSDIR
-@DATAOCEANsetenv SSTDIR    @SSTDIR
 setenv BCRSLV    @ATMOStag_@OCEANtag
-@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
-@MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
-@DATAOCEANsetenv BCTAG `basename $BCSDIR`
-@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
+@DATAOCEANsetenv BCTAG @LSMBCS
+@COUPLEDsetenv BCTAG ${OGCM_IM}x${OGCM_JM}
 setenv EMISSIONS @EMISSIONS
-chmod +x linkbcs
 
 @GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
 @GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
@@ -865,16 +859,26 @@ touch ExtData.rc
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
-setenv YEAR $yearc
-./linkbcs
+set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+$GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
+
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
 
 # Get proper ridge scheme GWD internal restart
 # --------------------------------------------
 if ( $rst_by_face == YES ) then
   echo "WARNING: The generated gwd_internal_face_x_rst are used"
+
+  # NOTE: If you want to run the by face gwd_internal restarts, you must
+  # supply a directory
   #foreach n (1 2 3 4 5 6)
     #/bin/rm gwd_internal_face_${n}_rst
-    #/bin/cp @GWDRSDIR/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
+    #/bin/cp /path/to/by-face-files/gwd_internal_c${AGCM_IM}_face_${n} gwd_internal_face_${n}_rst
   #end
 else
   if (! -e gwd_internal_rst) then
@@ -893,12 +897,6 @@ endif
 if (! -e tile.bin) then
 $GEOSBIN/binarytile.x tile.data tile.bin
 endif
-
-# If running in dual ocean mode, link sst and fraci data here
-#set yy  = `cat cap_restart | cut -c1-4`
-#echo $yy
-#ln -sf $SSTDIR/dataoceanfile_MERRA2_SST.${OGCM_IM}x${OGCM_JM}.${yy}.data sst.data
-#ln -sf $SSTDIR/dataoceanfile_MERRA2_ICE.${OGCM_IM}x${OGCM_JM}.${yy}.data fraci.data
 
 @CICE6 #detect existence of certain fields in CICE6 restart
 @CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null

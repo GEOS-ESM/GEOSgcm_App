@@ -39,10 +39,18 @@ set (programs
    gcm_quickstat.j
    scm_run.j
    construct_extdata_yaml_list.py
+   stagebcs.py
+   linkbcs.py
+   packtoiso.py
    )
 
 install (
    FILES ${templates}
+   DESTINATION etc
+   )
+
+install (
+   FILES bcs_catalog.yaml
    DESTINATION etc
    )
 

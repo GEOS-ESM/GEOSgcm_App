@@ -163,7 +163,6 @@ cd $EXPDIR/regress
 cp $EXPDIR/RC/*.rc     $EXPDIR/regress
 cp $EXPDIR/RC/*.yaml   $EXPDIR/regress
 cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
-cp $EXPDIR/linkbcs     $EXPDIR/regress
 cp $HOMDIR/*.yaml      $EXPDIR/regress
 @COUPLED cp $HOMDIR/*.nml       $EXPDIR/regress
 @MOM6cp $HOMDIR/MOM_input   $EXPDIR/regress
@@ -207,8 +206,15 @@ cp $EXPDIR/cap_restart $EXPDIR/regress
 @COUPLED /bin/mkdir INPUT
 @COUPLED cp $EXPDIR/RESTART/* INPUT
 
-setenv YEAR `cat cap_restart | cut -c1-4`
-./linkbcs
+set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+$GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
+
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
 
 if ( ! -e gwd_internal_rst ) then
   echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
@@ -531,8 +537,15 @@ set newstring = "JOB_SGMT: 00000000 ${test_duration_step2}"
 /bin/mv CAP.rc CAP.tmp
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
-setenv YEAR `cat cap_restart | cut -c1-4`
-./linkbcs
+set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+$GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
+set linkbcs_status = $status
+
+if ($linkbcs_status != 0) then
+   echo "linkbcs.py failed with return code $linkbcs_status"
+   exit $linkbcs_status
+endif
+
 set NX = `grep "^ *NX": AGCM.rc | cut -d':' -f2`
 set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 @ NPES = $NX * $NY
@@ -633,8 +646,15 @@ if ($RUN_STARTSTOP == TRUE) then
    /bin/mv CAP.rc CAP.tmp
    cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 
-   setenv YEAR `cat cap_restart | cut -c1-4`
-   ./linkbcs
+   set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+   $GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
+   set linkbcs_status = $status
+
+   if ($linkbcs_status != 0) then
+      echo "linkbcs.py failed with return code $linkbcs_status"
+      exit $linkbcs_status
+   endif
+
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
@@ -768,8 +788,15 @@ if ( $RUN_LAYOUT == TRUE) then
    @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
 
-   setenv YEAR `cat cap_restart | cut -c1-4`
-   ./linkbcs
+   set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+   $GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
+
+   set linkbcs_status = $status
+
+   if ($linkbcs_status != 0) then
+      echo "linkbcs.py failed with return code $linkbcs_status"
+      exit $linkbcs_status
+   endif
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
@@ -891,8 +918,15 @@ if ( $RUN_OPENMP == TRUE) then
    @MOM5sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${OGCM_NX0},${OGCM_NY0}#" input.nml
    @MOM6sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
 
-   setenv YEAR `cat cap_restart | cut -c1-4`
-   ./linkbcs
+   set link_timestamp = `$GEOSBIN/packtoiso.py cap_restart`
+   $GEOSBIN/linkbcs.py --manifest linkbcs.yaml --timestamp $link_timestamp
+
+   set linkbcs_status = $status
+
+   if ($linkbcs_status != 0) then
+      echo "linkbcs.py failed with return code $linkbcs_status"
+      exit $linkbcs_status
+   endif
 
    if ( ! -e gwd_internal_rst ) then
       echo "WARNING: gwd_internal_rst not found. Setting NCAR_NRDG to 0"
