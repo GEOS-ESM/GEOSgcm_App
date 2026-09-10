@@ -2422,8 +2422,17 @@ set LMAM       = FALSE
 set LCARMA     = FALSE
 set LGMICHEM   = FALSE
 set LSTRATCHEM = FALSE
+set LROUTE     = FALSE
 
-set RSNAMES = "LH2O LMAM LCARMA LGMICHEM LSTRATCHEM"
+# Enable Route restart/checkpoint entries only when routing is active
+set RUN_ROUTE = `awk '{for (i=1;i<=NF;i++) if ($i=="RUN_ROUTE:") {print $(i+1); exit}}' \
+                 $EXPDIR/RC/GEOS_SurfaceGridComp.rc`
+
+if ( "$RUN_ROUTE" != "" ) then
+   if ( $RUN_ROUTE > 0 ) set LROUTE = TRUE
+endif
+
+set RSNAMES = "LH2O LMAM LCARMA LGMICHEM LSTRATCHEM LROUTE"
 set RSTYPES = "INTERNAL IMPORT"
 
 set FILE = AGCM.rc.tmpl
