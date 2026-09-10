@@ -2425,12 +2425,10 @@ set LSTRATCHEM = FALSE
 set LROUTE     = FALSE
 
 # Enable Route restart/checkpoint entries only when routing is active
-set RUN_ROUTE = `awk '{for (i=1;i<=NF;i++) if ($i=="RUN_ROUTE:") {print $(i+1); exit}}' \
+set RUN_ROUTE = `sed -n 's/^[[:space:]]*#[[:space:]]*GEOSagcm=>RUN_ROUTE:[[:space:]]*//p' \
                  $EXPDIR/RC/GEOS_SurfaceGridComp.rc`
 
-if ( "$RUN_ROUTE" != "" ) then
-   if ( $RUN_ROUTE > 0 ) set LROUTE = TRUE
-endif
+if ( "$RUN_ROUTE" != "" && $RUN_ROUTE > 0 ) set LROUTE = TRUE
 
 set RSNAMES = "LH2O LMAM LCARMA LGMICHEM LSTRATCHEM LROUTE"
 set RSTYPES = "INTERNAL IMPORT"
