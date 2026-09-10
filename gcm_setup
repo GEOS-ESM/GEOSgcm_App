@@ -2425,7 +2425,7 @@ set LSTRATCHEM = FALSE
 set LROUTE     = FALSE
 
 # Enable Route restart/checkpoint entries only when routing is active
-set RUN_ROUTE = `sed -n 's/^[[:space:]]*#[[:space:]]*GEOSagcm=>RUN_ROUTE:[[:space:]]*//p' \
+set RUN_ROUTE = `sed -n 's/^[[:space:]]*RUN_ROUTE:[[:space:]]*//p' \
                  $EXPDIR/RC/GEOS_SurfaceGridComp.rc`
 
 if ( "$RUN_ROUTE" != "" && $RUN_ROUTE > 0 ) set LROUTE = TRUE
