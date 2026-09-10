@@ -56,6 +56,15 @@ if ( $?BASEDIR ) then
     setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
 endif
 
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
+endif
+
 setenv RUN_CMD "@RUN_CMD"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
@@ -363,6 +372,8 @@ endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
+@DATAATMcp -f  $HOMDIR/MOM_saltrestore .
+@DATAATMcp -f  $HOMDIR/MOM_dataatm .
 @CICE6cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
