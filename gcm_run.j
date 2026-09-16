@@ -357,17 +357,17 @@ chmod +x linkbcs
 @GEOSMLT setenv PATH ${MLRAD_ENV}/bin:${PATH}
 @GEOSMLT rehash
 
-# MAPL PythonBridge should come from the installed GEOS tree
+# Use Python modules and ML radiation resources from the installed GEOS tree
 @GEOSMLT set MAPL_PY = ${GEOSDIR}/lib/Python
+@GEOSMLT setenv GEOS_MLRAD_DATA_DIR ${GEOSDIR}/share/GEOSmlrad
 
-# MLRAD Python driver is still in the source tree
-@GEOSMLT set SRCTOP = `echo $GEOSDIR | sed 's#/install$#/src#'`
-@GEOSMLT set MLRAD_PY = ${SRCTOP}/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSradiation_GridComp/GEOSsolar_GridComp/@GEOSmlrad_GridComp/python
+# F107/AP forcing has already been staged from the experiment RC directory
+@GEOSMLT setenv GEOS_MLRAD_F107_AP_PATH ${SCRDIR}/F107_ap_appended.txt
 
 @GEOSMLT if ( $?PYTHONPATH ) then
-@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}:${MLRAD_PY}:${PYTHONPATH}
+@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}:${PYTHONPATH}
 @GEOSMLT else
-@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}:${MLRAD_PY}
+@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}
 @GEOSMLT endif
 
 @GEOSMLT echo "### PYBRIDGE SANITY CHECK START ###"
@@ -380,20 +380,15 @@ chmod +x linkbcs
 #         NRLMSIS for GEOS-MLT
 #######################################################################
 
-@GEOSMLT set MSIS_DIR = ${SRCTOP}/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSsuperdyn_GridComp/@FVdycoreCubed_GridComp/@fvdycore/NRL_MSIS
-
-@GEOSMLT if ( ! -r ${MSIS_DIR}/msis21.parm ) then
-@GEOSMLT   echo "ERROR: Missing ${MSIS_DIR}/msis21.parm"
+@GEOSMLT if ( ! -r msis21.parm ) then
+@GEOSMLT   echo "ERROR: Missing MSIS parameter file: msis21.parm"
 @GEOSMLT   exit 2
 @GEOSMLT endif
 
-@GEOSMLT if ( ! -r ${MSIS_DIR}/F107_ap_appended.txt ) then
-@GEOSMLT   echo "ERROR: Missing ${MSIS_DIR}/F107_ap_appended.txt"
+@GEOSMLT if ( ! -r F107_ap_appended.txt ) then
+@GEOSMLT   echo "ERROR: Missing MSIS forcing file: F107_ap_appended.txt"
 @GEOSMLT   exit 2
 @GEOSMLT endif
-
-@GEOSMLT /bin/ln -sf ${MSIS_DIR}/msis21.parm .
-@GEOSMLT /bin/ln -sf ${MSIS_DIR}/F107_ap_appended.txt .
 
 #######################################################################
 #                  Setup executable
