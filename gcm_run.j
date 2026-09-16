@@ -336,6 +336,60 @@ chmod +x linkbcs
 @GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
 @GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
 @GCMRUN_CATCHCNendif
+
+#######################################################################
+#         PythonBridge / GEOSpyD environment for GEOS-MLT
+#######################################################################
+
+@GEOSMLT if ( ! $?MODULESHOME ) then
+@GEOSMLT   if ( -f /usr/share/modules/init/csh ) then
+@GEOSMLT     source /usr/share/modules/init/csh
+@GEOSMLT   else if ( -f /usr/share/lmod/lmod/init/csh ) then
+@GEOSMLT     source /usr/share/lmod/lmod/init/csh
+@GEOSMLT   endif
+@GEOSMLT endif
+
+# Use the same GEOSpyD version as @env/g5_modules
+@GEOSMLT module load python/GEOSpyD/24.11.3-0/3.12
+
+# Derive the active GEOSpyD environment path
+@GEOSMLT setenv MLRAD_ENV `python -c "import sys; print(sys.prefix)"`
+@GEOSMLT setenv PATH ${MLRAD_ENV}/bin:${PATH}
+@GEOSMLT rehash
+
+# Use Python modules and ML radiation resources from the installed GEOS tree
+@GEOSMLT set MAPL_PY = ${GEOSDIR}/lib/Python
+@GEOSMLT setenv GEOS_MLRAD_DATA_DIR ${GEOSDIR}/share/GEOSmlrad
+
+# F107/AP forcing has already been staged from the experiment RC directory
+@GEOSMLT setenv GEOS_MLRAD_F107_AP_PATH ${SCRDIR}/F107_ap_appended.txt
+
+@GEOSMLT if ( $?PYTHONPATH ) then
+@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}:${PYTHONPATH}
+@GEOSMLT else
+@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}
+@GEOSMLT endif
+
+@GEOSMLT echo "### PYBRIDGE SANITY CHECK START ###"
+@GEOSMLT python -c "import sys; print('PYTHON=', sys.executable); print('PREFIX=', sys.prefix)"
+@GEOSMLT python -c "import cffi; import MAPL_PythonBridge; print('MAPL_PYBRIDGE_IMPORT_OK')"
+@GEOSMLT python -c "import geos_mlrad_driver; print('GEOS_MLRAD_DRIVER_IMPORT_OK')"
+@GEOSMLT echo "### PYBRIDGE SANITY CHECK END ###"
+
+#######################################################################
+#         NRLMSIS for GEOS-MLT
+#######################################################################
+
+@GEOSMLT if ( ! -r msis21.parm ) then
+@GEOSMLT   echo "ERROR: Missing MSIS parameter file: msis21.parm"
+@GEOSMLT   exit 2
+@GEOSMLT endif
+
+@GEOSMLT if ( ! -r F107_ap_appended.txt ) then
+@GEOSMLT   echo "ERROR: Missing MSIS forcing file: F107_ap_appended.txt"
+@GEOSMLT   exit 2
+@GEOSMLT endif
+
 #######################################################################
 #                  Setup executable
 #######################################################################
