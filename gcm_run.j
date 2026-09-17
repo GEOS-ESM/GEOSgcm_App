@@ -26,6 +26,17 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
+if ($ARCH == Darwin) then
+   set GSED = `which gsed`
+   if ( "$GSED" != "" ) then
+      set ISED = ( $GSED -i )
+   else
+      set ISED = ( sed -i.bak )
+   endif
+else
+   set ISED = ( sed -i )
+endif
+
 setenv SITE             @SITE
 setenv GEOSDIR          @GEOSDIR
 setenv GEOSBIN          @GEOSBIN
@@ -43,6 +54,15 @@ endif
 if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD "${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib"
     setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
+endif
+
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
 endif
 
 setenv RUN_CMD "@RUN_CMD"
@@ -352,6 +372,8 @@ endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
+@DATAATMcp -f  $HOMDIR/MOM_saltrestore .
+@DATAATMcp -f  $HOMDIR/MOM_dataatm .
 @CICE6cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
@@ -805,12 +827,12 @@ endif
 
 @COUPLEDset HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
 
-@COUPLED sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
-@MOM5 sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
+@COUPLED $ISED -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
+@MOM5 $ISED -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
 @MOM5        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
-@MOM6 sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
+@MOM6 $ISED -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
 @MOM6        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
-@CICE6 sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
+@CICE6 $ISED -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
 
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -884,10 +906,10 @@ endif
 @CICE6 ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
 @CICE6 if( $status == 0 ) then
 @CICE6    echo 'pond state in restart, turn on restart flag if not already'
-@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
+@CICE6    $ISED -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
 @CICE6 else
 @CICE6    echo 'pond state NOT in restart, turn off restart flag if already on'
-@CICE6    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
+@CICE6    $ISED -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
 @CICE6 endif
 
 # Test Openwater Restart for Number of tiles correctness

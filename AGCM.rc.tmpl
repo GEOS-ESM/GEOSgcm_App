@@ -129,10 +129,12 @@ CLOSURE_CONGESTUS: 3
 ###########################################################
 # TRB/GWD Parameterization
 # ------------------------
+HGT_SURFACE: 0.0
 NCAR_NRDG: @NCAR_NRDG
-# The below settings are only for v14 BCs currently being tested
-#v14 NCAR_EFFGWORO: 0.35
-#v14 NCAR_ORO_TNDMAX: 250
+# The below settings are only for v15 BCs currently being tested
+# with v2 topo
+#v15 NCAR_EFFGWORO: 0.35
+#v15 NCAR_ORO_TNDMAX: 250
 ###########################################################
 
 ###########################################################
@@ -550,35 +552,36 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 #
 # REPLAY PRECIP Parameters
 # ------------------------
-# To REPLAY to CMAP-based precip files, you must symbolically link into your work area the datastreams from MERRA_LAND:
+# When one of the config variables PRECIP_FILE or PRECIP_FILE_CLIMSCALE is present, the 
+# precipitation seen by the children of Surface (most importantly, land) is modified from
+# that produced by the atmospheric model.
+# PRECIP_FILE: 
+#   Points to hourly files with observation-based precipitation that directly replaces
+#   the model-generated precipitation.  Used with product-specific precip files in MERRA-21C 
+#   (through Sep 2025), MERRA-2, and GiOCEAN .  
+# PRECIP_FILE_CLIMSCALE:
+#   Points to pentad files with climatological scaling parameters that rescale the
+#   model-generated precipitation to an observation-based climatology.  Used in 
+#   MERRA-21C (from Oct 2025). 
 #
-#    Option 1) CMAP-CPCU Corrected (Used for NCA Project)
-#    ----------------------------------------------------
-#    /bin/ln -s /gpfsm/dnb51/projects/p15/iau/merra_land/precip_CPCU-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
+# Specify either PRECIP_FILE *or* PRECIP_FILE_CLIMSCALE (or neither). 
 #
-#         Then, you must replace the token after PRECIP_FILE with the proper datastream for the desired years:
-#         ----------------------------------------------------------------------------------------------------
-#         Years 1978-1993: d5_merra_jan79/diag/Y%y4/d5_merra_jan79.tavg1_2d_lfo_Nx_corr.%y4%m2%d2_%h230z.nc (Currently Not ONLINE)
-#         Years 1988-2001: d5_merra_jan89/diag/Y%y4/d5_merra_jan89.tavg1_2d_lfo_Nx_corr.%y4%m2%d2_%h230z.nc (Currently Not ONLINE)
-#         Years 1999-2014: d5_merra_jan98/diag/Y%y4/d5_merra_jan98.tavg1_2d_lfo_Nx_corr.%y4%m2%d2_%h230z.nc
-#         ---------------
+# To use the observation-based precip or precip scaling files, symbolically link 
+# the data into your work area.  For example (MERRA-21C through Sep 2025):
+#   /bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/precip_correction/precip_corr_R21C  ExtData/PCP
 #
-#    Option 2) CMAP-GPCP Corrected (from MERRA-Land)
-#    -----------------------------------------------
-#    /bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
-#
-#         Then, you must replace the token after PRECIP_FILE with the proper datastream:
-#         -----------------------------------------------------------------------------------------------------------
-#         Years 1979-2014: d5_merra/Y%y4/M%m2/d5_merra.tavg1_2d_lfo_Nx_corr.%y4%m2%d2_%h230z.nc
-#         ---------------
-#
-# Possible REPLAY PRECIP Files:
+# Then specify PRECIP_FILE with templated date and time stamps.  For example (MERRA-21C through Sep 2025):
+#   PRECIP_FILE: ExtData/PCP/precip_corr_R21C/diag/Y%y4/M%m2/R21C.tavg_1hr_prcpcorr_c360_sfc.%y4%m2%d2_%h230.nc4 
 # -----------------------------
-#PRECIP_FILE: ExtData/PCP/@PRECIP_FILE
+#PRECIP_FILE:           ExtData/PCP/@PRECIP_FILE
+#PRECIP_FILE_CLIMSCALE: ExtData/PCP/@PRECIP_FILE_CLIMSCALE
 #
-# Latitudinal Tapering between 42.5 and 62.5 degrees mimics NCEP's approach of using GCM-based precip at high latitudes
+# Apply latitudinal tapering to use the model-generated precip at high latitudes.  Used 
+# in MERRA-21C, MERRA-2, and GiOCEAN with product-specific low and high transition latitudes.
 # --------------------
-#USE_PP_TAPER: 1
+#USE_PP_TAPER:      1
+#PP_TAPER_LAT_LOW:  50.0
+#PP_TAPER_LAT_HIGH: 60.0
 
 ##############################################################################################
 ####    Land Surface Model                                                                ####
