@@ -372,6 +372,8 @@ endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
+@DATAATMcp -f  $HOMDIR/MOM_saltrestore .
+@DATAATMcp -f  $HOMDIR/MOM_dataatm .
 @CICE6cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
