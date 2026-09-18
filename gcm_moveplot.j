@@ -4,12 +4,12 @@
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#{{ BATCH_TIME }}1:00:00
-#{{ MOVE_P }}
-#{{ BATCH_JOBNAME }}{{ MOVE_N }}
-#{{ MOVE_Q }}
-#{{ BATCH_GROUP }}
-#{{ BATCH_OUTPUTNAME }}gcm_moveplot.o
+#{{ batch_time }}1:00:00
+#{{ move_p }}
+#{{ batch_jobname }}{{ move_n }}
+#{{ move_q }}
+#{{ batch_group_full }}
+#{{ batch_outputname }}gcm_moveplot.o
 
 #######################################################################
 #                  System Environment Variables
@@ -19,9 +19,9 @@ umask 022
 
 limit stacksize unlimited
 
-{{ SETENVS }}
+{{ mpi_config }}
 
-{{ MPT_SHEPHERD }}
+{{ ocean.mpt_shepherd }}
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -29,23 +29,23 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             {{ SITE }}
-setenv GEOSBIN          {{ GEOSBIN }}
-setenv GEOSUTIL         {{ GEOSSRC }}
+setenv SITE             {{ site }}
+setenv GEOSBIN          {{ bin_path }}
+setenv GEOSUTIL         {{ install_path }}
 
 source $GEOSBIN/g5_modules
-setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}
+setenv {{ ld_library_path_command }} ${LD_LIBRARY_PATH}
 if ( $?BASEDIR ) then
-    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
+    setenv {{ ld_library_path_command }} ${{'{'}}{{ ld_library_path_command }}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 
 #######################################################################
 #             Experiment Specific Environment Variables
 #######################################################################
 
-setenv    EXPID   {{ EXPID }}
-setenv    EXPDIR  {{ EXPDIR }}
-setenv    HOMDIR  {{ HOMDIR }}
+setenv    EXPID   {{ expConfig.experiment_id }}
+setenv    EXPDIR  {{ exp_dir }}
+setenv    HOMDIR  {{ exp_dir }}
 
 #######################################################################
 #                           MOVE Commands

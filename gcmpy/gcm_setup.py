@@ -42,7 +42,7 @@ def main():
         exit()
 
     experiment = SetupGCM(expConfig)
-    experiment.initialize_models()
+    experiment.config_models()
     experiment.set_num_CPUs()
     experiment.config_models()
     experiment.set_atmos_params()

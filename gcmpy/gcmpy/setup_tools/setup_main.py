@@ -52,6 +52,36 @@ class SetupGCM:
         self.several_tries      = ''
         self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text()
         self.linkx              = False
+
+        # literal/default values used directly in templates (formerly hardcoded
+        # inline in jinja_dict inside template()). Kept here so they participate
+        # in the auto-generated template context (vars(self)).
+        self.singularity_build   = '#DELETE'
+        self.native_build        = ''
+        self.singularity_sandbox = ''
+        self.real_bind_path      = ''
+        self.base_bind_path      = ''
+        self.checkpoint_type     = 'default'
+        self.observer_frq        = 0
+        self.dastuning           = '#'
+        self.oana_provider       = 'PCHEM'
+        self.dycore              = 'FV3'
+        self.ogcm_is_fcst        = '0'
+        self.boot                = 'YES'
+        self.grid_type           = 'Cubed-Sphere'
+        self.isccp_satsim        = 1
+        self.modis_satsim        = 0
+        self.radar_satsim        = 0
+        self.lidar_satsim        = 0
+        self.misr_satsim         = 0
+        self.satsim              = 0
+        self.use_skin_layer      = 1
+        self.analyze_ts          = 0
+        self._4diaudas           = '#DELETE'
+        self.regular_replay      = '#'
+        self.regular_replay_gmao = '#'
+        self.regular_replay_ncep = '#DELETE'
+        self.regular_replay_ecmwf = '#DELETE'
         self.templates          = ['gcm_run.j',
                                    'gcm_post.j',
                                    'gcm_archive.j',
@@ -633,219 +663,55 @@ class SetupGCM:
 
 
     def template(self):
+        # A few values need small amounts of coercion/derivation before they
+        # can be handed to Jinja as-is. Everything else is picked up
+        # automatically from `vars(self)` (plus envdict/pathdict below)
+        # because template placeholders now share their names with the
+        # corresponding Python attribute / nested-config key.
+        self.atmos['use_SHMEM'] = int(self.atmos['use_SHMEM'])
+        self.expConfig['io_server'] = int(self.expConfig['io_server'])
+        self.batch_group_full = self.batch_group + self.expConfig['group_root']
+
         # this dictionary holds template values for the default jinja2 delimiter "{{ val }}"
+        # Instance attributes (including nested dicts like self.atmos, self.ocean,
+        # self.land, self.gocart, self.expConfig which templates access via dotted
+        # notation, e.g. {{ atmos.im }}), plus envdict/pathdict (renamed to match
+        # their template placeholders).
         jinja_dict = {
-            'SETENVS': self.mpi_config,
-            'GCMVER': self.gcm_version,
-            'EXPSRC': self.gcm_version,
-            'EXPID': self.expConfig['experiment_id'],
-            'RUN_N': self.run_n,
-            'RUN_FN': self.run_fn,
-            'RUN_FT': self.run_ft,
-            'RUN_T': self.run_t,
-            'RUN_P': self.run_p,
-            'RUN_FP': self.run_fp,
-            'REGRESS_P': self.regress_p,
-            'RUN_Q': self.run_q,
-            'POST_N': self.post_n,
-            'POST_T': self.post_t,
-            'POST_P': self.post_p,
-            'POST_Q': self.post_q,
-            'MOVE_N': self.move_n,
-            'PLOT_N': self.plot_n,
-            'PLOT_T': self.plot_t,
-            'PLOT_P': self.plot_p,
-            'PLOT_Q': self.plot_q,
-            'MOVE_Q': self.move_q,
-            'MOVE_P': self.move_p,
-            'ARCHIVE_N': self.archive_n,
-            'ARCHIVE_T': self.archive_t,
-            'ARCHIVE_P': self.archive_p,
-            'ARCHIVE_Q': self.archive_q,
-            'REGRESS_N': self.regress_n,
-            'BCSDIR': self.bcs_dir,
-            'SSTDIR': self.sst_dir,
-            'SSTNAME': self.ocean['sst_name'],
-            'OCEANOUT': self.ocean['out'],
-            'LSMBCS': self.land['bcs'],
-            'EMIP_BCS_IN': self.land['emip_bcs_in'],
-            'EMIP_MERRA2': self.land['emip_MERRA2'],
-            'BCSTAG': self.ocean['tag'],
-            'SSTFILE': self.ocean['sst_file'],
-            'ICEFILE': self.ocean['ice_file'],
-            'KPARFILE': self.ocean['kpar_file'],
-            'CHMDIR': self.chem_dir,
-            'COUPLEDIR': self.coupled_dir,
-            'GWDRSDIR': self.gwdrs_dir,
-            'NCAR_NRDG': self.NCAR_NRDG,
-            'EXPDIR': self.exp_dir,
-            'EXPDSC': self.expConfig['experiment_description'],
-            'HOMDIR': self.exp_dir,
-            'BATCH_GROUP': self.batch_group+self.expConfig['group_root'],
-            'BATCH_TIME': self.batch_time,
-            'BATCH_CMD': self.batch_cmd,
-            'BATCH_JOBNAME': self.batch_jobname,
-            'BATCH_OUTPUTNAME': self.batch_outputname,
-            'BATCH_JOINOUTERR': self.batch_joinouterr,
-            'SITE': envdict['site'],
-            'proc_type': self.expConfig['processor'],
-            'GEOSDIR': str(pathdict['install']),
-            'GEOSSRC': str(pathdict['install']),
-            'GEOSBIN': str(pathdict['bin']),
-            'GEOSETC': str(pathdict['etc']),
-            'GEOSUTIL': str(pathdict['install']),
-            'SINGULARITY_BUILD': '#DELETE',
-            'NATIVE_BUILD': '',
-            'MPT_SHEPHERD': self.ocean['mpt_shepherd'],
-            'SINGULARITY_SANDBOX': '',
-            'REAL_BIND_PATH': '',
-            'BASE_BIND_PATH': '',
-            'BC_BASE': self.bc_base,
-            'BOUNDARY_DIR': self.boundary_dir,
-            'BCS_INPUT_BASE': self.bcs_input_base,
-            'CHECKPOINT_TYPE': 'default',
-            'OGCM_NX': self.ocean['NX'],
-            'OGCM_NY': self.ocean['NY'],
-            'OGCM_NPROCS': self.ocean['nprocs'],
-            'OBSERVER_FRQ': 0,
-            'DASTUNING': '#',
-            'COUPLED': self.ocean['coupled'],
-            'CLDMICRO': self.atmos['microphysics'],
-            'MOM6': self.ocean['MOM6'],
-            'OCNMODEL': self.ocean['model'],
-            'CICE4': self.ocean['CICE4'],
-            'CICE6': self.ocean['CICE6'],
-            'HIST_CICE4': self.ocean['hist_CICE4'],
-            'MIT': self.ocean['MIT'],
-            'DATAOCEAN': self.ocean['data'],
-            'OPS_SPECIES': self.gocart['ops_species'],
-            'CMIP_SPECIES': self.gocart['cmip_species'],
-            'MERRA2OX_SPECIES': self.gocart['MERRA2OX_species'],
-            'HIST_GOCART': self.gocart['gocart_hist'],
-            'LSM_PARMS': self.land['parameters'],
-            'OCEAN_NAME': self.ocean['name'],
-            'OCEAN_PRELOAD': self.ocean['preload'],
-            'ana4replay.eta.%y4%m2%d2_%h2z.nc4': '/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g',
-            'REPLAY_ANA_EXPID': self.replay_ana_expID,
-            'REPLAY_ANA_LOCATION': self.replay_ana_location,
-            'M2_REPLAY_ANA_LOCATION': self.M2_replay_ana_location,
-            'OX_RELAXTIME': self.gocart['ox_relaxtime'],
-            'PCHEM_CLIM_YEARS': self.gocart['pchem_clim_years'],
-            'RATS_PROVIDER': self.gocart['rats_provider'],
-            'AERO_PROVIDER': self.gocart['aero_provider'],
-            'OANA_PROVIDER': 'PCHEM',
-            'EMISSIONS': self.gocart['emissions'],
-            'CH4_PROVIDER': self.gocart['ch4_provider'],
-            'CO2_PROVIDER': self.gocart['c02_provider'],
-            'DYCORE': 'FV3',
-            'AGCM_GRIDNAME': self.atmos['gridname'],
-            'OGCM_GRIDNAME': self.ocean['gridname'],
-            'OGCM_IS_FCST': '0',
-            'BOOT': 'YES',
-            'BCSRES': self.bcs_res,
-            'OCEANtag': self.ocean['res'],
-            'ATMOStag': self.atmos['res'],
-            'RES_DATELINE': self.atmos['res_dateline'],
-            'TILEDATA': self.tile_data,
-            'TILEBIN': self.tile_bin,
-            'DT': self.atmos['dt'],
-            'CONV_DT': self.atmos['conv_dt'],
-            'CHEM_DT': self.atmos['chem_dt'],
-            'SOLAR_DT': self.atmos['dt_solar'],
-            'IRRAD_DT': self.atmos['dt_irrad'],
-            'OCEAN_DT': self.atmos['dt_ocean'],
-            'NX': self.atmos['nx'],
-            'NY': self.atmos['ny'],
-            'USE_SHMEM': int(self.atmos['use_SHMEM']),
-            'USE_IOSERVER': int(self.expConfig['io_server']),
-            'NUM_OSERVER_NODES': self.n_oserver_nodes,
-            'NUM_BACKEND_PES': self.n_backend_pes,
-            'RESTART_BY_OSERVER': self.restart_by_oserver,
-            'NCPUS_PER_NODE': self.num_CPUs,
-            'NUM_READERS': self.atmos['num_readers'],
-            'NUM_WRITERS': self.atmos['num_writers'],
-            'LATLON_AGCM': self.atmos['latlon'],
-            'LATLON_OGCM': self.ocean['latlon'],
-            'CUBE_AGCM': self.atmos['cube'],
-            'CUBE_OGCM': self.ocean['cube'],
-            'GRID_TYPE': 'Cubed-Sphere',
-            'AGCM_NF': self.atmos['nf'],
-            'AGCM_IM': self.atmos['im'],
-            'AGCM_JM': self.atmos['jm'],
-            'AGCM_LM': self.atmos['lm'],
-            'OGCM_IM': self.ocean['IM'],
-            'OGCM_JM': self.ocean['JM'],
-            'OGCM_LM': self.ocean['LM'],
-            'OGCM_NF': self.ocean['NF'],
-            'OGCM_GRID_TYPE': self.ocean['grid_type'],
-            'BEG_DATE': self.begin_date,
-            'END_DATE': self.end_date,
-            'JOB_SGMT': self.job_sgmt,
-            'NUM_SGMT': self.atmos['num_sgmt'],
-            'CONUS': self.atmos['conus'],
-            'CONVPAR_OPTION': self.atmos['convpar_option'],
-            'STRETCH_FACTOR': self.atmos['stretch_factor'],
-            'INTERPOLATE_SST': self.interpolate_sst,
-            'HIST_IM': self.atmos['hist_im'],
-            'HIST_JM': self.atmos['hist_jm'],
-            'CLIM_IM': self.atmos['CLIM_IM'],
-            'CLIM_JM': self.atmos['CLIM_JM'],
-            'ISCCP_SATSIM': 1,
-            'MODIS_SATSIM': 0,
-            'RADAR_SATSIM': 0,
-            'LIDAR_SATSIM': 0,
-            'MISR_SATSIM': 0,
-            'SATSIM': 0,
-            'USE_SKIN_LAYER': 1,
-            'ANALYZE_TS': 0,
-            'LSM_CHOICE': self.land['model'],
-            'MP_TURN_OFF_WSUB_EXTDATA': self.atmos['mp_turn_off_wsub_extdata'],
-            'BACM_1M_': self.atmos['BACM_1M'],
-            'GFDL_1M_': self.atmos['GFDL_1M'],
-            'MGB2_2M_': self.atmos['MGB2_2M'],
-            'RRTMGP_RADIATION': self.atmos['RRTMGP_RADIATION'],
-            'RRTMG_RADIATION': self.atmos['RRTMG_RADIATION'],
-            'KLID': self.atmos['KLID'],
-            'PRELOAD_COMMAND': envdict['preload_command'],
-            'LD_LIBRARY_PATH_CMD': envdict['ld_library_path_command'],
-            'RUN_CMD': envdict['run_command'],
-            'MODELATM': self.ocean['modelatm'],
-            'USE_DATA_ATM4OCN': self.ocean['use_data_ATM4OCN'],
-            'FV_SCHMIDT': self.atmos['schmidt'],
-            'FV_STRETCH_FAC': self.atmos['FV_stretch_fac'],
-            'FV_TARGET_LON': self.atmos['target_lon'],
-            'FV_TARGET_LAT': self.atmos['target_lat'],
-            'FORCEDAS': self.atmos['force_das'],
-            'FORCEGCM': self.atmos['force_gcm'],
-            'FVCUBED': '',
-            'HIST_CATCHCN': self.land['HIST_catchment'],
-            'GCMRUN_CATCHCN': self.land['GCMRUN_catchment'],
-            'EMIP_OLDLAND': self.land['emip_oldland'],
-            'EMIP_NEWLAND': self.land['emip_newland'],
-            '_4DIAUDAS': '#DELETE',
-            'SEVERAL_TRIES': self.several_tries,
-            'REGULAR_REPLAY': '#',
-            'REGULAR_REPLAY_GMAO': '#',
-            'REGULAR_REPLAY_NCEP': '#DELETE',
-            'REGULAR_REPLAY_ECMWF': '#DELETE'
+            **vars(self),
+            'site': envdict['site'],
+            'preload_command': envdict['preload_command'],
+            'ld_library_path_command': envdict['ld_library_path_command'],
+            'run_command': envdict['run_command'],
+            'install_path': str(pathdict['install']),
+            'bin_path': str(pathdict['bin']),
+            'etc_path': str(pathdict['etc']),
         }
 
-        # Create YAML file meant to drive the the creation
-        # of the batch script
+        '''
+        # select specific variables to be seen in the experiment yaml
         exp_yaml_file_vars = [
-                'SITE', 'EXPDIR', 'GEOSDIR', 
-                'NX', 'NY', 
-                'USE_IOSERVER', 
-                'proc_type', 'NCPUS_PER_NODE', 
-                'AGCM_IM', 'AGCM_JM', 'AGCM_LM', 'OGCM_IM', 'OGCM_JM', 
-                'DT', 'CONV_DT', 'CHEM_DT', 'SOLAR_DT', 'IRRAD_DT', 'OCEAN_DT'
+                'site', 'exp_dir', 'install_path',
+                'atmos.nx', 'atmos.ny',
+                'expConfig.io_server',
+                'expConfig.processor', 'num_CPUs',
+                'atmos.im', 'atmos.jm', 'atmos.lm', 'ocean.IM', 'ocean.JM',
+                'atmos.dt', 'atmos.conv_dt', 'atmos.chem_dt', 'atmos.dt_solar',
+                'atmos.dt_irrad', 'atmos.dt_ocean'
         ]
-        #_exclude = {'SETENVS', 'GCMVER', 'EXPSRC'}
-        #exp_yaml_dict = {k: v for k, v in jinja_dict.items() if k not in _exclude}
-        exp_yaml_fname = Path(self.exp_dir) / f"run_{jinja_dict['EXPID']}.yaml"
-        exp_yaml_dict = {k: jinja_dict[k] for k in exp_yaml_file_vars}
+        
 
-        write_dict_into_yaml(exp_yaml_fname, exp_yaml_dict)
+        def _resolve(dotted_key):
+            obj = jinja_dict
+            for part in dotted_key.split('.'):
+                obj = obj[part] if isinstance(obj, dict) else getattr(obj, part)
+            return obj
+        '''
+
+        exp_yaml_fname = Path(self.exp_dir) / f"run_{self.expConfig['experiment_id']}.yaml"
+        #exp_yaml_dict = {k: _resolve(k) for k in exp_yaml_file_vars}
+
+        write_dict_into_yaml(exp_yaml_fname, jinja_dict)
 
         # this is an edge-case that can't be handled with jinja2
         for file in self.templates:

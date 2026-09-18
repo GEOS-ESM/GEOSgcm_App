@@ -4,11 +4,11 @@
 #                     Batch Parameters for Regress Job
 #######################################################################
 
-#{{ BATCH_TIME }}{{ RUN_T }}
-#{{ REGRESS_P }}
-#{{ BATCH_JOBNAME }}{{ REGRESS_N }}
-#{{ RUN_Q }}
-#{{ BATCH_GROUP }}
+#{{ batch_time }}{{ run_t }}
+#{{ regress_p }}
+#{{ batch_jobname }}{{ regress_n }}
+#{{ run_q }}
+#{{ batch_group_full }}
 
 #######################################################################
 #                  System Environment Variables
@@ -18,9 +18,9 @@ umask 022
 
 limit stacksize unlimited
 
-{{ SETENVS }}
+{{ mpi_config }}
 
-{{ MPT_SHEPHERD }}
+{{ ocean.mpt_shepherd }}
 
 # Establish safe default number of OpenMP threads
 # -----------------------------------------------
@@ -94,31 +94,31 @@ set argv = ()
 
 setenv ARCH `uname`
 
-setenv SITE    {{ SITE }}
-setenv GEOSDIR {{ GEOSDIR }}
-setenv GEOSBIN {{ GEOSBIN }}
+setenv SITE    {{ site }}
+setenv GEOSDIR {{ install_path }}
+setenv GEOSBIN {{ bin_path }}
 
 source $GEOSBIN/g5_modules
 # We only prepend to DY/LD_LIBRARY_PATH if it exists
-if ( $?{{ LD_LIBRARY_PATH_CMD }} ) then
-   setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${GEOSDIR}/lib"
+if ( $?{{ ld_library_path_command }} ) then
+   setenv {{ ld_library_path_command }} "${{'{'}}{{ ld_library_path_command }}{{'}'}}:${GEOSDIR}/lib"
 else
-   setenv {{ LD_LIBRARY_PATH_CMD }} "${GEOSDIR}/lib"
+   setenv {{ ld_library_path_command }} "${GEOSDIR}/lib"
 endif
-# We only add BASEDIR to the {{ LD_LIBRARY_PATH_CMD }} if BASEDIR is defined (i.e., not running with Spack)
+# We only add BASEDIR to the {{ ld_library_path_command }} if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
-    setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib"
+    setenv {{ ld_library_path_command }} "${{'{'}}{{ ld_library_path_command }}{{'}'}}:${BASEDIR}/${ARCH}/lib"
 endif
 
-setenv RUN_CMD "{{ RUN_CMD }}"
+setenv RUN_CMD "{{ run_command }}"
 
 #######################################################################
 #             Experiment Specific Environment Variables
 #######################################################################
 
-setenv EXPID  {{ EXPID }}
-setenv EXPDIR {{ EXPDIR }}
-setenv HOMDIR {{ HOMDIR }}
+setenv EXPID  {{ expConfig.experiment_id }}
+setenv EXPDIR {{ exp_dir }}
+setenv HOMDIR {{ exp_dir }}
 setenv SCRDIR $EXPDIR/scratch
 
 #######################################################################
@@ -144,9 +144,9 @@ cp $EXPDIR/RC/*.yaml   $EXPDIR/regress
 cp $EXPDIR/GEOSgcm.x   $EXPDIR/regress
 cp $EXPDIR/linkbcs     $EXPDIR/regress
 cp $HOMDIR/*.yaml      $EXPDIR/regress
-{{ COUPLED }} cp $HOMDIR/*.nml       $EXPDIR/regress
-{{ MOM6 }}cp $HOMDIR/MOM_input   $EXPDIR/regress
-{{ MOM6 }}cp $HOMDIR/MOM_override $EXPDIR/regress
+{{ ocean.coupled }} cp $HOMDIR/*.nml       $EXPDIR/regress
+{{ ocean.MOM6 }}cp $HOMDIR/MOM_input   $EXPDIR/regress
+{{ ocean.MOM6 }}cp $HOMDIR/MOM_override $EXPDIR/regress
 
 cat fvcore_layout.rc >> input.nml
 
@@ -183,8 +183,8 @@ foreach rst ( $rst_file_names )
 end
 cp $EXPDIR/cap_restart $EXPDIR/regress
 
-{{ COUPLED }} /bin/mkdir INPUT
-{{ COUPLED }} cp $EXPDIR/RESTART/* INPUT
+{{ ocean.coupled }} /bin/mkdir INPUT
+{{ ocean.coupled }} cp $EXPDIR/RESTART/* INPUT
 
 setenv YEAR `cat cap_restart | cut -c1-4`
 ./linkbcs
@@ -234,23 +234,23 @@ COLLECTIONS: test_collection
   test_collection.grid_label:        PC180x91-DC ,
   test_collection.deflate:           1 ,
   test_collection.frequency:         060000 ,
-{{ DATAOCEAN }}  test_collection.fields:           'PHIS', 'AGCM' ,
-{{ DATAOCEAN }}                                    'SLP' , 'DYN'  ,
-{{ DATAOCEAN }}                                    'T'   , 'DYN'  ,
-{{ DATAOCEAN }}                                    'U;V' , 'DYN'  ,
-{{ DATAOCEAN }}                                    'Q'   , 'MOIST', 'QV',
+{{ ocean.data }}  test_collection.fields:           'PHIS', 'AGCM' ,
+{{ ocean.data }}                                    'SLP' , 'DYN'  ,
+{{ ocean.data }}                                    'T'   , 'DYN'  ,
+{{ ocean.data }}                                    'U;V' , 'DYN'  ,
+{{ ocean.data }}                                    'Q'   , 'MOIST', 'QV',
 {{ MOM5 }}  test_collection.fields:           'UW'   ,'MOM'  , 'US',
 {{ MOM5 }}                                    'VW'   ,'MOM'  , 'VS',
 {{ MOM5 }}                                    'TW'   ,'MOM'  , 'TS',
 {{ MOM5 }}                                    'SW'   ,'MOM'  , 'SS',
 {{ MOM5 }}                                    'SLV'  ,'MOM'  ,
 {{ MOM5 }}                                    'QFLUX','OCEAN' ,
-{{ MOM6 }}  test_collection.fields:           'UW'   ,'MOM6'  , 'US',
-{{ MOM6 }}                                    'VW'   ,'MOM6'  , 'VS',
-{{ MOM6 }}                                    'TW'   ,'MOM6'  , 'TS',
-{{ MOM6 }}                                    'SW'   ,'MOM6'  , 'SS',
-{{ MOM6 }}                                    'SLV'  ,'MOM6'  ,
-{{ MOM6 }}                                    'QFLUX','OCEAN' ,
+{{ ocean.MOM6 }}  test_collection.fields:           'UW'   ,'MOM6'  , 'US',
+{{ ocean.MOM6 }}                                    'VW'   ,'MOM6'  , 'VS',
+{{ ocean.MOM6 }}                                    'TW'   ,'MOM6'  , 'TS',
+{{ ocean.MOM6 }}                                    'SW'   ,'MOM6'  , 'SS',
+{{ ocean.MOM6 }}                                    'SLV'  ,'MOM6'  ,
+{{ ocean.MOM6 }}                                    'QFLUX','OCEAN' ,
   ::
 _EOF_
 
@@ -299,8 +299,8 @@ set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l
 
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
-setenv EMISSIONS {{ EMISSIONS }}
-if( {{ EMISSIONS }} == AMIP_EMISSIONS ) then
+setenv EMISSIONS {{ gocart.emissions }}
+if( {{ gocart.emissions }} == AMIP_EMISSIONS ) then
     if( $EXTDATA2G_TRUE == 0 ) then
        set AMIP_Transition_Date = 20000301
 
@@ -327,16 +327,16 @@ if( {{ EMISSIONS }} == AMIP_EMISSIONS ) then
     endif
 endif
 
-{{ MP_TURN_OFF_WSUB_EXTDATA }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
-{{ MP_TURN_OFF_WSUB_EXTDATA }}# -------------------------------------------------
+{{ atmos.mp_turn_off_wsub_extdata }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
+{{ atmos.mp_turn_off_wsub_extdata }}# -------------------------------------------------
 if ($EXTDATA2G_TRUE == 0 ) then
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
+   {{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
+   {{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
 else
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   {{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+   {{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+   {{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 endif
-{{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/rm WSUB_ExtData.tmp
+{{ atmos.mp_turn_off_wsub_extdata }}/bin/rm WSUB_ExtData.tmp
 
 # Generate the complete ExtData.rc
 # --------------------------------
@@ -380,14 +380,14 @@ if( $LM  != 72 ) then
     endif
 endif
 
-{{ RRTMGP_RADIATION }} # Move GOCART to use RRTMGP Bands
-{{ RRTMGP_RADIATION }} # -------------------------------
-{{ RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
-{{ RRTMGP_RADIATION }} foreach instance ($instance_files)
-   {{ RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
-   {{ RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
-   {{ RRTMGP_RADIATION }} /bin/rm $instance.tmp
-{{ RRTMGP_RADIATION }} end
+{{ atmos.RRTMGP_RADIATION }} # Move GOCART to use RRTMGP Bands
+{{ atmos.RRTMGP_RADIATION }} # -------------------------------
+{{ atmos.RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
+{{ atmos.RRTMGP_RADIATION }} foreach instance ($instance_files)
+   {{ atmos.RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
+   {{ atmos.RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   {{ atmos.RRTMGP_RADIATION }} /bin/rm $instance.tmp
+{{ atmos.RRTMGP_RADIATION }} end
 
 # If REPLAY, link necessary forcing files
 # ---------------------------------------
@@ -484,7 +484,7 @@ if( $RUN_STARTSTOP == TRUE ) then
 
    echo "=== Running test of duration ${test_duration_step1} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-   {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde1 = $date[1]
@@ -503,7 +503,7 @@ if( $RUN_STARTSTOP == TRUE ) then
       /bin/mv -v $chk ${chk}.${nymde1}_${nhmse1}.1
    end
 
-   {{ MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.1
+   {{ ocean.MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.1
 
    # Move history as well
    set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
@@ -532,9 +532,9 @@ cp CAP.rc.orig  CAP.rc
 cp AGCM.rc.orig AGCM.rc
 cp HISTORY.rc0  HISTORY.rc
 
-{{ COUPLED }} /bin/rm -rf INPUT
-{{ COUPLED }} /bin/mkdir INPUT
-{{ COUPLED }} cp $EXPDIR/RESTART/* INPUT
+{{ ocean.coupled }} /bin/rm -rf INPUT
+{{ ocean.coupled }} /bin/mkdir INPUT
+{{ ocean.coupled }} cp $EXPDIR/RESTART/* INPUT
 
 ./strip CAP.rc
 set oldstring = `cat CAP.rc | grep JOB_SGMT:`
@@ -550,7 +550,7 @@ set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 
 echo "=== Running test of duration ${test_duration_step2} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
-{{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+{{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
 set date = `cat cap_restart`
 set nymde2 = $date[1]
@@ -577,7 +577,7 @@ foreach chk ( $replay_chk_file_names )
    $MOVE_OR_COPY $chk ${chk}.${nymde1}_${nhmse1}.2
 end
 
-{{ MOM6 }} $MOVE_OR_COPY RESTART/MOM.res.nc MOM.res.nc.2
+{{ ocean.MOM6 }} $MOVE_OR_COPY RESTART/MOM.res.nc MOM.res.nc.2
 
 # *Copy* history as well
 set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
@@ -618,7 +618,7 @@ while ( $n <= $numchk )
 @ n = $n + 1
 end
 
-{{ COUPLED }} cp RESTART/* INPUT
+{{ ocean.coupled }} cp RESTART/* INPUT
 
 ##################################################################
 ######
@@ -633,10 +633,10 @@ if ($RUN_STARTSTOP == TRUE) then
 
    cp HISTORY.rc0 HISTORY.rc
 
-   {{ MOM6 }}# When you restart in MOM6 mode, you must change input_filename
-   {{ MOM6 }}# in the input.nml file from 'n' to 'r'
-   {{ MOM6 }} /bin/cp input.nml input.nml.orig
-   {{ MOM6 }} sed -i -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
+   {{ ocean.MOM6 }}# When you restart in MOM6 mode, you must change input_filename
+   {{ ocean.MOM6 }}# in the input.nml file from 'n' to 'r'
+   {{ ocean.MOM6 }} /bin/cp input.nml input.nml.orig
+   {{ ocean.MOM6 }} sed -i -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
 
    ./strip CAP.rc
    set oldstring = `cat CAP.rc | grep JOB_SGMT:`
@@ -669,7 +669,7 @@ if ($RUN_STARTSTOP == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step3} with NX = $NX and NY = $NY starting at $nymdb $nhmsb ==="
 
-   {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde3 = $date[1]
@@ -685,7 +685,7 @@ if ($RUN_STARTSTOP == TRUE) then
    foreach chk ( $replay_chk_file_names )
       /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.3
    end
-   {{ MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
+   {{ ocean.MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
 
    # Move history as well
    set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
@@ -721,12 +721,12 @@ if ( $RUN_LAYOUT == TRUE) then
       cp $EXPDIR/$rst $EXPDIR/regress
    end
 
-   {{ COUPLED }} /bin/rm -rf INPUT
-   {{ COUPLED }} /bin/mkdir INPUT
-   {{ COUPLED }} cp $EXPDIR/RESTART/* INPUT
+   {{ ocean.coupled }} /bin/rm -rf INPUT
+   {{ ocean.coupled }} /bin/mkdir INPUT
+   {{ ocean.coupled }} cp $EXPDIR/RESTART/* INPUT
 
-   {{ COUPLED }} # restore original input.nml
-   {{ COUPLED }} /bin/mv input.nml.orig input.nml
+   {{ ocean.coupled }} # restore original input.nml
+   {{ ocean.coupled }} /bin/mv input.nml.orig input.nml
 
    /bin/rm              cap_restart
    echo $nymd0 $nhms0 > cap_restart
@@ -767,17 +767,17 @@ if ( $RUN_LAYOUT == TRUE) then
    # cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc #
    ###############################################################
 
-   {{ COUPLED }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
-   {{ COUPLED }} set newstring = "OGCM.NX: ${test_NY}"
-   {{ COUPLED }} /bin/mv AGCM.rc AGCM.tmp
-   {{ COUPLED }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-   {{ COUPLED }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
-   {{ COUPLED }} set newstring = "OGCM.NY: ${test_NX}"
-   {{ COUPLED }} /bin/mv AGCM.rc AGCM.tmp
-   {{ COUPLED }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   {{ ocean.coupled }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
+   {{ ocean.coupled }} set newstring = "OGCM.NX: ${test_NY}"
+   {{ ocean.coupled }} /bin/mv AGCM.rc AGCM.tmp
+   {{ ocean.coupled }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   {{ ocean.coupled }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
+   {{ ocean.coupled }} set newstring = "OGCM.NY: ${test_NX}"
+   {{ ocean.coupled }} /bin/mv AGCM.rc AGCM.tmp
+   {{ ocean.coupled }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
    {{ MOM5 }}sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${test_NY},${test_NX}#" input.nml
-   {{ MOM6 }}sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
+   {{ ocean.MOM6 }}sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${test_NY}, ${test_NX}/g" MOM_override
 
    setenv YEAR `cat cap_restart | cut -c1-4`
    ./linkbcs
@@ -800,7 +800,7 @@ if ( $RUN_LAYOUT == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step4} with NX = $test_NX and NY = $test_NY starting at $nymd0 $nhms0 ==="
 
-   {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
@@ -817,7 +817,7 @@ if ( $RUN_LAYOUT == TRUE) then
       /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.4
    end
 
-   {{ MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
+   {{ ocean.MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
 
    # Move history as well
    set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
@@ -859,12 +859,12 @@ if ( $RUN_OPENMP == TRUE) then
       cp $EXPDIR/$rst $EXPDIR/regress
    end
 
-   {{ COUPLED }} /bin/rm -rf INPUT
-   {{ COUPLED }} /bin/mkdir INPUT
-   {{ COUPLED }} cp $EXPDIR/RESTART/* INPUT
+   {{ ocean.coupled }} /bin/rm -rf INPUT
+   {{ ocean.coupled }} /bin/mkdir INPUT
+   {{ ocean.coupled }} cp $EXPDIR/RESTART/* INPUT
 
-   {{ COUPLED }} # restore original input.nml
-   {{ COUPLED }} /bin/mv input.nml.orig input.nml
+   {{ ocean.coupled }} # restore original input.nml
+   {{ ocean.coupled }} /bin/mv input.nml.orig input.nml
 
    /bin/rm              cap_restart
    echo $nymd0 $nhms0 > cap_restart
@@ -890,17 +890,17 @@ if ( $RUN_OPENMP == TRUE) then
    /bin/mv AGCM.rc AGCM.tmp
    cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
-   {{ COUPLED }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
-   {{ COUPLED }} set newstring = "OGCM.NX: ${OGCM_NX0}"
-   {{ COUPLED }} /bin/mv AGCM.rc AGCM.tmp
-   {{ COUPLED }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
-   {{ COUPLED }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
-   {{ COUPLED }} set newstring = "OGCM.NY: ${OGCM_NY0}"
-   {{ COUPLED }} /bin/mv AGCM.rc AGCM.tmp
-   {{ COUPLED }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   {{ ocean.coupled }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NX:"`
+   {{ ocean.coupled }} set newstring = "OGCM.NX: ${OGCM_NX0}"
+   {{ ocean.coupled }} /bin/mv AGCM.rc AGCM.tmp
+   {{ ocean.coupled }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
+   {{ ocean.coupled }} set oldstring = `cat AGCM.rc | grep "^ *OGCM.NY:"`
+   {{ ocean.coupled }} set newstring = "OGCM.NY: ${OGCM_NY0}"
+   {{ ocean.coupled }} /bin/mv AGCM.rc AGCM.tmp
+   {{ ocean.coupled }} cat AGCM.tmp | sed -e "s?$oldstring?$newstring?g" > AGCM.rc
 
    {{ MOM5 }}sed -r -i -e "/^ *layout/ s#= ([0-9]+),*([0-9]+)#= ${OGCM_NX0},${OGCM_NY0}#" input.nml
-   {{ MOM6 }}sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
+   {{ ocean.MOM6 }}sed -r -i -e "s/#override LAYOUT = 3, 2/#override LAYOUT = ${OGCM_NX0}, ${OGCM_NY0}/g" MOM_override
 
    setenv YEAR `cat cap_restart | cut -c1-4`
    ./linkbcs
@@ -923,7 +923,7 @@ if ( $RUN_OPENMP == TRUE) then
 
    echo "=== Running OpenMP test of duration ${test_duration_step5} with NX = $NX0 and NY = $NY0 starting at $nymd0 $nhms0 ==="
 
-   {{ OCEAN_PRELOAD }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+   {{ ocean.preload }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
@@ -940,7 +940,7 @@ if ( $RUN_OPENMP == TRUE) then
       /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.5
    end
 
-   {{ MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.5
+   {{ ocean.MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.5
 
    # Move history as well
    set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
@@ -1000,24 +1000,24 @@ if ($RUN_STARTSTOP == TRUE) then
    endif
    end
 
-   {{ MOM6 }}# check MOM.res.nc (MOM6 restart)
-   {{ MOM6 }}set file1 = MOM.res.nc.1
-   {{ MOM6 }}set file2 = MOM.res.nc.3
-   {{ MOM6 }}if( -e $file1 && -e $file2 ) then
-   {{ MOM6 }}      set check = true
-   {{ MOM6 }}      if( $check == true ) then
-   {{ MOM6 }}         echo Comparing "MOM6 restarts"
-   {{ MOM6 }}         cmp $file1 $file2
-   {{ MOM6 }}         if( $status == 0 ) then
-   {{ MOM6 }}             echo Start-Stop Success!
-   {{ MOM6 }}             echo " "
-   {{ MOM6 }}         else
-   {{ MOM6 }}             echo Start-Stop Failed!
-   {{ MOM6 }}             echo " "
-   {{ MOM6 }}             set pass = false
-   {{ MOM6 }}         endif
-   {{ MOM6 }}      endif
-   {{ MOM6 }}endif
+   {{ ocean.MOM6 }}# check MOM.res.nc (MOM6 restart)
+   {{ ocean.MOM6 }}set file1 = MOM.res.nc.1
+   {{ ocean.MOM6 }}set file2 = MOM.res.nc.3
+   {{ ocean.MOM6 }}if( -e $file1 && -e $file2 ) then
+   {{ ocean.MOM6 }}      set check = true
+   {{ ocean.MOM6 }}      if( $check == true ) then
+   {{ ocean.MOM6 }}         echo Comparing "MOM6 restarts"
+   {{ ocean.MOM6 }}         cmp $file1 $file2
+   {{ ocean.MOM6 }}         if( $status == 0 ) then
+   {{ ocean.MOM6 }}             echo Start-Stop Success!
+   {{ ocean.MOM6 }}             echo " "
+   {{ ocean.MOM6 }}         else
+   {{ ocean.MOM6 }}             echo Start-Stop Failed!
+   {{ ocean.MOM6 }}             echo " "
+   {{ ocean.MOM6 }}             set pass = false
+   {{ ocean.MOM6 }}         endif
+   {{ ocean.MOM6 }}      endif
+   {{ ocean.MOM6 }}endif
 
    echo "=== Comparing replay checkpoint files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
@@ -1125,24 +1125,24 @@ if ($RUN_LAYOUT == TRUE) then
    endif
    end
 
-   {{ MOM6 }}# check MOM.res.nc (MOM6 restart)
-   {{ MOM6 }}set file1 = MOM.res.nc.2
-   {{ MOM6 }}set file2 = MOM.res.nc.4
-   {{ MOM6 }}if( -e $file1 && -e $file2 ) then
-   {{ MOM6 }}      set check = true
-   {{ MOM6 }}      if( $check == true ) then
-   {{ MOM6 }}         echo Comparing "MOM6 restarts"
-   {{ MOM6 }}         cmp $file1 $file2
-   {{ MOM6 }}         if( $status == 0 ) then
-   {{ MOM6 }}             echo Layout Success!
-   {{ MOM6 }}             echo " "
-   {{ MOM6 }}         else
-   {{ MOM6 }}             echo Layout Failed!
-   {{ MOM6 }}             echo " "
-   {{ MOM6 }}             set pass = false
-   {{ MOM6 }}         endif
-   {{ MOM6 }}      endif
-   {{ MOM6 }}endif
+   {{ ocean.MOM6 }}# check MOM.res.nc (MOM6 restart)
+   {{ ocean.MOM6 }}set file1 = MOM.res.nc.2
+   {{ ocean.MOM6 }}set file2 = MOM.res.nc.4
+   {{ ocean.MOM6 }}if( -e $file1 && -e $file2 ) then
+   {{ ocean.MOM6 }}      set check = true
+   {{ ocean.MOM6 }}      if( $check == true ) then
+   {{ ocean.MOM6 }}         echo Comparing "MOM6 restarts"
+   {{ ocean.MOM6 }}         cmp $file1 $file2
+   {{ ocean.MOM6 }}         if( $status == 0 ) then
+   {{ ocean.MOM6 }}             echo Layout Success!
+   {{ ocean.MOM6 }}             echo " "
+   {{ ocean.MOM6 }}         else
+   {{ ocean.MOM6 }}             echo Layout Failed!
+   {{ ocean.MOM6 }}             echo " "
+   {{ ocean.MOM6 }}             set pass = false
+   {{ ocean.MOM6 }}         endif
+   {{ ocean.MOM6 }}      endif
+   {{ ocean.MOM6 }}endif
 
    echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
 
@@ -1257,24 +1257,24 @@ if ($RUN_OPENMP == TRUE) then
    endif
    end
 
-   {{ MOM6 }}# check MOM.res.nc (MOM6 restart)
-   {{ MOM6 }}set file1 = MOM.res.nc.2
-   {{ MOM6 }}set file2 = MOM.res.nc.5
-   {{ MOM6 }}if( -e $file1 && -e $file2 ) then
-   {{ MOM6 }}      set check = true
-   {{ MOM6 }}      if( $check == true ) then
-   {{ MOM6 }}         echo Comparing "MOM6 restarts"
-   {{ MOM6 }}         cmp $file1 $file2
-   {{ MOM6 }}         if( $status == 0 ) then
-   {{ MOM6 }}             echo OpenMP Success!
-   {{ MOM6 }}             echo " "
-   {{ MOM6 }}         else
-   {{ MOM6 }}             echo OpenMP Failed!
-   {{ MOM6 }}             echo " "
-   {{ MOM6 }}             set openmp_pass = false
-   {{ MOM6 }}         endif
-   {{ MOM6 }}      endif
-   {{ MOM6 }}endif
+   {{ ocean.MOM6 }}# check MOM.res.nc (MOM6 restart)
+   {{ ocean.MOM6 }}set file1 = MOM.res.nc.2
+   {{ ocean.MOM6 }}set file2 = MOM.res.nc.5
+   {{ ocean.MOM6 }}if( -e $file1 && -e $file2 ) then
+   {{ ocean.MOM6 }}      set check = true
+   {{ ocean.MOM6 }}      if( $check == true ) then
+   {{ ocean.MOM6 }}         echo Comparing "MOM6 restarts"
+   {{ ocean.MOM6 }}         cmp $file1 $file2
+   {{ ocean.MOM6 }}         if( $status == 0 ) then
+   {{ ocean.MOM6 }}             echo OpenMP Success!
+   {{ ocean.MOM6 }}             echo " "
+   {{ ocean.MOM6 }}         else
+   {{ ocean.MOM6 }}             echo OpenMP Failed!
+   {{ ocean.MOM6 }}             echo " "
+   {{ ocean.MOM6 }}             set openmp_pass = false
+   {{ ocean.MOM6 }}         endif
+   {{ ocean.MOM6 }}      endif
+   {{ ocean.MOM6 }}endif
 
    echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
 

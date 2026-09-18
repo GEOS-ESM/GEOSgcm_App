@@ -32,7 +32,7 @@ def _build_coupled(ocean: dict, catalog: CatalogSearch, expConfig: dict):
     if ocean.get('preload') is None:
         ocean['preload'] = ''
 
-    ocean['model'] = expConfig['OM_name']
+    ocean['model'] = expConfig['OCEAN_type']
 
     # Uncoupled-only fields — mark as deleted for template cleanup
     ocean['CICE4']      = '#DELETE'
@@ -43,7 +43,7 @@ def _build_coupled(ocean: dict, catalog: CatalogSearch, expConfig: dict):
 def _build_uncoupled(ocean: dict, catalog: CatalogSearch, expConfig: dict):
     """Populate ocean dict for uncoupled (data ocean) configurations."""
 
-    hr_code = expConfig['OM_horizontal_res']
+    hr_code = expConfig['DATAOCEAN_resolution']
 
     # Fields that are uniform across all uncoupled configs (top-level uncoupled section)
     common_fields = [
@@ -64,7 +64,7 @@ def _build_uncoupled(ocean: dict, catalog: CatalogSearch, expConfig: dict):
 
     # CS: IM and JM are derived from the atmospheric resolution at runtime
     if hr_code == 'CS':
-        ocean['IM'] = int(expConfig['AM_horizontal_res'][1:])
+        ocean['IM'] = int(expConfig['AGCM_grid'][1:])
         ocean['JM'] = ocean['IM'] * 6
         IMO = '%04d' % ocean['IM']
         JMO = '%04d' % ocean['JM']
@@ -101,7 +101,7 @@ def _build_data_atmosphere(ocean: dict, catalog: CatalogSearch, expConfig: dict,
 
     # The catalog uses string keys 'true'/'false'; normalize the bool expConfig
     # value so _search_recursive can navigate into the correct sub-dict.
-    da_str = str(expConfig['OM_data_atmos']).lower()   # 'true' or 'false'
+    da_str = str(expConfig['OCEAN_data_atmosphere']).lower()   # 'true' or 'false'
 
     # Temporarily inject the string key into config values so the recursive
     # search can navigate into the matching 'true'/'false' sub-dict.
@@ -142,8 +142,8 @@ def get_ocean_config(expConfig: dict) -> dict:
     ocean = {}
 
     # Pass-through values from expConfig
-    ocean['running_ocean']    = expConfig['OM_coupled']
-    ocean['seaice_model']     = expConfig['OM_seaice_model']
+    ocean['running_ocean']    = expConfig['OCEAN_coupled']
+    ocean['seaice_model']     = expConfig['SEAICE_model']
     ocean['history_template'] = expConfig['history_template']
     ocean['mpt_shepherd']     = ''   # mutated externally by setup_main if needed
 

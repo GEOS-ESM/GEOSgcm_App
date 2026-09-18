@@ -1,5 +1,6 @@
 add_subdirectory(questions)
 add_subdirectory(config)
+add_subdirectory(catalogs)
 
 set (programs
 	__init__.py

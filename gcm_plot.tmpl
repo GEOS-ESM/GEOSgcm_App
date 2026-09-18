@@ -4,12 +4,12 @@
 #                     Batch Parameters for Plot Job
 #######################################################################
 
-#{{ BATCH_TIME }}{{ PLOT_T }}
-#{{ PLOT_P }}
-#{{ BATCH_JOBNAME }}@NAME
-#{{ PLOT_Q }}
-#{{ BATCH_GROUP }}
-#{{ BATCH_OUTPUTNAME }}OUTPUT
+#{{ batch_time }}{{ plot_t }}
+#{{ plot_p }}
+#{{ batch_jobname }}@NAME
+#{{ plot_q }}
+#{{ batch_group_full }}
+#{{ batch_outputname }}OUTPUT
 
 #######################################################################
 #                  System Environment Variables
@@ -19,9 +19,9 @@ umask 022
 
 limit stacksize unlimited
 
-{{ SETENVS }}
+{{ mpi_config }}
 
-{{ MPT_SHEPHERD }}
+{{ ocean.mpt_shepherd }}
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -29,23 +29,23 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             {{ SITE }}
-setenv GEOSBIN          {{ GEOSBIN }}
-setenv GEOSUTIL         {{ GEOSSRC }}
+setenv SITE             {{ site }}
+setenv GEOSBIN          {{ bin_path }}
+setenv GEOSUTIL         {{ install_path }}
 
 source $GEOSBIN/g5_modules
-setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}
+setenv {{ ld_library_path_command }} ${LD_LIBRARY_PATH}
 if ( $?BASEDIR ) then
-    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
+    setenv {{ ld_library_path_command }} ${{'{'}}{{ ld_library_path_command }}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 
 #######################################################################
 #             Experiment Specific Environment Variables
 #######################################################################
 
-setenv    EXPID   {{ EXPID }}
-setenv    EXPDIR  {{ EXPDIR }}
-setenv    HOMDIR  {{ HOMDIR }}
+setenv    EXPID   {{ expConfig.experiment_id }}
+setenv    EXPDIR  {{ exp_dir }}
+setenv    HOMDIR  {{ exp_dir }}
 
 #######################################################################
 #                         Quickplot Commands
@@ -64,5 +64,5 @@ endif
 #######################################################################
 
  set MOVE =  `grep PLOT_MOVE: $EXPDIR/plot/plot.rc | cut -d'#' -f1 | cut -d':' -f2`
-if( $MOVE[1] == 'ON' ) {{ BATCH_CMD }} $EXPDIR/plot/gcm_moveplot.j
+if( $MOVE[1] == 'ON' ) {{ batch_cmd }} $EXPDIR/plot/gcm_moveplot.j
 

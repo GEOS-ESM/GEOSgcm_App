@@ -2,13 +2,13 @@ ROOT_NAME: GCM
 ROOT_CF: AGCM.rc
 HIST_CF: HISTORY.rc
 
-BEG_DATE:     {{ BEG_DATE }}
-END_DATE:     {{ END_DATE }}
-JOB_SGMT:     {{ JOB_SGMT }}
-NUM_SGMT:     {{ NUM_SGMT }}
-HEARTBEAT_DT:       {{ DT }}
+BEG_DATE:     {{ begin_date }}
+END_DATE:     {{ end_date }}
+JOB_SGMT:     {{ job_sgmt }}
+NUM_SGMT:     {{ atmos.num_sgmt }}
+HEARTBEAT_DT:       {{ atmos.dt }}
 
-USE_SHMEM: {{ USE_SHMEM }}
+USE_SHMEM: {{ atmos.use_SHMEM }}
 USE_EXTDATA2G: .TRUE.
 
 # Parameters for Cycled REPLAY Forecasts

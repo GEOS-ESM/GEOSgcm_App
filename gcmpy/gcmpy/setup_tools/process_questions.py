@@ -120,17 +120,15 @@ class Handle:
         if i != 'MOM6_resolution':
             return
         if question_dict['AGCM_grid'].answer == "c12":
-            question_dict['MOM_resolution'].choices = ['o72']
+            question_dict['MOM6_resolution'].choices = ['o72']
         elif question_dict['AGCM_grid'].answer == "c90":
-            question_dict['MOM_resolution'].choices = ['o540']
+            question_dict['MOM6_resolution'].choices = ['o540']
         elif question_dict['AGCM_grid'].answer == "c180":
-            question_dict['MOM_resolution'].choices = ['o720 (1/2-deg,  720x576  Tripolar)', 
+            question_dict['MOM6_resolution'].choices = ['o720 (1/2-deg,  720x576  Tripolar)', 
                                                        'o1440 (1/4-deg, 1440x1080  Tripolar)', 
                                                        'o2880 (1/8-deg, 2880x2240 Tripolar)']
         elif question_dict['AGCM_grid'].answer == "c360":
-            question_dict['MOM_resolution'].choices = ['o1440 (1/4-deg, 1440x1080  Tripolar)']
-
-        question_dict["MOM_resolution"].choices = choices 
+            question_dict['MOM6_resolution'].choices = ['o1440 (1/4-deg, 1440x1080  Tripolar)']
 
     @staticmethod
     def seaice_choices(question_dict, i):
