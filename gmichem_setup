@@ -1236,16 +1236,16 @@ if ($DATA_ATMOS == TRUE) then
   set GWD_IN_BCS   = "FALSE"
 else
 
-set DEFAULT_LSM_BCS = "v12"
-set LSM_BCS_V12_DEFAULT_STR = "${C2}v12${CN} (Default)"
+set DEFAULT_LSM_BCS = "v14"
+set LSM_BCS_V12_DEFAULT_STR = "${C2}v14${CN} (Default)"
 set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3)"
 if ( $AGCM_LM == 72 ) then
    set DEFAULT_LSM_BCS = "NL3"
-   set LSM_BCS_V12_DEFAULT_STR = "${C2}v12${CN}"
+   set LSM_BCS_V12_DEFAULT_STR = "${C2}v14${CN}"
    set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3, Default)"
 endif
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${LSM_BCS_NL3_DEFAULT_STR}, ${C2}v14${CN} (v14_BETA) or ${LSM_BCS_V12_DEFAULT_STR}"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${LSM_BCS_NL3_DEFAULT_STR}, ${C2}v12${CN}, or ${LSM_BCS_V12_DEFAULT_STR}"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = ${DEFAULT_LSM_BCS}
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
@@ -1282,7 +1282,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v14" ) then
     set GWD_IN_BCS   = "TRUE"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, ${C2}v14${CN} (v14_BETA) or ${C2}v12${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, ${C2}v12${CN}, or ${C2}v14${CN}!"
     goto LSM_BCS
 endif
 
