@@ -56,7 +56,7 @@ install (
    )
 
 install (
-   FILES catalog.yaml
+   FILES bcs_catalog.yaml
    DESTINATION etc
    )
 
