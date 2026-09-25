@@ -315,7 +315,7 @@ echo "   NOTE: For 72 levels, your defaults will match GEOSgcm v11"
 echo "         For 91, 137, or 181 levels, your defaults will change to match GEOSgcm v12:"
 echo "         - Microphysics will change to GFDL_1M"
 echo "         - Convection will change to GF2020"
-echo "         - Land surface model boundary conditions will change to Land v12"
+echo "         - Land surface model boundary conditions will change to Land v14"
 echo "         - Radiation will change to RRTMGP"
 echo "         - Default heartbeat will be resolution dependent"
 set   AGCM_LM = $<
@@ -333,6 +333,18 @@ if ( $AGCM_LM == 72 ) then
 else
    set RRTMG_RADIATION = "#DELETE"
    set RRTMGP_RADIATION = ""
+endif
+
+#######################################################################
+#                 Set shallow cumulus option
+#######################################################################
+
+if ( $AGCM_LM == 72 ) then
+   set SHALLOW_UW = ""
+   set SHALLOW_SHOC = "#"
+else
+   set SHALLOW_UW = "#"
+   set SHALLOW_SHOC = ""
 endif
 
 #######################################################################
@@ -1148,15 +1160,15 @@ if ($DATA_ATMOS == TRUE) then
 else
 
 set DEFAULT_LSM_BCS = "v14"
-set LSM_BCS_V12_DEFAULT_STR = "${C2}v14${CN} (Default)"
+set LSM_BCS_V14_DEFAULT_STR = "${C2}v14${CN} (Default)"
 set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3)"
 if ( $AGCM_LM == 72 ) then
    set DEFAULT_LSM_BCS = "NL3"
-   set LSM_BCS_V12_DEFAULT_STR = "${C2}v14${CN}"
+   set LSM_BCS_V14_DEFAULT_STR = "${C2}v14${CN}"
    set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3, Default)"
 endif
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${LSM_BCS_NL3_DEFAULT_STR}, ${C2}v12${CN}, or ${LSM_BCS_V12_DEFAULT_STR}"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${LSM_BCS_NL3_DEFAULT_STR}, ${C2}v12${CN}, or ${LSM_BCS_V14_DEFAULT_STR}"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = ${DEFAULT_LSM_BCS}
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
@@ -2298,6 +2310,8 @@ s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 s?@RRTMG_RADIATION?$RRTMG_RADIATION?g
 s?@RRTMGP_RADIATION?$RRTMGP_RADIATION?g
+s?@SHALLOW_UW?$SHALLOW_UW?g
+s?@SHALLOW_SHOC?$SHALLOW_SHOC?g
 
 EOF
 
