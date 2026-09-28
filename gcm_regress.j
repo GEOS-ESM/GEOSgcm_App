@@ -177,13 +177,24 @@ set IM = `grep  AGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set JM = `grep  AGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set LM = `grep  AGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 
+# Determine Land Surface Model choice (1: Catchment, 2: CatchmentCN)
+# ------------------------------------------------------------------
+set LSM_CHOICE = `grep "^ *LSM_CHOICE:" AGCM.rc | grep -v "#" | head -1 | cut -d':' -f2 | tr -d ' '`
+if ( "$LSM_CHOICE" == "" ) set LSM_CHOICE = 1
+
+if ( $LSM_CHOICE == 1 ) then
+   set lsm_filter = "CATCHCN"
+else
+   set lsm_filter = "CATCH_INTERNAL"
+endif
+
 # Create Restart List
 # -------------------
-set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
-set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
+set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f2`
 
-set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
-set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU | grep -v "#" | cut -d ":" -f2`
+set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f2`
 
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
