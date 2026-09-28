@@ -182,8 +182,8 @@ set LM = `grep  AGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
 set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
 
-set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
-set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v "#" | cut -d ":" -f2`
+set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU | grep -v "#" | cut -d ":" -f2`
 
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
@@ -473,7 +473,26 @@ if( $RUN_STARTSTOP == TRUE ) then
 
    echo "=== Running test of duration ${test_duration_step1} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
+   /bin/rm -f EGRESS
+
    @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
 
    set date = `cat cap_restart`
    set nymde1 = $date[1]
@@ -539,7 +558,26 @@ set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 
 echo "=== Running test of duration ${test_duration_step2} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
+/bin/rm -f EGRESS
+
 @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+# Capture the return code from GEOSgcm.x
+# --------------------------------------
+set run_status = $status
+
+if ($run_status != 0) then
+   echo "GEOSgcm.x failed with return code $run_status"
+   exit $run_status
+endif
+
+if( -e EGRESS ) then
+   set rc = 0
+else
+   echo "EGRESS file not found, GEOSgcm.x likely failed"
+   exit 10
+endif
+echo GEOSgcm Run Status: $rc
 
 set date = `cat cap_restart`
 set nymde2 = $date[1]
@@ -563,7 +601,7 @@ set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
 # Need also make another variable storing all the replay checkpoint files
 set complete_layout_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
 foreach chk ( $replay_chk_file_names )
-   $MOVE_OR_COPY $chk ${chk}.${nymde1}_${nhmse1}.2
+   $MOVE_OR_COPY $chk ${chk}.${nymde2}_${nhmse2}.2
 end
 
 @MOM6 $MOVE_OR_COPY RESTART/MOM.res.nc MOM.res.nc.2
@@ -601,7 +639,7 @@ while ( $n <= $numchk )
        endif
        end
        if( $m == $z ) then
-           echo "Warning!!  Could not find CHECKPOINT/RESTART match for:  " $chk_files[$n]
+           echo "Warning:  Could not find CHECKPOINT/RESTART match for:  " $chk_files[$n]
            exit
        endif
 @ n = $n + 1
@@ -658,7 +696,26 @@ if ($RUN_STARTSTOP == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step3} with NX = $NX and NY = $NY starting at $nymdb $nhmsb ==="
 
+   /bin/rm -f EGRESS
+
    @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
 
    set date = `cat cap_restart`
    set nymde3 = $date[1]
@@ -672,7 +729,7 @@ if ($RUN_STARTSTOP == TRUE) then
    # and we need to move those as well if they exist
    set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
-      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.3
+      /bin/mv -v  $chk ${chk}.${nymde3}_${nhmse3}.3
    end
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
 
@@ -789,7 +846,26 @@ if ( $RUN_LAYOUT == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step4} with NX = $test_NX and NY = $test_NY starting at $nymd0 $nhms0 ==="
 
+   /bin/rm -f EGRESS
+
    @OCEAN_PRELOAD @SEVERAL_TRIES $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
@@ -803,7 +879,7 @@ if ( $RUN_LAYOUT == TRUE) then
    # and we need to move those as well if they exist
    set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
-      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.4
+      /bin/mv -v  $chk ${chk}.${nymde4}_${nhmse4}.4
    end
 
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
@@ -912,21 +988,40 @@ if ( $RUN_OPENMP == TRUE) then
 
    echo "=== Running OpenMP test of duration ${test_duration_step5} with NX = $NX0 and NY = $NY0 starting at $nymd0 $nhms0 ==="
 
+   /bin/rm -f EGRESS
+
    @OCEAN_PRELOAD $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
+
    set date = `cat cap_restart`
-   set nymde4 = $date[1]
-   set nhmse4 = $date[2]
+   set nymde5 = $date[1]
+   set nhmse5 = $date[2]
 
    foreach chk ( $chk_file_names )
-      /bin/mv -v $chk ${chk}.${nymde4}_${nhmse4}.5
+      /bin/mv -v $chk ${chk}.${nymde5}_${nhmse5}.5
    end
 
    # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
    # and we need to move those as well if they exist
    set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
-      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.5
+      /bin/mv -v  $chk ${chk}.${nymde5}_${nhmse5}.5
    end
 
    @MOM6/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.5
@@ -935,7 +1030,7 @@ if ( $RUN_OPENMP == TRUE) then
    set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 
    foreach hist ( $hist_file_names )
-      /bin/mv -v $hist ${hist}.${nymde4}_${nhmse4}.5
+      /bin/mv -v $hist ${hist}.${nymde5}_${nhmse5}.5
    end
 
    # Reset OpenMP Threads to 1
@@ -963,18 +1058,20 @@ if ($RUN_STARTSTOP == TRUE) then
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
    set startstop_pass = true
+   @ num_startstop_comparisons = 0
    foreach chk ( $chk_file_names )
-   set file1 = ${chk}.${nymde1}_${nhmse1}.1
-   set file2 = ${chk}.${nymde3}_${nhmse3}.3
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         foreach exempt (${EXEMPT_chk})
-            if( $chk == $exempt ) set check = false
-         end
-         if( $check == true ) then
+      set check = true
+      foreach exempt (${EXEMPT_chk})
+         if( $chk == $exempt ) set check = false
+      end
+      if( $check == true ) then
+         set file1 = ${chk}.${nymde1}_${nhmse1}.1
+         set file2 = ${chk}.${nymde3}_${nhmse3}.3
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare NetCDF-4 checkpoint files
+            @ num_startstop_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -984,42 +1081,55 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
+         else
+            echo "Start-Stop Failed: Missing checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set startstop_pass = false
          endif
-   endif
+      endif
    end
 
    @MOM6# check MOM.res.nc (MOM6 restart)
    @MOM6set file1 = MOM.res.nc.1
    @MOM6set file2 = MOM.res.nc.3
    @MOM6if( -e $file1 && -e $file2 ) then
-   @MOM6      set check = true
-   @MOM6      if( $check == true ) then
-   @MOM6         echo Comparing "MOM6 restarts"
-   @MOM6         cmp $file1 $file2
-   @MOM6         if( $status == 0 ) then
-   @MOM6             echo Start-Stop Success!
-   @MOM6             echo " "
-   @MOM6         else
-   @MOM6             echo Start-Stop Failed!
-   @MOM6             echo " "
-   @MOM6             set startstop_pass = false
-   @MOM6         endif
-   @MOM6      endif
+   @MOM6   echo Comparing "MOM6 restarts"
+   @MOM6   @ num_startstop_comparisons++
+   @MOM6   cmp $file1 $file2
+   @MOM6   if( $status == 0 ) then
+   @MOM6       echo Start-Stop Success!
+   @MOM6       echo " "
+   @MOM6   else
+   @MOM6       echo Start-Stop Failed!
+   @MOM6       echo " "
+   @MOM6       set startstop_pass = false
+   @MOM6   endif
+   @MOM6else
+   @MOM6   echo "Start-Stop Failed: Missing MOM6 restart file(s)"
+   @MOM6   if ( ! -e $file1 ) echo "   Missing $file1"
+   @MOM6   if ( ! -e $file2 ) echo "   Missing $file2"
+   @MOM6   echo " "
+   @MOM6   set startstop_pass = false
    @MOM6endif
 
    echo "=== Comparing replay checkpoint files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
-   # Check history files
-   foreach chk ( $complete_startstop_replay_chk_file_names )
-   set file1 = ${chk}.${nymde1}_${nhmse1}.1
-   set file2 = ${chk}.${nymde3}_${nhmse3}.3
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   # Check replay checkpoint files
+   if ( `grep -c "^ *MKIAU_CHECKPOINT_FILE" AGCM.rc.orig` > 0 && $#complete_startstop_replay_chk_file_names == 0 ) then
+      echo "Start-Stop Failed: Replay active with MKIAU_CHECKPOINT_FILE, but no replay checkpoint files produced by run 1"
+      echo " "
+      set startstop_pass = false
+   else
+      foreach chk ( $complete_startstop_replay_chk_file_names )
+         set file1 = ${chk}.${nymde1}_${nhmse1}.1
+         set file2 = ${chk}.${nymde3}_${nhmse3}.3
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare checkpoint files
+            @ num_startstop_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -1029,23 +1139,32 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
+         else
+            echo "Start-Stop Failed: Missing replay checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set startstop_pass = false
          endif
+      end
    endif
-   end
 
    echo "=== Comparing history files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
    # Check history files
-   foreach hist ( $complete_startstop_hist_file_names )
-   set file1 = ${hist}.${nymde1}_${nhmse1}.1
-   set file2 = ${hist}.${nymde3}_${nhmse3}.3
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   if ( $#complete_startstop_hist_file_names == 0 ) then
+      echo "Start-Stop Failed: No history files produced by run 1 (${EXPID}.test_collection.*.nc4)"
+      echo " "
+      set startstop_pass = false
+   else
+      foreach hist ( $complete_startstop_hist_file_names )
+         set file1 = ${hist}.${nymde1}_${nhmse1}.1
+         set file2 = ${hist}.${nymde3}_${nhmse3}.3
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${hist}
 
             # compare history files
+            @ num_startstop_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -1055,15 +1174,22 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
+         else
+            echo "Start-Stop Failed: Missing history file(s) for ${hist}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set startstop_pass = false
          endif
+      end
    endif
-   end
 
-   if( $startstop_pass == true ) then
+   if( $startstop_pass == true && $num_startstop_comparisons > 0 ) then
       echo "<font color=green> PASS </font>"                > startstop_regress_test
    else
+      if( $num_startstop_comparisons == 0 ) echo "Start-Stop Failed: No comparisons performed"
       echo "<font color=red> <blink> FAIL </blink> </font>" > startstop_regress_test
+      set startstop_pass = false
    endif
 
 else
@@ -1088,18 +1214,20 @@ if ($RUN_LAYOUT == TRUE) then
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step2} with restarts from ${test_NX}x${test_NY} run of duration ${test_duration_step4} ==="
 
    set layout_pass = true
+   @ num_layout_comparisons = 0
    foreach chk ( $chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse2}.2
-   set file2 = ${chk}.${nymde4}_${nhmse4}.4
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         foreach exempt (${EXEMPT_chk})
-            if( $chk == $exempt ) set check = false
-         end
-         if( $check == true ) then
+      set check = true
+      foreach exempt (${EXEMPT_chk})
+         if( $chk == $exempt ) set check = false
+      end
+      if( $check == true ) then
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde4}_${nhmse4}.4
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare NetCDF-4 checkpoint files
+            @ num_layout_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
@@ -1109,42 +1237,55 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
+         else
+            echo "Layout Failed: Missing checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set layout_pass = false
          endif
-   endif
+      endif
    end
 
    @MOM6# check MOM.res.nc (MOM6 restart)
    @MOM6set file1 = MOM.res.nc.2
    @MOM6set file2 = MOM.res.nc.4
    @MOM6if( -e $file1 && -e $file2 ) then
-   @MOM6      set check = true
-   @MOM6      if( $check == true ) then
-   @MOM6         echo Comparing "MOM6 restarts"
-   @MOM6         cmp $file1 $file2
-   @MOM6         if( $status == 0 ) then
-   @MOM6             echo Layout Success!
-   @MOM6             echo " "
-   @MOM6         else
-   @MOM6             echo Layout Failed!
-   @MOM6             echo " "
-   @MOM6             set layout_pass = false
-   @MOM6         endif
-   @MOM6      endif
+   @MOM6   echo Comparing "MOM6 restarts"
+   @MOM6   @ num_layout_comparisons++
+   @MOM6   cmp $file1 $file2
+   @MOM6   if( $status == 0 ) then
+   @MOM6       echo Layout Success!
+   @MOM6       echo " "
+   @MOM6   else
+   @MOM6       echo Layout Failed!
+   @MOM6       echo " "
+   @MOM6       set layout_pass = false
+   @MOM6   endif
+   @MOM6else
+   @MOM6   echo "Layout Failed: Missing MOM6 restart file(s)"
+   @MOM6   if ( ! -e $file1 ) echo "   Missing $file1"
+   @MOM6   if ( ! -e $file2 ) echo "   Missing $file2"
+   @MOM6   echo " "
+   @MOM6   set layout_pass = false
    @MOM6endif
 
    echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
 
-   # Check history files
-   foreach chk ( $complete_layout_replay_chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse4}.2
-   set file2 = ${chk}.${nymde2}_${nhmse4}.4
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   # Check replay checkpoint files
+   if ( `grep -c "^ *MKIAU_CHECKPOINT_FILE" AGCM.rc.orig` > 0 && $#complete_layout_replay_chk_file_names == 0 ) then
+      echo "Layout Failed: Replay active with MKIAU_CHECKPOINT_FILE, but no replay checkpoint files produced by run 2"
+      echo " "
+      set layout_pass = false
+   else
+      foreach chk ( $complete_layout_replay_chk_file_names )
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde4}_${nhmse4}.4
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare checkpoint files
+            @ num_layout_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
@@ -1154,23 +1295,32 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
+         else
+            echo "Layout Failed: Missing replay checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set layout_pass = false
          endif
+      end
    endif
-   end
 
    echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
 
    # Check history files
-   foreach hist ( $complete_layout_hist_file_names )
-   set file1 = ${hist}.${nymde2}_${nhmse4}.2
-   set file2 = ${hist}.${nymde2}_${nhmse4}.4
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   if ( $#complete_layout_hist_file_names == 0 ) then
+      echo "Layout Failed: No history files produced by run 2 (${EXPID}.test_collection.*.nc4)"
+      echo " "
+      set layout_pass = false
+   else
+      foreach hist ( $complete_layout_hist_file_names )
+         set file1 = ${hist}.${nymde2}_${nhmse2}.2
+         set file2 = ${hist}.${nymde4}_${nhmse4}.4
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${hist}
 
             # compare history files
+            @ num_layout_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
@@ -1180,15 +1330,22 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
+         else
+            echo "Layout Failed: Missing history file(s) for ${hist}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set layout_pass = false
          endif
+      end
    endif
-   end
 
-   if( $layout_pass == true ) then
+   if( $layout_pass == true && $num_layout_comparisons > 0 ) then
       echo "<font color=green> PASS </font>"                > layout_regress_test
    else
+      if( $num_layout_comparisons == 0 ) echo "Layout Failed: No comparisons performed"
       echo "<font color=red> <blink> FAIL </blink> </font>" > layout_regress_test
+      set layout_pass = false
    endif
 
 else
@@ -1196,12 +1353,6 @@ else
    # We need to set something here for the "overall" regress_test file
    set layout_pass = true
 
-endif
-
-if( $startstop_pass == true && $layout_pass == true ) then
-   echo "<font color=green> PASS </font>"                > regress_test
-else
-   echo "<font color=red> <blink> FAIL </blink> </font>" > regress_test
 endif
 
 
@@ -1220,18 +1371,20 @@ if ($RUN_OPENMP == TRUE) then
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step2} with restarts from OpenMP:2 ${NX0}x${NY0} run of duration ${test_duration_step5} ==="
 
    set openmp_pass = true
+   @ num_openmp_comparisons = 0
    foreach chk ( $chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse2}.2
-   set file2 = ${chk}.${nymde4}_${nhmse4}.5
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         foreach exempt (${EXEMPT_chk})
-            if( $chk == $exempt ) set check = false
-         end
-         if( $check == true ) then
+      set check = true
+      foreach exempt (${EXEMPT_chk})
+         if( $chk == $exempt ) set check = false
+      end
+      if( $check == true ) then
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde5}_${nhmse5}.5
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare NetCDF-4 checkpoint files
+            @ num_openmp_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo OpenMP Success!
@@ -1241,42 +1394,55 @@ if ($RUN_OPENMP == TRUE) then
                echo " "
                set openmp_pass = false
             endif
-
+         else
+            echo "OpenMP Failed: Missing checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set openmp_pass = false
          endif
-   endif
+      endif
    end
 
    @MOM6# check MOM.res.nc (MOM6 restart)
    @MOM6set file1 = MOM.res.nc.2
    @MOM6set file2 = MOM.res.nc.5
    @MOM6if( -e $file1 && -e $file2 ) then
-   @MOM6      set check = true
-   @MOM6      if( $check == true ) then
-   @MOM6         echo Comparing "MOM6 restarts"
-   @MOM6         cmp $file1 $file2
-   @MOM6         if( $status == 0 ) then
-   @MOM6             echo OpenMP Success!
-   @MOM6             echo " "
-   @MOM6         else
-   @MOM6             echo OpenMP Failed!
-   @MOM6             echo " "
-   @MOM6             set openmp_pass = false
-   @MOM6         endif
-   @MOM6      endif
+   @MOM6   echo Comparing "MOM6 restarts"
+   @MOM6   @ num_openmp_comparisons++
+   @MOM6   cmp $file1 $file2
+   @MOM6   if( $status == 0 ) then
+   @MOM6       echo OpenMP Success!
+   @MOM6       echo " "
+   @MOM6   else
+   @MOM6       echo OpenMP Failed!
+   @MOM6       echo " "
+   @MOM6       set openmp_pass = false
+   @MOM6   endif
+   @MOM6else
+   @MOM6   echo "OpenMP Failed: Missing MOM6 restart file(s)"
+   @MOM6   if ( ! -e $file1 ) echo "   Missing $file1"
+   @MOM6   if ( ! -e $file2 ) echo "   Missing $file2"
+   @MOM6   echo " "
+   @MOM6   set openmp_pass = false
    @MOM6endif
 
    echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
 
-   # Check history files
-   foreach chk ( $complete_layout_replay_chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse4}.2
-   set file2 = ${chk}.${nymde2}_${nhmse4}.5
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   # Check replay checkpoint files
+   if ( `grep -c "^ *MKIAU_CHECKPOINT_FILE" AGCM.rc.orig` > 0 && $#complete_layout_replay_chk_file_names == 0 ) then
+      echo "OpenMP Failed: Replay active with MKIAU_CHECKPOINT_FILE, but no replay checkpoint files produced by run 2"
+      echo " "
+      set openmp_pass = false
+   else
+      foreach chk ( $complete_layout_replay_chk_file_names )
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde5}_${nhmse5}.5
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare checkpoint files
+            @ num_openmp_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo OpenMP Success!
@@ -1286,23 +1452,32 @@ if ($RUN_OPENMP == TRUE) then
                echo " "
                set openmp_pass = false
             endif
-
+         else
+            echo "OpenMP Failed: Missing replay checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set openmp_pass = false
          endif
+      end
    endif
-   end
 
    echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
 
    # Check history files
-   foreach hist ( $complete_layout_hist_file_names )
-   set file1 = ${hist}.${nymde2}_${nhmse4}.2
-   set file2 = ${hist}.${nymde2}_${nhmse4}.5
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   if ( $#complete_layout_hist_file_names == 0 ) then
+      echo "OpenMP Failed: No history files produced by run 2 (${EXPID}.test_collection.*.nc4)"
+      echo " "
+      set openmp_pass = false
+   else
+      foreach hist ( $complete_layout_hist_file_names )
+         set file1 = ${hist}.${nymde2}_${nhmse2}.2
+         set file2 = ${hist}.${nymde5}_${nhmse5}.5
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${hist}
 
             # compare history files
+            @ num_openmp_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo OpenMP Success!
@@ -1312,15 +1487,22 @@ if ($RUN_OPENMP == TRUE) then
                echo " "
                set openmp_pass = false
             endif
-
+         else
+            echo "OpenMP Failed: Missing history file(s) for ${hist}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set openmp_pass = false
          endif
+      end
    endif
-   end
 
-   if( $openmp_pass == true ) then
+   if( $openmp_pass == true && $num_openmp_comparisons > 0 ) then
       echo "<font color=green> PASS </font>"                > openmp_regress_test
    else
+      if( $num_openmp_comparisons == 0 ) echo "OpenMP Failed: No comparisons performed"
       echo "<font color=red> <blink> FAIL </blink> </font>" > openmp_regress_test
+      set openmp_pass = false
    endif
 
 else
