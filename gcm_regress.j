@@ -188,13 +188,30 @@ else
    set lsm_filter = "CATCH_INTERNAL"
 endif
 
+# Determine if GOCART is running data-driven
+# ------------------------------------------
+set is_data_driven = 0
+if ( -e GOCART2G_GridComp.rc ) then
+   set data_count = `sed -e 's/#.*//' GOCART2G_GridComp.rc | grep -E "ACTIVE_INSTANCES|PASSIVE_INSTANCES" | grep -c "\.data"`
+   if ( $data_count > 0 ) set is_data_driven = 1
+else if ( -e $EXPDIR/RC/GOCART2G_GridComp.rc ) then
+   set data_count = `sed -e 's/#.*//' $EXPDIR/RC/GOCART2G_GridComp.rc | grep -E "ACTIVE_INSTANCES|PASSIVE_INSTANCES" | grep -c "\.data"`
+   if ( $data_count > 0 ) set is_data_driven = 1
+endif
+
+if ( $is_data_driven == 0 ) then
+   set gocart_data_filter = "GOCART\.data"
+else
+   set gocart_data_filter = "DO_NOT_FILTER_GOCART_DATA"
+endif
+
 # Create Restart List
 # -------------------
-set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
-set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f2`
+set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f2`
 
-set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
-set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "#" | cut -d ":" -f2`
+set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f2`
 
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
