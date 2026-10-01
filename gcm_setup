@@ -2779,38 +2779,53 @@ setenv GCMVER   `cat ${GEOSETC}/.AGCM_VERSION`
 # -------------------------------------------------
 
 if ( ! -e $HOME/.HOMDIRroot || ! -e $HOME/.EXPDIRroot ) then
-   if ( -e $HOME/.HOMDIRroot && ! -e $HOME/.EXPDIRroot ) then
-      echo "$HOME/.EXPDIRroot was not found."
-      echo "Please run gcm_setup in non-clone mode at least once to use this script."
-      exit 1
-   else if ( ! -e $HOME/.HOMDIRroot && -e $HOME/.EXPDIRroot ) then
-      echo "$HOME/.HOMDIRroot was not found."
-      echo "Please run gcm_setup in non-clone mode at least once to use this script."
-      exit 1
+   echo "Both $HOME/.HOMDIRroot and $HOME/.EXPDIRroot are required for clone defaults."
+   echo "Please run gcm_setup in non-clone mode at least once to use this script."
+   exit 1
+endif
+
+# Use the saved roots for defaults, as in non-clone setup.
+# Ask for full paths so HOME and EXPERIMENT can be separate or identical.
+
+set HOMDIRroot=`cat $HOME/.HOMDIRroot`
+set EXPDIRroot=`cat $HOME/.EXPDIRroot`
+set NEWEXPID=$EXPID
+
+foreach CLONETYPE ( HOME EXPERIMENT )
+   if ( "$CLONETYPE" == "HOME" ) then
+      set CLONEDEFAULT="$HOMDIRroot/$NEWEXPID"
+      set CLONECONTENTS="scripts and RC files"
    else
-      echo "$HOME/.HOMDIRroot and $HOME/.EXPDIRroot were not found."
-      echo "Please run gcm_setup in non-clone mode at least once to use this script."
-      exit 1
+      set CLONEDEFAULT="$EXPDIRroot/$NEWEXPID"
+      set CLONECONTENTS="model output and restart files"
    endif
-endif
+   set check = FALSE
+   while ( $check == FALSE )
+      echo
+      echo "Enter Desired Location for the new clone's ${C1}${CLONETYPE}${CN} Directory (to contain $CLONECONTENTS)"
+      echo "Hit ENTER to use Default Location:"
+      echo "Default: ${C2}${CLONEDEFAULT}${CN}"
+      set NEWCLONEDIR = $<
+      if ( "$NEWCLONEDIR" == "" ) set NEWCLONEDIR="$CLONEDEFAULT"
+      if ( "$NEWCLONEDIR" !~ /* ) set NEWCLONEDIR="$cwd/$NEWCLONEDIR"
+      if ( "$NEWEXPID" != `basename "$NEWCLONEDIR"` ) then
+         echo "The ${C1}${CLONETYPE}${CN} Directory MUST end with the Experiment ID: ${C2}${NEWEXPID}${CN}"
+      else if ( -e "$NEWCLONEDIR" && ! -d "$NEWCLONEDIR" ) then
+         echo "$NEWCLONEDIR is not a directory. Please enter a directory path."
+      else
+         set NEWCLONEDIR=`dirname "$NEWCLONEDIR"`/$NEWEXPID
+         set check = TRUE
+      endif
+   end
+   if ( "$CLONETYPE" == "HOME" ) then
+      set NEWHOMDIR="$NEWCLONEDIR"
+   else
+      set NEWEXPDIR="$NEWCLONEDIR"
+   endif
+end
 
-# MAT There are two thoughts here. You can either place the clone in
-# the .HOMDIRroot/.EXPDIRroot, but that is only nice if you have one
-# single place you put all your experiments. What if you have lots of
-# directories? Instead, let us default to the directory root of the
-# cloned experiment if the cloned experiment is yours. If it isn't your
-# experiment you are cloning, then default to the values in the dotfile
-
-if ( $OLDUSER == $LOGNAME) then
-   set HOMDIRroot=`dirname $OLDHOMDIR`
-   set EXPDIRroot=`dirname $OLDEXPDIR`
-else
-   set HOMDIRroot=`cat $HOME/.HOMDIRroot`
-   set EXPDIRroot=`cat $HOME/.EXPDIRroot`
-endif
-
-echo "Setting HOMDIR to $HOMDIRroot"
-echo "Setting EXPDIR to $EXPDIRroot"
+echo "Setting HOMDIR to $NEWHOMDIR"
+echo "Setting EXPDIR to $NEWEXPDIR"
 
 if ( -e $HOME/.GROUProot ) then
    set GROUProot=`cat $HOME/.GROUProot`
@@ -2843,13 +2858,6 @@ else
    echo "This is not allowed. Please fix this and try again."
    exit 1
 endif
-
-# ------------------------------------------------
-# Set the new EXPDIR and HOMDIR based on the roots
-# ------------------------------------------------
-set  NEWEXPID=$EXPID
-set NEWEXPDIR=$EXPDIRroot/$NEWEXPID
-set NEWHOMDIR=$HOMDIRroot/$NEWEXPID
 
 # -----------------------------------------
 # If the new EXPDIR and HOMDIR exist, exit!
