@@ -315,7 +315,7 @@ echo "   NOTE: For 72 levels, your defaults will match GEOSgcm v11"
 echo "         For 91, 137, or 181 levels, your defaults will change to match GEOSgcm v12:"
 echo "         - Microphysics will change to GFDL_1M"
 echo "         - Convection will change to GF2020"
-echo "         - Land surface model boundary conditions will change to Land v12"
+echo "         - Land surface model boundary conditions will change to Land v14"
 echo "         - Radiation will change to RRTMGP"
 echo "         - Default heartbeat will be resolution dependent"
 set   AGCM_LM = $<
@@ -333,6 +333,18 @@ if ( $AGCM_LM == 72 ) then
 else
    set RRTMG_RADIATION = "#DELETE"
    set RRTMGP_RADIATION = ""
+endif
+
+#######################################################################
+#                 Set shallow cumulus option
+#######################################################################
+
+if ( $AGCM_LM == 72 ) then
+   set SHALLOW_UW = ""
+   set SHALLOW_SHOC = "#"
+else
+   set SHALLOW_UW = "#"
+   set SHALLOW_SHOC = ""
 endif
 
 #######################################################################
@@ -1006,6 +1018,7 @@ endif
 #--------------------------
 set DATA_ATMOS = FALSE
 set MODELATM = ""
+set DATAATM = "#DELETE"
 set USE_DATA_ATM4OCN = .FALSE.
 
 if( $OGCM == "TRUE" ) then
@@ -1034,6 +1047,7 @@ DATATMOS:
 
    if ($DATA_ATMOS == TRUE) then
       set MODELATM = "#DELETE"
+      set DATAATM = ""
       set USE_DATA_ATM4OCN = .TRUE.
 
       set DEFAULT_HISTORY_TEMPLATE = "HISTORY.DATAATM.rc.tmpl"
@@ -1145,16 +1159,16 @@ if ($DATA_ATMOS == TRUE) then
   set GWD_IN_BCS   = "FALSE"
 else
 
-set DEFAULT_LSM_BCS = "v12"
-set LSM_BCS_V12_DEFAULT_STR = "${C2}v12${CN} (Default)"
+set DEFAULT_LSM_BCS = "v14"
+set LSM_BCS_V14_DEFAULT_STR = "${C2}v14${CN} (Default)"
 set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3)"
 if ( $AGCM_LM == 72 ) then
    set DEFAULT_LSM_BCS = "NL3"
-   set LSM_BCS_V12_DEFAULT_STR = "${C2}v12${CN}"
+   set LSM_BCS_V14_DEFAULT_STR = "${C2}v14${CN}"
    set LSM_BCS_NL3_DEFAULT_STR = "${C2}NL3${CN} (Icarus-NLv3, Default)"
 endif
 
-echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${LSM_BCS_NL3_DEFAULT_STR}, ${C2}v14${CN} (v14_BETA) or ${LSM_BCS_V12_DEFAULT_STR}"
+echo "Enter the choice of ${C1}Land Surface Boundary Conditions${CN} using: ${C2}ICA${CN} (Icarus), ${LSM_BCS_NL3_DEFAULT_STR}, ${C2}v12${CN}, or ${LSM_BCS_V14_DEFAULT_STR}"
 set   LSM_BCS  = $<
 if( .$LSM_BCS == . ) set LSM_BCS = ${DEFAULT_LSM_BCS}
 if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "ica" ) then
@@ -1191,7 +1205,7 @@ else if( `echo $LSM_BCS | tr '[:upper:]' '[:lower:]'` == "v14" ) then
     set GWD_IN_BCS   = "TRUE"
 else
     echo
-    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, ${C2}v14${CN} (v14_BETA) or ${C2}v12${CN}!"
+    echo "${C1} Land Surface Boundary Conditions${CN} must be set equal to ${C2}ICA (Icarus)${CN}, ${C2}NL3 (Icarus-NLv3)${CN}, ${C2}v12${CN}, or ${C2}v14${CN}!"
     goto LSM_BCS
 endif
 
@@ -1307,7 +1321,7 @@ EMISSIONS:
         set OX_RELAXTIME = 0.00
      else
         set MERRA2OX_SPECIES = ''
-        set PCHEM_CLIM_YEARS = 39
+        set PCHEM_CLIM_YEARS = 48
         set OX_RELAXTIME = 259200.
      endif
 
@@ -2290,10 +2304,13 @@ s?@LD_LIBRARY_PATH_CMD?$LD_LIBRARY_PATH_CMD?g
 s?@RUN_CMD?$RUN_CMD?g
 
 s?@MODELATM?$MODELATM?g
+s?@DATAATM?$DATAATM?g
 s?@USE_DATA_ATM4OCN?$USE_DATA_ATM4OCN?g
 
 s?@RRTMG_RADIATION?$RRTMG_RADIATION?g
 s?@RRTMGP_RADIATION?$RRTMGP_RADIATION?g
+s?@SHALLOW_UW?$SHALLOW_UW?g
+s?@SHALLOW_SHOC?$SHALLOW_SHOC?g
 
 EOF
 
@@ -2344,6 +2361,11 @@ if( $OGCM == TRUE & "$OCNMODEL" != "MIT" ) then
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/input.nml ${TMPOCEANDIR}
       /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/*table ${TMPOCEANDIR}
       set FILES = "$FILES MOM_input MOM_override data_table "
+      if ($DATA_ATMOS == TRUE) then
+         /bin/cp ${ETCDIR}/MOM6/mom6_app/${OGCM_IM}x${OGCM_JM}/MOM_saltrestore ${TMPOCEANDIR}
+         /bin/cp ${ETCDIR}/MOM6/mom6_app/common/MOM_dataatm ${TMPOCEANDIR}
+         set FILES = "$FILES MOM_saltrestore MOM_dataatm"
+      endif
    endif
 
    if ( $SEAICE_NAME == "CICE6" ) then
@@ -2414,8 +2436,15 @@ set LMAM       = FALSE
 set LCARMA     = FALSE
 set LGMICHEM   = FALSE
 set LSTRATCHEM = FALSE
+set LROUTE     = FALSE
 
-set RSNAMES = "LH2O LMAM LCARMA LGMICHEM LSTRATCHEM"
+# Enable Route restart/checkpoint entries only when routing is active
+set RUN_ROUTE = `sed -n 's/^[[:space:]]*RUN_ROUTE:[[:space:]]*\([0-9][0-9]*\).*$/\1/p' \
+                 $EXPDIR/RC/GEOS_SurfaceGridComp.rc`                 
+
+if ( "$RUN_ROUTE" != "" && $RUN_ROUTE > 0 ) set LROUTE = TRUE
+
+set RSNAMES = "LH2O LMAM LCARMA LGMICHEM LSTRATCHEM LROUTE"
 set RSTYPES = "INTERNAL IMPORT"
 
 set FILE = AGCM.rc.tmpl
@@ -2544,7 +2573,7 @@ if( $LSM_BCS == "ICA" ) then
     awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
-if( $AGCM_LM == 72 ) then
+if( $LSM_BCS == "ICA" || $LSM_BCS == "NL3" ) then
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *SNOW_ALBEDO_INFO:/ s/1/0/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
@@ -2631,6 +2660,7 @@ if ($DATA_ATMOS == TRUE) then
    /bin/mv $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
    cat  $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp | sed -e "s/%OCN_RES%/${OGCM_IM}x${OGCM_JM}/g" > $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.yaml
    /bin/rm $EXPDIR/RC/JRA55-DO_DataAtm_Forcings_ExtData.tmp
+   $ISED "/parameter_filename = 'MOM_input',/a\\                              'MOM_dataatm', " $EXPDIR/input.nml
 endif
 
 
