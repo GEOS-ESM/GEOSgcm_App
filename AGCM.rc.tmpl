@@ -104,9 +104,32 @@ ORBIT_ANAL2B: .TRUE.
 ###########################################################
 
 ###########################################################
-# shallow cumulus options
+# SHOC-MF options
 # ----------------------------------------
-SHALLOW_OPTION: UW
+@SHALLOW_SHOCSHALLOW_OPTION: NONE
+@SHALLOW_SHOCTURBULENCE_DO_SHOC: 1
+@SHALLOW_SHOCEDMF_DOMF: 1
+@SHALLOW_SHOCPDFSHAPE: 6
+@SHALLOW_SHOCEDMF_ALPHAW: 0.07
+@SHALLOW_SHOCEDMF_ENT0: 0.40
+@SHALLOW_SHOCEDMF_ENTUFAC: 1.2
+@SHALLOW_SHOCEDMF_L0FAC: 11.0
+@SHALLOW_SHOCTURBULENCE_SHC_LENFAC1: 8.0
+@SHALLOW_SHOCTURBULENCE_SHC_LENFAC2: 2.0
+@SHALLOW_SHOCTURBULENCE_SHC_LENFAC3: 1.0
+###########################################################
+
+###########################################################
+# UW shallow cumulus options
+# ----------------------------------------
+@SHALLOW_UWSHALLOW_OPTION: UW
+#JASON_UW: .FALSE.
+#JASON_MFD_SC: .FALSE.
+#JASON_PBL_SC: .FALSE.
+#JASON_BELJAARS: .FALSE.
+#JASON_LOUIS: .FALSE.
+#JASON_LOCK: .FALSE.
+#TURBULENCE_TPFAC: 0.0
 ###########################################################
 
 ###########################################################

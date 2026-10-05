@@ -389,22 +389,22 @@ case $selected_case in
 esac
 
 SITE=$(awk '{print $2}' $INSTALLDIR/etc/SITE.rc)
-BCSTAG="Icarus_Reynolds"
+BCSTAG="v14"
 
 case $SITE in
    NCCS)
    SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v12.0/"
-   BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
+   BCSDIR="/discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput_nc3"
    ;;
    NAS)
    SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
-   BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
+   BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs_shared/fvInput/ExtData/esm/tiles/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
    SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
-   BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
+   BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs_shared/fvInput/ExtData/esm/tiles/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    *)
@@ -423,7 +423,7 @@ case $SITE in
 
    # 3. Set the required directory variables based on the user input
    SCMDIR="$TINYBCS_PATH/scm"
-   BCSDIR="$TINYBCS_PATH/bcs/Icarus"
+   BCSDIR="$TINYBCS_PATH/bcs/$BCSTAG"
    CHMDIR="$TINYBCS_PATH/chem"
 
    # 4. Check if the selected case exists in this new SCMDIR
@@ -484,8 +484,7 @@ mkdir -p $expdir/ExtData
 /bin/cp $SOURCEDIR/cap_restart $expdir
 /bin/cp $SOURCEDIR/HISTORY.rc $expdir
 
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 $expdir/species.data
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 $expdir/species.data
+/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 $expdir/species.data
 
 /bin/cp $INSTALLDIR/etc/*.rc $expdir
 
