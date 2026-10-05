@@ -367,9 +367,9 @@ cat << _EOF_ > $FILE
 # --------------------------------------------------------------
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4 species.data
 
-# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
+# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 48-Years)
 # ----------------------------------------------------------
-@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-202608.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
@@ -695,24 +695,24 @@ endif
 # Check for MERRA2OX Consistency
 # ------------------------------
 
-# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# The MERRA2OX pchem file is only valid until 202608, so this is a first
 # attempt at a check to make sure you aren't using it and are past the date
 
 # Check for MERRA2OX by looking at AGCM.rc
 set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
 
-# If it is 39, we are using MERRA2OX
-if ( $PCHEM_CLIM_YEARS == 39 ) then
+# If it is 48, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 48 ) then
 
    # Grab the date from cap_restart
    set YEARMON = `cat cap_restart | cut -c1-6`
 
    # Set a magic date
-   set MERRA2OX_END_DATE = "201706"
+   set MERRA2OX_END_DATE = "202608"
 
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
-      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 202608. This file is only valid until this time."
       exit 2
    endif
 endif
