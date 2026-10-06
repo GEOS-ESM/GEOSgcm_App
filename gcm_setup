@@ -353,7 +353,7 @@ endif
 
 ASKMP:
 
-set DEFAULT_CLDMICRO = "GFDL_1M"
+set DEFAULT_CLDMICRO = "MGB2_2M"
 if ( $AGCM_LM == 72 ) then
    set DEFAULT_CLDMICRO = "BACM_1M"
 endif
