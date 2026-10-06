@@ -123,7 +123,7 @@ if ( $?TSE_TMPDIR ) then
    # purposes. So we can set a flag USE_TSE_TMPDIR to TRUE if we want
    # and we default to TRUE
 
-   set USE_TSE_TMPDIR = TRUE
+   set USE_TSE_TMPDIR = FALSE
 
    # If we want to use TSE_TMPDIR as the scratch, we create a scratch
    # directory under TSE_TMPDIR and link it to SCRDIR
