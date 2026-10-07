@@ -55,7 +55,7 @@ AGCM.IM_WORLD: @AGCM_IM
 # use extreme caution when adjusing these
 # the defaults are most ideal
 # ----------------------------------------
-ADJUST_DT: .FALSE.
+ADJUST_SPLITS: .TRUE.
 GOCART2G_DT: @CHEM_DT
 GOCART_DT: @CHEM_DT
 HEMCO_DT: @CHEM_DT
@@ -69,6 +69,21 @@ UW_DT: @CONV_DT
 # dynamics options
 # ----------------------------------------
 DYCORE: @DYCORE
+#DYCORE: FV3+ADV
+#AdvCore_Advection: 1
+###########################################################
+
+###########################################################
+# limit advected tracers in forecast
+EXCLUDE_ADVECTION_TRACERS: ALWAYS
+EXCLUDE_ADVECTION_TRACERS_LIST:
+PCHEM::OX
+PCHEM::N2O
+PCHEM::CFC11
+PCHEM::CFC12
+PCHEM::HCFC22
+PCHEM::CH4
+::
 ###########################################################
 
 ###########################################################
@@ -104,9 +119,25 @@ ORBIT_ANAL2B: .TRUE.
 ###########################################################
 
 ###########################################################
-# shallow cumulus options
+# SHOC-MF options
 # ----------------------------------------
-SHALLOW_OPTION: UW
+SHALLOW_OPTION: NONE
+TURBULENCE_DO_SHOC: 1
+EDMF_DOMF: 1
+PDFSHAPE: 6
+# --- Moderated EDMF Tuning ---
+EDMF_ZINV: 2500.0
+EDMF_ZMAX: 3500.0
+EDMF_ALPHAW: 0.07
+EDMF_ENT0: 0.40
+EDMF_ENTUFAC: 1.2
+EDMF_L0FAC: 12.5
+###########################################################
+
+###########################################################
+# UW shallow cumulus options
+# ----------------------------------------
+#SHALLOW_OPTION: UW
 ###########################################################
 
 ###########################################################
@@ -235,10 +266,10 @@ ANA_LM: @AGCM_LM
 
 # Restart Record Parameters
 # -------------------------
-RECORD_FINAL:  >>>RECFINL<<<
-RECORD_FREQUENCY: 000000       000000
-RECORD_REF_DATE: >>>REFDATE<<< >>>FCSDATE<<<
-RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
+#RECORD_FINAL:  >>>RECFINL<<<
+RECORD_FREQUENCY:  720000
+RECORD_REF_DATE: 20231201
+RECORD_REF_TIME:   210000
 
 
 ###################################################################################################
@@ -357,29 +388,35 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 ####                                                                                           ####
 ###################################################################################################
 
+REPLAY_MODE:           Regular
+REPLAY_FILE_FREQUENCY: 21600
+REPLAY_ANA_EXPID:      f5421_fpp
+REPLAY_ANA_LOCATION:   /discover/nobackup/projects/gmao/geos_fp_arch/f5421_fpp
+REPLAY_FILE:           ana/Y%y4/M%m2/f5421_fpp.asm.eta.%y4%m2%d2_%h2%n2z.nc4
+
 #   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
 #   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
 
 #   Typical Exact REPLAY Configuration
 #   ----------------------------------
 #   REPLAY_MODE: Exact
-#   REPLAY_FILE:   rs/Y%y4/M%m2/@REPLAY_ANA_EXPID.agcm_import_rst.%y4%m2%d2_%h2z.bin
-#   REPLAY_FILE09: rs/Y%y4/M%m2/@REPLAY_ANA_EXPID.agcm09_import_rst.%y4%m2%d2_%h2z.bin
+#   REPLAY_FILE:   rs/Y%y4/M%m2/x0039.agcm_import_rst.%y4%m2%d2_%h2z.bin
+#   REPLAY_FILE09: rs/Y%y4/M%m2/x0039.agcm09_import_rst.%y4%m2%d2_%h2z.bin
 #   REPLAY_FILE_FREQUENCY: 10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
 
 #   Typical Regular REPLAY Configuration
 #   ------------------------------------
 #   REPLAY_MODE: Regular
-#   REPLAY_FILE:   ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana.eta.%y4%m2%d2_%h2z.nc4
-#   REPLAY_FILE09: ana/Y%y4/M%m2/@REPLAY_ANA_EXPID.ana09.eta.%y4%m2%d2_%h2z.nc4
+#   REPLAY_FILE:   ana/Y%y4/M%m2/x0039.ana.eta.%y4%m2%d2_%h2z.nc4
+#   REPLAY_FILE09: ana/Y%y4/M%m2/x0039.ana09.eta.%y4%m2%d2_%h2z.nc4
 #   REPLAY_FILE_FREQUENCY:       10800
 #   REPLAY_FILE_REFERENCE_TIME: 000000
 
 # MERRA-2 Regular REPLAY Configuration
 # --------------------------------------------
 #M2 REPLAY_ANA_EXPID: MERRA-2
-#M2 REPLAY_ANA_LOCATION: @M2_REPLAY_ANA_LOCATION
+#M2 REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/merra2/data
 #M2 REPLAY_MODE: Regular
 #M2 REPLAY_FILE: ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4
 #M2 MKIAU_JCAP: 62
@@ -484,7 +521,6 @@ RECORD_REF_TIME: >>>REFTIME<<< >>>FCSTIME<<<
 @REGULAR_REPLAY_NCEP   REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
 @REGULAR_REPLAY_NCEP   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
 @REGULAR_REPLAY   REPLAY_SHUTOFF: 21600   #  ShutOff Replay after 6-hours of Integration
-@REGULAR_REPLAY   REPLAY_WINDFIX: YES     #  Apply windfix to force vertically-integrated analysis divergence increment to zero
 #
 #   REPLAY_BLEND_QV_AT_TP: .FALSE. #  Default = FALSE,  Blend QV to BKG upwards from tropopause
 #

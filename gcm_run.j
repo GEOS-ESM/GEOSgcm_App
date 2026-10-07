@@ -83,6 +83,20 @@ setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
 
 #######################################################################
+#                        Boundary Datasets
+#######################################################################
+setenv BCSDIR    @BCSDIR
+@DATAOCEANsetenv SSTDIR    @SSTDIR
+setenv BCRSLV    @ATMOStag_@OCEANtag
+@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
+@MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
+
+#this is hard-wired for NAS for now - should make it more general
+@DATAOCEANsetenv BCTAG `basename $BCSDIR`
+@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
+setenv EMISSIONS @EMISSIONS
+
+#######################################################################
 #                          DSL configuration
 #######################################################################
 
@@ -123,7 +137,7 @@ if ( $?TSE_TMPDIR ) then
    # purposes. So we can set a flag USE_TSE_TMPDIR to TRUE if we want
    # and we default to TRUE
 
-   set USE_TSE_TMPDIR = TRUE
+   set USE_TSE_TMPDIR = FALSE
 
    # If we want to use TSE_TMPDIR as the scratch, we create a scratch
    # directory under TSE_TMPDIR and link it to SCRDIR
@@ -336,6 +350,108 @@ set newstring =  "END_DATE: ${year}${month}01 210000"
 cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
 /bin/rm CAP.tmp
 
+else
+
+#######################################################################
+#   if restarts are missing, regrid/remap from ANA restarts
+#######################################################################
+
+# Set config file paths (adjust directories if necessary)
+set AGCM_RC = "$EXPDIR/AGCM.rc"
+set CAP_RST = "$EXPDIR/cap_restart"
+
+# 1. Parse required variables from AGCM.rc
+# ------------------------------------------------------------
+set REPLAY_ANA_EXPID    = `grep "^REPLAY_ANA_EXPID:"    $AGCM_RC | awk '{print $2}'`
+set REPLAY_ANA_LOCATION = `grep "^REPLAY_ANA_LOCATION:" $AGCM_RC | awk '{print $2}'`
+
+# 2. Extract and format date/time from cap_restart
+# ------------------------------------------------------------
+set RSTDATE = `cat $CAP_RST`
+set year    = `echo $RSTDATE | awk '{print substr($1,1,4)}'`
+set month   = `echo $RSTDATE | awk '{print substr($1,5,2)}'`
+set day     = `echo $RSTDATE | awk '{print substr($1,7,2)}'`
+set hour    = `echo $RSTDATE | awk '{print substr($2,1,2)}'`
+
+# 3. Check for existing restart file
+# ------------------------------------------------------------
+set nonomatch
+set pattern_matches = ( $EXPDIR/restarts/*fvcore_internal_rst*${year}${month}${day}_${hour}* )
+unset nonomatch
+if ( -e "$pattern_matches[1]" ) then
+    echo "fvcore_internal_rst already exists. Skipping fetch and remap step."
+else
+    echo "Target restart missing. Commencing dynamic fetch and remap..."
+
+    cd $EXPDIR/restarts
+
+    # 4. Construct path and link/extract source archive
+    # ------------------------------------------------------------
+    set SRC_DIR  = "${REPLAY_ANA_LOCATION}/rs/Y${year}/M${month}"
+    set TAR_FILE = "${REPLAY_ANA_EXPID}.rst.${year}${month}${day}_${hour}z.tar"
+
+
+    if ( -e "${SRC_DIR}/${TAR_FILE}" ) then
+        ln -sf "${SRC_DIR}/${TAR_FILE}" .
+        tar -xvf ${TAR_FILE} --wildcards "*_internal_rst*"
+    else
+        echo "ERROR: Source archive not found at \({SRC_DIR}/\){TAR_FILE}"
+        exit 1
+    endif
+
+    # 5. Regrid / Remap Restarts
+    # ------------------------------------------------------------
+    set RSTID = `/bin/ls *catch* | /bin/grep -Po '^.*(?=\.\w+_rst\.)'`
+    
+    $GEOSBIN/remap_restarts.py command_line -np \
+        -ymdh year{month}day{hour} \
+        -grout C${AGCM_IM} \
+        -levsout ${AGCM_LM} \
+        -out_dir . \
+        -rst_dir . \
+        -expid $RSTID \
+        -bcvin NL3 \
+        -oceanin CS \
+        -in_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles \
+        -newid regrid \
+        -nobkg \
+        -nolcv \
+        -bcvout NL3 \
+        -rs 3 \
+        -oceanout CS \
+        -out_bc_base /discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles
+
+    # 6. Format and determine extension type
+    # ------------------------------------------------------------
+    set IMC = $AGCM_IM
+    if ( $IMC < 10 ) then
+         set IMC = 000$IMC
+    else if ( $IMC < 100 ) then
+         set IMC = 00$IMC
+    else if ( $IMC < 1000 ) then
+         set IMC = 0$IMC
+    endif
+
+    set chk_type = `ls -1 regrid.catch*_internal_rst.${year}${month}${day}_${hour}z.nc4 | xargs /usr/bin/file -Lb --mime-type `
+    set ext = bin
+    if ( "$chk_type" =~ *"application/x-hdf"* ) set ext = nc4
+
+    # Strip prefixes/suffixes to standardize restart filenames
+    $GEOSBIN/stripname regrid.
+    $GEOSBIN/stripname .${year}${month}${day}_${hour}z.${ext}
+
+    # Move up to main experiment directory
+    /bin/mv *_rst ../
+
+    # Clean up the local symlink to keep directory tidy
+    if ( -l ${TAR_FILE} ) /bin/rm ${TAR_FILE}
+
+    cd ../
+
+endif
+
+endif
+
 endif
 
 set GIGATRAJ  = `grep '^\s*GIGATRAJ_PARCELS_FILE:'     AGCM.rc | cut -d: -f2`
@@ -416,16 +532,6 @@ done:
 #######################################################################
 #                        Link Boundary Datasets
 #######################################################################
-setenv BCSDIR    @BCSDIR
-@DATAOCEANsetenv SSTDIR    @SSTDIR
-setenv BCRSLV    @ATMOStag_@OCEANtag
-@MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
-@MOM6setenv SSTDIR  @COUPLEDIR/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
-
-#this is hard-wired for NAS for now - should make it more general
-@DATAOCEANsetenv BCTAG `basename $BCSDIR`
-@COUPLEDsetenv BCTAG `basename @COUPLEDIR/@OCNMODEL/${OGCM_IM}x${OGCM_JM}`
-setenv EMISSIONS @EMISSIONS
 chmod +x linkbcs
 
 @GCMRUN_CATCHCNset LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
@@ -539,7 +645,7 @@ set dummy = `echo $rst_file_names`
 set rst_file_names = ''
 set tile_rsts = (catch catchcn route lake landice openwater saltwater seaicethermo)
 
-# check if it resarts by face
+# check if it restarts by face
 # ----------------------------------
 set rst_by_face = NO
 if( $GCMEMIP == TRUE ) then
@@ -636,8 +742,10 @@ if( $GCMEMIP == TRUE ) then
       if(-e $EXPDIR/restarts/$RSTDATE/$rst ) cp $EXPDIR/restarts/$RSTDATE/$rst . &
     end
 else
+    set edate = e`cat cap_restart | cut -c1-8`_`cat cap_restart | cut -c10-11`z
     foreach rst ( $rst_file_names $monthly_chk_names )
-      if(-e $EXPDIR/$rst ) cp $EXPDIR/$rst . &
+       set rfile  = `/bin/ls -1 $HOMDIR/restarts/*${rst}.${edate}*`
+       /bin/ln -s $rfile $rst
     end
 
     # WW3 restart file
@@ -653,6 +761,7 @@ wait
 
 # Copy and Tar Initial Restarts to Restarts Directory
 # ---------------------------------------------------
+if( $GCMEMIP == TRUE ) then
 set edate = e`cat cap_restart | cut -c1-8`_`cat cap_restart | cut -c10-11`z
 set numrs = `/bin/ls -1 ${EXPDIR}/restarts/*${edate}* | wc -l`
 if($numrs == 0) then
@@ -674,6 +783,7 @@ if($numrs == 0) then
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}`
      @COUPLED /bin/rm -rf RESTART.${edate}
    cd $SCRDIR
+endif
 endif
 
 # If any restart is binary, set NUM_READERS to 1 so that
@@ -912,6 +1022,7 @@ endif
 
 # Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
+if( $GCMEMIP == TRUE ) then
 
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
@@ -924,6 +1035,8 @@ if ( -x $GEOSBIN/rs_numtiles.x ) then
       echo "Your restarts are probably for a different ocean."
       exit 7
    endif
+
+endif
 
 endif
 
@@ -1203,54 +1316,70 @@ set edate  = e`awk '{print $1}' cap_restart`_`awk '{print $2}' cap_restart | cut
 @COUPLED cp -r RESTART ${EXPDIR}/restarts/RESTART.${edate}
 @COUPLED cp RESTART/* INPUT
 
-# Move Intermediate Checkpoints to RESTARTS directory
+# 1. Process Intermediate (Dated) Checkpoints
 # ---------------------------------------------------
-set   checkpoints  =    `/bin/ls -1 *_checkpoint.*`
-if( $#checkpoints != 0 ) /bin/mv -f *_checkpoint.* ${EXPDIR}/restarts
-
-
-# Rename Final Checkpoints for Archive
-# ------------------------------------
-    set checkpoints = `/bin/ls -1 *_checkpoint`
-foreach checkpoint ($checkpoints)
-        set   chk_type = `/usr/bin/file -Lb --mime-type $checkpoint`
-            if ( $chk_type =~ "application/octet-stream" ) then
-                  set ext  = bin
+set intermediate_checkpoints = `/bin/ls -1 *_checkpoint.*`
+if ( $#intermediate_checkpoints != 0 ) then
+    foreach checkpoint ($intermediate_checkpoints)
+        if ( -e $checkpoint ) then
+            # Determine extension (.bin or .nc4) dynamically
+            set chk_type = `/usr/bin/file -Lb --mime-type $checkpoint`
+            if ( "$chk_type" =~ *"application/octet-stream"* ) then
+                set ext = bin
             else
-                  set ext  = nc4
+                set ext = nc4
             endif
-       /bin/mv            $checkpoint      $EXPID.${checkpoint}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.$ext
-       $GEOSBIN/stripname _checkpoint _rst $EXPID.${checkpoint}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.$ext
-end
+            # Extract raw embedded date string
+            # e.g. 20251129_2100z
+            set raw_date = `echo $checkpoint | awk -F. '{print $(NF-1)}'`
+            # Transform HHMMz -> HHz
+            # e.g. 20251129_2100z -> 20251129_21z
+            set file_date = `echo $raw_date | sed 's/[0-9][0-9]z$/z/'`
+            # Extract component base name
+            # e.g. fvcore_internal_checkpoint
+            set chk_base = `echo $checkpoint | awk -F. '{print $1}'`
+            # Replace _checkpoint with _rst
+            # fvcore_internal_checkpoint -> fvcore_internal_rst
+            # moist_import_checkpoint     -> moist_import_rst
+            set rst_base = `echo $chk_base | sed 's/_checkpoint$/_rst/'`
+            # Construct final restart filename
+            set rstfile = ${EXPID}.${rst_base}.e${file_date}.${GCMVER}.${BCTAG}_${BCRSLV}.${ext}
+            /bin/mv -f $checkpoint ${EXPDIR}/restarts/$rstfile
+        endif
+    end
+endif
 
+# 2. Process Final (Undated) Checkpoints
+# ------------------------------------
+set checkpoints = (`/bin/ls -1 *_checkpoint`)
+if ( $#checkpoints != 0 ) then
+    foreach checkpoint ($checkpoints)
+        if ( -e $checkpoint ) then
+            # Determine extension (.bin or .nc4) dynamically
+            set chk_type = `/usr/bin/file -Lb --mime-type $checkpoint`
+            if ( "$chk_type" =~ *"application/octet-stream"* ) then
+                set ext = bin
+            else
+                set ext = nc4
+            endif
+            # Extract component base name
+            # e.g. fvcore_internal_checkpoint
+            #      moist_import_checkpoint
+            #      geosgcm_snowlayer_checkpoint
+            set chk_base = $checkpoint
+            # Replace _checkpoint with _rst
+            set rst_base = `echo $chk_base | sed 's/_checkpoint$/_rst/'`
+            # Construct final restart filename using $edate
+            set rstfile = ${EXPID}.${rst_base}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.${ext}
+            # Move/rename checkpoint
+            /bin/mv -f $checkpoint ${EXPDIR}/restarts/$rstfile
+        endif
+    end
+endif
 
-# Remove Initial RESTARTS
-# -----------------------
-set restarts = `/bin/ls -1 *_rst`
-/bin/rm -f $restarts
-
-
-# Copy Renamed Final Checkpoints to RESTARTS directory
-# ----------------------------------------------------
-    set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-foreach  restart ($restarts)
-cp $restart ${EXPDIR}/restarts &
-end
-wait
-
-# Remove EXPID from RESTART name
-# ------------------------------
-    set  restarts = `/bin/ls -1 $EXPID.*_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-foreach  restart ($restarts)
-$GEOSBIN/stripname $EXPID. '' $restart
-end
-
-# Remove DATE and VERSION Stamps from RESTART name
+# 3. Clean Up Initial Raw RESTARTS (if any remain)
 # ------------------------------------------------
-    set  restarts = `/bin/ls -1 *_rst.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
-foreach  restart ($restarts)
-$GEOSBIN/stripname .${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.\* '' $restart
-end
+#/bin/rm -f *_rst
 
 # WW3 restarts - assumes that there is at least one NEW restart file
 # ------------------------------------------------------------------
@@ -1268,12 +1397,14 @@ endif
 
 # TAR ARCHIVED RESTARTS
 # ---------------------
-cd $EXPDIR/restarts
+if( $GCMEMIP == TRUE ) then
 if( $FSEGMENT == 00000000 ) then
+     cd $EXPDIR/restarts
         @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
         @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
         @COUPLED /bin/rm -rf RESTART.${edate}
+endif
 endif
 
 
@@ -1378,21 +1509,11 @@ if( $GCMEMIP == TRUE ) then
      wait
      cp cap_restart $EXPDIR/restarts/$RSTDATE/cap_restart
 else
-     foreach rst ( `/bin/ls -1 *_rst` )
-        /bin/rm -f $EXPDIR/$rst
-     end
-        /bin/rm -f $EXPDIR/cap_restart
-     foreach rst ( `/bin/ls -1 *_rst` )
-       cp $rst $EXPDIR/$rst &
-     end
-     wait
-     cp cap_restart $EXPDIR/cap_restart
-
+     /bin/cp cap_restart $EXPDIR/cap_restart
      if( $wavewatch ) then
         set rst_ww3 = "restart.ww3"
         /bin/rm -f $EXPDIR/$rst_ww3
-        cp $rst_ww3 $EXPDIR/$rst_ww3 &
-        wait
+        cp $rst_ww3 $EXPDIR/$rst_ww3
      endif
 endif
 
@@ -1402,7 +1523,7 @@ if ( $rc == 0 ) then
       cd  $HOMDIR
       if ( $GCMEMIP == TRUE ) then
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j$RSTDATE
-          else
+      else
           if( $capdate < $enddate ) @BATCH_CMD $HOMDIR/gcm_run.j
       endif
 endif
