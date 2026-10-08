@@ -1469,6 +1469,8 @@ switch ( $REPLAY_CHOICE )
    case 5:
       # ERA5 3D-Var Replay
       set REPLAY_ERA5 = ""
+      echo "ERA5 data defaults to /css which will have poor performance characteristics"
+      echo "             the user should copy required data to tmp space before running"
       breaksw
 
    case 6:
