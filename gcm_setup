@@ -1391,6 +1391,96 @@ echo ""
 echo "Using ${C2}${HISTORY_TEMPLATE}${CN}"
 
 #######################################################################
+#                      DAS / Replay Options
+#######################################################################
+
+# Initialize all replay tags to '#' (commented out) by default
+set REPLAY_EXACT     = "#"
+set REPLAY_GEOS_IT   = "#"
+set REPLAY_X_EXP     = "#"
+set REPLAY_GEOS_FP   = "#"
+set REPLAY_GEOS_M21C = "#"
+set REPLAY_MERRA_2   = "#"
+set REPLAY_ERA5      = "#"
+
+set EXACT_EXPID      = "EXACT_EXPID"
+set X_EXPID          = "X_EXPID"
+set GEOS_FP_EXPID    = "GEOS_FP_EXPID"
+
+ASKREPLAY:
+echo ""
+echo "Select ${C1}Replay / Assimilation Mode${CN}: (Default: ${C2}0 - NONE${CN})"
+echo "   ${C2}0${CN}. NONE (Free Running Model)"
+echo "   ${C2}1${CN}. X-EXP     4D-Var Replay to DAS X-EXP"
+echo "   ${C2}2${CN}. GEOS-FP   4D-Var Replay"
+echo "   ${C2}3${CN}. GEOS-M21C 4D-Var Replay"
+echo "   ${C2}4${CN}. MERRA-2   3D-Var Replay"
+echo "   ${C2}5${CN}. ERA5      3D-Var Replay"
+echo "   ${C2}6${CN}. GEOS-IT (1999-Present)"
+echo "   ${C2}7${CN}. Exact Replay"
+
+set REPLAY_CHOICE = $<
+if ( .$REPLAY_CHOICE == . ) set REPLAY_CHOICE = 0
+
+switch ( $REPLAY_CHOICE )
+   case 0:
+      # Free-running model (default)
+      breaksw
+
+   case 1:
+      # X-EXP 4D-Var Replay
+      set REPLAY_X_EXP = ""
+      echo "Enter ${C1}X-EXP Target EXPID${CN}:"
+      set X_EXPID = $<
+      breaksw
+
+   case 2:
+      # GEOS-FP 4D-Var Replay
+      set REPLAY_GEOS_FP = ""
+      echo "Enter ${C1}GEOS-FP Target EXPID${CN}:"
+      set GEOS_FP_EXPID = $<
+      breaksw
+
+   case 3:
+      # GEOS-M21C 4D-Var Replay
+      set REPLAY_GEOS_M21C = ""
+      breaksw
+
+   case 4:
+      # MERRA-2 3D-Var Replay
+      set REPLAY_MERRA_2 = ""
+      breaksw
+
+   case 5:
+      # ERA5 3D-Var Replay
+      set REPLAY_ERA5 = ""
+      breaksw
+
+   case 6:
+      # GEOS-IT (1999-Present)
+      set REPLAY_GEOS_IT = ""
+      breaksw
+
+   case 7:
+      # Exact Replay
+      set REPLAY_EXACT = ""
+      echo "Enter ${C1}EXACT Replay EXPID${CN}:"
+      set EXACT_EXPID = $<
+      breaksw
+
+   default:
+      echo "${C1}Invalid choice: $REPLAY_CHOICE${CN}"
+      goto ASKREPLAY
+endsw
+
+# When Replay is enabled, activate DAS imports and adjust relax time
+if ( $REPLAY_CHOICE != 0 ) then
+   set HIST_REPLAY = ""
+else
+   set HIST_REPLAY = "#"
+endif
+
+#######################################################################
 #                  Architecture Specific Variables
 #######################################################################
 
@@ -1498,9 +1588,6 @@ if( $SITE == 'NAS' ) then
               setenv BOUNDARY_DIR /nobackup/gmao_SIteam/ModelData
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                                                         # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION ONLY_MERRA2_SUPPORTED                                                             # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                                                    # Default Analysis Location   for M2 REPLAY
 
               setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
 
@@ -1555,9 +1642,6 @@ else if( $SITE == 'NCCS' ) then
               setenv BOUNDARY_DIR /discover/nobackup/projects/gmao
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                            # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID x0039                                                   # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/g6dev/ltakacs/x0039                  # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION ${BOUNDARY_DIR}/merra2/data                       # Default Analysis Location   for M2 REPLAY
 
               setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
 
@@ -1603,9 +1687,6 @@ else if( $SITE == 'AWS' | $SITE == 'Azure' ) then
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                      # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                             # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                             # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                          # Default Analysis Location   for M2 REPLAY
 
               setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
 
@@ -1645,9 +1726,6 @@ else
               setenv BOUNDARY_DIR /ford1/share/gmao_SIteam/ModelData
               setenv BC_BASE ${BOUNDARY_DIR}/bcs_shared/fvInput/ExtData/esm/tiles
               setenv BCSDIR  ${BC_BASE}/${LSM_BCS}                                     # location of Boundary Conditions
-              setenv REPLAY_ANA_EXPID    REPLAY_UNSUPPORTED                            # Default Analysis Experiment for REPLAY
-              setenv REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                            # Default Analysis Location   for REPLAY
-              setenv M2_REPLAY_ANA_LOCATION REPLAY_UNSUPPORTED                         # Default Analysis Location   for M2 REPLAY
 
               setenv BCS_INPUT_BASE ${BOUNDARY_DIR}/bcs_shared/make_bcs_inputs/atmosphere     # Base of the new topography layout
 
@@ -1861,6 +1939,10 @@ endif
 
 if( -e $HOME/.GROUProot ) /bin/rm $HOME/.GROUProot
 echo $GROUP > $HOME/.GROUProot
+
+if ($GROUP == "s1062") then
+   setenv GROUP "s1062 --partition=geosgms --qos=geos_xl"
+endif
 
 #######################################################################
 #      Copy Model Executable and RC Files to Experiment Directory
@@ -2176,6 +2258,7 @@ s?@OPS_SPECIES?$OPS_SPECIES?g
 s?@CMIP_SPECIES?$CMIP_SPECIES?g
 s?@MERRA2OX_SPECIES?$MERRA2OX_SPECIES?g
 s?@FVCUBED?$FVCUBED?g
+s?@HIST_REPLAY?$HIST_REPLAY?g
 s?@HIST_GOCART?$HIST_GOCART?g
 s?@HIST_CATCHCN?$HIST_CATCHCN?g
 s?@GCMRUN_CATCHCN?$GCMRUN_CATCHCN?g
@@ -2186,15 +2269,18 @@ s?@OCEAN_NAME?$OCEAN_NAME?g
 s?@OCEAN_PRELOAD?$OCEAN_PRELOAD?g
 
 s?@4DIAUDAS?#DELETE?g
-s?@REGULAR_REPLAY_GMAO?#?g
-s?@REGULAR_REPLAY_NCEP?#DELETE?g
-s?@REGULAR_REPLAY_ECMWF?#DELETE?g
-s?@REGULAR_REPLAY?#?g
-s?ana4replay.eta.%y4%m2%d2_%h2z.nc4?/discover/nobackup/projects/gmao/merra2/data/ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4?g
 
-s?@REPLAY_ANA_EXPID?$REPLAY_ANA_EXPID?g
-s?@REPLAY_ANA_LOCATION?$REPLAY_ANA_LOCATION?g
-s?@M2_REPLAY_ANA_LOCATION?$M2_REPLAY_ANA_LOCATION?g
+s?#@REPLAY_EXACT ?$REPLAY_EXACT ?g
+s?#@REPLAY_GEOS-IT ?$REPLAY_GEOS_IT ?g
+s?#@REPLAY_X-EXP ?$REPLAY_X_EXP ?g
+s?#@REPLAY_GEOS-FP ?$REPLAY_GEOS_FP ?g
+s?#@REPLAY_GEOS-M21C ?$REPLAY_GEOS_M21C ?g
+s?#@REPLAY_MERRA-2 ?$REPLAY_MERRA_2 ?g
+s?#@REPLAY_ERA5 ?$REPLAY_ERA5 ?g
+
+s?@EXACT-EXPID?$EXACT_EXPID?g
+s?@X-EXPID?$X_EXPID?g
+s?@GEOS-FP-EXPID?$GEOS_FP_EXPID?g
 
 s?@OX_RELAXTIME?$OX_RELAXTIME?g
 s?@PCHEM_CLIM_YEARS?$PCHEM_CLIM_YEARS?g
@@ -2544,7 +2630,7 @@ if( $LSM_BCS == "ICA" ) then
     awk '{ if ($1~"Z0_FORMULATION:") { sub(/4/,"2") }; print }' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif
 
-if( $AGCM_LM == 72 ) then
+if( $LSM_BCS == "NL3" ) then
     /bin/mv $EXPDIR/RC/GEOS_SurfaceGridComp.rc $EXPDIR/RC/GEOS_SurfaceGridComp.tmp
     cat $EXPDIR/RC/GEOS_SurfaceGridComp.tmp | sed -e '/^ *SNOW_ALBEDO_INFO:/ s/1/0/' > $EXPDIR/RC/GEOS_SurfaceGridComp.rc
 endif

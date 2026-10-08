@@ -126,8 +126,6 @@ TURBULENCE_DO_SHOC: 1
 EDMF_DOMF: 1
 PDFSHAPE: 6
 # --- Moderated EDMF Tuning ---
-EDMF_ZINV: 2500.0
-EDMF_ZMAX: 3500.0
 EDMF_ALPHAW: 0.07
 EDMF_ENT0: 0.40
 EDMF_ENTUFAC: 1.2
@@ -200,11 +198,11 @@ NCAR_NRDG: @NCAR_NRDG
 ###########################################################
 # Ocean Model Configuration Parameters
 # ------------------------------------
-OGCM.GRID_TYPE: @OGCM_GRID_TYPE
-OGCM.GRIDNAME: @OGCM_GRIDNAME
-OGCM.IM_WORLD: @OGCM_IM
-OGCM.JM_WORLD: @OGCM_JM
-OGCM.LM: @OGCM_LM
+  OGCM.GRID_TYPE: @OGCM_GRID_TYPE
+  OGCM.GRIDNAME: @OGCM_GRIDNAME
+  OGCM.IM_WORLD: @OGCM_IM
+  OGCM.JM_WORLD: @OGCM_JM
+  OGCM.LM: @OGCM_LM
 @COUPLED OGCM.NX: @OGCM_NX
 @COUPLED OGCM.NY: @OGCM_NY
 @MOM5 OGCM.GRIDSPEC: MAPL_Tripolar.nc
@@ -214,7 +212,7 @@ OGCM.LM: @OGCM_LM
 @DATAOCEAN @LATLON_OGCM OGCM.POLE: 'PE'
 @DATAOCEAN @LATLON_OGCM OGCM.DATELINE: 'DE'
 @DATAOCEAN @CUBE_OGCM OGCM.NF: @OGCM_NF
-OGCM_RUN_DT: @OCEAN_DT
+  OGCM_RUN_DT: @OCEAN_DT
 ###########################################################
 ##############################################################################################
 ####                                                                                      ####
@@ -388,74 +386,70 @@ RECORD_REF_TIME:   210000
 ####                                                                                           ####
 ###################################################################################################
 
-REPLAY_MODE:           Regular
-REPLAY_FILE_FREQUENCY: 21600
-REPLAY_ANA_EXPID:      f5421_fpp
-REPLAY_ANA_LOCATION:   /discover/nobackup/projects/gmao/geos_fp_arch/f5421_fpp
-REPLAY_FILE:           ana/Y%y4/M%m2/f5421_fpp.asm.eta.%y4%m2%d2_%h2%n2z.nc4
-
-#   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
-#   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
-
-#   Typical Exact REPLAY Configuration
-#   ----------------------------------
-#   REPLAY_MODE: Exact
-#   REPLAY_FILE:   rs/Y%y4/M%m2/x0039.agcm_import_rst.%y4%m2%d2_%h2z.bin
-#   REPLAY_FILE09: rs/Y%y4/M%m2/x0039.agcm09_import_rst.%y4%m2%d2_%h2z.bin
-#   REPLAY_FILE_FREQUENCY: 10800
-#   REPLAY_FILE_REFERENCE_TIME: 000000
-
-#   Typical Regular REPLAY Configuration
-#   ------------------------------------
-#   REPLAY_MODE: Regular
-#   REPLAY_FILE:   ana/Y%y4/M%m2/x0039.ana.eta.%y4%m2%d2_%h2z.nc4
-#   REPLAY_FILE09: ana/Y%y4/M%m2/x0039.ana09.eta.%y4%m2%d2_%h2z.nc4
-#   REPLAY_FILE_FREQUENCY:       10800
-#   REPLAY_FILE_REFERENCE_TIME: 000000
-
-# MERRA-2 Regular REPLAY Configuration
-# --------------------------------------------
-#M2 REPLAY_ANA_EXPID: MERRA-2
-#M2 REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/merra2/data
-#M2 REPLAY_MODE: Regular
-#M2 REPLAY_FILE: ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4
-#M2 MKIAU_JCAP: 62
+# Typical Exact REPLAY Configuration
+# ----------------------------------
+#@REPLAY_EXACT REPLAY_MODE: Exact
+#@REPLAY_EXACT REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@EXACT-EXPID
+#@REPLAY_EXACT REPLAY_FILE:   rs/Y%y4/M%m2/@EXACT-EXPID.agcm_import_rst.%y4%m2%d2_%h2z.bin
+#@REPLAY_EXACT REPLAY_FILE09: rs/Y%y4/M%m2/@EXACT-EXPID.agcm09_import_rst.%y4%m2%d2_%h2z.bin
+#@REPLAY_EXACT REPLAY_FILE_FREQUENCY: 7200
+#@REPLAY_EXACT REPLAY_FILE_REFERENCE_TIME: 000000
 
 # GEOS-IT Regular REPLAY Configuration (1999-Present)
 # ---------------------------------------------------
-#IT REPLAY_ANA_EXPID: GEOS-IT
-#IT REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos-it/dao_ops/archive/d5294_geosit_ALL
-#IT REPLAY_MODE: Regular
-#IT REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#IT MKIAU_JCAP: 62
+#@REPLAY_GEOS-IT REPLAY_ANA_EXPID: GEOS-IT
+#@REPLAY_GEOS-IT REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos-it/dao_ops/archive/d5294_geosit_ALL
+#@REPLAY_GEOS-IT REPLAY_MODE: Regular
+#@REPLAY_GEOS-IT REPLAY_FILE: ana/Y%y4/M%m2/d5294_geosit.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#@REPLAY_GEOS-IT MKIAU_JCAP: 62
 
-# 4dvar ANA EXPID and LOCATION used for REPLAY
+# 4dvar REPLAY to X-EXP
 # --------------------------------------
-#X_EXP REPLAY_ANA_EXPID: @ANA_EXPID
-#X_EXP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@ANA_EXPID
-#X_EXP REPLAY_MODE: Regular
-#X_EXP REPLAY_FILE: ana/Y%y4/M%m2/@ANA_EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
-#X_EXP REPLAY_FILE_FREQUENCY: 7200
+#@REPLAY_X-EXP REPLAY_ANA_EXPID: @X-EXPID
+#@REPLAY_X-EXP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/dadev/dao_it/archive/@X-EXPID
+#@REPLAY_X-EXP REPLAY_MODE: Regular
+#@REPLAY_X-EXP REPLAY_FILE: ana/Y%y4/M%m2/@X-EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#@REPLAY_X-EXP REPLAY_FILE_FREQUENCY: 7200
+#@REPLAY_X-EXP REPLAY_FILE_REFERENCE_TIME: 000000
 
-# Regular REPLAY to GEOS-FP
+# 4dvar REPLAY to GEOS-FP
 # -------------------------
-#FP REPLAY_ANA_EXPID: f5295_fp
-#FP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos_fp_arch/f5295_fp
-#FP REPLAY_MODE: Regular
-#FP REPLAY_FILE: ana/Y%y4/M%m2/f5295_fp.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#@REPLAY_GEOS-FP REPLAY_ANA_EXPID: @GEOS-FP-EXPID
+#@REPLAY_GEOS-FP REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/geos_fp_arch/@GEOS-FP-EXPID
+#@REPLAY_GEOS-FP REPLAY_MODE: Regular
+#@REPLAY_GEOS-FP REPLAY_FILE: ana/Y%y4/M%m2/@GEOS-FP-EXPID.ana.eta.%y4%m2%d2_%h2%n2z.nc4
+#@REPLAY_GEOS-FP REPLAY_FILE_FREQUENCY:      7200
+#@REPLAY_GEOS-FP REPLAY_FILE_REFERENCE_TIME: 000000
+#@REPLAY_GEOS-FP MKIAU_JCAP: 382
+
+# GEOS-M21C Regular REPLAY Configuration
+# --------------------------------------------
+#@REPLAY_GEOS-M21C REPLAY_ANA_EXPID: e5303_m21c
+#@REPLAY_GEOS-M21C REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/merra21c/archive/e5303_m21c_ALL
+#@REPLAY_GEOS-M21C REPLAY_MODE: Regular
+#@REPLAY_GEOS-M21C REPLAY_FILE: ana/Y%y4/M%m2/e5303_m21c.ana.eta.%y4%m2%d2_%h2z.nc4
+#@REPLAY_GEOS-M21C REPLAY_FILE_FREQUENCY:      7200
+#@REPLAY_GEOS-M21C REPLAY_FILE_REFERENCE_TIME: 000000
+#@REPLAY_GEOS-M21C MKIAU_JCAP: 164
+
+# MERRA-2 Regular REPLAY Configuration
+# --------------------------------------------
+#@REPLAY_MERRA-2 REPLAY_ANA_EXPID: MERRA-2
+#@REPLAY_MERRA-2 REPLAY_ANA_LOCATION: /discover/nobackup/projects/gmao/merra2/data
+#@REPLAY_MERRA-2 REPLAY_MODE: Regular
+#@REPLAY_MERRA-2 REPLAY_FILE: ana/MERRA2_all/Y%y4/M%m2/MERRA2.ana.eta.%y4%m2%d2_%h2z.nc4
+#@REPLAY_MERRA-2 MKIAU_JCAP: 62
 
 # Regular REPLAY to ERA5
 # ----------------------
-#ERA5 REPLAY_MODE: Regular
-#ERA5 REPLAY_FILE_FREQUENCY: 21600
-#ERA5 REPLAY_FILE_REFERENCE_TIME: 000000
-#ERA5 REPLAY_ANA_EXPID: era5
-#ERA5 REPLAY_ANA_LOCATION: /css/era5
-#ERA5 REPLAY_FILE: ana/L137/Y%y4/M%m2/era5-L137.ana.eta.%y4%m2%d2_%h2z.nc4
-#ERA5 REPLAY_O3: NO
-#ERA5 MKIAU_JCAP: 62
-#ERA5 REPLAY_DAMPBEG:  500.0
-#ERA5 REPLAY_DAMPEND: 5000.0
+#@REPLAY_ERA5 REPLAY_MODE: Regular
+#@REPLAY_ERA5 REPLAY_FILE_FREQUENCY: 21600
+#@REPLAY_ERA5 REPLAY_FILE_REFERENCE_TIME: 000000
+#@REPLAY_ERA5 REPLAY_ANA_EXPID: era5
+#@REPLAY_ERA5 REPLAY_ANA_LOCATION: /css/era5
+#@REPLAY_ERA5 REPLAY_FILE: ana/L137/Y%y4/M%m2/era5-L137.ana.eta.%y4%m2%d2_%h2z.nc4
+#@REPLAY_ERA5 REPLAY_O3: NO
+#@REPLAY_ERA5 MKIAU_JCAP: 62
 
 #   4DIAU (recreate analysis tendency on the fly)
 #   ---------------------------------------------
@@ -474,6 +468,9 @@ REPLAY_FILE:           ana/Y%y4/M%m2/f5421_fpp.asm.eta.%y4%m2%d2_%h2%n2z.nc4
 
 #@4DIAUDAS    REPLAY_INTERVAL: 3600.0
 #@4DIAUDAS    PREDICTOR_OFFSET: 3600.0
+
+#   ASSIMILATION_CYCLE:  nnnnnn       #  (Default: 21600)
+#   IAU_DIGITAL_FILTER:  YES or NO    #  (Default: YES  )
 
 ####################################################################################################
 ####                    Miscellaneous Exact/Regular REPLAY Parameters                           ####
@@ -506,24 +503,18 @@ REPLAY_FILE:           ana/Y%y4/M%m2/f5421_fpp.asm.eta.%y4%m2%d2_%h2%n2z.nc4
 #   REPLAY_V:  YES or NO    #  (Default: YES)
 #   REPLAY_T:  YES or NO    #  (Default: YES)
 #   REPLAY_QV: YES or NO    #  (Default: YES)
-@REGULAR_REPLAY_GMAO   REPLAY_O3: YES or NO    #  (Default: YES)
-@REGULAR_REPLAY_NCEP   REPLAY_O3: YES or NO    #  (Default: YES)
-@REGULAR_REPLAY_ECMWF  REPLAY_O3: YES or NO    #  (Default: YES)
+#   REPLAY_O3: YES or NO    #  (Default: YES)
+#   REPLAY_O3: YES or NO    #  (Default: YES)
+#   REPLAY_O3: YES or NO    #  (Default: YES)
 #   REPLAY_TS: YES or NO    #  (Default:  NO)
 #
 #   Regular REPLAY Remapping and Blending Variables
 #   -----------------------------------------------
 #   REPLAY_REMAP:    YES    #  Default = YES,  Remap ANA Data to BKG Topography
-@REGULAR_REPLAY_ECMWF  REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
-@REGULAR_REPLAY_ECMWF  REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
-@REGULAR_REPLAY_GMAO   REPLAY_DAMPBEG:  100.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
-@REGULAR_REPLAY_GMAO   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
-@REGULAR_REPLAY_NCEP   REPLAY_DAMPBEG: 1000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
-@REGULAR_REPLAY_NCEP   REPLAY_DAMPEND: 5000.0  #  Default =  1,   Linearly Damp Increments between DAMPBEG & DAMPEND (Pascals)
-@REGULAR_REPLAY   REPLAY_SHUTOFF: 21600   #  ShutOff Replay after 6-hours of Integration
+#   REPLAY_SHUTOFF: 21600   #  ShutOff Replay after 6-hours of Integration
 #
 #   REPLAY_BLEND_QV_AT_TP: .FALSE. #  Default = FALSE,  Blend QV to BKG upwards from tropopause
-#
+#   REPLAY_BLEND_AT_PBL: .FALSE.   #  Default = FALSE,  Do not replay in the boundary layer
 #
 ##############################################################################################
 ####                               Intermittent Replay Options                            ####
