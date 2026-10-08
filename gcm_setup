@@ -945,10 +945,6 @@ else
         set DATAOCEAN = ""
     endif
     if( $HRCODE == 'cs' ) then
-        if( $LOW_ATM_RES == 'TRUE') then
-             echo "Error: Cubed-Sphere Ocean with ${AGCM_IM} not currently supported. Must be c90 or higher"
-             exit 7
-        endif
         set OGCM_IM  = `echo $AGCM_IM | cut -b2-`
         set OGCM_JM  = `expr $OGCM_IM \* 6`
         set Resolution = `echo $OGCM_IM $OGCM_JM`
