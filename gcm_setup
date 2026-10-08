@@ -365,6 +365,21 @@ else
 endif
 
 #######################################################################
+#                 Shallow Mass Flux/Convection Options
+#######################################################################
+if ( $AGCM_LM == 72 ) then
+   set SHALLOW_SHOCMF = "#"
+   set SHALLOW_UW = ""
+   echo 
+   echo "AGCM running with UW Shallow Convection"
+else
+   set SHALLOW_SHOCMF = ""
+   set SHALLOW_UW = "#"
+   echo 
+   echo "AGCM running with SHOC-MF"
+endif
+
+#######################################################################
 #            Test to see if you want to use ioserver
 #######################################################################
 
@@ -2368,6 +2383,9 @@ s/@MP_TURN_OFF_WSUB_EXTDATA/$MP_TURN_OFF_WSUB_EXTDATA/g
 s?@BACM_1M_?$BACM_1M_?g
 s?@GFDL_1M_?$GFDL_1M_?g
 s?@MGB2_2M_?$MGB2_2M_?g
+
+s?#@SHALLOW_SHOCMF?$SHALLOW_SHOCMF?g
+s?#@SHALLOW_UW?$SHALLOW_UW?g
 
 s?@KLID?$KLID?g
 
