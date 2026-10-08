@@ -600,7 +600,7 @@ if( $OGCM == TRUE ) then
     echo "Choose an ${C1}Ocean Model${CN}: (Default: ${C2}MOM6${CN})"
     echo "   ${C2}MOM5${CN}"
     echo "   ${C2}MOM6${CN}"
-    echo "   ${C2}MIT${CN}"
+    echo "   ${C2}MIT${CN} (C90/LLC90 or C180/LLC270, with CICE4)"
 
     set OCNMODEL  = $<
     if ( .$OCNMODEL == . ) then
@@ -652,13 +652,58 @@ if( $OGCM == TRUE ) then
     # ------------------------
     CORSLV:
     if( "$OCNMODEL" == "MIT" ) then
-        if ( $AGCM_IM != "c90" ) then
-            echo "You MUST select c90 atmospheric resolution for MIT ocean!"
+        if ( $AGCM_IM != "c90" & $AGCM_IM != "c180" ) then
+            echo "You MUST select c90 or c180 atmospheric resolution for MIT ocean!"
             exit 1
         endif
         set OGRIDTYP = "MITLLC"
-        set OGCM_JM = 15
-        set OGCM_IM = `expr $OGCM_JM \* 360`
+
+        # MITgcm LLC ocean resolution.
+        # The GEOS side sees the MIT domain in its compact layout: JM is the
+        # MIT sub-tile size sNy, and IM is (number of active tiles)*sNx, so the
+        # active tile count is simply IM/JM. That tile count is also the MIT
+        # MPI decomposition (NX tiles x NY=1).
+        #
+        # LLC code  sNx=sNy  total tiles  blank  active  compact IM x JM
+        # --------  -------  -----------  -----  ------  ---------------
+        # llc90       15         468       108     360      5400 x 15
+        # llc270      30        1053       285     768     23040 x 30
+        #
+        # These profiles must match the compiled MIT SIZE.h and data.exch2.
+        # An installed executable cannot switch between MIT_CONFIG_ID builds.
+        if ( $AGCM_IM == "c180" ) then
+           set DEFAULT_LLCCODE = 'llc270'
+           set MIT_CONFIG_ID_REQUIRED = 'c180_llc270_01'
+        else
+           set DEFAULT_LLCCODE = 'llc90'
+           set MIT_CONFIG_ID_REQUIRED = 'c90_llc90_02'
+        endif
+
+        DOMITOCN:
+        echo "Enter the ${C1}MITgcm LLC Ocean Resolution${CN} code: ${C2}llc90${CN}  (1-deg,    5400x15 compact, 360 tiles)"
+        echo "                                               ${C2}llc270${CN} (1/3-deg, 23040x30 compact, 768 tiles)"
+        echo "                                               (Default: ${C2}${DEFAULT_LLCCODE}${CN})"
+        set   LLCCODE = `echo $<`
+        if( .$LLCCODE == . ) set LLCCODE = $DEFAULT_LLCCODE
+        set   LLCCODE = `echo $LLCCODE | tr "[:upper:]" "[:lower:]"`
+
+        if ( "$LLCCODE" != "$DEFAULT_LLCCODE" ) then
+           echo "MIT $AGCM_IM requires $DEFAULT_LLCCODE with its matching compiled configuration."
+           goto DOMITOCN
+        endif
+
+        if( $LLCCODE == 'llc90' ) then
+           set OGCM_JM     = 15
+           set OGCM_NTILES = 360
+        else if( $LLCCODE == 'llc270' ) then
+           set OGCM_JM     = 30
+           set OGCM_NTILES = 768
+        else
+           goto DOMITOCN
+        endif
+        set OGCM_IM = `expr $OGCM_JM \* $OGCM_NTILES`
+        echo "Required build: BUILD_MIT_OCEAN=ON, MIT_CONFIG_ID=$MIT_CONFIG_ID_REQUIRED"
+        echo "MIT SIZE.h must use sNx=sNy=$OGCM_JM, nPx=$OGCM_NTILES, nPy=1, nSx=nSy=1, Nr=50."
 
     else if ( $OCEAN_NAME == "MOM" ) then
         set Resolution = `echo 360 200`
@@ -784,13 +829,15 @@ if( $OGCM == TRUE ) then
     # Seaice Model
     # -----------
     SEAICEMODEL:
-    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}CICE6${CN})"
+    set DEFAULT_SEAICEMODEL = "CICE4"
+    if ( "$OCNMODEL" == "MOM6" ) set DEFAULT_SEAICEMODEL = "CICE6"
+    echo "Choose a ${C1}Seaice Model${CN}: (Default: ${C2}${DEFAULT_SEAICEMODEL}${CN})"
     echo "   ${C2}CICE4${CN}"
-    echo "   ${C2}CICE6${CN}"
+    if ( "$OCNMODEL" != "MIT" ) echo "   ${C2}CICE6${CN}"
 
     set SEAICEMODEL  = $<
     if ( .$SEAICEMODEL == . ) then
-       set SEAICEMODEL  = "CICE6"
+       set SEAICEMODEL  = $DEFAULT_SEAICEMODEL
     else
        set SEAICEMODEL = `echo $SEAICEMODEL | tr "[:lower:]" "[:upper:]"`
 
@@ -801,6 +848,11 @@ if( $OGCM == TRUE ) then
        else
           echo
        endif
+     endif
+
+    if ( "$OCNMODEL" == "MIT" & "$SEAICEMODEL" != "CICE4" ) then
+       echo "MIT supports only CICE4."
+       goto SEAICEMODEL
     endif
 
     # NOTE: We use a CMake variable here because the shared library
@@ -826,15 +878,27 @@ if( $OGCM == TRUE ) then
     endif
 
     # combine seaice preload with ocean preload
-    set OCEAN_PRELOAD = `echo ${OCEAN_PRELOAD}`:`echo ${SEAICE_PRELOAD}`
+    if ( "$OCNMODEL" == "MIT" ) then
+       # The working MIT run launches directly through RUN_CMD. Do not inject
+       # MOM or CICE libraries with LD_PRELOAD/DYLD_INSERT_LIBRARIES here.
+       # Keep the template's g5_modules and library search-path setup.
+       set OCEAN_PRELOAD = ""
+    else
+       set OCEAN_PRELOAD = `echo ${OCEAN_PRELOAD}`:`echo ${SEAICE_PRELOAD}`
+    endif
 
 
     # We only ask this if not MOM6
     if ( "$OCNMODEL" != "MOM6" ) then
+       OCNLM:
        echo "Enter the Ocean Model ${C1}Vertical Resolution${CN}: ${C2}LM${CN} (Default: 50)"
        set   OGCM_LM = $<
        if( .$OGCM_LM == . ) then
           set   OGCM_LM = 50
+       endif
+       if ( "$OCNMODEL" == "MIT" & "$OGCM_LM" != "50" ) then
+          echo "These MIT profiles are compiled with Nr=50; choose 50 levels."
+          goto OCNLM
        endif
        set OGCM_NX = 36
        set OGCM_NY = 10
@@ -849,8 +913,11 @@ if( $OGCM == TRUE ) then
     set OGCM_NF = 1
 
     if( "$OCNMODEL" == "MIT" ) then
-        set OGCM_NX = 360
+        # One MPI rank per active LLC tile; NPROCS must be re-derived here
+        # because it was computed above from the generic OGCM_NX x OGCM_NY.
+        set OGCM_NX = $OGCM_NTILES
         set OGCM_NY = 1
+        @ OGCM_NPROCS = $OGCM_NX * $OGCM_NY
         set OGCM_GRIDSPEC = mit.ascii
     endif
 
@@ -1077,6 +1144,24 @@ endif
 # ----------------------
 source $BINDIR/set_resolution_params.csh $AGCM_IM $CLDMICRO $OGCM $OCNMODEL
 
+# The helper's generic coupled layout transposes the ocean decomposition.
+# MIT needs a cubed-sphere atmosphere layout with the SAME rank count as MIT.
+# In particular, C180 must not inherit NX=1, NY=768 (128 strips per face).
+if ( $OGCM == TRUE & "$OCNMODEL" == "MIT" ) then
+   if ( $AGCM_IM == 90 ) then
+      set NX = 10
+      set NY = 36
+   else if ( $AGCM_IM == 180 ) then
+      set NX = 8
+      set NY = 96
+   endif
+   @ MIT_ATM_NPROCS = $NX * $NY
+   if ( $MIT_ATM_NPROCS != $OGCM_NPROCS ) then
+      echo "ERROR: Atmosphere and compiled MIT ocean rank counts must agree."
+      exit 2
+   endif
+endif
+
 set OGCM_IS_FCST = 0
 set FVCUBED         = ""
 set AGCM_GRIDNAME   = "PE${AGCM_IM}x${AGCM_JM}-CF"
@@ -1084,7 +1169,9 @@ if( ${OGRIDTYP} == 'CF' ) then
    set OGCM_GRIDNAME   = "OC${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
 else
     if( "$OCNMODEL" == "MIT" ) then
-        set OGCM_GRIDNAME   = "${OGRIDTYP}${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
+        # mkMITAquaRaster names its compact grid LL...-LL. This is distinct
+        # from the MITLLC tag used to locate the boundary-condition directory.
+        set OGCM_GRIDNAME   = "LL${OGCM_IM}x${OGCM_JM}-LL"
     else
         set OGCM_GRIDNAME   = "PE${OGCM_IM}x${OGCM_JM}-${OGRIDTYP}"
     endif
@@ -1677,8 +1764,116 @@ if( $SITE == 'GMAO.desktop' ) then
    set USE_IOSERVER = 0
    set NUM_OSERVER_NODES = 0
    set NUM_BACKEND_PES = 0
-   set NX = 1
-   set NY = 6
+   if ( "$OCNMODEL" != "MIT" ) then
+      set NX = 1
+      set NY = 6
+   endif
+endif
+
+# MIT asset overrides keep a custom tile/runoff set separate from the ocean
+# grid, CICE mask, and forcing files. Land bundle tags may differ from MIT tags.
+if ( $OGCM == TRUE & "$OCNMODEL" == "MIT" ) then
+   # Discover C180 defaults to the supplied working experiment's data bundle.
+   # Keep C90 and other sites on their normal MIT paths. No external profile
+   # script is needed; explicit GEOS_MIT_* settings still override defaults.
+   set MIT_BCS_PROFILE = "standard"
+   if ( "$SITE" == "NCCS" & $AGCM_IM == 180 ) then
+      set MIT_BCS_PROFILE = "G12_t4_MITC4"
+   endif
+   if ( $?GEOS_MIT_BCS_PROFILE ) then
+      set MIT_BCS_PROFILE = "$GEOS_MIT_BCS_PROFILE"
+   endif
+   if ( "$MIT_BCS_PROFILE" != "standard" & "$MIT_BCS_PROFILE" != "G12_t4_MITC4" ) then
+      echo "ERROR: GEOS_MIT_BCS_PROFILE must be standard or G12_t4_MITC4."
+      exit 2
+   endif
+   if ( "$MIT_BCS_PROFILE" == "G12_t4_MITC4" ) then
+      if ( "$SITE" != "NCCS" | $AGCM_IM != 180 ) then
+         echo "ERROR: G12_t4_MITC4 boundary conditions require C180 on NCCS/Discover."
+         exit 2
+      endif
+   endif
+   set MIT_CPLDIR = "${COUPLEDIR}/MIT"
+   set MIT_LAND_BCRSLV = "$BCSRES"
+   if ( "$MIT_BCS_PROFILE" == "G12_t4_MITC4" ) then
+      setenv BCSDIR /discover/nobackup/projects/gmao/geos_itv/skhani/Ocean_Bathymetry/NEW_LAND_BC_TEST/v13
+      set MIT_CPLDIR = /discover/nobackup/projects/gmao/geos_itv/skhani/Ocean_Bathymetry/NEW_OCI_BC_TEST
+      set MIT_LAND_BCRSLV = CF0180x6C_M6TP1440x1080
+   endif
+   if ( $?GEOS_MIT_BCSDIR ) then
+      setenv BCSDIR "$GEOS_MIT_BCSDIR"
+   endif
+   if ( $?GEOS_MIT_CPLDIR ) then
+      set MIT_CPLDIR = "$GEOS_MIT_CPLDIR"
+   endif
+   if ( $?GEOS_MIT_LAND_BCRSLV ) then
+      set MIT_LAND_BCRSLV = "$GEOS_MIT_LAND_BCRSLV"
+   endif
+   set MIT_TILEFILE = "${BCSDIR}/geometry/${BCSRES}/${BCSRES}-Pfafstetter.til"
+   set MIT_RUNOFFFILE = "${BCSDIR}/geometry/${MIT_LAND_BCRSLV}/${MIT_LAND_BCRSLV}-Pfafstetter.TRN"
+   set MIT_GRIDSPECFILE = "${BCSDIR}/geometry/${BCSRES}/mit.ascii"
+   set MIT_KPARFILE = "${MIT_CPLDIR}/${OGCM_IM}x${OGCM_JM}/${KPARFILE}"
+   set MIT_INPUTDIR = "${MIT_CPLDIR}/${OGCM_IM}x${OGCM_JM}/INPUT"
+   set MIT_CICEGRIDFILE = "${MIT_CPLDIR}/${OGCM_IM}x${OGCM_JM}/cice/grid_cice.bin"
+   set MIT_CICEKMTFILE = "${MIT_CPLDIR}/${OGCM_IM}x${OGCM_JM}/cice/kmt_cice.bin"
+   if ( "$MIT_BCS_PROFILE" == "G12_t4_MITC4" ) then
+      set MIT_TILEFILE = /gpfsm/dnb10/projects/p118/afahad/g12exp/G12_t4_MITC4/restarts/tile_target.data
+      set MIT_GRIDSPECFILE = /discover/nobackup/projects/GEOS_MITgcm/afahad/GEOSMITgcmfiles/mit.ascii
+      set MIT_KPARFILE = /discover/nobackup/projects/GEOS_MITgcm/afahad/GEOSMITgcmfiles/SEAWIFS_KPAR_mon_clim.data
+      set MIT_INPUTDIR = "${MIT_CPLDIR}/1440x1080/INPUT"
+      set MIT_CICEGRIDFILE = /gpfsm/dnb06/projects/p185/make_bcs_inputs/ocean/MOM6/1440x1080/cice/grid_cice.bin
+      set MIT_CICEKMTFILE = /gpfsm/dnb06/projects/p185/make_bcs_inputs/ocean/MOM6/1440x1080/cice/kmt_cice.bin
+   endif
+   # Preserve the template's consumer filename. A map's compatibility cannot
+   # be established by deriving a new filename from the ocean dimensions.
+   set MIT_REMAP_NAME = "DC0360xPC0181_LL5400x15-LL.bin"
+   if ( $?GEOS_MIT_REMAP_NAME ) then
+      set MIT_REMAP_NAME = "$GEOS_MIT_REMAP_NAME"
+   endif
+   set MIT_REMAPFILE = "${MIT_CPLDIR}/${MIT_REMAP_NAME}"
+   if ( $?GEOS_MIT_TILE ) then
+      set MIT_TILEFILE = "$GEOS_MIT_TILE"
+   endif
+   if ( $?GEOS_MIT_RUNOFF ) then
+      set MIT_RUNOFFFILE = "$GEOS_MIT_RUNOFF"
+   endif
+   if ( $?GEOS_MIT_GRIDSPEC ) then
+      set MIT_GRIDSPECFILE = "$GEOS_MIT_GRIDSPEC"
+   endif
+   if ( $?GEOS_MIT_REMAP ) then
+      set MIT_REMAPFILE = "$GEOS_MIT_REMAP"
+   endif
+   if ( $?GEOS_MIT_KPAR ) then
+      set MIT_KPARFILE = "$GEOS_MIT_KPAR"
+   endif
+   if ( $?GEOS_MIT_INPUTDIR ) then
+      set MIT_INPUTDIR = "$GEOS_MIT_INPUTDIR"
+   endif
+   if ( $?GEOS_MIT_CICE_GRID ) then
+      set MIT_CICEGRIDFILE = "$GEOS_MIT_CICE_GRID"
+   endif
+   if ( $?GEOS_MIT_CICE_KMT ) then
+      set MIT_CICEKMTFILE = "$GEOS_MIT_CICE_KMT"
+   endif
+   set MIT_REQUIRED_REMAP = ""
+   if ( $DATA_ATMOS == TRUE ) set MIT_REQUIRED_REMAP = "$MIT_REMAP_NAME"
+   echo "MIT boundary-condition profile: $MIT_BCS_PROFILE"
+
+   # Resource names must agree with the tile header, not just its directory tag.
+   if ( -e "$MIT_TILEFILE" ) then
+      set MIT_TILE_HEADER = ( `head -8 "$MIT_TILEFILE" | awk 'NR>=3 {print $1}'` )
+      if ( $#MIT_TILE_HEADER != 6 ) then
+         echo "ERROR: Invalid MIT tile header in $MIT_TILEFILE"
+         exit 2
+      endif
+      if ( "$MIT_TILE_HEADER[1]" != "$AGCM_GRIDNAME" | \
+           "$MIT_TILE_HEADER[2]" != "$AGCM_IM" | "$MIT_TILE_HEADER[3]" != "$AGCM_JM" | \
+           "$MIT_TILE_HEADER[5]" != "$OGCM_IM" | "$MIT_TILE_HEADER[6]" != "$OGCM_JM" ) then
+         echo "ERROR: MIT tile grids do not match the selected atmosphere/ocean profile."
+         exit 2
+      endif
+      set OGCM_GRIDNAME = "$MIT_TILE_HEADER[4]"
+   endif
 endif
 
 #######################################################################
@@ -2328,6 +2523,24 @@ s?@FV_RUN_HYDROSTATIC?$RUN_HYDROSTATIC?g
 
 EOF
 
+# Adapt the existing GEOS templates without requiring new template tokens.
+# Preserve a remapping alias unless the experiment explicitly overrides it.
+if ( $OGCM == TRUE & "$OCNMODEL" == "MIT" ) then
+cat >> $HOMDIR/sedfile << EOF
+s?^[ \t]*setenv CPLDIR .*?setenv CPLDIR ${MIT_CPLDIR}?
+s?^[ \t]*setenv BCRSLV .*?setenv BCRSLV ${MIT_LAND_BCRSLV}?
+s?^[ \t]*/bin/ln .* tile.data[ \t]*\$?/bin/ln -sf ${MIT_TILEFILE} tile.data?
+s?^[ \t]*/bin/ln .* runoff.bin[ \t]*\$?/bin/ln -sf ${MIT_RUNOFFFILE} runoff.bin?
+s?^[ \t]*/bin/ln .*[/]mit[.]ascii.*\$?/bin/ln -sf ${MIT_GRIDSPECFILE} mit.ascii?
+s?^[ \t]*/bin/ln .*DC0360xPC0181_LL5400x15-LL[.]bin.*\$?/bin/ln -sf ${MIT_REMAPFILE} ${MIT_REMAP_NAME}?
+s?^[ \t]*/bin/ln .* SEAWIFS_KPAR_mon_clim[.]data[ \t]*\$?/bin/ln -sf ${MIT_KPARFILE} SEAWIFS_KPAR_mon_clim.data?
+s?^[ \t]*/bin/ln .*[/]cice[/]kmt_cice[.]bin.*\$?/bin/ln -sf ${MIT_CICEKMTFILE} kmt_cice.bin?
+s?^[ \t]*/bin/ln .*[/]cice[/]grid_cice[.]bin.*\$?/bin/ln -sf ${MIT_CICEGRIDFILE} grid_cice.bin?
+s?^[ \t]*cp .*[/]INPUT/[*] INPUT[ \t]*\$?cp ${MIT_INPUTDIR}/* INPUT?
+/^[ \t]*OCEAN_INTERNAL_RESTART_FILE:/s?^?#?
+EOF
+endif
+
 set FILES = "gcm_run.j          \
              gcm_post.j         \
              gcm_archive.j      \
@@ -2416,6 +2629,17 @@ foreach FILE ($FILES)
 
    echo "Creating ${C1}${FILE}${CN} for Experiment: $EXPID "
    chmod 755 $HOMDIR/$FILE
+
+   # The stock run template does not check linkbcs's exit status. Propagate
+   # preflight failures so a missing MIT input prevents the model launch.
+   if ( $OGCM == TRUE & "$OCNMODEL" == "MIT" ) then
+      if ( "$FILE" == "gcm_run.j" | "$FILE" == "gcm_forecast.tmpl" ) then
+         /bin/mv $HOMDIR/$FILE $HOMDIR/$FILE.tmp
+         awk '$0 ~ "^[ \t]*[.]/linkbcs[ \t]*$" { print; print "if ( $status != 0 ) exit 2"; next } { print }' \
+             $HOMDIR/$FILE.tmp > $HOMDIR/$FILE
+         /bin/rm -f $HOMDIR/$FILE.tmp
+      endif
+   endif
 
 end
 
@@ -2527,6 +2751,63 @@ if( $OGCM == TRUE ) if(! -e $EXPDIR/RESTART ) mkdir -p $EXPDIR/RESTART
 /bin/cp $GEOSUTIL/post/plot.rc      $EXPDIR/plot
 /bin/cp $GEOSUTIL/post/post.rc      $EXPDIR/post
 /bin/mv $HOMDIR/linkbcs.tmpl        $EXPDIR/linkbcs
+
+if ( $OGCM == TRUE & "$OCNMODEL" == "MIT" ) then
+   if ( ! -d $EXPDIR/mit_input ) mkdir -p $EXPDIR/mit_input
+   cat > $EXPDIR/check_mit_inputs.csh << EOF
+#!/bin/tcsh -f
+# Run from scratch after linkbcs; check symlink targets before GEOSgcm.x starts.
+set missing = 0
+foreach file ( tile.data runoff.bin mit.ascii SEAWIFS_KPAR_mon_clim.data grid_cice.bin kmt_cice.bin ${MIT_REQUIRED_REMAP} ${MIT_INPUTDIR} ${GEOSDIR}/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@ ${EXPDIR}/mit_input/data ${EXPDIR}/mit_input/data.exch2 )
+   if ( ! -e \$file ) then
+      echo "ERROR: Missing MIT/CICE4 input: \$file"
+      set missing = 1
+   endif
+end
+if ( \$missing != 0 ) exit 2
+set header = ( \`head -8 tile.data | awk 'NR>=3 {print \$1}'\` )
+if ( \$#header != 6 ) then
+   echo "ERROR: Invalid tile.data header"
+   exit 2
+endif
+if ( "\$header[1]" != "${AGCM_GRIDNAME}" | "\$header[2]" != "${AGCM_IM}" | "\$header[3]" != "${AGCM_JM}" | "\$header[4]" != "${OGCM_GRIDNAME}" | "\$header[5]" != "${OGCM_IM}" | "\$header[6]" != "${OGCM_JM}" ) then
+   echo "ERROR: tile.data disagrees with the selected AGCM.rc grids"
+   exit 2
+endif
+echo "MIT/CICE4 input paths and tile header passed."
+EOF
+   chmod +x $EXPDIR/check_mit_inputs.csh
+   cat >> $EXPDIR/linkbcs << EOF
+
+# Fail on missing or incompatible MIT/CICE4 inputs instead of dangling links.
+${EXPDIR}/check_mit_inputs.csh
+if ( \$status != 0 ) exit 2
+EOF
+   cat > $EXPDIR/MIT_SETUP.txt << EOF
+Selected profile: C${AGCM_IM} / ${LLCCODE} / CICE4
+Boundary-condition profile: ${MIT_BCS_PROFILE}
+Required build: BUILD_MIT_OCEAN=ON; MIT_CONFIG_ID=${MIT_CONFIG_ID_REQUIRED}
+SIZE.h: sNx=sNy=${OGCM_JM}; nSx=nSy=1; nPx=${OGCM_NX}; nPy=1; Nr=50
+Atmosphere NX x NY: ${NX} x ${NY}; ocean NX x NY: ${OGCM_NX} x ${OGCM_NY}
+Ocean grid: ${OGCM_GRIDNAME}; compact dimensions: ${OGCM_IM} x ${OGCM_JM}
+Tile: ${MIT_TILEFILE}
+Runoff (must match this tile/land geometry): ${MIT_RUNOFFFILE}
+Grid specification: ${MIT_GRIDSPECFILE}
+Land BC root/tag: ${BCSDIR} / ${MIT_LAND_BCRSLV}
+KPAR: ${MIT_KPARFILE}
+INPUT directory: ${MIT_INPUTDIR}
+CICE4 grid: ${MIT_CICEGRIDFILE}
+CICE4 mask: ${MIT_CICEKMTFILE}
+Data-atmosphere transform: ${MIT_REMAPFILE}
+Stage the matching MIT data, data.exch2, package namelists, grid/bathymetry,
+forcing, and pickups in ${EXPDIR}/mit_input and ${EXPDIR}/restarts.
+MIT manages its ocean state through pickups; OCEAN_INTERNAL_RESTART_FILE
+is disabled. Keep the GEOS openwater/saltwater/CICE4 restarts appropriate
+to this grid (5 ice categories and 4 ice layers).
+Changing the menu selection does not rebuild the executable. Verify the
+actual CMakeCache.txt, SIZE.h, and data.exch2 before launching.
+EOF
+endif
 
 /bin/mv $HOMDIR/CAP.rc.tmpl         $HOMDIR/CAP.rc
 /bin/mv $HOMDIR/AGCM.rc.tmpl        $HOMDIR/AGCM.rc
