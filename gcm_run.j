@@ -1023,21 +1023,16 @@ endif
 # Test Openwater Restart for Number of tiles correctness
 # ------------------------------------------------------
 if( $GCMEMIP == TRUE ) then
-
 if ( -x $GEOSBIN/rs_numtiles.x ) then
-
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
    @SINGULARITY_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
    @NATIVE_BUILD set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
       echo "Your restarts are probably for a different ocean."
       exit 7
    endif
-
 endif
-
 endif
 
 # Check for MERRA2OX Consistency
@@ -1398,13 +1393,11 @@ endif
 # TAR ARCHIVED RESTARTS
 # ---------------------
 if( $GCMEMIP == TRUE ) then
-if( $FSEGMENT == 00000000 ) then
      cd $EXPDIR/restarts
         @DATAOCEAN tar cf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*
         @COUPLED tar cvf  restarts.${edate}.tar $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.* RESTART.${edate}
      /bin/rm -rf `/bin/ls -d -1     $EXPID.*.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.*`
         @COUPLED /bin/rm -rf RESTART.${edate}
-endif
 endif
 
 

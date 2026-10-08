@@ -580,6 +580,8 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'DQLDT_SC'    , 'MOIST'    , 'DQLDTSC'    ,
                                  'DQIDT_SC'    , 'MOIST'    , 'DQIDTSC'    ,
                                  'DQADT_SC'    , 'MOIST'    , 'DQADTSC'    ,
+                                 'NCCN_ICE'    , 'MOIST'    , 'NCCNICE'    ,
+                                 'NCCN_LIQ'    , 'MOIST'    , 'NCCNLIQ'    ,
                                   ::
 
   geosgcm_turb.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
@@ -672,6 +674,7 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'DQDT'             , 'MOIST'      ,     'DQVDTMST'   ,
                                  'QVIT'             , 'PHYSICS'    ,     'DQVDTTRB'   ,
                                  'H2O_TEND'         , 'CHEMISTRY'  ,     'DQVDTCHM'   ,
+                                 'OX_TEND'          , 'CHEMISTRY'  ,     'DOXDTCHM'   ,
                                  'DPDTPHY'          , 'PHYSICS'    ,
                                  'DQVDTSCL'         , 'PHYSICS'    ,
                                   ::
@@ -1721,6 +1724,19 @@ PC@CLIM_IMx@CLIM_JM-DC.LM: @AGCM_LM
                                  'OLR'   , 'IRRAD'   ,
                                   ::
 
+  tavg24_1d_route.template:      '%y4%m2%d2_%h2%n2z.nc4',
+  tavg24_1d_route.archive:       '%c/Y%y4',
+  tavg24_1d_route.format:        'CFIO',
+  tavg24_1d_route.mode:          'time-averaged',
+  tavg24_1d_route.frequency:     030000,
+  tavg24_1d_route.ref_time:      210000,
+  tavg24_1d_route.fields:        'QSFLOW'      , 'ROUTE' ,
+                                 'QOUTFLOW'    , 'ROUTE' ,
+                                 'QRES'        , 'ROUTE' ,
+                                 'QCAT'        , 'ROUTE' ,
+                                 'QINFLOW'     , 'ROUTE' ,
+                                 'QRUNOFF_CAT' , 'ROUTE' ,
+                                  ::
   tavg1_2d_prcp.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
   tavg1_2d_prcp.archive:        '%c/Y%y4' ,
   tavg1_2d_prcp.format:         'CFIO' ,
