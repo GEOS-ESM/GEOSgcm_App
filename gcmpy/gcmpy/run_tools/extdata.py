@@ -40,7 +40,11 @@ def prune_chem_collections(rc_dir: Path) -> None:
     Args:
         rc_dir: Directory containing GEOS_ChemGridComp.rc and the *_ExtData.rc files.
     """
-    chem_rc_text = (rc_dir / "GEOS_ChemGridComp.rc").read_text()
+    chem_rc_path = rc_dir / "GEOS_ChemGridComp.rc"
+    # gcm_run.j runs `grep ... GEOS_ChemGridComp.rc | wc -l`: when the file
+    # is missing, grep fails and wc reports 0, i.e. every component is
+    # treated as disabled. Reproduce that instead of raising.
+    chem_rc_text = chem_rc_path.read_text() if chem_rc_path.exists() else ""
 
     for key, filename in _CHEM_COLLECTIONS:
         extdata_file = rc_dir / filename
@@ -88,11 +92,17 @@ def generate_extdata_file(rc_dir: Path, geosbin: Path) -> None:
         extdata_rc.unlink()
 
     construct_script = geosbin / "construct_extdata_yaml_list.py"
-    subprocess.run(
-        ["python3", str(construct_script), str(rc_dir / "GEOS_ChemGridComp.rc")],
-        check=True,
-        cwd=rc_dir,
-    )
+    try:
+        subprocess.run(
+            ["python3", str(construct_script), str(rc_dir / "GEOS_ChemGridComp.rc")],
+            check=True,
+            cwd=rc_dir,
+        )
+    except (subprocess.CalledProcessError, OSError) as error:
+        # gcm_run.j:879-883 runs the constructor bare (no `set -e`), so a
+        # failure there doesn't abort the job either -- warn and fall
+        # through to the ExtData.rc placeholder below.
+        print(f"WARNING: construct_extdata_yaml_list.py failed: {error}")
 
     # Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
     extdata_rc.touch()

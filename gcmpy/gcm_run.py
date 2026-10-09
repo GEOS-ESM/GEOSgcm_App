@@ -16,12 +16,14 @@
     resubmit for the next segment using the same submit_job() code path
     (via subprocess, not by looping back through shell) -- see execute().
 
-Only the submission path (and the sbatch-flag translation it relies on)
-is fully implemented here. The execute() segment loop is wired up to
-call into the existing gcmpy.run_tools modules that have already been
-ported from gcm_run.j, and leaves clearly marked TODOs (with original
-gcm_run.j line-number references, matching the docstring convention
-used in gcmpy/run_tools/) for the chunks that have not been ported yet.
+Both paths are implemented: submit_job() handles the login-node sbatch
+submission, and execute() runs the full in-job segment loop (staging
+restarts, emissions, ExtData, launching GEOSgcm.x, archiving
+restarts/checkpoints, post-processing, copy-back, resubmission) by
+calling into the gcmpy.run_tools modules ported from gcm_run.j, with
+original gcm_run.j line-number citations throughout. A few areas remain
+deliberately deferred (singularity execution, MIT/MOM5 ocean variants)
+and are documented at their call sites.
 """
 
 import argparse
@@ -308,7 +310,7 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
     `while ( $counter <= ${NUM_SGMT} )` loop body, lines 673-1399).
 
     Wires up every ported gcmpy/run_tools module in the original's order:
-    ExtData (still a TODO), linkbcs, pre-run checks, MPI environment,
+    ExtData assembly, linkbcs, pre-run checks, MPI environment,
     bundleParser, REPLAY linking, OpenMP setup, the GEOSgcm.x launch,
     checkpoint archiving, HISTORY/holding moves, and post-processing.
     Launch failures raise GEOSRunError/EgressMissingError, matching
@@ -392,9 +394,22 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
     )
     patch_yaml_levels(scratch_dir, job_ctx["resources"]["AGCM_LM"])
 
-    # gcm_run.j:839-885 -- ExtData.rc assembly.
-    from gcmpy.run_tools.extdata import stage_extdata  # noqa: F401
-    # TODO: call stage_extdata(...).
+    # gcm_run.j:839-885 -- ExtData assembly: prune ExtData files for
+    # disabled chem components, patch WSUB_CLIM for microphysics that
+    # don't use it, and run construct_extdata_yaml_list.py (ExtData2G;
+    # extdata1g support was removed from gcmpy).
+    from gcmpy.run_tools.extdata import stage_extdata
+
+    stage_extdata(
+        scratch_dir,
+        job_ctx["geosbin"],
+        # The setup-time Jinja prefix '' keeps the WSUB block active
+        # (1MOM/GFDL); '#DELETE#' comments it out (MGB2_2M uses WSUB_CLIM).
+        turn_off_wsub=(
+            run_config.get("atmos", {}).get("mp_turn_off_wsub_extdata", "")
+            == ""
+        ),
+    )
 
     # gcm_run.j:886-983, 996-1022 -- per-segment pre-launch steps (see
     # gcmpy/run_tools/pre_run.py for the individual gcm_run.j citations).
@@ -452,12 +467,6 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
     from gcmpy.run_tools.mpi_runner import run_gcm
 
     resources = job_ctx["resources"]
-    # TODO: ocean_preload is not yet resolved for coupled-ocean (MOM6) runs
-    # -- run_config['ocean']['preload'] is an unresolved csh-template
-    # string (CMake-style @...@ substitution tokens) that needs real
-    # platform-aware resolution (shared-library suffix, LD_PRELOAD vs.
-    # DYLD_INSERT_LIBRARIES). Passing None is correct for the common
-    # uncoupled-atmosphere case.
     run_gcm(
         run_cmd=run_config["run_command"],
         total_pes=resources["TOTAL_PES"],
@@ -470,7 +479,9 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
         num_oserver_nodes=resources["NUM_OSERVER_NODES"],
         num_backend_pes=resources["NUM_BACKEND_PES"],
         singularity_run=job_ctx["singularity_run"],
-        ocean_preload=None,
+        # gcm_run.j:1120-1121 {{ ocean.preload }} -- raw catalog prefix
+        # (empty for uncoupled runs); run_gcm() resolves $GEOSDIR etc.
+        ocean_preload=run_config.get("ocean", {}).get("preload") or None,
         max_attempts=3 if run_config.get("several_tries") else 1,
     )
 

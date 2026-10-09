@@ -47,24 +47,72 @@ def _build_ioserver_args(
     ]
 
 
+def _parse_ocean_preload(raw: str | None, geosdir: Path) -> dict[str, str] | None:
+    """
+    Turn the ocean catalog's preload command prefix into an environment
+    mapping for the launch.
+
+    The catalog stores a csh command prefix such as
+    `env LD_PRELOAD=$GEOSDIR/lib/libmom6.so:$GEOSDIR/lib/libcice6.so`
+    (or `env DYLD_INSERT_LIBRARIES=...` on macOS), which gcm_run.j embeds
+    verbatim in the launch line (gcm_run.j:1120-1121) for the shell to
+    expand. Here we strip the `env` wrapper and expand `$GEOSDIR` against
+    the experiment's GEOS directory (GEOSBIN lives at $GEOSDIR/bin).
+
+    Args:
+        raw:     Raw `ocean.preload` string from run_<expid>.yaml, or None.
+        geosdir: GEOS installation directory ($GEOSDIR).
+
+    Returns:
+        Mapping of environment variable name to expanded value, or None
+        when there is nothing to preload (empty string) or the value is
+        unusable (unresolved `@...@` CMake tokens, malformed input) --
+        never raises, so a broken catalog entry cannot abort the run.
+    """
+    if not raw:
+        return None
+
+    text = str(raw).strip()
+    if text.startswith("env "):
+        text = text[4:].strip()
+
+    # An unresolved CMake template token (e.g. @PRELOAD_COMMAND@) means
+    # the install was configured without it -- skip rather than export
+    # garbage.
+    if "@" in text:
+        print(f"WARNING: unresolved ocean preload {raw!r}; ignoring")
+        return None
+
+    name, sep, value = text.partition("=")
+    name = name.strip()
+    if not sep or not name or not value:
+        print(f"WARNING: cannot parse ocean preload {raw!r}; ignoring")
+        return None
+
+    value = value.replace("${GEOSDIR}", str(geosdir))
+    value = value.replace("$GEOSDIR", str(geosdir))
+    return {name: value}
+
+
 def _build_command(
     run_cmd: str,
     total_pes: int,
     geosexe: Path,
     ioserver_args: list[str],
     singularity_run: str | None,
-    ocean_preload: str | None,
+    preload_env: dict[str, str] | None,
 ) -> tuple[list[str], dict[str, str]]:
     """
     Assemble the full subprocess command and environment for a single launch attempt.
 
     Args:
-        run_cmd:         MPI launcher and its base flags (e.g. 'srun' or 'mpiexec').
-        total_pes:       Total number of PEs to pass to the launcher.
-        geosexe:         Path to the GEOSgcm.x executable.
-        ioserver_args:   Pre-built IO server argument list (empty list if not used).
+        run_cmd:      MPI launcher and its base flags (e.g. 'srun' or 'mpiexec').
+        total_pes:    Total number of PEs to pass to the launcher.
+        geosexe:      Path to the GEOSgcm.x executable.
+        ioserver_args: Pre-built IO server argument list (empty list if not used).
         singularity_run: Singularity invocation prefix, or None for a native build.
-        ocean_preload:   Value for LD_PRELOAD (coupled ocean runs), or None.
+        preload_env:  Extra environment (coupled-ocean LD_PRELOAD /
+                      DYLD_INSERT_LIBRARIES) from _parse_ocean_preload(), or None.
 
     Returns:
         A (cmd, env) tuple ready for subprocess.run.
@@ -79,8 +127,8 @@ def _build_command(
     ]
 
     env = os.environ.copy()
-    if ocean_preload:
-        env["LD_PRELOAD"] = ocean_preload
+    if preload_env:
+        env.update(preload_env)
 
     return cmd, env
 
@@ -137,7 +185,11 @@ def run_gcm(
         num_oserver_nodes: Number of output server nodes (used when use_ioserver=True).
         num_backend_pes:   Number of backend PEs per node (used when use_ioserver=True).
         singularity_run:   Singularity invocation prefix, or None for a native build.
-        ocean_preload:     Value for LD_PRELOAD for coupled ocean runs, or None.
+        ocean_preload:     Raw `ocean.preload` catalog string (csh command
+                           prefix such as `env LD_PRELOAD=$GEOSDIR/lib/
+                           libmom6.so`), resolved against geosbin's parent
+                           into launch-time environment variables; None or
+                           '' skips preloading.
         max_attempts:      Number of launch attempts before giving up (native builds only).
 
     Raises:
@@ -150,9 +202,13 @@ def run_gcm(
         else []
     )
 
+    # gcm_run.j:1120-1121 -- {{ ocean.preload }} sits in front of the
+    # launch command; resolve it into launch-time environment variables.
+    preload_env = _parse_ocean_preload(ocean_preload, Path(geosbin).parent)
+
     cmd, env = _build_command(
         run_cmd, total_pes, geosexe, ioserver_args,
-        singularity_run, ocean_preload,
+        singularity_run, preload_env,
     )
 
     if use_shmem:

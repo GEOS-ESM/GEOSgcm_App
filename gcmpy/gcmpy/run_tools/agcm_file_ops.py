@@ -12,7 +12,7 @@ from gcmpy.utils.file_ops import get_val_from_rc_file
 num_seconds_per_day = 86400
 
 def get_use_waves(agcm_rc_file: Path | str) -> int:
-    """
+    r"""
     Implement the C-shell command:
 
     set USE_WAVES = `grep '^\s*USE_WAVES:' AGCM.rc| cut -d: -f2`
@@ -23,7 +23,7 @@ def get_use_waves(agcm_rc_file: Path | str) -> int:
     return int(USE_WAVES)
 
 def get_nx_ny(agcm_rc_file: Path | str) -> tuple[int]:
-    """
+    r"""
     Implement the C-shell command:
 
        set NX = `grep '^\s*NX:' AGCM.rc | cut -d: -f2`
@@ -36,7 +36,7 @@ def get_nx_ny(agcm_rc_file: Path | str) -> tuple[int]:
     return int(NX), int(NY)
 
 def get_agcm_im_jm_lm(agcm_rc_file: Path | str) -> tuple[int]:
-    """
+    r"""
     Implement the C-shell command:
 
        set AGCM_IM  = `grep '^\s*AGCM_IM:' AGCM.rc | cut -d: -f2`
@@ -50,7 +50,7 @@ def get_agcm_im_jm_lm(agcm_rc_file: Path | str) -> tuple[int]:
     return int(AGCM_IM), int(AGCM_JM), int(AGCM_LM)
 
 def get_ogcm_im_jm(agcm_rc_file: Path | str) -> tuple[int]:
-    """
+    r"""
     Implement the C-shell command:
 
        set OGCM_IM = `grep '^\s*OGCM\.IM_WORLD:' AGCM.rc | cut -d: -f2`
@@ -63,7 +63,7 @@ def get_ogcm_im_jm(agcm_rc_file: Path | str) -> tuple[int]:
     return int(OGCM_IM), int(OGCM_JM)
 
 def get_ogcm_coupled_overrides(agcm_rc_file: Path | str) -> tuple[int]:
-    """
+    r"""
     Implement the C-shell command (only run for coupled-ocean experiments):
 
        set OGCM_LM = `grep '^\s*OGCM\.LM:' AGCM.rc | cut -d: -f2`
@@ -84,7 +84,7 @@ def get_ogcm_coupled_overrides(agcm_rc_file: Path | str) -> tuple[int]:
     return int(NX), int(NY), int(OGCM_LM)
 
 def get_ioserver_params(agcm_rc_file: Path | str) -> tuple[int]:
-    """
+    r"""
     Implement the C-shell command:
 
     set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:' AGCM.rc | cut -d: -f2`
@@ -97,7 +97,7 @@ def get_ioserver_params(agcm_rc_file: Path | str) -> tuple[int]:
     return int(NUM_OSERVER_NODES), int(NUM_BACKEND_PES)
 
 def get_GIGATRAJ(agcm_rc_file: Path | str) -> str:
-    """
+    r"""
     Implement the C-shell command:
 
     set GIGATRAJ = `grep '^\s*GIGATRAJ_PARCELS_FILE:' AGCM.rc | cut -d: -f2`

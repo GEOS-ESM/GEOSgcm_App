@@ -36,7 +36,7 @@ def run_system_untar(archive_path: str,
 
 
 def get_rstid() -> str:
-    """
+    r"""
     Implmenting the Bash script:
 
     set RSTID = `/bin/ls *catch* | /bin/grep -Po '^.*(?=\.\w+_rst\.)'`
@@ -64,7 +64,7 @@ def get_rstid() -> str:
     return rstid
 
 def get_day() -> str:
-    """
+    r"""
     Implmenting the Bash script:
 
         set day  = `/bin/ls *catch* | /bin/grep -Po '(?<=\d{6})\d{2}(?=_21z)'`
