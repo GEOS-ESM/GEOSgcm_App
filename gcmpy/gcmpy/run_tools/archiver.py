@@ -4,14 +4,15 @@ restarts/archiver.py
 Post-run logic that takes _checkpoint files, renames them, strips EXPIDs,
 and builds the restart tarballs for the next segment.
 
-Replaces lines 1283-1364 of gcm_run.j.
+Replaces lines 1226-1312 of gcm_run.j.
 """
 
+import subprocess
 import tarfile
 from pathlib import Path
 
 import shutil
-from stage_restarts import read_edate
+from gcmpy.run_tools.stage_restarts import read_edate
 
 
 def _stripname(path: Path, old: str, new: str) -> Path:
@@ -31,6 +32,37 @@ def _stripname(path: Path, old: str, new: str) -> Path:
     new_path = path.parent / path.name.replace(old, new, 1)
     path.rename(new_path)
     return new_path
+
+
+def _checkpoint_extension(path: Path) -> str:
+    """
+    Determine the archive extension for a final checkpoint file.
+
+    Replaces:
+        set chk_type = `/usr/bin/file -Lb --mime-type $checkpoint`
+        if ( $chk_type =~ "application/octet-stream" ) then ext = bin
+        else ext = nc4
+
+    Args:
+        path: The checkpoint file to sniff.
+
+    Returns:
+        'bin' for application/octet-stream content, 'nc4' otherwise.
+        Falls back to 'nc4' (with a warning) if the file(1) utility is
+        not available.
+    """
+    file_tool = shutil.which("file")
+    if file_tool is None:
+        print(f"WARNING: file(1) not found; assuming nc4 for {path.name}")
+        return "nc4"
+
+    result = subprocess.run(
+        [file_tool, "-Lb", "--mime-type", str(path)],
+        capture_output=True,
+        text=True,
+    )
+    mime_type = result.stdout.strip()
+    return "bin" if mime_type == "application/octet-stream" else "nc4"
 
 
 def move_intermediate_checkpoints(scr_dir: Path, restarts_dir: Path) -> None:
@@ -71,7 +103,7 @@ def rename_final_checkpoints(
       2. Replace `_checkpoint` with `_rst` in that stamped name.
 
     Replaces:
-        /bin/mv $checkpoint $EXPID.${checkpoint}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.nc4
+        /bin/mv $checkpoint $EXPID.${checkpoint}.${edate}.${GCMVER}.${BCTAG}_${BCRSLV}.{bin,nc4}
         $GEOSBIN/stripname _checkpoint _rst $EXPID.${checkpoint}...
 
     Args:
@@ -85,11 +117,14 @@ def rename_final_checkpoints(
     Returns:
         List of Paths to the renamed *_rst.* files in scr_dir.
     """
-    suffix = f"{edate}.{gcmver}.{bctag}_{bcrslv}"
     renamed = []
 
     for checkpoint in sorted(scr_dir.glob("*_checkpoint")):
-        stamped = checkpoint.parent / f"{expid}.{checkpoint.name}.{suffix}.nc4"
+        ext = _checkpoint_extension(checkpoint)
+        stamped = checkpoint.parent / (
+            f"{expid}.{checkpoint.name}.{edate}.{gcmver}."
+            f"{bctag}_{bcrslv}.{ext}"
+        )
         checkpoint.rename(stamped)
         final = _stripname(stamped, "_checkpoint", "_rst")
         renamed.append(final)
@@ -116,54 +151,41 @@ def remove_initial_restarts(scr_dir: Path) -> None:
         rst.unlink()
 
 
-def archive_wavewatch(
-    scr_dir: Path,
-    expid: str,
-    edate: str,
-    gcmver: str,
-    bctag: str,
-    bcrslv: str,
-) -> Path | None:
+def archive_wavewatch(scr_dir: Path) -> Path | None:
     """
-    Handle WaveWatch3 restart archiving.
+    Promote the latest numbered WaveWatch3 checkpoint to the canonical
+    clean name, discarding the older numbered ones.
 
-    Finds the latest numbered WaveWatch3 checkpoint file
-    (`restart[0-9][0-9][0-9].ww3`), renames it to the stamped archive name
-    in scratch, then removes any remaining intermediate numbered ww3 files.
-
-    The stamped ww3 file remains in scr_dir and is picked up by tar_restarts.
+    The stamped archive copy (`$EXPID.restart.ww3.${edate}...bin`) is made
+    by archive_checkpoints() into the restarts directory, matching the
+    original, which renames in scratch first (clean `restart.ww3`) and then
+    copies a stamped version to $EXPDIR/restarts.
 
     Replaces:
         set ww3checkpoint = `/bin/ls -1 restart[0-9][0-9][0-9].ww3 | sort -n | tail -n 1`
-        /bin/mv -f $ww3checkpoint restart.ww3
+        if( $#ww3checkpoint != 0 ) /bin/mv -f $ww3checkpoint restart.ww3
         cp restart.ww3 ${EXPDIR}/restarts/$EXPID.restart.ww3.${edate}...bin
         /bin/rm ./restart[0-9][0-9][0-9].ww3
 
     Args:
         scr_dir: Scratch directory.
-        expid:   Experiment ID string.
-        edate:   Experiment date label.
-        gcmver:  GEOS model version string.
-        bctag:   Boundary condition tag string.
-        bcrslv:  Boundary condition resolution string.
 
     Returns:
-        Path to the stamped ww3 restart in scr_dir, or None if no ww3 checkpoints found.
+        Path to scratch's `restart.ww3`, or None if no new numbered
+        checkpoint was produced this segment (existing restart.ww3 is
+        then left untouched, as in the original).
     """
     ww3_checkpoints = sorted(scr_dir.glob("restart[0-9][0-9][0-9].ww3"))
     if not ww3_checkpoints:
         return None
 
-    latest = ww3_checkpoints[-1]
-    suffix = f"{edate}.{gcmver}.{bctag}_{bcrslv}"
-    stamped_ww3 = scr_dir / f"{expid}.restart.ww3.{suffix}.bin"
-    latest.rename(stamped_ww3)
+    ww3_checkpoints[-1].rename(scr_dir / "restart.ww3")
 
     # Remove any remaining intermediate numbered ww3 checkpoints
     for checkpoint in scr_dir.glob("restart[0-9][0-9][0-9].ww3"):
         checkpoint.unlink()
 
-    return stamped_ww3
+    return scr_dir / "restart.ww3"
 
 
 def strip_restart_names(
@@ -211,7 +233,6 @@ def strip_restart_names(
 
 
 def tar_restarts(
-    scr_dir: Path,
     restarts_dir: Path,
     expid: str,
     edate: str,
@@ -222,15 +243,16 @@ def tar_restarts(
     coupled: bool = False,
 ) -> None:
     """
-    Bundle the stamped restart files directly from the scratch directory into a
-    tar archive written to the restarts directory, then remove the originals.
+    Bundle the stamped restart files from the experiment restarts directory
+    into a tar archive, then remove the stamped originals (and the copied
+    RESTART.${edate} tree for coupled runs).
 
-    Tars from scr_dir before strip_restart_names runs, so stamped filenames
-    are still intact. No intermediate copy to restarts_dir is needed.
-
-    Only runs when fsegment == '00000000', indicating a full-segment run.
+    Callers must have copied the stamped files into restarts_dir first --
+    matching gcm_run.j, which always copies there (lines 1266-1272) but
+    only tars for full-segment runs.
 
     Replaces:
+        cd $EXPDIR/restarts
         if( $FSEGMENT == 00000000 ) then
             tar cf restarts.${edate}.tar $EXPID.*.${edate}...
             /bin/rm -rf `ls -d -1 $EXPID.*.${edate}...`
@@ -238,8 +260,7 @@ def tar_restarts(
         endif
 
     Args:
-        scr_dir:      Scratch directory containing the stamped restart files.
-        restarts_dir: Experiment restarts directory (tar is written here).
+        restarts_dir: Experiment restarts directory (source and tar target).
         expid:        Experiment ID string.
         edate:        Experiment date label.
         gcmver:       GEOS model version string.
@@ -252,7 +273,7 @@ def tar_restarts(
         return
 
     suffix = f"{edate}.{gcmver}.{bctag}_{bcrslv}"
-    stamped_files = sorted(scr_dir.glob(f"{expid}.*.{suffix}.*"))
+    stamped_files = sorted(restarts_dir.glob(f"{expid}.*.{suffix}.*"))
 
     tar_path = restarts_dir / f"restarts.{edate}.tar"
     with tarfile.open(tar_path, "w") as tar:
@@ -285,17 +306,25 @@ def archive_checkpoints(
     wavewatch: bool = False,
 ) -> None:
     """
-    Top-level entry point: rename checkpoints, build the tar archive, then
-    strip stamped names in scratch so clean `*_rst` files are ready for the
+    Top-level entry point: rename checkpoints, copy the stamped results to
+    the experiment restarts directory, build the tar archive, then strip
+    stamped names in scratch so clean `*_rst` files are ready for the
     next segment.
 
-    Flow:
-      1. Move intermediate checkpoints to the restarts directory.
-      2. Rename final checkpoints with full experiment stamp in scratch.
-      3. Remove stale bare `*_rst` files from scratch.
-      4. (Optional) Handle WaveWatch3 restart — stamps ww3 file in scratch.
-      5. Tar all stamped files from scratch into restarts_dir.
-      6. Strip stamps from files in scratch for the next segment.
+    Flow (gcm_run.j line references):
+      1. (1237-1238, coupled) Copy RESTART/ into restarts/RESTART.${edate}
+         and its contents into scratch INPUT/.
+      2. (1239) Move intermediate checkpoints to the restarts directory.
+      3. (1245) Rename final checkpoints with full experiment stamp in
+         scratch (bin/nc4 chosen by sniffing).
+      4. (1260) Remove stale bare `*_rst` files from scratch.
+      5. (1288) Promote the latest ww3 checkpoint to clean `restart.ww3`
+         in scratch (the stamped copy lands in step 6).
+      6. (1266-1272) Copy all stamped files into the restarts directory
+         (always, even for forecast-segment runs).
+      7. (1302-1311) Tar the stamped files (full segments only).
+      8. (1274-1286) Strip stamps from files in scratch for the next
+         segment.
 
     Args:
         scr_dir:          Scratch directory containing post-run checkpoint files.
@@ -313,19 +342,41 @@ def archive_checkpoints(
     restarts_dir.mkdir(exist_ok=True)
 
     edate = read_edate(cap_restart_path)
+    suffix = f"{edate}.{gcmver}.{bctag}_{bcrslv}"
 
     if coupled:
-        shutil.copytree(scr_dir / "RESTART", restarts_dir / f"RESTART.{edate}")
+        restart_src = scr_dir / "RESTART"
+        if restart_src.exists():
+            shutil.copytree(restart_src, restarts_dir / f"RESTART.{edate}")
+            # cp RESTART/* INPUT
+            input_dir = scr_dir / "INPUT"
+            if input_dir.is_dir():
+                for item in restart_src.iterdir():
+                    if item.is_file():
+                        shutil.copy2(item, input_dir / item.name)
+            else:
+                print(f"WARNING: {input_dir} not found; skipping RESTART/* INPUT")
 
     move_intermediate_checkpoints(scr_dir, restarts_dir)
     rename_final_checkpoints(scr_dir, expid, edate, gcmver, bctag, bcrslv)
     remove_initial_restarts(scr_dir)
 
+    ww3_restart = None
     if wavewatch:
-        archive_wavewatch(scr_dir, expid, edate, gcmver, bctag, bcrslv)
+        ww3_restart = archive_wavewatch(scr_dir)
+
+    # gcm_run.j:1266-1272 -- stamped restarts are copied into the
+    # experiment restarts directory for every segment; only the tar below
+    # is conditional on a full-segment run.
+    for stamped in sorted(scr_dir.glob(f"{expid}.*_rst.{suffix}.*")):
+        shutil.copy2(stamped, restarts_dir / stamped.name)
+    if ww3_restart is not None:
+        shutil.copy2(
+            ww3_restart, restarts_dir / f"{expid}.restart.ww3.{suffix}.bin"
+        )
 
     tar_restarts(
-        scr_dir, restarts_dir, expid, edate, gcmver, bctag, bcrslv, fsegment, coupled
+        restarts_dir, expid, edate, gcmver, bctag, bcrslv, fsegment, coupled
     )
 
     strip_restart_names(scr_dir, expid, edate, gcmver, bctag, bcrslv)

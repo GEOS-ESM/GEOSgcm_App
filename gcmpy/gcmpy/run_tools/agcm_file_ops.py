@@ -45,7 +45,7 @@ def get_agcm_im_jm_lm(agcm_rc_file: Path | str) -> tuple[int]:
     """
     AGCM_IM = get_val_from_rc_file(agcm_rc_file, "AGCM_IM:")
     AGCM_JM = get_val_from_rc_file(agcm_rc_file, "AGCM_JM:")
-    AGCM_LM = get_val_from_rc_file(agcm_rc_file, "AGCM_JM:")
+    AGCM_LM = get_val_from_rc_file(agcm_rc_file, "AGCM_LM:")
 
     return int(AGCM_IM), int(AGCM_JM), int(AGCM_LM)
 
@@ -57,10 +57,31 @@ def get_ogcm_im_jm(agcm_rc_file: Path | str) -> tuple[int]:
        set OGCM_JM = `grep '^\s*OGCM\.JM_WORLD:' AGCM.rc | cut -d: -f2`
 
     """
-    OGCM_IM = get_val_from_rc_file(agcm_rc_file, r"OGCM\.IM_WORLD:")
-    OGCM_JM = get_val_from_rc_file(agcm_rc_file, r"OGCM\.JM_WORLD:")
+    OGCM_IM = get_val_from_rc_file(agcm_rc_file, "OGCM.IM_WORLD:")
+    OGCM_JM = get_val_from_rc_file(agcm_rc_file, "OGCM.JM_WORLD:")
 
     return int(OGCM_IM), int(OGCM_JM)
+
+def get_ogcm_coupled_overrides(agcm_rc_file: Path | str) -> tuple[int]:
+    """
+    Implement the C-shell command (only run for coupled-ocean experiments):
+
+       set OGCM_LM = `grep '^\s*OGCM\.LM:' AGCM.rc | cut -d: -f2`
+       set      NX = `grep '^\s*OGCM\.NX:' AGCM.rc | cut -d: -f2`
+       set      NY = `grep '^\s*OGCM\.NY:' AGCM.rc | cut -d: -f2`
+
+    For coupled-ocean experiments, these OGCM.NX/OGCM.NY values override the
+    plain NX/NY read by get_nx_ny().
+
+    Returns
+    -------
+    NX, NY, OGCM_LM : tuple[int]
+    """
+    NX = get_val_from_rc_file(agcm_rc_file, "OGCM.NX:")
+    NY = get_val_from_rc_file(agcm_rc_file, "OGCM.NY:")
+    OGCM_LM = get_val_from_rc_file(agcm_rc_file, "OGCM.LM:")
+
+    return int(NX), int(NY), int(OGCM_LM)
 
 def get_ioserver_params(agcm_rc_file: Path | str) -> tuple[int]:
     """

@@ -6,6 +6,7 @@ set (programs
 	gcm_configure.py
 	gcm_create.py
 	gcm_setup.py
+	gcm_run.py
 	README.md
 	)
 

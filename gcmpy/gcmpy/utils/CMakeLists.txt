@@ -11,6 +11,7 @@ set (files
   strip_name.py
   yaml_ops.py
   catalog_ops.py
+  flag_ops.py
   )
 
 install (

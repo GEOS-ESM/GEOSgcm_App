@@ -1,7 +1,10 @@
 
 set (programs
 	__init__.py
+	test_archiver.py
 	test_cap_files_ops.py
+	test_post_run.py
+	test_pre_run.py
 	)
 
 foreach (file ${programs})

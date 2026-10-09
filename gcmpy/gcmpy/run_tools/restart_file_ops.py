@@ -25,8 +25,8 @@ def run_system_untar(archive_path: str,
        Pattern of the wildcards.
     """
     command = ["tar", "-xvf", archive_path, "-C", extract_path]
-    if wcard_pattern
-       command += ["--wildcard", f"r{wcard_pattern}"]
+    if wcard_pattern:
+        command += ["--wildcards", wcard_pattern]
 
     # Run the command and print the output to the console
     try:

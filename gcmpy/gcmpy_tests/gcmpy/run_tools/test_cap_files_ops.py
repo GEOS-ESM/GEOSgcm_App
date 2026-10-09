@@ -45,7 +45,12 @@ PRINTSPEC: 0  # (0: OFF, 1: IMPORT & EXPORT, 2: IMPORT, 3: EXPORT)
 
 def test_get_date_from_cap_rc():
     cap_rc_file = "CAP.rc"
-    result = nymde, nhmse, nymds, nhmss
+    result = {
+        "experiment_end_date": nymde,
+        "experiment_end_time": nhmse,
+        "segment_length_date": nymds,
+        "segment_length_time": nhmss,
+    }
     Path(cap_rc_file).write_text(cap_rc_text)
     answer = get_date_from_cap_rc(cap_rc_file)
     os.remove(cap_rc_file)
@@ -54,7 +59,7 @@ def test_get_date_from_cap_rc():
 
 def test_get_date_from_cap_restart():
     cap_restart_file = "cap_restart"
-    result = nymdc, nhmsc
+    result = {"current_date": nymdc, "current_time": nhmsc}
     Path(cap_restart_file).write_text(cap_restart_text)
     answer = get_date_from_cap_restart(cap_restart_file)
     os.remove(cap_restart_file)

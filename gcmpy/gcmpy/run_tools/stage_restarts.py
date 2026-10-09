@@ -399,7 +399,7 @@ def fetch_restarts(
     rstdate: str = "",
     coupled: bool = False,
     wavewatch: bool = False,
-) -> None:
+) -> bool:
     """
     Top-level entry point: parse restart names, detect and configure the face
     layout, copy restarts to scratch, and archive the initial set.
@@ -418,7 +418,11 @@ def fetch_restarts(
         rstdate:          Restart date string (required when gcmemip=True).
         coupled:          True for coupled (MOM6/CICE) runs.
         wavewatch:        True if WaveWatch3 is enabled.
-        archive:          Optional tarring
+
+    Returns:
+        True if restarts are stored in face-decomposed layout. Callers need
+        this later (gcm_run.j:901-921 -- ridge-scheme GWD restart handling)
+        to decide whether to patch NCAR_NRDG in AGCM.rc.
     """
     # Parse restart and checkpoint names
     rst_names = _parse_agcm_restarts(agcm_rc_path)
@@ -443,3 +447,5 @@ def fetch_restarts(
         exp_dir, scratch_dir, rst_file_names, cap_restart_path,
         expid, gcmver, bctag, bcrslv, coupled, wavewatch,
     )
+
+    return rst_by_face

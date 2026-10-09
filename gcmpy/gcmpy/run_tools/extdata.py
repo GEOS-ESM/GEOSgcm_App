@@ -118,4 +118,4 @@ def stage_extdata(
     if turn_off_wsub:
         patch_wsub_extdata(rc_dir)
 
-    generate_extdata_rc(rc_dir, geosbin)
+    generate_extdata_file(rc_dir, geosbin)

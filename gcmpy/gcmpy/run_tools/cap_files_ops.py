@@ -3,10 +3,11 @@ import sys
 import datetime as dttm
 from pathlib import Path
 
-from gcmpy.utils.clock_ops import advance_clock
+from gcmpy.utils.clock_ops import advance_clock, create_clock
 from gcmpy.utils.regex_ops import search_replace_in_file
 from gcmpy.utils.regex_ops import extract_line_starting_with
 from gcmpy.utils.file_ops import get_val_from_rc_file
+from gcmpy.utils.path_ops import check_file_exists
 
 num_seconds_per_day = 86400
 
@@ -42,14 +43,14 @@ def create_cap_files(dir_name: str,
     nhms = "210000"
 
     cap_restart = Path(dir_name) / "cap_restart"
-    cap_resatrt.write_text(f"{nymd} {nhms}")
+    cap_restart.write_text(f"{nymd} {nhms}")
 
     # Advancve the clock
     cur_clock = create_clock(nymd, nhms)
     cur_month = cur_clock.month
     counter = 0
     while counter < 4:
-         clock = advance_clock(cur_clock, secs_to_add=num_seconds_per_days)
+         clock = advance_clock(cur_clock, secs_to_add=num_seconds_per_day)
          month = clock.month
          cur_clock = clock
          if cur_month != month:
@@ -66,15 +67,14 @@ def create_cap_files(dir_name: str,
         print(f"The CAP.rc file does not exists in {dir_name}")
         sys.exit(1)
 
-def get_date_from_cap_restart(cap_restart_file: str) -> tuple[str]:
+def get_date_from_cap_restart(cap_restart_file: str) -> dict:
     """
     The file cap_restart_file contains one line with the format
     (representing the date and time):
 
          YYYYMMDD hhmmss
 
-    This function read the file and returns two values,
-    YYYYMMDD and hhmmss
+    This function reads the file and returns the date and time.
 
     Parameters
     ----------
@@ -83,23 +83,27 @@ def get_date_from_cap_restart(cap_restart_file: str) -> tuple[str]:
 
     Returns
     -------
-    nymdc, nhmsc : tuple[str]
-       A tuple of the date and time.
+    dict
+       {"current_date": YYYYMMDD, "current_time": hhmmss}
     """
     with open(cap_restart_file, 'r') as fid:
         line = fid.readline()
 
     line_as_list = line.strip().split()
-    nymdc, nhmsc = line_as_list[0], line_as_list[1]
+    current_date, current_time = line_as_list[0], line_as_list[1]
 
-    return nymdc, nhmsc
+    return {"current_date": current_date, "current_time": current_time}
 
-def get_date_from_cap_rc(cap_rc_file: str) -> tuple[str]:
+def get_date_from_cap_rc(cap_rc_file: str) -> dict:
     """
     The file cap_rc_file contains several lines including two starting
     with "END_DATE:" and "JOB_SGMT:". This function reads the file,
-    get the two lines and extract date/time values from each 
-    of them.
+    gets the two lines and extracts date/time values from each of them.
+
+    Note that JOB_SGMT is a *duration* (the segment length), not a
+    calendar date/time -- its YYYYMMDD/hhmmss-shaped value represents
+    years/months/days and hours/minutes/seconds to advance by, not a
+    point in time.
 
     Parameters
     ----------
@@ -108,18 +112,25 @@ def get_date_from_cap_rc(cap_rc_file: str) -> tuple[str]:
 
     Returns
     -------
-    nymde, nhmse, nymds, nhmss : tuple[str]
-       A tuple of date/time values.
+    dict
+       {"experiment_end_date": YYYYMMDD, "experiment_end_time": hhmmss,
+        "segment_length_date": YYYYMMDD-shaped duration,
+        "segment_length_time": hhmmss-shaped duration}
     """
     end_date = get_val_from_rc_file(cap_rc_file, "END_DATE:")
     end_date_list = end_date.strip().split()
-    nymde, nhmse = end_date_list[0], end_date_list[1]
+    experiment_end_date, experiment_end_time = end_date_list[0], end_date_list[1]
 
     job_sgmt = get_val_from_rc_file(cap_rc_file, "JOB_SGMT:")
     job_sgmt_list = job_sgmt.strip().split()
-    nymds, nhmss = job_sgmt_list[0], job_sgmt_list[1]
+    segment_length_date, segment_length_time = job_sgmt_list[0], job_sgmt_list[1]
 
-    return nymde, nhmse, nymds, nhmss
+    return {
+        "experiment_end_date": experiment_end_date,
+        "experiment_end_time": experiment_end_time,
+        "segment_length_date": segment_length_date,
+        "segment_length_time": segment_length_time,
+    }
 
 
 
