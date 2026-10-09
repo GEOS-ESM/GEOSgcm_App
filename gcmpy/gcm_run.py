@@ -240,6 +240,17 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
         cice6=cice6,
     )
 
+    # gcm_run.j:399-403 -- GCMRUN_catchment: strip CNFROOTC history
+    # fields when the CatchmentCN land model (LSM_CHOICE == 2) is
+    # active. Flag gate lives here (Jinja line-prefix semantics), the
+    # LSM_CHOICE check inside reads scratch AGCM.rc dynamically.
+    if is_enabled(run_config.get("land", {}).get("GCMRUN_catchment", "#DELETE")):
+        from gcmpy.run_tools.history_file_ops import strip_gcmrun_cnfrootc_lines
+
+        strip_gcmrun_cnfrootc_lines(
+            scratch_dir / "HISTORY.rc", scratch_dir / "AGCM.rc"
+        )
+
     # gcm_run.j:403-494 -- build/select the GEOSgcm.x executable
     # (native vs. singularity; singularity raises NotImplementedError).
     from gcmpy.run_tools.executable_setup import setup_executable

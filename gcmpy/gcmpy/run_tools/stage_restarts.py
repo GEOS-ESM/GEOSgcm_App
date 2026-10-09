@@ -298,6 +298,43 @@ def copy_restarts_to_scratch(
 
 
 # ---------------------------------------------------------------------------
+# Coupled-input staging
+# ---------------------------------------------------------------------------
+
+def stage_coupled_input(exp_dir: Path, scratch_dir: Path) -> None:
+    """
+    Seed scratch INPUT/ from the experiment's RESTART/ directory.
+
+    Replaces gcm_run.j:617-620 (runs once, before the segment loop):
+
+        {{ ocean.coupled }} /bin/mkdir INPUT
+        {{ ocean.coupled }} cp $EXPDIR/RESTART/* INPUT
+
+    The model then refreshes INPUT/ from its own scratch RESTART/ output
+    after each segment (gcm_run.j:1237, mirrored in archiver.py), but the
+    initial contents must come from the experiment. Only files are copied:
+    plain csh `cp` without -r fails on subdirectories, and a missing
+    $EXPDIR/RESTART makes the glob fail without aborting the script.
+
+    Args:
+        exp_dir:    Experiment directory (source RESTART/ lives here).
+        scratch_dir: Scratch/run directory (INPUT/ is created here).
+    """
+    # csh `mkdir INPUT` errors harmlessly when it already exists; the
+    # Python equivalent is an idempotent create.
+    input_dir = scratch_dir / "INPUT"
+    input_dir.mkdir(exist_ok=True)
+
+    restart_dir = exp_dir / "RESTART"
+    if not restart_dir.is_dir():
+        return
+
+    for item in restart_dir.iterdir():
+        if item.is_file():
+            shutil.copy2(item, input_dir / item.name)
+
+
+# ---------------------------------------------------------------------------
 # Archiving initial restarts
 # ---------------------------------------------------------------------------
 
@@ -402,7 +439,8 @@ def fetch_restarts(
 ) -> bool:
     """
     Top-level entry point: parse restart names, detect and configure the face
-    layout, copy restarts to scratch, and archive the initial set.
+    layout, copy restarts to scratch (seed coupled INPUT/ from the
+    experiment's RESTART/, gcm_run.j:617-620), and archive the initial set.
 
     Args:
         exp_dir:          Experiment directory.
@@ -440,6 +478,11 @@ def fetch_restarts(
         exp_dir, scratch_dir, rst_file_names, monthly_chk_names,
         gcmemip, rstdate, wavewatch,
     )
+
+    # gcm_run.j:617-620 -- coupled runs seed scratch INPUT/ from the
+    # experiment's RESTART/ directory (before the initial archive below).
+    if coupled:
+        stage_coupled_input(exp_dir, scratch_dir)
 
     # Archive the initial restarts (no-op if already archived for this date)
     #if archive == True
