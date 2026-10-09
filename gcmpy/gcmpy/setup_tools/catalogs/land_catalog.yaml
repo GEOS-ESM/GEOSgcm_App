@@ -34,6 +34,13 @@ bcs:
     emip_newland: ''
     emip_MERRA2: MERRA2_NewLand
     gwd_in_bcs: true
+  v14:
+    parameters: ''
+    emip_bcs_in: NL3
+    emip_oldland: '#DELETE'
+    emip_newland: ''
+    emip_MERRA2: MERRA2_NewLand
+    gwd_in_bcs: true
 
 models:
   Catchment:

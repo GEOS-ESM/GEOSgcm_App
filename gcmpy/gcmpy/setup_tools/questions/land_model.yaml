@@ -1,7 +1,7 @@
 LAND_bcs:
   type:           'select'
   prompt:         'Select the Land Surface Boundary Conditions:'
-  choices:        ['v12', 'NL3', 'ICA']
+  choices:        ['v12', 'v14', 'NL3', 'ICA']
   default_answer: ''
   follows_up:
     - ['OCEAN_data_atmosphere', [False]]
