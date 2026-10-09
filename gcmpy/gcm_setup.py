@@ -61,6 +61,7 @@ def main():
     experiment.config_gocartGridComp()
     experiment.config_heartbeat()
     experiment.template()
+    experiment.stage_bcs()
     experiment.organize_exp_dir()
 
 if __name__ == "__main__":

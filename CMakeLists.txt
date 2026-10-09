@@ -39,6 +39,9 @@ set (programs
    gcm_quickstat.j
    scm_run.j
    construct_extdata_yaml_list.py
+   stagebcs.py
+   linkbcs.py
+   packtoiso.py
    )
 
 install (
@@ -52,7 +55,7 @@ install (
    )
 
 install (
-   FILES fvcore_layout.rc saverst.rc logging.yaml
+   FILES fvcore_layout.rc saverst.rc logging.yaml bcs_catalog.yaml
    DESTINATION etc
    )
 

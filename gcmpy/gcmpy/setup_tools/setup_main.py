@@ -6,6 +6,7 @@ import sys
 import glob
 import math
 import shutil
+import subprocess
 import yaml
 import argparse
 from pathlib import Path
@@ -82,8 +83,15 @@ class SetupGCM:
         self.regular_replay_gmao = '#'
         self.regular_replay_ncep = '#DELETE'
         self.regular_replay_ecmwf = '#DELETE'
-        self.templates          = ['gcm_run.j',
-                                   'gcm_post.j',
+        # NOTE: gcm_run.j (the old csh SLURM/PBS job script) is intentionally
+        # left out of this list. The run job is now handled by the static
+        # (non-templated) gcm_run.sh + gcm_run.py orchestrator -- see
+        # gcm_run.py's --submit/--execute modes. gcm_run.j itself is kept
+        # in the source tree untouched as a fallback/reference.
+        # NOTE: linkbcs.tmpl is intentionally left out of this list -- boundary
+        # dataset linking is now handled by the stagebcs.py/linkbcs.py pipeline
+        # (see stage_bcs()) instead of a per-experiment templated csh script.
+        self.templates          = ['gcm_post.j',
                                    'gcm_archive.j',
                                    'gcm_regress.j',
                                    'gcm_plot.tmpl',
@@ -95,8 +103,7 @@ class SetupGCM:
                                    'CAP.rc.tmpl',
                                    'AGCM.rc.tmpl',
                                    'logging.yaml',
-                                   'fvcore_layout.rc',
-                                   'linkbcs.tmpl']
+                                   'fvcore_layout.rc']
     def config_models(self):
         self.ocean  = get_ocean_config(self.expConfig)
         self.atmos  = get_atmos_config(self.expConfig, self.ocean['NX'], self.ocean['NY'])
@@ -651,6 +658,75 @@ class SetupGCM:
             os.makedirs(f"{self.exp_dir}/RESTART", exist_ok=True)
 
 
+    # ------------------------------------------------------------------
+    # Boundary-dataset ("BCS") linking manifest generation
+    # ------------------------------------------------------------------
+    def stage_bcs(self):
+        """
+        Build linkbcs_config.yaml (the flat config consumed by stagebcs.py)
+        and invoke stagebcs.py once, at experiment-setup time, to produce
+        the resolved linkbcs.yaml manifest that linkbcs.py applies every
+        segment at run time (see gcm_run.py / run_tools/linkbcs_ops.py).
+
+        Replaces the old linkbcs.tmpl mechanism.
+        """
+        exp_dir = self.expConfig['exp_dir']
+
+        seaice_model_map = {'CICE6': 'cice6', 'CICE4': 'cice'}
+        linkbcs_config = {
+            'install_dir': str(pathdict['install']),
+            'boundary_dir': str(self.boundary_dir),
+            'agcm_grid': f"c{self.atmos['im']}",
+            'land_version': self.land['bcs'].lower(),
+            'seaice_model': seaice_model_map.get(self.ocean['seaice_model'], 'cice'),
+            'catchcn': self.land['model'] == 'CatchmentCN-CLM4.0',
+            # Hardcoded: not yet represented in gcmpy's config model.
+            'precip_correction': False,
+            'dual_ocean': False,
+            'experiment_type': 'GCM',
+            # Hardcoded PCHEM ozone climatology; not yet represented in
+            # gcmpy's config model (matches the most common production
+            # default -- MERRA-2 Ozone Data).
+            'pchem_species': 'merra-2',
+        }
+
+        if self.ocean['running_ocean']:
+            ocean_model = self.ocean['model'].lower()
+            if ocean_model == 'mit':
+                raise NotImplementedError(
+                    "linkbcs staging does not yet support the MIT ocean model "
+                    "(bcs_catalog.yaml has no 'MIT' section) -- deferred."
+                )
+            linkbcs_config['ocean_model'] = ocean_model
+            # Needed for stagebcs.py to navigate into ocean_model.mom6.<oXXX>
+            linkbcs_config['ocean_resolution'] = f"o{self.ocean['IM']}"
+            # stagebcs.py unconditionally reads config['ogcm_grid'] (only
+            # meaningfully compared against 'cubed_sphere_ostia' for the
+            # uncoupled/data-ocean case) -- must be present but is a no-op
+            # for coupled runs.
+            linkbcs_config['ogcm_grid'] = 'coupled'
+        else:
+            linkbcs_config['ocean_model'] = "data"
+            hr_code = self.expConfig['DATAOCEAN_resolution']
+            ogcm_grid_map = {
+                'o1': 'reynolds',
+                'o2': 'merra-2',
+                'o3': 'ostia',
+                'CS': 'cubed_sphere_ostia',
+            }
+            # stagebcs.py explicitly reads config['ogcm_grid'] by this exact key.
+            linkbcs_config['ogcm_grid'] = ogcm_grid_map[hr_code]
+
+        config_path = Path(exp_dir) / "linkbcs_config.yaml"
+        write_dict_into_yaml(config_path, linkbcs_config)
+
+        subprocess.run(
+            [str(Path(pathdict['bin']) / "stagebcs.py"), "--config", str(config_path)],
+            cwd=exp_dir,
+            check=True,
+        )
+
+
     # Templating helper function -- Removes lines marked with "#DELETE"
     def cleanup(self, file_path):
         with open(file_path, 'r') as file:
@@ -778,13 +854,11 @@ class SetupGCM:
         os.rename(f"{exp_dir}/CAP.rc.tmpl", f"{exp_dir}/CAP.rc")
         os.rename(f"{exp_dir}/AGCM.rc.tmpl", f"{exp_dir}/AGCM.rc")
         os.rename(f"{exp_dir}/{self.ocean['history_template']}", f"{exp_dir}/HISTORY.rc")
-        os.rename(f"{exp_dir}/linkbcs.tmpl", f"{exp_dir}/linkbcs")
 
         # update file permissions
         os.chmod(f"{exp_dir}/CAP.rc", 0o755)
         os.chmod(f"{exp_dir}/fvcore_layout.rc", 0o755)
         os.chmod(f"{exp_dir}/archive/gcm_archive.j", 0o755)
-        os.chmod(f"{exp_dir}/linkbcs", 0o755)
         os.chmod(f"{exp_dir}/logging.yaml", 0o755)
         os.chmod(f"{exp_dir}/forecasts/gcm_forecast.tmpl", 0o644)
         os.chmod(f"{exp_dir}/plot/gcm_plot.tmpl", 0o644)
