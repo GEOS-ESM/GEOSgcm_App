@@ -104,9 +104,32 @@ ORBIT_ANAL2B: .TRUE.
 ###########################################################
 
 ###########################################################
-# shallow cumulus options
+# SHOC-MF options
 # ----------------------------------------
-SHALLOW_OPTION: UW
+{{ SHALLOW_SHOC }}SHALLOW_OPTION: NONE
+{{ SHALLOW_SHOC }}TURBULENCE_DO_SHOC: 1
+{{ SHALLOW_SHOC }}EDMF_DOMF: 1
+{{ SHALLOW_SHOC }}PDFSHAPE: 6
+{{ SHALLOW_SHOC }}EDMF_ALPHAW: 0.07
+{{ SHALLOW_SHOC }}EDMF_ENT0: 0.40
+{{ SHALLOW_SHOC }}EDMF_ENTUFAC: 1.2
+{{ SHALLOW_SHOC }}EDMF_L0FAC: 11.0
+{{ SHALLOW_SHOC }}TURBULENCE_SHC_LENFAC1: 8.0
+{{ SHALLOW_SHOC }}TURBULENCE_SHC_LENFAC2: 2.0
+{{ SHALLOW_SHOC }}TURBULENCE_SHC_LENFAC3: 1.0
+###########################################################
+
+###########################################################
+# UW shallow cumulus options
+# ----------------------------------------
+{{ SHALLOW_UW }}SHALLOW_OPTION: UW
+#JASON_UW: .FALSE.
+#JASON_MFD_SC: .FALSE.
+#JASON_PBL_SC: .FALSE.
+#JASON_BELJAARS: .FALSE.
+#JASON_LOUIS: .FALSE.
+#JASON_LOCK: .FALSE.
+#TURBULENCE_TPFAC: 0.0
 ###########################################################
 
 ###########################################################
@@ -659,6 +682,10 @@ MAPL_ENABLE_BOOTSTRAP: {{ BOOT }}
 {{ MODELATM }}CATCH_INTERNAL_RESTART_FILE:            catch_internal_rst
 {{ MODELATM }}CATCH_INTERNAL_CHECKPOINT_FILE:         catch_internal_checkpoint
 {{ MODELATM }}CATCH_INTERNAL_CHECKPOINT_TYPE:         {{ CHECKPOINT_TYPE }}
+
+{{ MODELATM }}ROUTE_INTERNAL_RESTART_FILE:            route_internal_rst
+{{ MODELATM }}ROUTE_INTERNAL_CHECKPOINT_FILE:         route_internal_checkpoint
+{{ MODELATM }}ROUTE_INTERNAL_CHECKPOINT_TYPE:         {{ CHECKPOINT_TYPE }}
 
 {{ MODELATM }}CATCHCNCLM40_INTERNAL_RESTART_FILE:     catchcn_internal_rst
 {{ MODELATM }}CATCHCNCLM40_INTERNAL_CHECKPOINT_FILE:  catchcn_internal_checkpoint
