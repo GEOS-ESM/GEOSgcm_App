@@ -4,7 +4,7 @@ stage_restarts.py
 Identifies and copies the required initial restarts to the scratch directory.
 Handles face vs tile restart layout detection and AGCM.rc configuration.
 
-Replaces lines 494-645 of gcm_run.j.
+Replaces lines 494-664 of gcm_run.j.
 """
 
 import re
@@ -12,6 +12,8 @@ import shutil
 import sys
 import tarfile
 from pathlib import Path
+
+from gcmpy.utils.file_ops import get_file_type
 
 # Tile-based restart components — these are never expanded into face files
 # even when rst_by_face is True. (A frozenset is an immutable list)
@@ -418,6 +420,48 @@ def archive_initial_restarts(
             tar.add(exp_dir / "RESTART", arcname=f"RESTART.{edate}")
 
 
+def force_num_readers_1_for_binary_restarts(
+    scratch_dir: Path,
+    agcm_rc_path: Path,
+    rst_file_names: list[str],
+) -> bool:
+    """
+    If any staged restart is binary, set NUM_READERS to 1 in AGCM.rc so
+    +-style bootstrapping of missing files can occur in MAPL (pbinary
+    cannot do this, but pnc4 can).
+
+    Replaces (gcm_run.j:647-664):
+        set found_binary = 0
+        foreach rst ( $rst_file_names )
+           if (-e $rst) then
+              set rst_type = `/usr/bin/file -Lb --mime-type $rst`
+              if ( $rst_type =~ "application/octet-stream" ) then
+                 set found_binary = 1
+              endif
+           endif
+        end
+        if ($found_binary == 1) then
+           ... sed NUM_READERS -> 1 in AGCM.rc ...
+
+    Args:
+        scratch_dir:      Scratch directory holding the staged restarts.
+        agcm_rc_path:     Path to AGCM.rc to patch.
+        rst_file_names:   Expanded list of restart file names (relative to
+                          scratch_dir, as in the csh foreach loop).
+
+    Returns:
+        True if a binary restart was found and NUM_READERS was patched.
+    """
+    for rst in rst_file_names:
+        rst_path = scratch_dir / rst
+        if rst_path.exists() and get_file_type(str(rst_path)) == (
+            "application/octet-stream"
+        ):
+            _set_agcm_flag(agcm_rc_path, "NUM_READERS", "1")
+            return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Top-level entry point
 # ---------------------------------------------------------------------------
@@ -489,6 +533,12 @@ def fetch_restarts(
     archive_initial_restarts(
         exp_dir, scratch_dir, rst_file_names, cap_restart_path,
         expid, gcmver, bctag, bcrslv, coupled, wavewatch,
+    )
+
+    # gcm_run.j:647-664 -- if any restart is binary, force NUM_READERS to 1
+    # so +-style MAPL bootstrapping works (pbinary cannot do it).
+    force_num_readers_1_for_binary_restarts(
+        scratch_dir, agcm_rc_path, rst_file_names
     )
 
     return rst_by_face

@@ -40,7 +40,7 @@ def move_history_to_holding(
     Args:
         scratch_dir: Scratch directory holding the finished output files.
         exp_dir:     Experiment directory (holding/ is created at setup).
-        collections: HISTORY collection names (job_ctx['collections']).
+        collections: HISTORY collection names (job_context['collections']).
     """
     for collection in collections:
         holding_dir = exp_dir / "holding" / collection

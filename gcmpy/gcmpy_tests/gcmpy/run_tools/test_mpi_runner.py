@@ -98,10 +98,54 @@ def test_build_command_singularity_and_ioserver():
     assert cmd == [
         "mpiexec",
         "48",
-        "singularity exec /fake/image.sif",
+        "singularity",
+        "exec",
+        "/fake/image.sif",
         "/fake/bin/GEOSgcm.x",
         "--npes_io_server",
         "16",
         "--logging_config",
         "logging.yaml",
     ]
+
+
+def test_build_command_expands_multword_run_command(monkeypatch):
+    # setup writes run_command = '$GEOSBIN/esma_mpirun -np ' (setup_envs.py:34);
+    # csh word-splits and expands it before the launch.
+    monkeypatch.setenv("GEOSBIN", "/install/bin")
+    cmd, _ = _build_command(
+        "$GEOSBIN/esma_mpirun -np ",
+        560,
+        Path("/install/bin/GEOSgcm.x"),
+        [],
+        None,
+        None,
+    )
+    assert cmd[:4] == ["/install/bin/esma_mpirun", "-np", "560", "/install/bin/GEOSgcm.x"]
+
+
+def test_build_command_run_command_trailing_space_only():
+    cmd, _ = _build_command(
+        "srun ",
+        24,
+        Path("/fake/bin/GEOSgcm.x"),
+        [],
+        None,
+        None,
+    )
+    assert cmd[:3] == ["srun", "24", "/fake/bin/GEOSgcm.x"]
+
+
+def test_build_command_unresolved_run_command_var_raises(monkeypatch):
+    monkeypatch.delenv("GEOSBIN", raising=False)
+    import pytest
+
+    with pytest.raises(ValueError, match="unexpanded variable"):
+        _build_command(
+            "$GEOSBIN/esma_mpirun -np ",
+            24,
+            Path("/fake/bin/GEOSgcm.x"),
+            [],
+            None,
+            None,
+        )

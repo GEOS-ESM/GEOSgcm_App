@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from gcmpy.run_tools.stage_restarts import fetch_restarts, stage_coupled_input
+from gcmpy.run_tools.stage_restarts import (
+    fetch_restarts,
+    force_num_readers_1_for_binary_restarts,
+    stage_coupled_input,
+)
 
 
 def _make_experiment(tmp_path: Path) -> tuple[Path, Path]:
@@ -136,3 +140,66 @@ def test_fetch_restarts_skips_input_when_uncoupled(tmp_path):
     with tarfile.open(tar_path) as tar:
         names = tar.getnames()
     assert not any(name.startswith("RESTART.") for name in names)
+
+
+def test_binary_restart_forces_num_readers_1(tmp_path):
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    agcm = tmp_path / "AGCM.rc"
+    agcm.write_text("NUM_READERS: 6\n")
+    # Zero bytes -> application/octet-stream for `file --mime-type`.
+    (scratch / "fvcore_internal_rst").write_bytes(b"\x00" * 16)
+
+    found = force_num_readers_1_for_binary_restarts(
+        scratch, agcm, ["fvcore_internal_rst"]
+    )
+
+    assert found is True
+    # gcm_run.j:664 -- NUM_READERS rewritten to 1 (not e.g. 16).
+    assert "NUM_READERS: 1\n" == agcm.read_text()
+
+
+def test_netcdf_restart_leaves_num_readers_alone(tmp_path):
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    agcm = tmp_path / "AGCM.rc"
+    agcm.write_text("NUM_READERS: 6\n")
+    # Plain text content is not application/octet-stream.
+    (scratch / "fvcore_internal_rst").write_text("netcdf-ish")
+
+    found = force_num_readers_1_for_binary_restarts(
+        scratch, agcm, ["fvcore_internal_rst"]
+    )
+
+    assert found is False
+    assert "NUM_READERS: 6\n" == agcm.read_text()
+
+
+def test_binary_override_skips_missing_restarts(tmp_path):
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    agcm = tmp_path / "AGCM.rc"
+    agcm.write_text("NUM_READERS: 6\n")
+
+    # csh checks `-e $rst` before probing the type.
+    found = force_num_readers_1_for_binary_restarts(
+        scratch, agcm, ["not_staged.nc"]
+    )
+
+    assert found is False
+    assert "NUM_READERS: 6\n" == agcm.read_text()
+
+
+def test_fetch_restarts_applies_binary_num_readers_override(tmp_path):
+    exp, scratch = _make_experiment(tmp_path)
+    # Add NUM_READERS to both AGCM copies (exp seed + already-populated scratch).
+    for directory in (exp, scratch):
+        (directory / "AGCM.rc").write_text(
+            (directory / "AGCM.rc").read_text() + "NUM_READERS: 6\n"
+        )
+    (exp / "fvcore_internal_rst").write_bytes(b"\x00" * 32)
+
+    _fetch(exp, scratch, coupled=False)
+
+    assert (scratch / "fvcore_internal_rst").exists()
+    assert "NUM_READERS: 1" in (scratch / "AGCM.rc").read_text()

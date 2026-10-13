@@ -7,6 +7,7 @@ Replaces lines 1162-1194 of gcm_run.j.
 """
 
 import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -94,6 +95,39 @@ def _parse_ocean_preload(raw: str | None, geosdir: Path) -> dict[str, str] | Non
     return {name: value}
 
 
+def _tokenize_command(cmd_string: str, what: str) -> list[str]:
+    """
+    Split a csh-style command string into argv tokens with variable
+    expansion.
+
+    gcm_run.j relies on the shell to expand and word-split `$RUN_CMD`
+    (and `$SINGULARITY_RUN`) before launching GEOSgcm.x, and setup
+    writes multi-word values such as '$GEOSBIN/esma_mpirun -np '
+    (setup_envs.py:34). subprocess requires the tokens pre-split and
+    expanded.
+
+    Args:
+        cmd_string: Command string, possibly multi-word with $VAR refs.
+        what:       Label used in error messages (e.g. 'run_command').
+
+    Returns:
+        Expanded argv token list.
+
+    Raises:
+        ValueError: If a token still contains '$' after expansion
+                    (the referenced variable is not in the environment).
+    """
+    tokens = [os.path.expandvars(token) for token in shlex.split(cmd_string)]
+    unresolved = [token for token in tokens if "$" in token]
+    if unresolved:
+        raise ValueError(
+            f"{what} contains unexpanded variable reference(s): {unresolved} "
+            "-- the referenced variable (e.g. GEOSBIN, set by gcm_run.sh) "
+            "must be exported in the environment"
+        )
+    return tokens
+
+
 def _build_command(
     run_cmd: str,
     total_pes: int,
@@ -106,29 +140,36 @@ def _build_command(
     Assemble the full subprocess command and environment for a single launch attempt.
 
     Args:
-        run_cmd:      MPI launcher and its base flags (e.g. 'srun' or 'mpiexec').
+        run_cmd:      MPI launcher string; multi-word values like
+                      '$GEOSBIN/esma_mpirun -np ' are tokenized and
+                      expanded (replaces csh word-splitting of $RUN_CMD).
         total_pes:    Total number of PEs to pass to the launcher.
         geosexe:      Path to the GEOSgcm.x executable.
         ioserver_args: Pre-built IO server argument list (empty list if not used).
-        singularity_run: Singularity invocation prefix, or None for a native build.
+        singularity_run: Singularity invocation prefix (tokenized like
+                      run_cmd), or None for a native build.
         preload_env:  Extra environment (coupled-ocean LD_PRELOAD /
                       DYLD_INSERT_LIBRARIES) from _parse_ocean_preload(), or None.
 
     Returns:
         A (cmd, env) tuple ready for subprocess.run.
     """
-    if singularity_run is not None:
-        exe_args = [singularity_run, str(geosexe)]
-    else:
-        exe_args = [str(geosexe)]
-
-    cmd = [run_cmd, str(total_pes)] + exe_args + ioserver_args + [
-        "--logging_config", "logging.yaml"
-    ]
-
     env = os.environ.copy()
     if preload_env:
         env.update(preload_env)
+
+    run_tokens = _tokenize_command(run_cmd, "run_command")
+
+    if singularity_run is not None:
+        exe_args = _tokenize_command(singularity_run, "singularity_run") + [
+            str(geosexe)
+        ]
+    else:
+        exe_args = [str(geosexe)]
+
+    cmd = run_tokens + [str(total_pes)] + exe_args + ioserver_args + [
+        "--logging_config", "logging.yaml"
+    ]
 
     return cmd, env
 

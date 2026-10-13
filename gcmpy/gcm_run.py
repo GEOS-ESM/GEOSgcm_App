@@ -315,7 +315,7 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
     }
 
 
-def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
+def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     """
     Run one segment iteration of the GCM job (one pass through gcm_run.j's
     `while ( $counter <= ${NUM_SGMT} )` loop body, lines 673-1399).
@@ -329,10 +329,10 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
 
     Returns None (the original communicates failure only by exiting).
     """
-    exp_dir = job_ctx["exp_dir"]
-    scratch_dir = job_ctx["scratch_dir"]
-    gcmemip = job_ctx["gcmemip"]
-    rstdate = job_ctx["rstdate"]
+    exp_dir = job_context["exp_dir"]
+    scratch_dir = job_context["scratch_dir"]
+    gcmemip = job_context["gcmemip"]
+    rstdate = job_context["rstdate"]
 
     # gcm_run.j:673-682 -- copy CAP.rc from $HOMDIR (or GCMEMIP restarts
     # dir) and normalize whitespace, ready for this segment's run.
@@ -377,7 +377,7 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
         stage_amip_emissions(
             exp_dir / "RC",
             scratch_dir,
-            job_ctx["resources"]["AGCM_LM"],
+            job_context["resources"]["AGCM_LM"],
             amip_subdir=amip_subdir,
         )
 
@@ -385,7 +385,7 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
     # ww3_multi.nml isn't present -- see ww3_ops.py's module docstring).
     from gcmpy.run_tools.ww3_ops import set_ww3_dates
 
-    if job_ctx["wavewatch"]:
+    if job_context["wavewatch"]:
         set_ww3_dates(
             scratch_dir,
             time_vars["current_date"],
@@ -399,11 +399,11 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
 
     sync_heartbeat_dt(
         scratch_dir,
-        coupled=job_ctx["coupled"],
-        mom6=job_ctx["mom6"],
-        cice6=job_ctx["cice6"],
+        coupled=job_context["coupled"],
+        mom6=job_context["mom6"],
+        cice6=job_context["cice6"],
     )
-    patch_yaml_levels(scratch_dir, job_ctx["resources"]["AGCM_LM"])
+    patch_yaml_levels(scratch_dir, job_context["resources"]["AGCM_LM"])
 
     # gcm_run.j:839-885 -- ExtData assembly: prune ExtData files for
     # disabled chem components, patch WSUB_CLIM for microphysics that
@@ -413,7 +413,7 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
 
     stage_extdata(
         scratch_dir,
-        job_ctx["geosbin"],
+        job_context["geosbin"],
         # The setup-time Jinja prefix '' keeps the WSUB block active
         # (1MOM/GFDL); '#DELETE#' comments it out (MGB2_2M uses WSUB_CLIM).
         turn_off_wsub=(
@@ -444,16 +444,16 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
     # setup time by SetupGCM.stage_bcs(); this re-applies it every segment.
     from gcmpy.run_tools.linkbcs_ops import apply_linkbcs
 
-    apply_linkbcs(scratch_dir, job_ctx["geosbin"], scratch_dir / "cap_restart")
+    apply_linkbcs(scratch_dir, job_context["geosbin"], scratch_dir / "cap_restart")
 
     # gcm_run.j:901-983 -- GWD ridge restart, tile.bin, CICE6 pond state,
     # openwater tile-count validation, MERRA2OX date guard.
-    configure_gwd_restarts(scratch_dir, job_ctx["rst_by_face"])
-    ensure_tile_bin(scratch_dir, job_ctx["geosbin"])
-    if job_ctx["cice6"]:
+    configure_gwd_restarts(scratch_dir, job_context["rst_by_face"])
+    ensure_tile_bin(scratch_dir, job_context["geosbin"])
+    if job_context["cice6"]:
         configure_cice6_pond_restart(scratch_dir)
     validate_openwater_tiles(
-        scratch_dir, job_ctx["geosbin"], run_config["run_command"]
+        scratch_dir, job_context["geosbin"], run_config["run_command"]
     )
     check_merra2ox_dates(scratch_dir)
 
@@ -477,19 +477,19 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
     # gcm_run.j:1162-1194 -- launch GEOSgcm.x.
     from gcmpy.run_tools.mpi_runner import run_gcm
 
-    resources = job_ctx["resources"]
+    resources = job_context["resources"]
     run_gcm(
         run_cmd=run_config["run_command"],
         total_pes=resources["TOTAL_PES"],
-        geosexe=job_ctx["geosexe"],
-        geosbin=job_ctx["geosbin"],
+        geosexe=job_context["geosexe"],
+        geosbin=job_context["geosbin"],
         scr_dir=scratch_dir,
-        use_shmem=(job_ctx["segment_control"]["USE_SHMEM"] == "1"),
+        use_shmem=(job_context["segment_control"]["USE_SHMEM"] == "1"),
         use_ioserver=(resources["USE_IOSERVER"] == 1),
         model_npes=resources["NX"] * resources["NY"],
         num_oserver_nodes=resources["NUM_OSERVER_NODES"],
         num_backend_pes=resources["NUM_BACKEND_PES"],
-        singularity_run=job_ctx["singularity_run"],
+        singularity_run=job_context["singularity_run"],
         # gcm_run.j:1120-1121 {{ ocean.preload }} -- raw catalog prefix
         # (empty for uncoupled runs); run_gcm() resolves $GEOSDIR etc.
         ocean_preload=run_config.get("ocean", {}).get("preload") or None,
@@ -510,13 +510,13 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
         scratch_dir,
         exp_dir,
         scratch_dir / "cap_restart",
-        job_ctx["expid"],
-        job_ctx["gcmver"],
-        job_ctx["bctag"],
-        job_ctx["bcrslv"],
-        fsegment=job_ctx["segment_control"]["FCST_SEGMENT"],
-        coupled=job_ctx["coupled"],
-        wavewatch=job_ctx["wavewatch"],
+        job_context["expid"],
+        job_context["gcmver"],
+        job_context["bctag"],
+        job_context["bcrslv"],
+        fsegment=job_context["segment_control"]["FCST_SEGMENT"],
+        coupled=job_context["coupled"],
+        wavewatch=job_context["wavewatch"],
     )
 
     # gcm_run.j:1314-1352 -- HISTORY files to holding, MOM6/CICE6 output.
@@ -527,13 +527,13 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
         run_post_processing,
     )
 
-    move_history_to_holding(scratch_dir, exp_dir, job_ctx["collections"])
+    move_history_to_holding(scratch_dir, exp_dir, job_context["collections"])
     move_ocean_outputs(
         scratch_dir,
         exp_dir,
         edate,
-        mom6=job_ctx["mom6"],
-        cice6=job_ctx["cice6"],
+        mom6=job_context["mom6"],
+        cice6=job_context["cice6"],
     )
 
     # gcm_run.j:1355-1378 -- post-processing and cycled forecasts. The
@@ -543,7 +543,7 @@ def run_one_segment(job_ctx: dict, run_config: dict, counter: int) -> None:
     run_forecast_setup(
         scratch_dir,
         exp_dir,
-        job_ctx["segment_control"]["FCST_SEGMENT"],
+        job_context["segment_control"]["FCST_SEGMENT"],
         nymdc=time_vars["current_date"],
         nhmsc=time_vars["current_time"],
     )
@@ -567,36 +567,36 @@ def run_segments(config_path: Path, run_config: dict) -> bool:
         END_DATE), i.e. execute() should resubmit the job;
         False when the experiment is finished.
     """
-    job_ctx = run_job_setup(config_path, run_config)
-    num_sgmt = int(job_ctx["segment_control"]["NUM_SGMT"])
-    enddate = job_ctx["segment_control"]["END_DATE"][:8]
+    job_context = run_job_setup(config_path, run_config)
+    num_sgmt = int(job_context["segment_control"]["NUM_SGMT"])
+    enddate = job_context["segment_control"]["END_DATE"][:8]
 
     counter = 1
     while counter <= num_sgmt:
-        run_one_segment(job_ctx, run_config, counter)
+        run_one_segment(job_context, run_config, counter)
         counter += 1
 
         # gcm_run.j:1384-1391 -- stop early once cap_restart has reached
         # the experiment's END_DATE.
-        capdate = (job_ctx["scratch_dir"] / "cap_restart").read_text()[:8]
+        capdate = (job_context["scratch_dir"] / "cap_restart").read_text()[:8]
         if capdate >= enddate:
             break
 
     # gcm_run.j:1384-1385 -- re-read for the resubmit decision below
     # (also covers NUM_SGMT == 0, where the loop body never ran).
-    capdate = (job_ctx["scratch_dir"] / "cap_restart").read_text()[:8]
+    capdate = (job_context["scratch_dir"] / "cap_restart").read_text()[:8]
 
     # gcm_run.j:1403-1431 -- copy restarts (+ cap_restart, ww3, RESTART/)
     # back to the experiment directory (or restarts/$RSTDATE for GCMEMIP).
     from gcmpy.run_tools.post_run import copy_restarts_to_exp_dir
 
     copy_restarts_to_exp_dir(
-        job_ctx["scratch_dir"],
-        job_ctx["exp_dir"],
-        gcmemip=job_ctx["gcmemip"],
-        rstdate=job_ctx["rstdate"],
-        wavewatch=job_ctx["wavewatch"],
-        coupled=job_ctx["coupled"],
+        job_context["scratch_dir"],
+        job_context["exp_dir"],
+        gcmemip=job_context["gcmemip"],
+        rstdate=job_context["rstdate"],
+        wavewatch=job_context["wavewatch"],
+        coupled=job_context["coupled"],
     )
 
     # gcm_run.j:1434-1441 -- resubmit only while the end date is ahead.
