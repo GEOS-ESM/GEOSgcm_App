@@ -4,12 +4,12 @@
 #                     Batch Parameters for Run Job
 #######################################################################
 
-#{{ BATCH_TIME }}{{ RUN_FT }}
-#{{ RUN_FP }}
-#{{ BATCH_JOBNAME }}{{ RUN_FN }}_&DATE
-#{{ RUN_Q }}
-#{{ BATCH_GROUP }}
-#{{ BATCH_OUTPUTNAME }}FCSTOUT
+#{{ batch_time }}{{ run_ft }}
+#{{ run_fp }}
+#{{ batch_jobname }}{{ run_fn }}_&DATE
+#{{ run_q }}
+#{{ batch_group_full }}
+#{{ batch_outputname }}FCSTOUT
 
 #######################################################################
 #                         System Settings
@@ -25,16 +25,16 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             {{ SITE }}
-setenv GEOSDIR          {{ GEOSDIR }}
-setenv GEOSBIN          {{ GEOSBIN }}
-setenv GEOSETC          {{ GEOSETC }}
-setenv GEOSUTIL         {{ GEOSSRC }}
+setenv SITE             {{ site }}
+setenv GEOSDIR          {{ install_path }}
+setenv GEOSBIN          {{ bin_path }}
+setenv GEOSETC          {{ etc_path }}
+setenv GEOSUTIL         {{ install_path }}
 
 source $GEOSBIN/g5_modules
-setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
+setenv {{ ld_library_path_command }} ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
 if ( $?BASEDIR ) then
-   setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
+   setenv {{ ld_library_path_command }} ${{'{'}}{{ ld_library_path_command }}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 # Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
 if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
@@ -45,7 +45,7 @@ if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
     endif
 endif
 
-setenv RUN_CMD "{{ RUN_CMD }}"
+setenv RUN_CMD "{{ run_command }}"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
 echo   VERSION: $GCMVER
@@ -55,9 +55,9 @@ echo   VERSION: $GCMVER
 #######################################################################
 
 
-setenv  EXPID   {{ EXPID }}
-setenv  EXPDIR  {{ EXPDIR }}
-setenv  HOMDIR  {{ HOMDIR }}
+setenv  EXPID   {{ expConfig.experiment_id }}
+setenv  EXPDIR  {{ exp_dir }}
+setenv  HOMDIR  {{ exp_dir }}
 
 #######################################################################
 #                  Set Forecast Run Parameters
@@ -168,14 +168,14 @@ set  AGCM_LM  = `grep '^\s*AGCM_LM:'        $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_IM  = `grep '^\s*OGCM\.IM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 set  OGCM_JM  = `grep '^\s*OGCM\.JM_WORLD:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
-{{ COUPLED }} set  OGCM_LM  = `grep '^\s*OGCM\.LM:'       $HOMDIR/AGCM.rc | cut -d: -f2`
-{{ COUPLED }} set       NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
-{{ COUPLED }} set       NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+{{ ocean.coupled }} set  OGCM_LM  = `grep '^\s*OGCM\.LM:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+{{ ocean.coupled }} set       NX  = `grep '^\s*OGCM\.NX:'       $HOMDIR/AGCM.rc | cut -d: -f2`
+{{ ocean.coupled }} set       NY  = `grep '^\s*OGCM\.NY:'       $HOMDIR/AGCM.rc | cut -d: -f2`
 
 # Calculate number of cores/nodes for IOSERVER
 # --------------------------------------------
 
-set USE_IOSERVER      = {{ USE_IOSERVER }}
+set USE_IOSERVER      = {{ expConfig.io_server }}
 set NUM_OSERVER_NODES = `grep '^\s*IOSERVER_NODES:'  $HOMDIR/AGCM.rc | cut -d: -f2`
 set NUM_BACKEND_PES   = `grep '^\s*NUM_BACKEND_PES:' $HOMDIR/AGCM.rc | cut -d: -f2`
 
@@ -201,7 +201,7 @@ else if ($?PBS_NODEFILE) then
 else
    # This is the default value if nothing is specified that is used
    # for desktops and laptops from gcm_setup
-   set NCPUS_PER_NODE = {{ NCPUS_PER_NODE }}
+   set NCPUS_PER_NODE = {{ num_CPUs }}
 endif
 
 set NUM_MODEL_NODES=`echo "scale=6;($MODEL_NPES / $NCPUS_PER_NODE)" | bc | awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($1)}'`
@@ -437,22 +437,22 @@ done:
 #                        Link Boundary Datasets
 #######################################################################
 
-setenv BCSDIR    {{ BCSDIR }}
-{{ DATAOCEAN }}setenv SSTDIR    {{ SSTDIR }}
-setenv BCRSLV    {{ ATMOStag }}_{{ OCEANtag }}
-{{ MOM5 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
-{{ MOM6 }}setenv SSTDIR  {{ COUPLEDIR }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
+setenv BCSDIR    {{ bcs_dir }}
+{{ ocean.data }}setenv SSTDIR    {{ sst_dir }}
+setenv BCRSLV    {{ atmos.res }}_{{ ocean.res }}
+{{ MOM5 }}setenv SSTDIR  {{ coupled_dir }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
+{{ ocean.MOM6 }}setenv SSTDIR  {{ coupled_dir }}/SST/MERRA2/${OGCM_IM}x${OGCM_JM}/v1
 
 #this is hard-wired for NAS for now - should make it more general
-{{ DATAOCEAN }}setenv BCTAG `basename $BCSDIR`
-{{ COUPLED }}setenv BCTAG `basename {{ COUPLEDIR }}/{{ OCNMODEL }}/${OGCM_IM}x${OGCM_JM}`
-setenv EMISSIONS {{ EMISSIONS }}
+{{ ocean.data }}setenv BCTAG `basename $BCSDIR`
+{{ ocean.coupled }}setenv BCTAG `basename {{ coupled_dir }}/{{ ocean.model }}/${OGCM_IM}x${OGCM_JM}`
+setenv EMISSIONS {{ gocart.emissions }}
 chmod +x linkbcs
 
-{{ GCMRUN_CATCHCN }}set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
-{{ GCMRUN_CATCHCN }}if ($LSM_CHOICE == 2) then
-{{ GCMRUN_CATCHCN }}  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
-{{ GCMRUN_CATCHCN }}endif
+{{ land.GCMRUN_catchment }}set LSM_CHOICE = `grep LSM_CHOICE:  AGCM.rc | cut -d':' -f2`
+{{ land.GCMRUN_catchment }}if ($LSM_CHOICE == 2) then
+{{ land.GCMRUN_catchment }}  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+{{ land.GCMRUN_catchment }}endif
 
 #######################################################################
 #                    Get Executable and RESTARTS
@@ -611,11 +611,11 @@ if( $AGCM_LM  != 72 ) then
     endif
 endif
 
-{{ MP_TURN_OFF_WSUB_EXTDATA }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
-{{ MP_TURN_OFF_WSUB_EXTDATA }}# -------------------------------------------------
-{{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-{{ MP_TURN_OFF_WSUB_EXTDATA }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-{{ MP_TURN_OFF_WSUB_EXTDATA }}/bin/rm WSUB_ExtData.tmp
+{{ atmos.mp_turn_off_wsub_extdata }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
+{{ atmos.mp_turn_off_wsub_extdata }}# -------------------------------------------------
+{{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+{{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
+{{ atmos.mp_turn_off_wsub_extdata }}/bin/rm WSUB_ExtData.tmp
 
 # Construct extdata.yaml list for all components based on RC files
 # ----------------------------------------------------------------
@@ -624,14 +624,14 @@ $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 # Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
 touch ExtData.rc
 
-{{ RRTMGP_RADIATION }} # Move GOCART to use RRTMGP Bands
-{{ RRTMGP_RADIATION }} # -------------------------------
-{{ RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
-{{ RRTMGP_RADIATION }} foreach instance ($instance_files)
-   {{ RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
-   {{ RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
-   {{ RRTMGP_RADIATION }} /bin/rm $instance.tmp
-{{ RRTMGP_RADIATION }} end
+{{ atmos.RRTMGP_RADIATION }} # Move GOCART to use RRTMGP Bands
+{{ atmos.RRTMGP_RADIATION }} # -------------------------------
+{{ atmos.RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
+{{ atmos.RRTMGP_RADIATION }} foreach instance ($instance_files)
+   {{ atmos.RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
+   {{ atmos.RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   {{ atmos.RRTMGP_RADIATION }} /bin/rm $instance.tmp
+{{ atmos.RRTMGP_RADIATION }} end
 
 # Link Boundary Conditions for Appropriate Date
 # ---------------------------------------------
@@ -667,8 +667,8 @@ endif
 if ( -x $GEOSBIN/rs_numtiles.x ) then
 
    set N_OPENW_TILES_EXPECTED = `grep '^\s*0' tile.data | wc -l`
-   {{ SINGULARITY_BUILD }} set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
-   {{ NATIVE_BUILD }} set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   {{ singularity_build }} set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $SINGULARITY_RUN $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
+   {{ native_build }} set N_OPENW_TILES_FOUND = `$RUN_CMD 1 $GEOSBIN/rs_numtiles.x openwater_internal_rst | grep Total | awk '{print $NF}'`
 
    if ( $N_OPENW_TILES_EXPECTED != $N_OPENW_TILES_FOUND ) then
       echo "Error! Found $N_OPENW_TILES_FOUND tiles in openwater. Expect to find $N_OPENW_TILES_EXPECTED tiles."
@@ -712,9 +712,9 @@ endif
 # Environment variables for MPI, etc
 # ----------------------------------
 
-{{ SETENVS }}
+{{ mpi_config }}
 
-{{ MPT_SHEPHERD }}
+{{ ocean.mpt_shepherd }}
 
 # Run bundleParser.py
 #---------------------
@@ -759,8 +759,8 @@ else
    set IOSERVER_EXTRA = ""
 endif
 
-{{ SINGULARITY_BUILD }} {{ OCEAN_PRELOAD }} $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
-{{ NATIVE_BUILD }} {{ OCEAN_PRELOAD }} {{ SEVERAL_TRIES }} $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+{{ singularity_build }} {{ ocean.preload }} $RUN_CMD $TOTAL_PES $SINGULARITY_RUN $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
+{{ native_build }} {{ ocean.preload }} {{ several_tries }} $RUN_CMD $TOTAL_PES $GEOSEXE $IOSERVER_OPTIONS $IOSERVER_EXTRA --logging_config 'logging.yaml'
 
 if( $USE_SHMEM == 1 ) $GEOSBIN/RmShmKeys_sshmpi.csh >& /dev/null
 

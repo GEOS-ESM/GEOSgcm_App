@@ -31,6 +31,6 @@ sed -f sedfile gcm_run.tmp > gcm_run.j$RSTDATE
 /bin/rm -f sedfile
 /bin/rm -f gcm_run.tmp
 
-echo {{ BATCH_CMD }} gcm_run.j$RSTDATE
+echo {{ batch_cmd }} gcm_run.j$RSTDATE
 end
 

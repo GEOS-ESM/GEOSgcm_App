@@ -1,4 +1,4 @@
-AM_horizontal_res:
+AGCM_grid:
   type:           'select'
   prompt:         'Select the atmospheric models HORIZONTAL resolution:'
   choices:        ['c12  -- 8    deg (750.0    km)', 'c24  -- 4    deg (375.0    km)', 'c48  -- 2    deg (187.5    km)', 'c90  -- 1    deg (100.0    km)', 'c180 -- 1/2  deg ( 50.0    km)', 'c360 -- 1/4  deg ( 25.0    km)', 'c720 -- 1/8  deg ( 12.5    km)', 'c1120 -- 1/12 deg (  8.0    km)', 'c1440 - 1/16 deg (  6.25   km)','c270 --  (16.0 -100 km)', 'c540 --  ( 8.0 - 50 km)', 'c1080 -  ( 4.0 - 25 km)', 'c1536 -  ( 2.0 - 20 km)', 'c2160 -  ( 2.0 - 12 km)']
@@ -6,14 +6,14 @@ AM_horizontal_res:
   follows_up:     ''
   answer:         ''
 
-AM_vertical_res:
+AGCM_LM:
   type:           'text'
   prompt:         'Enter the atmospheric models VERTICAL resolution:'
   choices:        ''
   default_answer: '181'
   follows_up:     ''
 
-AM_microphysics:
+MOIST_version:
   type:           'select'
   prompt:         'Select the Atmospheric Model Microphysics:'
   choices:        ['GFDL_1M  --  6-phase 1-moment Geophysical Fluid Dynamics Laboratory', 'BACM_1M  --  3-phase 1-moment Bacmeister et al', 'MGB2_2M  --  5 or 6-phase 2-moment Morrison & Gettleman']

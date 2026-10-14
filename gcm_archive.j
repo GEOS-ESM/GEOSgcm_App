@@ -4,12 +4,12 @@
 #                     Batch Parameters for Archive Job
 #######################################################################
 
-#{{ BATCH_TIME }}{{ ARCHIVE_T }}
-#{{ ARCHIVE_P }}
-#{{ BATCH_JOBNAME }}{{ ARCHIVE_N }}
-#{{ ARCHIVE_Q }}
-#{{ BATCH_GROUP }}
-#{{ BATCH_OUTPUTNAME }}OUTPUT
+#{{ batch_time }}{{ archive_t }}
+#{{ archive_p }}
+#{{ batch_jobname }}{{ archive_n }}
+#{{ archive_q }}
+#{{ batch_group_full }}
+#{{ batch_outputname }}OUTPUT
 
 #######################################################################
 #                  System Environment Variables
@@ -19,9 +19,9 @@ umask 022
 
 limit stacksize unlimited
 
-{{ SETENVS }}
+{{ mpi_config }}
 
-{{ MPT_SHEPHERD }}
+{{ ocean.mpt_shepherd }}
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -29,13 +29,13 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             {{ SITE }}
-setenv GEOSBIN          {{ GEOSBIN }}
+setenv SITE             {{ site }}
+setenv GEOSBIN          {{ bin_path }}
 
 source $GEOSBIN/g5_modules
-setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}
+setenv {{ ld_library_path_command }} ${LD_LIBRARY_PATH}
 if ( $?BASEDIR ) then
-    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
+    setenv {{ ld_library_path_command }} ${{'{'}}{{ ld_library_path_command }}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 
 #######################################################################

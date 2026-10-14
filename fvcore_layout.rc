@@ -1,11 +1,10 @@
 &fv_core_nml
  range_warn = .F.
  fv_debug = .F.
- {{ FV_SCHMIDT }}
- {{ FV_STRETCH_FAC }}
- {{ FV_TARGET_LON }}
- {{ FV_TARGET_LAT }}
- {{ FV_RUN_HYDROSTATIC }}
+ {{ atmos.schmidt }}
+ {{ atmos.FV_stretch_fac }}
+ {{ atmos.target_lon }}
+ {{ atmos.target_lat }}
 /
 
 &main_nml

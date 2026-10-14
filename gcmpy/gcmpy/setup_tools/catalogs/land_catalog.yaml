@@ -1,0 +1,58 @@
+# Land catalog derived from land.py
+# Static lookup data for land surface model configuration.
+# Fields that are resolved at runtime from expConfig (model name, bcs name) are
+# not repeated here -- only the output values set by set_bcs() and set_catchment().
+
+defaults:
+  parameters: ''
+  emip_bcs_in: ''
+  emip_oldland: ''
+  emip_newland: ''
+  emip_MERRA2: ''
+  HIST_catchment: ''
+  GCMRUN_catchment: ''
+
+bcs:
+  ICA:
+    parameters: '#DELETE'
+    emip_bcs_in: GM4
+    emip_oldland: ''
+    emip_newland: '#DELETE'
+    emip_MERRA2: MERRA2
+    gwd_in_bcs: false
+  NL3:
+    parameters: ''
+    emip_bcs_in: NL3
+    emip_oldland: '#DELETE'
+    emip_newland: ''
+    emip_MERRA2: MERRA2_NewLand
+    gwd_in_bcs: false
+  v12:
+    parameters: ''
+    emip_bcs_in: NL3
+    emip_oldland: '#DELETE'
+    emip_newland: ''
+    emip_MERRA2: MERRA2_NewLand
+    gwd_in_bcs: true
+  v14:
+    parameters: ''
+    emip_bcs_in: NL3
+    emip_oldland: '#DELETE'
+    emip_newland: ''
+    emip_MERRA2: MERRA2_NewLand
+    gwd_in_bcs: true
+
+models:
+  Catchment:
+    model: 1
+    HIST_catchment: '#DELETE'
+    GCMRUN_catchment: '#DELETE'
+  CatchmentCN-CLM4.0:
+    model: 2
+    HIST_catchment: ''
+    GCMRUN_catchment: ''
+
+data_atmos_defaults:
+  # When OCEAN_data_atmosphere is true, land questions are skipped and these values are used
+  model: Catchment
+  bcs: NL3

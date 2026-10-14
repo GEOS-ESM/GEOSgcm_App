@@ -1,263 +1,158 @@
-from datetime import date
-from gcmpy.utils.color_ops import Color
+from pathlib import Path
+import yaml
 
-class Ocean:
-    def __init__(ocean, expConfig):
-        ocean.expConfig = expConfig
-        ocean.running_ocean = ocean.expConfig['OM_coupled']
-        ocean.model = ocean.expConfig['OM_name']
-        ocean.seaice_model = ocean.expConfig['OM_seaice_model']
-        ocean.history_template = ocean.expConfig['history_template']
-        ocean.LM = ocean.expConfig['OM_vertical_res']
-        ocean.data_atmos = ocean.expConfig['OM_data_atmos']
-        ocean.name = ''
-        ocean.preload = ''
-        ocean.seaice_name = ''
-        ocean.seaice_preload = ''
-        ocean.gridtyp = ''
-        ocean.mpt_shepherd = ''
+from gcmpy.utils.catalog_ops import CatalogSearch, load_catalog
 
 
-    def config(ocean):
-        if ocean.running_ocean == True:
-            ocean.set_coupled()
-            ocean.set_seaice()
-            ocean.set_preload()
-            ocean.set_data_atmosphere()
-        else:
-            ocean.set_uncoupled()
-            ocean.set_data_atmosphere()
+CATALOG_PATH = Path(__file__).parent / "catalogs" / "ocean_catalog.yaml"
 
 
-    def set_coupled(ocean):
-        # NOTE: We use a CMake variable here because the shared library
-        # suffix is different on Linux and macOS. This is set by configure_file()
-        if ocean.model == 'MOM5':
-            ocean.name = 'MOM'
-            ocean.gridtyp = 'M5TP'
-            ocean.grid_type = 'Tripolar'
-            ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.MOM5 = ''
-            ocean.MOM6 = '#DELETE'
-            ocean.MIT = '#DELETE'
-            MOM5_warning = (
-                "######################################################\n"
-                "You have chosen to set up a coupled model experiment with MOM5.\n"
-                "Be aware that such a set up is _known_ to have problems. See following for more details:\n"
-                "https://github.com/GEOS-ESM/MOM5/issues/19\n"
-                "If your intent is to help _fix_ above issue, your help is much appreciated. Thank you and good luck!\n"
-                "Otherwise, until this above issue is _fixed_ you are on your own with above choice.\n"
-                "######################################################"
-            )
-            print(Color.GREEN + MOM5_warning + Color.RESET)
-            ocean.NX = 36
-            ocean.NY = 10
-            resolution = ocean.expConfig['OM_MOM_horizontal_res'].split()
-            ocean.IM = int(resolution[0])
-            ocean.JM = int(resolution[1])
-        elif ocean.model == 'MOM6':
-            ocean.name = 'MOM6'
-            ocean.gridtyp = 'M6TP'
-            ocean.grid_type = 'Tripolar'
-            ocean.preload = 'env @PRELOAD_COMMAND=$GEOSDIR/lib/libmom6@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.MOM5 = '#DELETE'
-            ocean.MOM6 = ''
-            ocean.MIT = '#DELETE'
-            ocean.set_MOM6_resolution()
-        elif ocean.model == 'MIT':
-            ocean.name = 'MIT'
-            ocean.grid_type = 'llc'
-            ocean.gridtyp = 'MITLLC'
-            ocean.MOM5 = '#DELETE'
-            ocean.MOM6 = '#DELETE'
-            ocean.MIT = ''
-            ocean.JM = 15
-            ocean.IM = ocean.jm * 360
-            ocean.NX = 360
-            ocean.NY = 1
-            #ocean.gridspec = 'mit.ascii' <-- dead code(?)
+# ---------------------------------------------------------------------------
+# Private helpers — one per catalog section
+# ---------------------------------------------------------------------------
 
-        ocean.coupled = ''
-        IMO = '%04d' % ocean.IM
-        JMO = '%04d' % ocean.JM
-        ocean.res = f"{ocean.gridtyp}{IMO}x{JMO}"
-        ocean.tag = 'Reynolds'
-        ocean.sst_name = '#DELETE'
-        ocean.sst_file = '#DELETE'
-        ocean.ice_file = '#DELETE'
-        ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
-        ocean.ostia = '#DELETE'
-        ocean.out = '#DELETE'
-        ocean.latlon = ''
-        ocean.cube = '#DELETE'
-        ocean.data = '#DELETE'
-        ocean.NF = 1
+def _build_coupled(ocean: dict, catalog: CatalogSearch, expConfig: dict):
+    """Populate ocean dict for coupled (running_ocean=True) configurations."""
 
-        ocean.nprocs = ocean.NX * ocean.NY # This might be bugged(!)
-        ocean.set_gridname()
+    coupled_fields = [
+        'coupled', 'tag', 'sst_name', 'sst_file', 'ice_file',
+        'ostia', 'out', 'latlon', 'cube', 'data', 'NF',
+        # model-specific
+        'name', 'gridtyp', 'grid_type', 'preload', 'MOM6', 'MIT',
+        # resolution-specific
+        'NX', 'NY', 'IM', 'JM', 'LM', 'IMO', 'JMO',
+        'res', 'kpar_file', 'gridname', 'nprocs',
+    ]
+
+    for field in coupled_fields:
+        ocean[field] = catalog.get_value(field, 'coupled')
+
+    # MIT has no preload entry in the catalog; default to empty string so
+    # seaice preload concatenation in _build_seaice() works cleanly.
+    if ocean.get('preload') is None:
+        ocean['preload'] = ''
+
+    ocean['model'] = expConfig['OCEAN_type']
+
+    # Uncoupled-only fields — mark as deleted for template cleanup
+    ocean['CICE4']      = '#DELETE'
+    ocean['CICE6']      = '#DELETE'
+    ocean['hist_CICE4'] = '#DELETE'
 
 
-    def set_uncoupled(ocean):
-        #rename this to 'uncoupled_hres'
-        hr_code = ocean.expConfig['OM_horizontal_res']
-        todays_date = date.today()
+def _build_uncoupled(ocean: dict, catalog: CatalogSearch, expConfig: dict):
+    """Populate ocean dict for uncoupled (data ocean) configurations."""
 
-        if hr_code == 'o1':
-            ocean.IM = 360
-            ocean.JM = 180
-            ocean.grid_type = 'LatLon'
-            ocean.NF = 1
-            ocean.tag = 'Reynolds'
-            ocean.sst_name = 'SST'
-            ocean.out = '360x180'
-            ocean.sst_file = f"dataoceanfile_MERRA_sst_1971-current.{ocean.IM}x{ocean.JM}.LE"
-            ocean.ice_file = f"dataoceanfile_MERRA_fraci_1971-current.{ocean.IM}x{ocean.JM}.LE"
-            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
-            ocean.gridtyp = 'DE'
-            ocean.latlon = ''
-            ocean.cube = '#DELETE'
-            ocean.ostia = '#DELETE'
-            ocean.data = ''
-        elif hr_code == 'o2':
-            ocean.IM = 1440
-            ocean.JM = 720
-            ocean.grid_type = 'LatLon'
-            ocean.NF = 1
-            ocean.tag = 'MERRA-2'
-            ocean.sst_name = 'MERRA2'
-            ocean.out = '1440x720'
-            ocean.sst_file = f"dataoceanfile_MERRA2_SST.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
-            ocean.ice_file = f"dataoceanfile_MERRA2_ICE.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
-            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
-            ocean.gridtyp = 'DE'
-            ocean.latlon = ''
-            ocean.cube = '#DELETE'
-            ocean.ostia = ''
-            ocean.data = ''
-        elif hr_code == 'o3':
-            ocean.IM = 2880
-            ocean.JM = 1440
-            ocean.grid_type = 'LatLon'
-            ocean.NF = 1
-            ocean.tag = 'Ostia'
-            ocean.sst_name = 'OSTIA_REYNOLDS'
-            ocean.out = '2880x1440'
-            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
-            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
-            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
-            ocean.gridtyp = 'DE'
-            ocean.latlon = ''
-            ocean.cube = '#DELETE'
-            ocean.ostia = ''
-            ocean.data = ''
-        elif hr_code == 'CS':
-            # need to add input validation for this case
-            ocean.IM = int(ocean.expConfig['AM_horizontal_res'][1:])
-            ocean.JM = ocean.IM * 6
-            ocean.grid_type = 'Cubed-Sphere'
-            ocean.NF = 6
-            ocean.tag = 'Ostia'
-            ocean.sst_name = 'OSTIA_REYNOLDS'
-            ocean.out = 'CS'
-            ocean.sst_file = f"dataoceanfile_OSTIA_REYNOLDS_SST.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
-            ocean.ice_file = f"dataoceanfile_OSTIA_REYNOLDS_ICE.{ocean.IM}x{ocean.JM}.${{YEAR}}.data"
-            ocean.kpar_file = f"SEAWIFS_KPAR_mon_clim.{ocean.IM}x{ocean.JM}"
-            ocean.gridtyp = 'CF'
-            ocean.latlon = '#DELETE'
-            ocean.cube = ''
-            ocean.ostia = ''
-            ocean.data = ''
+    hr_code = expConfig['DATAOCEAN_resolution']
 
-        IMO = '%04d' % ocean.IM
-        JMO = '%04d' % ocean.JM
-        if hr_code == 'CS':
-            ocean.res = f"CF{IMO}x6C"
-        else:
-            ocean.res = f"DE{IMO}xPE{JMO}"
-        #ocean.data = #THIS IS WILL OVERWRITE THE BLOCK ABOVE
-        ocean.name = ''
-        ocean.preload = ''
-        ocean.LM = 34
-        ocean.coupled = '#DELETE'
-        ocean.MOM5 = '#DELETE'
-        ocean.MOM6 = '#DELETE'
-        ocean.MIT = '#DELETE'
-        ocean.CICE4 = '#DELETE'
-        ocean.CICE6 = '#DELETE'
-        ocean.hist_CICE4 = '#DELETE'
-        ocean.model = f"Data Ocean ({hr_code})"
-        ocean.NX = ''
-        ocean.NY = ''
-        ocean.nprocs = ''
-        ocean.set_gridname()
+    # Fields that are uniform across all uncoupled configs (top-level uncoupled section)
+    common_fields = [
+        'name', 'preload', 'LM', 'coupled',
+        'MOM6', 'MIT', 'CICE4', 'CICE6', 'hist_CICE4',
+        'NX', 'NY', 'nprocs',
+    ]
+    for field in common_fields:
+        ocean[field] = catalog.get_value(field, 'uncoupled')
+
+    # Fields that vary by horizontal resolution sub-key (o1, o2, o3, CS)
+    res_fields = [
+        'grid_type', 'NF', 'tag', 'sst_name', 'out',
+        'gridtyp', 'latlon', 'cube', 'ostia', 'data',
+    ]
+    for field in res_fields:
+        ocean[field] = catalog.get_value(field, 'uncoupled')
+
+    # CS: IM and JM are derived from the atmospheric resolution at runtime
+    if hr_code == 'CS':
+        ocean['IM'] = int(expConfig['AGCM_grid'][1:])
+        ocean['JM'] = ocean['IM'] * 6
+        IMO = '%04d' % ocean['IM']
+        JMO = '%04d' % ocean['JM']
+        ocean['IMO']      = IMO
+        ocean['JMO']      = JMO
+        ocean['res']      = f"CF{IMO}x6C"
+        ocean['gridname'] = f"OC{ocean['IM']}x{ocean['JM']}-CF"
+    else:
+        for field in ['IM', 'JM', 'IMO', 'JMO', 'res', 'gridname']:
+            ocean[field] = catalog.get_value(field, 'uncoupled')
+
+    ocean['model'] = f"Data Ocean ({hr_code})"
 
 
+def _build_seaice(ocean: dict, catalog: CatalogSearch, expConfig: dict):
+    """
+    Populate seaice fields for coupled configurations.
+    For uncoupled configs, seaice fields are already set to #DELETE by
+    _build_uncoupled(), so this helper is a no-op in that case.
+    """
+    if not ocean['running_ocean']:
+        return
+
+    seaice_fields = ['seaice_preload', 'CICE4', 'CICE6', 'hist_CICE4']
+    for field in seaice_fields:
+        ocean[field] = catalog.get_value(field, 'seaice')
+
+    # Append seaice preload to the ocean model preload
+    ocean['preload'] = f"{ocean['preload']}:{ocean['seaice_preload']}"
 
 
-    def set_MOM6_resolution(ocean):
-        # For MOM6 we currently have only 3 allowed ocean resolutions based on the
-        # atmospheric resolution. The allowed are:
-        #
-        # Atm Res  Atm NXxNY  Atm IMxJM  Ocean NXxNY  Ocean IMxJM  Ocean LM
-        # -------  ---------  ---------  -----------  -----------  --------
-        # c12      1x6        12x72      3x2          72x36        50
-        # c90      5x36       90x540     90x2         540x458      50
-        # c180     30x36      180x1080   36x30        1440x1080    75
-        #
-        # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
+def _build_data_atmosphere(ocean: dict, catalog: CatalogSearch, expConfig: dict, catalog_data: dict):
+    """Populate data atmosphere fields from the data_atmosphere catalog section."""
 
-        atmos_res = ocean.expConfig['AM_horizontal_res']
+    # The catalog uses string keys 'true'/'false'; normalize the bool expConfig
+    # value so _search_recursive can navigate into the correct sub-dict.
+    da_str = str(expConfig['OCEAN_data_atmosphere']).lower()   # 'true' or 'false'
 
-        if atmos_res == 'c12':
-            ocean.NX = 3
-            ocean.NY = 2
-            ocean.IM = 72
-            ocean.JM = 36
-            ocean.LM = 50
-        elif atmos_res == 'c90':
-            ocean.NX = 90
-            ocean.NY = 2
-            ocean.IM = 540
-            ocean.JM = 458
-            ocean.LM = 50
-        elif atmos_res == 'c180':
-            ocean.NX = 36
-            ocean.NY = 30
-            ocean.IM = 1440
-            ocean.JM = 1080
-            ocean.LM = 75
+    # Temporarily inject the string key into config values so the recursive
+    # search can navigate into the matching 'true'/'false' sub-dict.
+    saved = catalog.config
+    catalog.config = {**expConfig, '_da_key': da_str}
 
-    def set_preload(ocean):
-        ocean.preload = f"{ocean.preload}:{ocean.seaice_preload}"
+    for field in ['modelatm', 'use_data_ATM4OCN']:
+        ocean[field] = catalog.get_value(field, 'data_atmosphere')
 
+    catalog.config = saved
 
-    def set_seaice(ocean):
-        if ocean.seaice_model == 'CICE4':
-            ocean.seaice_preload = '$GEOSDIR/lib/libCICE4@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.CICE4 = ''
-            ocean.CICE6 = '#DELETE'
-            ocean.hist_CICE4 = ''
-        elif ocean.seaice_model == 'CICE6':
-            ocean.seaice_preload = '$GEOSDIR/lib/libcice6@CMAKE_SHARED_LIBRARY_SUFFIX@'
-            ocean.CICE4 = '#DELETE'
-            ocean.CICE6 = ''
-            ocean.hist_CICE4 = '#DELETE'
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
 
+def get_ocean_config(expConfig: dict) -> dict:
+    """
+    Build and return the ocean configuration dictionary.
 
-    def set_data_atmosphere(ocean):
-        if ocean.data_atmos == True:
-            ocean.modelatm = '#DELETE'
-            ocean.use_data_ATM4OCN = '.TRUE.'
-        else:
-            ocean.modelatm = ''
-            ocean.use_data_ATM4OCN = '.FALSE.'
+    Replaces the Ocean class. Takes the experiment configuration dict and
+    returns a flat dict of all ocean-related settings, sourced from
+    ocean_catalog.yaml via OceanCatalog, with runtime-derived values
+    computed in Python where necessary.
 
-    def set_gridname(ocean):
-        if ocean.gridtyp == 'CF':
-            ocean.gridname = f"OC{ocean.IM}x{ocean.JM}-{ocean.gridtyp}"
-        elif ocean.model == 'MIT':
-            ocean.gridname = f"{ocean.gridtyp}{ocean.IM}x{ocean.JM}-{ocean.gridtyp}"
-        else:
-            ocean.gridname = f"PE{ocean.IM}x{ocean.JM}-{ocean.gridtyp}"
+    Parameters
+    ----------
+    expConfig : dict
+        Experiment configuration dictionary (e.g. from gcm_setup questions).
 
+    Returns
+    -------
+    dict
+        Flat ocean configuration dictionary. Keys match the attribute names
+        previously set on the Ocean class.
+    """
+    catalog_data = load_catalog(CATALOG_PATH)
+    catalog = CatalogSearch(catalog_data, expConfig)
+    ocean = {}
 
+    # Pass-through values from expConfig
+    ocean['running_ocean']    = expConfig['OCEAN_coupled']
+    ocean['seaice_model']     = expConfig['SEAICE_model']
+    ocean['history_template'] = expConfig['history_template']
+    ocean['mpt_shepherd']     = ''   # mutated externally by setup_main if needed
+
+    if ocean['running_ocean']:
+        _build_coupled(ocean, catalog, expConfig)
+    else:
+        _build_uncoupled(ocean, catalog, expConfig)
+
+    _build_seaice(ocean, catalog, expConfig)
+    _build_data_atmosphere(ocean, catalog, expConfig, catalog_data)
+
+    return ocean

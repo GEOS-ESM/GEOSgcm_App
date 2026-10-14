@@ -612,7 +612,12 @@ def clean_dir(adir: str) -> None:
         for file_object in os.listdir(adir):
             logger.info('Will clean up %s', adir)
             file_object_path = os.path.join(adir, file_object)
-            if os.path.isfile(file_object_path):
+            # Symlinks (including links to directories, e.g. the chem/ and
+            # das/ REPLAY links that configure_replay() plants in scratch)
+            # must be unlinked directly -- shutil.rmtree() refuses to operate
+            # on a symbolic link and would abort the run.
+            if os.path.islink(file_object_path) or os.path.isfile(
+                    file_object_path):
                 os.unlink(file_object_path)
             else:
                 try:

@@ -97,3 +97,23 @@ def test_cat_files():
                               
     assert new_text1 == result1
     assert new_text2 == result2
+
+def test_clean_dir_removes_symlinked_subdirectory(tmp_path):
+    # Regression: shutil.rmtree() refuses to operate on symlinks, so a
+    # scratch directory holding REPLAY chem/das links (configure_replay)
+    # used to abort clean_dir() via its bare sys.exit() -- silently
+    # killing the *next* job of an experiment with exit status 0.
+    target = tmp_path / "ana_target"
+    target.mkdir()
+    (target / "file").write_text("data")
+
+    work = tmp_path / "work"
+    work.mkdir()
+    (work / "real").write_text("content")
+    (work / "chem").symlink_to(target)
+
+    clean_dir(str(work))
+
+    assert not (work / "chem").exists()
+    assert not (work / "real").exists()
+    assert (target / "file").exists()

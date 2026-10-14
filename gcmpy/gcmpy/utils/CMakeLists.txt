@@ -10,6 +10,8 @@ set (files
   run_cmd_ops.py
   strip_name.py
   yaml_ops.py
+  catalog_ops.py
+  flag_ops.py
   )
 
 install (

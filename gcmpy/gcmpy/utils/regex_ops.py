@@ -343,3 +343,24 @@ def grep_file(pattern: str,
 
     return grep_str
 
+
+def normalize_whitespace(text: str) -> str:
+    """
+    Python equivalent of `awk '{$1=$1};1'`: collapses runs of whitespace
+    within each line to a single space, and strips leading/trailing
+    whitespace, while preserving blank lines as empty lines.
+
+    Parameters
+    ----------
+    text : str
+       The text to normalize.
+
+    Returns
+    -------
+    str
+       The normalized text, with a trailing newline.
+    """
+    lines = []
+    for line in text.splitlines():
+        lines.append(" ".join(line.split()))
+    return "\n".join(lines) + "\n"

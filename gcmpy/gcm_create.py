@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import argparse
-from jinja2 import Environment, FileSystemLoader, Undefined
 
 from gcmpy.setup_tools.geos_ops import copy_src_tarfile
 from gcmpy.setup_tools.setup_main import SetupGCM
 from gcmpy.setup_tools.setup_envs import set_env_dicts
 from gcmpy.setup_tools.clone import yaml_receipt, yaml_input_exp, clone_exp
-from gcmpy.setup_tools.process_questions import ask_questions
 from gcmpy.utils.yaml_ops import read_yaml_file
 from gcmpy.utils.path_ops import get_current_dir, get_home_dir
-from gcmpy.utils.color_ops import Color
 
 def main():
-    # Parse command line flags
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--yaml", "-y")
+    parser = argparse.ArgumentParser(
+        description="Create a GCM experiment directory from a YAML driver file."
+    )
+    parser.add_argument(
+        "--yaml", "-y",
+        required=True,
+        help="Path to the YAML driver file produced by gcm_configure.py."
+    )
     args = parser.parse_args()
 
     parent_dir = get_current_dir()
@@ -25,11 +26,8 @@ def main():
 
     home_dir = get_home_dir()
 
-    if args.yaml:
-        expConfig = read_yaml_file(args.yaml)
-        expConfig['clone_experiment'] = None
-    else:
-        expConfig = ask_questions()
+    expConfig = read_yaml_file(args.yaml)
+    expConfig['clone_experiment'] = None
 
     # if cloning we don't care about 90% of this script
     if expConfig['clone_experiment']:
@@ -39,7 +37,7 @@ def main():
         exit()
 
     experiment = SetupGCM(expConfig)
-    experiment.initialize_models()
+    experiment.config_models()
     experiment.set_num_CPUs()
     experiment.config_models()
     experiment.set_atmos_params()

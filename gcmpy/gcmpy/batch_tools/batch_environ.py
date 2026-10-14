@@ -1,6 +1,6 @@
-import slurm_env
-import pbs_env
-import interactive_env
+from . import slurm_env
+from . import pbs_env
+from . import interactive_env
 
 def load_env_vars() -> dict:
     """

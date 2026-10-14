@@ -2,6 +2,8 @@
 import sys
 from pathlib import Path
 
+from gcmpy.utils.file_ops import get_val_from_rc_file
+
 #from gcmpy.utils.regex_ops import search_replace_in_file
 #from gcmpy.utils.regex_ops import extract_line_starting_with
 #from gcmpy.utils.regex_ops import grep_file
@@ -220,6 +222,52 @@ def read_history_rc(history_rc_file: str) -> dict:
     history_dict['COLLECTIONS'] = nested_collections
 
     return history_dict
+
+def strip_gcmrun_cnfrootc_lines(
+    history_rc_path: Path | str,
+    agcm_rc_path: Path | str,
+) -> bool:
+    """
+    Drop HISTORY.rc lines that reference the 'CNFROOTC' history field when
+    the CatchmentCN land model is active.
+
+    Replaces gcm_run.j:399-403:
+
+        {{ land.GCMRUN_catchment }}set LSM_CHOICE = `grep LSM_CHOICE: AGCM.rc | cut -d':' -f2`
+        {{ land.GCMRUN_catchment }}if ($LSM_CHOICE == 2) then
+        {{ land.GCMRUN_catchment }}  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
+        {{ land.GCMRUN_catchment }}endif
+
+    Note the grep pattern includes the single quotes: only lines literally
+    containing `'CNFROOTC'` are removed (an unquoted CNFROOTC survives),
+    and entire lines are dropped exactly like `grep -v`. The
+    land.GCMRUN_catchment gate itself lives at the call site in
+    gcm_run.py (Jinja line-prefix semantics); this function only applies
+    the LSM_CHOICE == 2 check, reading AGCM.rc dynamically as the
+    original does.
+
+    Args:
+        history_rc_path: Scratch HISTORY.rc to patch in place.
+        agcm_rc_path:    Scratch AGCM.rc supplying LSM_CHOICE.
+
+    Returns:
+        True if the file was rewritten (LSM_CHOICE == 2), False when left
+        untouched (LSM_CHOICE missing or != 2).
+    """
+    lsm_choice = get_val_from_rc_file(agcm_rc_path, "LSM_CHOICE:")
+    if lsm_choice is None or str(lsm_choice).strip() != "2":
+        return False
+
+    history_rc_path = Path(history_rc_path)
+    lines = history_rc_path.read_text().splitlines(keepends=True)
+    kept = [line for line in lines if "'CNFROOTC'" not in line]
+
+    if len(kept) == len(lines):
+        return False
+
+    history_rc_path.write_text("".join(kept))
+    return True
+
 
 # --- Example Usage ---
 if __name__ == "__main__":

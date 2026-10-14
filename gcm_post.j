@@ -4,13 +4,13 @@
 #                Batch Parameters for Post-Processing Job
 #######################################################################
 
-#{{ BATCH_TIME }}{{ POST_T }}
-#{{ POST_P }}
-#{{ BATCH_JOBNAME }}{{ POST_N }}_@COLLECTION.@YYYYMM
-#{{ POST_Q }}
-#{{ BATCH_GROUP }}
-#{{ BATCH_OUTPUTNAME }}@POST_O
-#{{ BATCH_JOINOUTERR }}
+#{{ batch_time }}{{ post_t }}
+#{{ post_p }}
+#{{ batch_jobname }}{{ post_n }}_@COLLECTION.@YYYYMM
+#{{ post_q }}
+#{{ batch_group_full }}
+#{{ batch_outputname }}@POST_O
+#{{ batch_joinouterr }}
 
 #######################################################################
 #                  System Environment Variables
@@ -20,9 +20,9 @@ umask 022
 
 limit stacksize unlimited
 
-{{ SETENVS }}
+{{ mpi_config }}
 
-{{ MPT_SHEPHERD }}
+{{ ocean.mpt_shepherd }}
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -30,22 +30,22 @@ limit stacksize unlimited
 
 setenv ARCH `uname`
 
-setenv SITE             {{ SITE }}
-setenv GEOSBIN          {{ GEOSBIN }}
-setenv GEOSUTIL         {{ GEOSSRC }}
-setenv BATCHNAME       "{{ POST_N }}"
+setenv SITE             {{ site }}
+setenv GEOSBIN          {{ bin_path }}
+setenv GEOSUTIL         {{ install_path }}
+setenv BATCHNAME       "{{ post_n }}"
 
 source $GEOSBIN/g5_modules
-setenv {{ LD_LIBRARY_PATH_CMD }} ${LD_LIBRARY_PATH}
+setenv {{ ld_library_path_command }} ${LD_LIBRARY_PATH}
 if ( $?BASEDIR ) then
-    setenv {{ LD_LIBRARY_PATH_CMD }} ${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib
+    setenv {{ ld_library_path_command }} ${{'{'}}{{ ld_library_path_command }}{{'}'}}:${BASEDIR}/${ARCH}/lib
 endif
 
 if( $?SLURM_NTASKS ) then
-      setenv RUN_CMD "{{ RUN_CMD }}"
+      setenv RUN_CMD "{{ run_command }}"
       set NCPUS = $SLURM_NTASKS
 else if( $?PBS_NODEFILE ) then
-      setenv RUN_CMD "{{ RUN_CMD }}"
+      setenv RUN_CMD "{{ run_command }}"
       set NCPUS = `cat $PBS_NODEFILE | wc -l`
 else
       set NCPUS = NULL
@@ -55,6 +55,6 @@ endif
 #                      Perform Post Processing
 #######################################################################
 
-$GEOSUTIL/post/gcmpost.script -source {{ EXPDIR }} -ncpus $NCPUS -collections @COLLECTION -rec_plt @YYYYMM
+$GEOSUTIL/post/gcmpost.script -source {{ exp_dir }} -ncpus $NCPUS -collections @COLLECTION -rec_plt @YYYYMM
 
 exit
