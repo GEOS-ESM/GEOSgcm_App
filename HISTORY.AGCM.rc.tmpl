@@ -1690,7 +1690,7 @@ PC{{ atmos.CLIM_IM }}x{{ atmos.CLIM_JM }}-DC.LM: {{ atmos.lm }}
                                   ::
 
   tavg3_2d_aer_x.format:         'CFIO' ,
-  tavg3_2d_aer_x.grid_label:      PC{{ HIST_IM }}x{{ HIST_JM }}-DC ,
+  tavg3_2d_aer_x.grid_label:      PC{{ atmos.hist_im }}x{{ atmos.hist_jm }}-DC ,
   tavg3_2d_aer_x.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
   tavg3_2d_aer_x.archive:        '%c/Y%y4' ,
   tavg3_2d_aer_x.mode:           'time-averaged' ,
@@ -1738,7 +1738,7 @@ PC{{ atmos.CLIM_IM }}x{{ atmos.CLIM_JM }}-DC.LM: {{ atmos.lm }}
   tavg1_2d_prcp.archive:        '%c/Y%y4' ,
   tavg1_2d_prcp.format:         'CFIO' ,
   tavg1_2d_prcp.deflate:         1 ,
-  tavg1_2d_prcp.grid_label:      PC{{ CLIM_IM }}x{{ CLIM_JM }}-DC ,
+  tavg1_2d_prcp.grid_label:      PC{{ atmos.CLIM_IM }}x{{ atmos.CLIM_JM }}-DC ,
   tavg1_2d_prcp.regrid_method:  'CONSERVE' ,
   tavg1_2d_prcp.mode:           'time-averaged' ,
   tavg1_2d_prcp.acc_ref_time:    210000 ,
