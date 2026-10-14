@@ -8,7 +8,7 @@
 #{{ run_p }}
 #{{ batch_jobname }}{{ run_n }}
 #{{ run_q }}
-#{{ batch_group_full }g
+#{{ batch_group_full }}
 #{{ batch_joinouterr }}
 
 #######################################################################
