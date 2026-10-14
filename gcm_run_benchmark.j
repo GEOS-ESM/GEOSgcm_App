@@ -38,6 +38,14 @@ setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${GEOSDIR}/lib
 if ( $?BASEDIR ) then
     setenv @LD_LIBRARY_PATH_CMD ${@LD_LIBRARY_PATH_CMD}:${BASEDIR}/${ARCH}/lib
 endif
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
+endif
 
 setenv RUN_CMD "@RUN_CMD"
 
@@ -359,9 +367,9 @@ cat << _EOF_ > $FILE
 # --------------------------------------------------------------
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4 species.data
 
-# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
+# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 48-Years)
 # ----------------------------------------------------------
-@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+@MERRA2OX_SPECIES/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-202608.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/Shared/*bin .
 /bin/ln -sf $BCSDIR/Shared/*c2l*.nc4 .
@@ -578,37 +586,10 @@ if( @OCEANtag != DE0360xPE0180 ) then
     endif
 endif
 
-# Which ExtData are we using
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 if( ${EMISSIONS} == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       # Before 2000-03-01, we need to use AMIP.20C which has different
-       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
-       # that if you make a change to anything in $EXPDIR/RC/AMIP or
-       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
-       # directory to be consistent. Some files in AMIP.20C are symlinks to
-       # that in AMIP but others are not.
-
-       if( $nymdc < ${AMIP_Transition_Date} ) then
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-            if( $nymdf > ${AMIP_Transition_Date} ) then
-             set nymdf = ${AMIP_Transition_Date}
-             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-             set newstring = "END_DATE: $nymdf $nhmsf"
-             /bin/mv CAP.rc CAP.tmp
-                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-            endif
-       else
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
+    set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $AGCM_LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -645,62 +626,25 @@ if( $AGCM_LM  != 72 ) then
     endif
 endif
 
-# Rename big ExtData files that are not needed
-# --------------------------------------------
-set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
-if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
-set           GMI_TRUE = `grep -i '^\s*ENABLE_GMICHEM:\s*\.TRUE\.'       GEOS_ChemGridComp.rc | wc -l`
-if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
-set           GCC_TRUE = `grep -i '^\s*ENABLE_GEOSCHEM:\s*\.TRUE\.'      GEOS_ChemGridComp.rc | wc -l`
-if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
-set         CARMA_TRUE = `grep -i '^\s*ENABLE_CARMA:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
-set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
-if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
-set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $ACHEM_TRUE == 0 && -e ACHEM_ExtData.rc              ) /bin/mv              ACHEM_ExtData.rc              ACHEM_ExtData.rc.NOT_USED
-set   GOCART_DATA_TRUE = `grep -i '^\s*ENABLE_GOCART_DATA:\s*\.TRUE\.'   GEOS_ChemGridComp.rc | wc -l`
-if ( $GOCART_DATA_TRUE == 0 && -e GOCARTdata_ExtData.rc         ) /bin/mv         GOCARTdata_ExtData.rc         GOCARTdata_ExtData.rc.NOT_USED
-
 @MP_TURN_OFF_WSUB_EXTDATA# 1MOM and GFDL microphysics do not use WSUB_CLIM
 @MP_TURN_OFF_WSUB_EXTDATA# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   @MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   @MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+@MP_TURN_OFF_WSUB_EXTDATA/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+@MP_TURN_OFF_WSUB_EXTDATAcat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 @MP_TURN_OFF_WSUB_EXTDATA/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-   cat $extdata_files > ExtData.rc
-   endif
-endif
-
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
 @RRTMGP_RADIATION # Move GOCART to use RRTMGP Bands
 @RRTMGP_RADIATION # -------------------------------
 @RRTMGP_RADIATION set instance_files = `/bin/ls -1 *_instance*.rc`
 @RRTMGP_RADIATION foreach instance ($instance_files)
    @RRTMGP_RADIATION /bin/mv $instance $instance.tmp
-   @RRTMGP_RADIATION cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   @RRTMGP_RADIATION cat $instance.tmp | sed -E -e 's/(^|[^[:alnum:]_])RRTMG([^[:alnum:]_]|$)/\1RRTMGP\2/' > $instance
    @RRTMGP_RADIATION /bin/rm $instance.tmp
 @RRTMGP_RADIATION end
 
@@ -751,24 +695,24 @@ endif
 # Check for MERRA2OX Consistency
 # ------------------------------
 
-# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# The MERRA2OX pchem file is only valid until 202608, so this is a first
 # attempt at a check to make sure you aren't using it and are past the date
 
 # Check for MERRA2OX by looking at AGCM.rc
 set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
 
-# If it is 39, we are using MERRA2OX
-if ( $PCHEM_CLIM_YEARS == 39 ) then
+# If it is 48, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 48 ) then
 
    # Grab the date from cap_restart
    set YEARMON = `cat cap_restart | cut -c1-6`
 
    # Set a magic date
-   set MERRA2OX_END_DATE = "201706"
+   set MERRA2OX_END_DATE = "202608"
 
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
-      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 202608. This file is only valid until this time."
       exit 2
    endif
 endif
@@ -928,6 +872,14 @@ setenv GEOSETC   $GEOSETC
 setenv GEOSUTIL  $GEOSUTIL
 source $GEOSBIN/g5_modules
 setenv @LD_LIBRARY_PATH_CMD ${LD_LIBRARY_PATH}:${BASEDIR}/${ARCH}/lib:${GEOSDIR}/lib
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( \$?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( \$?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "\${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:\${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "\$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
+endif
 echo $@LD_LIBRARY_PATH_CMD
 cd $statsdir
 $RUN_CMD 1 $GEOSUTIL/bin/stats.x -fcst $fcst_files -ana $ana_files -cli $clim_files -rc $GEOSUTIL/post/stats.rc \

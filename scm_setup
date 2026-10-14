@@ -95,7 +95,7 @@ usage ()
    echo "    --account: account under which to run the job"
    echo
    echo "  Optional argument: "
-   echo "    --num_levels: number of levels (default: 181; 72, 91, 137, and 181 allowed)."
+   echo "    --num_levels: number of levels (default: 72; 72, 91, 137, and 181 allowed)."
    echo
    echo "  Optional env vars: "
    echo "    When running on the TBC data, you can set TINYBCS_PATH to point to the dataset or you can answer the prompt."
@@ -109,7 +109,7 @@ usage ()
 selected_case=NULL
 expdir=NULL
 account=NULL
-nlev=181
+nlev=72
 
 while [ "${1+defined}" ]
 do
@@ -389,22 +389,22 @@ case $selected_case in
 esac
 
 SITE=$(awk '{print $2}' $INSTALLDIR/etc/SITE.rc)
-BCSTAG="Icarus_Reynolds"
+BCSTAG="v14"
 
 case $SITE in
    NCCS)
    SCMDIR="/discover/swdev/gmao_SIteam/scm/scminfiles/git-v12.0/"
-   BCSDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput/g5gcm/bcs/Icarus/$BCSTAG"
+   BCSDIR="/discover/nobackup/projects/gmao/bcs_shared/fvInput/ExtData/esm/tiles/$BCSTAG"
    CHMDIR="/discover/nobackup/projects/gmao/share/gmao_ops/fvInput_nc3"
    ;;
    NAS)
    SCMDIR="/nobackup/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
-   BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
+   BCSDIR="/nobackup/gmao_SIteam/ModelData/bcs_shared/fvInput/ExtData/esm/tiles/$BCSTAG"
    CHMDIR="/nobackup/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    GMAO*)
    SCMDIR="/ford1/share/gmao_SIteam/ModelData/scminfiles/git-v12.0/"
-   BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs/Icarus/$BCSTAG"
+   BCSDIR="/ford1/share/gmao_SIteam/ModelData/bcs_shared/fvInput/ExtData/esm/tiles/$BCSTAG"
    CHMDIR="/ford1/share/gmao_SIteam/ModelData/fvInput_nc3"
    ;;
    *)
@@ -423,7 +423,7 @@ case $SITE in
 
    # 3. Set the required directory variables based on the user input
    SCMDIR="$TINYBCS_PATH/scm"
-   BCSDIR="$TINYBCS_PATH/bcs/Icarus"
+   BCSDIR="$TINYBCS_PATH/bcs/$BCSTAG"
    CHMDIR="$TINYBCS_PATH/chem"
 
    # 4. Check if the selected case exists in this new SCMDIR
@@ -484,8 +484,7 @@ mkdir -p $expdir/ExtData
 /bin/cp $SOURCEDIR/cap_restart $expdir
 /bin/cp $SOURCEDIR/HISTORY.rc $expdir
 
-#/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.1870-2097.z_91x72.nc4 $expdir/species.data
-/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 $expdir/species.data
+/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 $expdir/species.data
 
 /bin/cp $INSTALLDIR/etc/*.rc $expdir
 
@@ -522,22 +521,21 @@ builtin cd $CURRDIR
 
 if [ $nlev -ne 72 ]
 then
-
-  digits=0000
-  temp=$digits$nlev
-  padlev=${temp:(-${#digits})}
-
   $ISED -e "s/L72/L${nlev}/g" -e "s/z72/z${nlev}/g" $expdir/*.rc
   $ISED -e "s/L72/L${nlev}/g" -e "s/z72/z${nlev}/g" $expdir/*.yaml
-
-  $ISED "/AGCM_LM:/c\AGCM_LM: ${nlev}" $expdir/AGCM.rc
-  $ISED "/AGCM.LM:/c\AGCM.LM: ${nlev}" $expdir/AGCM.rc
-  $ISED "/SCMGRID.LM:/c\SCMGRID.LM: ${nlev}" $expdir/HISTORY.rc
-  cp $SOURCEDIR/*rst.r0001x0001x${padlev} $expdir
-  /bin/mv $expdir/datmodyn_internal_rst.r0001x0001x${padlev} $expdir/datmodyn_internal_rst
-  /bin/mv $expdir/moist_internal_rst.r0001x0001x${padlev} $expdir/moist_internal_rst
-
 fi
+
+$ISED "/AGCM_LM:/c\AGCM_LM: ${nlev}" $expdir/AGCM.rc
+$ISED "/AGCM.LM:/c\AGCM.LM: ${nlev}" $expdir/AGCM.rc
+$ISED "/SCMGRID.LM:/c\SCMGRID.LM: ${nlev}" $expdir/HISTORY.rc
+
+digits=0000
+temp=$digits$nlev
+padlev=${temp:(-${#digits})}
+
+cp $SOURCEDIR/*rst.r0001x0001x${padlev} $expdir
+/bin/mv $expdir/datmodyn_internal_rst.r0001x0001x${padlev} $expdir/datmodyn_internal_rst
+/bin/mv $expdir/moist_internal_rst.r0001x0001x${padlev} $expdir/moist_internal_rst
 
 # We need to handle KLID like gcm_setup does
 ## First, initialize to 0
@@ -557,7 +555,7 @@ elif [ $nlev -eq 72 ]
 then
    KLID="14.0"
 fi
-$ISED "s#@KLID#$KLID#g" $expdir/AGCM.rc
+$ISED "s#{{ KLID }}#$KLID#g" $expdir/AGCM.rc
 
 /bin/ln -s $CHMDIR/g5chem $expdir/ExtData
 /bin/ln -s $CHMDIR/PIESA $expdir/ExtData

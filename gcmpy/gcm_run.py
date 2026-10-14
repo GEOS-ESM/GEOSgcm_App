@@ -127,7 +127,7 @@ def build_sbatch_args(run_config: dict) -> list:
     args += _sbatch_args_from_field(run_config.get("run_q"))
     args += _sbatch_args_from_field(run_config.get("batch_group_full"))
 
-    output_name = f"gcm_run.o{run_config.get('RSTDATE', run_config.get('rstdate', ''))}"
+    output_name = "gcm_run.o%j"
     args += _sbatch_args_from_field(
         f"{run_config.get('batch_outputname', '')}{output_name}"
     )

@@ -23,13 +23,16 @@ setenv BCRSLV    {{ atmos.res }}_{{ ocean.res }}
 {{ ocean.MOM6 }}/bin/ln -sf $CPLDIR/{{ ocean.IM }}x{{ ocean.JM }}/vgrid{{ ocean.LM }}.ascii ./vgrid.ascii
 {{ ocean.MIT }}/bin/ln  -sf $CPLDIR/DC0360xPC0181_LL5400x15-LL.bin DC0360xPC0181_LL5400x15-LL.bin
 
- # Precip correction
+# Precip correction
 #/bin/ln -s /discover/nobackup/projects/gmao/share/gmao_ops/fvInput/merra_land/precip_CPCUexcludeAfrica-CMAP_corrected_MERRA/GEOSdas-2_1_4 ExtData/PCP
 
 {{ ocean.data }}/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.til  tile.data
 {{ ocean.data }}if(     -e  $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL) then
 {{ ocean.data }}/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.TIL  tile.bin
 {{ ocean.data }}endif
+if(     -e  $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.nc4) then
+/bin/ln -sf $BCSDIR/geometry/$BCRSLV/${BCRSLV}-Pfafstetter.nc4  tile.nc4
+endif
 
 # DAS or REPLAY Mode (AGCM.rc:  pchem_clim_years = 1-Year Climatology)
 # --------------------------------------------------------------------
@@ -44,9 +47,9 @@ setenv BCRSLV    {{ atmos.res }}_{{ ocean.res }}
 # --------------------------------------------------------------
 #/bin/ln -sf $BCSDIR/Shared/pchem.species.CMIP-6.wH2OandPL.1850s.z_91x72.nc4 species.data
 
-# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 39-Years)
+# MERRA-2 Ozone Data (AGCM.rc:  pchem_clim_years = 48-Years)
 # ----------------------------------------------------------
-{{ gocart.MERRA2OX_species }}/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-201706.z_91x72.nc4 species.data
+{{ gocart.MERRA2OX_SPECIES }}/bin/ln -sf $BCSDIR/PCHEM/pchem.species.CMIP-5.MERRA2OX.197902-202608.z_91x72.nc4 species.data
 
 /bin/ln -sf $BCSDIR/land/$BCRSLV/visdf_{{ atmos.im }}x{{ atmos.jm }}.dat visdf.dat
 /bin/ln -sf $BCSDIR/land/$BCRSLV/nirdf_{{ atmos.im }}x{{ atmos.jm }}.dat nirdf.dat
@@ -75,7 +78,7 @@ if ( $bc_is_gm4 ) then
   set topo_src_dir = "$BCSDIR/TOPO/TOPO_{{ atmos.res }}"
 else
   set stream = v1
-  if ( $bc_ver_num >= 14 ) set stream = v2
+  if ( $bc_ver_num >= 15 ) set stream = v2
   set topo_src_dir = "{{ bcs_input_base }}/TOPO/${stream}/{{ atmos.res }}/smoothed"
 endif
 

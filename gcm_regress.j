@@ -94,6 +94,17 @@ set argv = ()
 
 setenv ARCH `uname`
 
+if ($ARCH == Darwin) then
+   set GSED = `which gsed`
+   if ( "$GSED" != "" ) then
+      set ISED = ( $GSED -i )
+   else
+      set ISED = ( sed -i.bak )
+   endif
+else
+   set ISED = ( sed -i )
+endif
+
 setenv SITE    {{ site }}
 setenv GEOSDIR {{ install_path }}
 setenv GEOSBIN {{ bin_path }}
@@ -108,6 +119,14 @@ endif
 # We only add BASEDIR to the {{ ld_library_path_command }} if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
     setenv {{ ld_library_path_command }} "${{'{'}}{{ ld_library_path_command }}{{'}'}}:${BASEDIR}/${ARCH}/lib"
+endif
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
 endif
 
 setenv RUN_CMD "{{ run_command }}"
@@ -156,13 +175,41 @@ set IM = `grep  AGCM_IM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set JM = `grep  AGCM_JM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 set LM = `grep  AGCM_LM: $HOMDIR/AGCM.rc | cut -d':' -f2`
 
+# Determine Land Surface Model choice (1: Catchment, 2: CatchmentCN)
+# ------------------------------------------------------------------
+set LSM_CHOICE = `grep "^ *LSM_CHOICE:" AGCM.rc | grep -v "#" | head -1 | cut -d':' -f2 | tr -d ' '`
+if ( "$LSM_CHOICE" == "" ) set LSM_CHOICE = 1
+
+if ( $LSM_CHOICE == 1 ) then
+   set lsm_filter = "CATCHCN"
+else
+   set lsm_filter = "CATCH_INTERNAL"
+endif
+
+# Determine if GOCART is running data-driven
+# ------------------------------------------
+set is_data_driven = 0
+if ( -e GOCART2G_GridComp.rc ) then
+   set data_count = `sed -e 's/#.*//' GOCART2G_GridComp.rc | grep -E "ACTIVE_INSTANCES|PASSIVE_INSTANCES" | grep -c "\.data"`
+   if ( $data_count > 0 ) set is_data_driven = 1
+else if ( -e $EXPDIR/RC/GOCART2G_GridComp.rc ) then
+   set data_count = `sed -e 's/#.*//' $EXPDIR/RC/GOCART2G_GridComp.rc | grep -E "ACTIVE_INSTANCES|PASSIVE_INSTANCES" | grep -c "\.data"`
+   if ( $data_count > 0 ) set is_data_driven = 1
+endif
+
+if ( $is_data_driven == 0 ) then
+   set gocart_data_filter = "GOCART\.data"
+else
+   set gocart_data_filter = "DO_NOT_FILTER_GOCART_DATA"
+endif
+
 # Create Restart List
 # -------------------
-set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
-set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "#" | cut -d ":" -f2`
+set rst_files      = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set rst_file_names = `cat AGCM.rc | grep "RESTART_FILE"    | grep -v VEGDYN | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f2`
 
-set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
-set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v "#" | cut -d ":" -f2`
+set chk_files      = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f1 | cut -d "_" -f1-2`
+set chk_file_names = `cat AGCM.rc | grep "CHECKPOINT_FILE" | grep -v MKIAU  | grep -v "$lsm_filter" | grep -v "$gocart_data_filter" | grep -v "#" | cut -d ":" -f2`
 
 # Remove possible bootstrap parameters (+/-)
 # ------------------------------------------
@@ -197,7 +244,7 @@ if ( ! -e gwd_internal_rst ) then
   if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
     echo "NCAR_NRDG: 0" >> AGCM.rc
   else
-    sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+    $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
   endif
 endif
 
@@ -295,23 +342,11 @@ set date = `cat cap_restart`
 set nymd0 = $date[1]
 set nhms0 = $date[2]
 
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 setenv EMISSIONS {{ gocart.emissions }}
 if( {{ gocart.emissions }} == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       if( $nymd0 < ${AMIP_Transition_Date} ) then
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-       else
-         set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
+    set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -329,36 +364,16 @@ endif
 
 {{ atmos.mp_turn_off_wsub_extdata }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
 {{ atmos.mp_turn_off_wsub_extdata }}# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   {{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   {{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   {{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   {{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+{{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+{{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 {{ atmos.mp_turn_off_wsub_extdata }}/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymd0 ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-       cat $extdata_files > ExtData.rc
-   endif
-endif
-
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
 if( $LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -385,7 +400,7 @@ endif
 {{ atmos.RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
 {{ atmos.RRTMGP_RADIATION }} foreach instance ($instance_files)
    {{ atmos.RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
-   {{ atmos.RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   {{ atmos.RRTMGP_RADIATION }} cat $instance.tmp | sed -E -e 's/(^|[^[:alnum:]_])RRTMG([^[:alnum:]_]|$)/\1RRTMGP\2/' > $instance
    {{ atmos.RRTMGP_RADIATION }} /bin/rm $instance.tmp
 {{ atmos.RRTMGP_RADIATION }} end
 
@@ -484,7 +499,26 @@ if( $RUN_STARTSTOP == TRUE ) then
 
    echo "=== Running test of duration ${test_duration_step1} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
+   /bin/rm -f EGRESS
+
    {{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
 
    set date = `cat cap_restart`
    set nymde1 = $date[1]
@@ -550,7 +584,26 @@ set NY = `grep "^ *NY": AGCM.rc | cut -d':' -f2`
 
 echo "=== Running test of duration ${test_duration_step2} with NX = $NX and NY = $NY starting at $nymd0 $nhms0 ==="
 
+/bin/rm -f EGRESS
+
 {{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+# Capture the return code from GEOSgcm.x
+# --------------------------------------
+set run_status = $status
+
+if ($run_status != 0) then
+   echo "GEOSgcm.x failed with return code $run_status"
+   exit $run_status
+endif
+
+if( -e EGRESS ) then
+   set rc = 0
+else
+   echo "EGRESS file not found, GEOSgcm.x likely failed"
+   exit 10
+endif
+echo GEOSgcm Run Status: $rc
 
 set date = `cat cap_restart`
 set nymde2 = $date[1]
@@ -574,7 +627,7 @@ set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
 # Need also make another variable storing all the replay checkpoint files
 set complete_layout_replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
 foreach chk ( $replay_chk_file_names )
-   $MOVE_OR_COPY $chk ${chk}.${nymde1}_${nhmse1}.2
+   $MOVE_OR_COPY $chk ${chk}.${nymde2}_${nhmse2}.2
 end
 
 {{ ocean.MOM6 }} $MOVE_OR_COPY RESTART/MOM.res.nc MOM.res.nc.2
@@ -612,7 +665,7 @@ while ( $n <= $numchk )
        endif
        end
        if( $m == $z ) then
-           echo "Warning!!  Could not find CHECKPOINT/RESTART match for:  " $chk_files[$n]
+           echo "Warning:  Could not find CHECKPOINT/RESTART match for:  " $chk_files[$n]
            exit
        endif
 @ n = $n + 1
@@ -636,7 +689,7 @@ if ($RUN_STARTSTOP == TRUE) then
    {{ ocean.MOM6 }}# When you restart in MOM6 mode, you must change input_filename
    {{ ocean.MOM6 }}# in the input.nml file from 'n' to 'r'
    {{ ocean.MOM6 }} /bin/cp input.nml input.nml.orig
-   {{ ocean.MOM6 }} sed -i -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
+   {{ ocean.MOM6 }} $ISED -e "s/input_filename = 'n'/input_filename = 'r'/g" input.nml
 
    ./strip CAP.rc
    set oldstring = `cat CAP.rc | grep JOB_SGMT:`
@@ -655,7 +708,7 @@ if ($RUN_STARTSTOP == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+         $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -669,7 +722,26 @@ if ($RUN_STARTSTOP == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step3} with NX = $NX and NY = $NY starting at $nymdb $nhmsb ==="
 
+   /bin/rm -f EGRESS
+
    {{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
 
    set date = `cat cap_restart`
    set nymde3 = $date[1]
@@ -683,7 +755,7 @@ if ($RUN_STARTSTOP == TRUE) then
    # and we need to move those as well if they exist
    set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
-      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.3
+      /bin/mv -v  $chk ${chk}.${nymde3}_${nhmse3}.3
    end
    {{ ocean.MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.3
 
@@ -790,7 +862,7 @@ if ( $RUN_LAYOUT == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+          $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -800,7 +872,26 @@ if ( $RUN_LAYOUT == TRUE) then
 
    echo "=== Running test of duration ${test_duration_step4} with NX = $test_NX and NY = $test_NY starting at $nymd0 $nhms0 ==="
 
+   /bin/rm -f EGRESS
+
    {{ ocean.preload }} {{ several_tries }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
+
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
 
    set date = `cat cap_restart`
    set nymde4 = $date[1]
@@ -814,7 +905,7 @@ if ( $RUN_LAYOUT == TRUE) then
    # and we need to move those as well if they exist
    set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
-      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.4
+      /bin/mv -v  $chk ${chk}.${nymde4}_${nhmse4}.4
    end
 
    {{ ocean.MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.4
@@ -849,7 +940,7 @@ if ( $RUN_OPENMP == TRUE) then
      echo KMP_AFFINITY     $KMP_AFFINITY
      echo OMP_NUM_THREADS $OMP_NUM_THREADS
      ./strip GWD_GridComp.rc
-     sed -i -e "s|FALSE|TRUE|g" GWD_GridComp.rc
+      $ISED -e "s|FALSE|TRUE|g" GWD_GridComp.rc
    endif
 
    # Copy Original Restarts to Regress directory
@@ -913,7 +1004,7 @@ if ( $RUN_OPENMP == TRUE) then
       if ( `grep -c "NCAR_NRDG:" AGCM.rc` == 0 ) then
          echo "NCAR_NRDG: 0" >> AGCM.rc
       else
-         sed -i '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
+          $ISED '/NCAR_NRDG:/c\NCAR_NRDG: 0' AGCM.rc
       endif
    endif
 
@@ -923,21 +1014,40 @@ if ( $RUN_OPENMP == TRUE) then
 
    echo "=== Running OpenMP test of duration ${test_duration_step5} with NX = $NX0 and NY = $NY0 starting at $nymd0 $nhms0 ==="
 
+   /bin/rm -f EGRESS
+
    {{ ocean.preload }} $RUN_CMD $NPES ./GEOSgcm.x --logging_config 'logging.yaml'
 
+   # Capture the return code from GEOSgcm.x
+   # --------------------------------------
+   set run_status = $status
+
+   if ($run_status != 0) then
+      echo "GEOSgcm.x failed with return code $run_status"
+      exit $run_status
+   endif
+
+   if( -e EGRESS ) then
+      set rc = 0
+   else
+      echo "EGRESS file not found, GEOSgcm.x likely failed"
+      exit 10
+   endif
+   echo GEOSgcm Run Status: $rc
+
    set date = `cat cap_restart`
-   set nymde4 = $date[1]
-   set nhmse4 = $date[2]
+   set nymde5 = $date[1]
+   set nhmse5 = $date[2]
 
    foreach chk ( $chk_file_names )
-      /bin/mv -v $chk ${chk}.${nymde4}_${nhmse4}.5
+      /bin/mv -v $chk ${chk}.${nymde5}_${nhmse5}.5
    end
 
    # Some replay runs also have checkpoints like mkiau_checkpoint.20150509_2200z.nc4
    # and we need to move those as well if they exist
    set replay_chk_file_names = `ls -1 mkiau_checkpoint.*.nc4`
    foreach chk ( $replay_chk_file_names )
-      /bin/mv -v  $chk ${chk}.${nymde1}_${nhmse1}.5
+      /bin/mv -v  $chk ${chk}.${nymde5}_${nhmse5}.5
    end
 
    {{ ocean.MOM6 }}/bin/mv -v RESTART/MOM.res.nc MOM.res.nc.5
@@ -946,13 +1056,13 @@ if ( $RUN_OPENMP == TRUE) then
    set hist_file_names = `ls -1 ${EXPID}.test_collection.*.nc4`
 
    foreach hist ( $hist_file_names )
-      /bin/mv -v $hist ${hist}.${nymde4}_${nhmse4}.5
+      /bin/mv -v $hist ${hist}.${nymde5}_${nhmse5}.5
    end
 
    # Reset OpenMP Threads to 1
    setenv OMP_NUM_THREADS 1
    ./strip GWD_GridComp.rc
-   sed -i -e "s|TRUE|FALSE|g" GWD_GridComp.rc
+    $ISED -e "s|TRUE|FALSE|g" GWD_GridComp.rc
 
 endif
 
@@ -974,18 +1084,20 @@ if ($RUN_STARTSTOP == TRUE) then
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
    set startstop_pass = true
+   @ num_startstop_comparisons = 0
    foreach chk ( $chk_file_names )
-   set file1 = ${chk}.${nymde1}_${nhmse1}.1
-   set file2 = ${chk}.${nymde3}_${nhmse3}.3
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         foreach exempt (${EXEMPT_chk})
-            if( $chk == $exempt ) set check = false
-         end
-         if( $check == true ) then
+      set check = true
+      foreach exempt (${EXEMPT_chk})
+         if( $chk == $exempt ) set check = false
+      end
+      if( $check == true ) then
+         set file1 = ${chk}.${nymde1}_${nhmse1}.1
+         set file2 = ${chk}.${nymde3}_${nhmse3}.3
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare NetCDF-4 checkpoint files
+            @ num_startstop_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -995,42 +1107,55 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
+         else
+            echo "Start-Stop Failed: Missing checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set startstop_pass = false
          endif
-   endif
+      endif
    end
 
    {{ ocean.MOM6 }}# check MOM.res.nc (MOM6 restart)
    {{ ocean.MOM6 }}set file1 = MOM.res.nc.1
    {{ ocean.MOM6 }}set file2 = MOM.res.nc.3
    {{ ocean.MOM6 }}if( -e $file1 && -e $file2 ) then
-   {{ ocean.MOM6 }}      set check = true
-   {{ ocean.MOM6 }}      if( $check == true ) then
-   {{ ocean.MOM6 }}         echo Comparing "MOM6 restarts"
-   {{ ocean.MOM6 }}         cmp $file1 $file2
-   {{ ocean.MOM6 }}         if( $status == 0 ) then
-   {{ ocean.MOM6 }}             echo Start-Stop Success!
-   {{ ocean.MOM6 }}             echo " "
-   {{ ocean.MOM6 }}         else
-   {{ ocean.MOM6 }}             echo Start-Stop Failed!
-   {{ ocean.MOM6 }}             echo " "
-   {{ ocean.MOM6 }}             set pass = false
-   {{ ocean.MOM6 }}         endif
-   {{ ocean.MOM6 }}      endif
+   {{ ocean.MOM6 }}   echo Comparing "MOM6 restarts"
+   {{ ocean.MOM6 }}   @ num_startstop_comparisons++
+   {{ ocean.MOM6 }}   cmp $file1 $file2
+   {{ ocean.MOM6 }}   if( $status == 0 ) then
+   {{ ocean.MOM6 }}       echo Start-Stop Success!
+   {{ ocean.MOM6 }}       echo " "
+   {{ ocean.MOM6 }}   else
+   {{ ocean.MOM6 }}       echo Start-Stop Failed!
+   {{ ocean.MOM6 }}       echo " "
+   {{ ocean.MOM6 }}       set startstop_pass = false
+   {{ ocean.MOM6 }}   endif
+   {{ ocean.MOM6 }}else
+   {{ ocean.MOM6 }}   echo "Start-Stop Failed: Missing MOM6 restart file(s)"
+   {{ ocean.MOM6 }}   if ( ! -e $file1 ) echo "   Missing $file1"
+   {{ ocean.MOM6 }}   if ( ! -e $file2 ) echo "   Missing $file2"
+   {{ ocean.MOM6 }}   echo " "
+   {{ ocean.MOM6 }}   set startstop_pass = false
    {{ ocean.MOM6 }}endif
 
    echo "=== Comparing replay checkpoint files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
-   # Check history files
-   foreach chk ( $complete_startstop_replay_chk_file_names )
-   set file1 = ${chk}.${nymde1}_${nhmse1}.1
-   set file2 = ${chk}.${nymde3}_${nhmse3}.3
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   # Check replay checkpoint files
+   if ( `grep -c "^ *MKIAU_CHECKPOINT_FILE" AGCM.rc.orig` > 0 && $#complete_startstop_replay_chk_file_names == 0 ) then
+      echo "Start-Stop Failed: Replay active with MKIAU_CHECKPOINT_FILE, but no replay checkpoint files produced by run 1"
+      echo " "
+      set startstop_pass = false
+   else
+      foreach chk ( $complete_startstop_replay_chk_file_names )
+         set file1 = ${chk}.${nymde1}_${nhmse1}.1
+         set file2 = ${chk}.${nymde3}_${nhmse3}.3
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare checkpoint files
+            @ num_startstop_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -1040,23 +1165,32 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
+         else
+            echo "Start-Stop Failed: Missing replay checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set startstop_pass = false
          endif
+      end
    endif
-   end
 
    echo "=== Comparing history files from ${NX0}x${NY0} run of duration ${test_duration_step1} with restarts from ${test_duration_step2} + ${test_duration_step3} ${NX0}x${NY0} runs ==="
 
    # Check history files
-   foreach hist ( $complete_startstop_hist_file_names )
-   set file1 = ${hist}.${nymde1}_${nhmse1}.1
-   set file2 = ${hist}.${nymde3}_${nhmse3}.3
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   if ( $#complete_startstop_hist_file_names == 0 ) then
+      echo "Start-Stop Failed: No history files produced by run 1 (${EXPID}.test_collection.*.nc4)"
+      echo " "
+      set startstop_pass = false
+   else
+      foreach hist ( $complete_startstop_hist_file_names )
+         set file1 = ${hist}.${nymde1}_${nhmse1}.1
+         set file2 = ${hist}.${nymde3}_${nhmse3}.3
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${hist}
 
             # compare history files
+            @ num_startstop_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Start-Stop Success!
@@ -1066,15 +1200,22 @@ if ($RUN_STARTSTOP == TRUE) then
                echo " "
                set startstop_pass = false
             endif
-
+         else
+            echo "Start-Stop Failed: Missing history file(s) for ${hist}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set startstop_pass = false
          endif
+      end
    endif
-   end
 
-   if( $startstop_pass == true ) then
+   if( $startstop_pass == true && $num_startstop_comparisons > 0 ) then
       echo "<font color=green> PASS </font>"                > startstop_regress_test
    else
+      if( $num_startstop_comparisons == 0 ) echo "Start-Stop Failed: No comparisons performed"
       echo "<font color=red> <blink> FAIL </blink> </font>" > startstop_regress_test
+      set startstop_pass = false
    endif
 
 else
@@ -1099,18 +1240,20 @@ if ($RUN_LAYOUT == TRUE) then
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step2} with restarts from ${test_NX}x${test_NY} run of duration ${test_duration_step4} ==="
 
    set layout_pass = true
+   @ num_layout_comparisons = 0
    foreach chk ( $chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse2}.2
-   set file2 = ${chk}.${nymde4}_${nhmse4}.4
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         foreach exempt (${EXEMPT_chk})
-            if( $chk == $exempt ) set check = false
-         end
-         if( $check == true ) then
+      set check = true
+      foreach exempt (${EXEMPT_chk})
+         if( $chk == $exempt ) set check = false
+      end
+      if( $check == true ) then
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde4}_${nhmse4}.4
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare NetCDF-4 checkpoint files
+            @ num_layout_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
@@ -1120,42 +1263,55 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
+         else
+            echo "Layout Failed: Missing checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set layout_pass = false
          endif
-   endif
+      endif
    end
 
    {{ ocean.MOM6 }}# check MOM.res.nc (MOM6 restart)
    {{ ocean.MOM6 }}set file1 = MOM.res.nc.2
    {{ ocean.MOM6 }}set file2 = MOM.res.nc.4
    {{ ocean.MOM6 }}if( -e $file1 && -e $file2 ) then
-   {{ ocean.MOM6 }}      set check = true
-   {{ ocean.MOM6 }}      if( $check == true ) then
-   {{ ocean.MOM6 }}         echo Comparing "MOM6 restarts"
-   {{ ocean.MOM6 }}         cmp $file1 $file2
-   {{ ocean.MOM6 }}         if( $status == 0 ) then
-   {{ ocean.MOM6 }}             echo Layout Success!
-   {{ ocean.MOM6 }}             echo " "
-   {{ ocean.MOM6 }}         else
-   {{ ocean.MOM6 }}             echo Layout Failed!
-   {{ ocean.MOM6 }}             echo " "
-   {{ ocean.MOM6 }}             set pass = false
-   {{ ocean.MOM6 }}         endif
-   {{ ocean.MOM6 }}      endif
+   {{ ocean.MOM6 }}   echo Comparing "MOM6 restarts"
+   {{ ocean.MOM6 }}   @ num_layout_comparisons++
+   {{ ocean.MOM6 }}   cmp $file1 $file2
+   {{ ocean.MOM6 }}   if( $status == 0 ) then
+   {{ ocean.MOM6 }}       echo Layout Success!
+   {{ ocean.MOM6 }}       echo " "
+   {{ ocean.MOM6 }}   else
+   {{ ocean.MOM6 }}       echo Layout Failed!
+   {{ ocean.MOM6 }}       echo " "
+   {{ ocean.MOM6 }}       set layout_pass = false
+   {{ ocean.MOM6 }}   endif
+   {{ ocean.MOM6 }}else
+   {{ ocean.MOM6 }}   echo "Layout Failed: Missing MOM6 restart file(s)"
+   {{ ocean.MOM6 }}   if ( ! -e $file1 ) echo "   Missing $file1"
+   {{ ocean.MOM6 }}   if ( ! -e $file2 ) echo "   Missing $file2"
+   {{ ocean.MOM6 }}   echo " "
+   {{ ocean.MOM6 }}   set layout_pass = false
    {{ ocean.MOM6 }}endif
 
    echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
 
-   # Check history files
-   foreach chk ( $complete_layout_replay_chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse4}.2
-   set file2 = ${chk}.${nymde2}_${nhmse4}.4
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   # Check replay checkpoint files
+   if ( `grep -c "^ *MKIAU_CHECKPOINT_FILE" AGCM.rc.orig` > 0 && $#complete_layout_replay_chk_file_names == 0 ) then
+      echo "Layout Failed: Replay active with MKIAU_CHECKPOINT_FILE, but no replay checkpoint files produced by run 2"
+      echo " "
+      set layout_pass = false
+   else
+      foreach chk ( $complete_layout_replay_chk_file_names )
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde4}_${nhmse4}.4
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare checkpoint files
+            @ num_layout_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
@@ -1165,23 +1321,32 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
+         else
+            echo "Layout Failed: Missing replay checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set layout_pass = false
          endif
+      end
    endif
-   end
 
    echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour ${test_NX}x${test_NY} run ==="
 
    # Check history files
-   foreach hist ( $complete_layout_hist_file_names )
-   set file1 = ${hist}.${nymde2}_${nhmse4}.2
-   set file2 = ${hist}.${nymde2}_${nhmse4}.4
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   if ( $#complete_layout_hist_file_names == 0 ) then
+      echo "Layout Failed: No history files produced by run 2 (${EXPID}.test_collection.*.nc4)"
+      echo " "
+      set layout_pass = false
+   else
+      foreach hist ( $complete_layout_hist_file_names )
+         set file1 = ${hist}.${nymde2}_${nhmse2}.2
+         set file2 = ${hist}.${nymde4}_${nhmse4}.4
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${hist}
 
             # compare history files
+            @ num_layout_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo Layout Success!
@@ -1191,15 +1356,22 @@ if ($RUN_LAYOUT == TRUE) then
                echo " "
                set layout_pass = false
             endif
-
+         else
+            echo "Layout Failed: Missing history file(s) for ${hist}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set layout_pass = false
          endif
+      end
    endif
-   end
 
-   if( $layout_pass == true ) then
+   if( $layout_pass == true && $num_layout_comparisons > 0 ) then
       echo "<font color=green> PASS </font>"                > layout_regress_test
    else
+      if( $num_layout_comparisons == 0 ) echo "Layout Failed: No comparisons performed"
       echo "<font color=red> <blink> FAIL </blink> </font>" > layout_regress_test
+      set layout_pass = false
    endif
 
 else
@@ -1207,12 +1379,6 @@ else
    # We need to set something here for the "overall" regress_test file
    set layout_pass = true
 
-endif
-
-if( $startstop_pass == true && $layout_pass == true ) then
-   echo "<font color=green> PASS </font>"                > regress_test
-else
-   echo "<font color=red> <blink> FAIL </blink> </font>" > regress_test
 endif
 
 
@@ -1231,18 +1397,20 @@ if ($RUN_OPENMP == TRUE) then
    echo "=== Comparing restarts from ${NX0}x${NY0} run of duration ${test_duration_step2} with restarts from OpenMP:2 ${NX0}x${NY0} run of duration ${test_duration_step5} ==="
 
    set openmp_pass = true
+   @ num_openmp_comparisons = 0
    foreach chk ( $chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse2}.2
-   set file2 = ${chk}.${nymde4}_${nhmse4}.5
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         foreach exempt (${EXEMPT_chk})
-            if( $chk == $exempt ) set check = false
-         end
-         if( $check == true ) then
+      set check = true
+      foreach exempt (${EXEMPT_chk})
+         if( $chk == $exempt ) set check = false
+      end
+      if( $check == true ) then
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde5}_${nhmse5}.5
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare NetCDF-4 checkpoint files
+            @ num_openmp_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo OpenMP Success!
@@ -1252,42 +1420,55 @@ if ($RUN_OPENMP == TRUE) then
                echo " "
                set openmp_pass = false
             endif
-
+         else
+            echo "OpenMP Failed: Missing checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set openmp_pass = false
          endif
-   endif
+      endif
    end
 
    {{ ocean.MOM6 }}# check MOM.res.nc (MOM6 restart)
    {{ ocean.MOM6 }}set file1 = MOM.res.nc.2
    {{ ocean.MOM6 }}set file2 = MOM.res.nc.5
    {{ ocean.MOM6 }}if( -e $file1 && -e $file2 ) then
-   {{ ocean.MOM6 }}      set check = true
-   {{ ocean.MOM6 }}      if( $check == true ) then
-   {{ ocean.MOM6 }}         echo Comparing "MOM6 restarts"
-   {{ ocean.MOM6 }}         cmp $file1 $file2
-   {{ ocean.MOM6 }}         if( $status == 0 ) then
-   {{ ocean.MOM6 }}             echo OpenMP Success!
-   {{ ocean.MOM6 }}             echo " "
-   {{ ocean.MOM6 }}         else
-   {{ ocean.MOM6 }}             echo OpenMP Failed!
-   {{ ocean.MOM6 }}             echo " "
-   {{ ocean.MOM6 }}             set openmp_pass = false
-   {{ ocean.MOM6 }}         endif
-   {{ ocean.MOM6 }}      endif
+   {{ ocean.MOM6 }}   echo Comparing "MOM6 restarts"
+   {{ ocean.MOM6 }}   @ num_openmp_comparisons++
+   {{ ocean.MOM6 }}   cmp $file1 $file2
+   {{ ocean.MOM6 }}   if( $status == 0 ) then
+   {{ ocean.MOM6 }}       echo OpenMP Success!
+   {{ ocean.MOM6 }}       echo " "
+   {{ ocean.MOM6 }}   else
+   {{ ocean.MOM6 }}       echo OpenMP Failed!
+   {{ ocean.MOM6 }}       echo " "
+   {{ ocean.MOM6 }}       set openmp_pass = false
+   {{ ocean.MOM6 }}   endif
+   {{ ocean.MOM6 }}else
+   {{ ocean.MOM6 }}   echo "OpenMP Failed: Missing MOM6 restart file(s)"
+   {{ ocean.MOM6 }}   if ( ! -e $file1 ) echo "   Missing $file1"
+   {{ ocean.MOM6 }}   if ( ! -e $file2 ) echo "   Missing $file2"
+   {{ ocean.MOM6 }}   echo " "
+   {{ ocean.MOM6 }}   set openmp_pass = false
    {{ ocean.MOM6 }}endif
 
    echo "=== Comparing replay checkpoint files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
 
-   # Check history files
-   foreach chk ( $complete_layout_replay_chk_file_names )
-   set file1 = ${chk}.${nymde2}_${nhmse4}.2
-   set file2 = ${chk}.${nymde2}_${nhmse4}.5
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   # Check replay checkpoint files
+   if ( `grep -c "^ *MKIAU_CHECKPOINT_FILE" AGCM.rc.orig` > 0 && $#complete_layout_replay_chk_file_names == 0 ) then
+      echo "OpenMP Failed: Replay active with MKIAU_CHECKPOINT_FILE, but no replay checkpoint files produced by run 2"
+      echo " "
+      set openmp_pass = false
+   else
+      foreach chk ( $complete_layout_replay_chk_file_names )
+         set file1 = ${chk}.${nymde2}_${nhmse2}.2
+         set file2 = ${chk}.${nymde5}_${nhmse5}.5
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${chk}
 
             # compare checkpoint files
+            @ num_openmp_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo OpenMP Success!
@@ -1297,23 +1478,32 @@ if ($RUN_OPENMP == TRUE) then
                echo " "
                set openmp_pass = false
             endif
-
+         else
+            echo "OpenMP Failed: Missing replay checkpoint file(s) for ${chk}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set openmp_pass = false
          endif
+      end
    endif
-   end
 
    echo "=== Comparing history files from 6-hour ${NX0}x${NY0} run with restarts from 6-hour OpenMP:2 ${NX0}x${NY0} run ==="
 
    # Check history files
-   foreach hist ( $complete_layout_hist_file_names )
-   set file1 = ${hist}.${nymde2}_${nhmse4}.2
-   set file2 = ${hist}.${nymde2}_${nhmse4}.5
-   if( -e $file1 && -e $file2 ) then
-         set check = true
-         if( $check == true ) then
+   if ( $#complete_layout_hist_file_names == 0 ) then
+      echo "OpenMP Failed: No history files produced by run 2 (${EXPID}.test_collection.*.nc4)"
+      echo " "
+      set openmp_pass = false
+   else
+      foreach hist ( $complete_layout_hist_file_names )
+         set file1 = ${hist}.${nymde2}_${nhmse2}.2
+         set file2 = ${hist}.${nymde5}_${nhmse5}.5
+         if( -e $file1 && -e $file2 ) then
             echo Comparing ${hist}
 
             # compare history files
+            @ num_openmp_comparisons++
             ${NCCMP} $file1 $file2
             if( $status == 0 ) then
                echo OpenMP Success!
@@ -1323,15 +1513,22 @@ if ($RUN_OPENMP == TRUE) then
                echo " "
                set openmp_pass = false
             endif
-
+         else
+            echo "OpenMP Failed: Missing history file(s) for ${hist}"
+            if ( ! -e $file1 ) echo "   Missing $file1"
+            if ( ! -e $file2 ) echo "   Missing $file2"
+            echo " "
+            set openmp_pass = false
          endif
+      end
    endif
-   end
 
-   if( $openmp_pass == true ) then
+   if( $openmp_pass == true && $num_openmp_comparisons > 0 ) then
       echo "<font color=green> PASS </font>"                > openmp_regress_test
    else
+      if( $num_openmp_comparisons == 0 ) echo "OpenMP Failed: No comparisons performed"
       echo "<font color=red> <blink> FAIL </blink> </font>" > openmp_regress_test
+      set openmp_pass = false
    endif
 
 else

@@ -14,7 +14,7 @@ from gcmpy.batch_tools.computing_sites import site_nodes_dict
 
 class Handle:
     '''
-    This class deals with special cases where a question"s 
+    This class deals with special cases where a question"s
     properties need to be checked/dynamically changed at
     runtime based on certain conditions (e.g. input validation)
     '''
@@ -62,11 +62,11 @@ class Handle:
         else:
             exit(1)
 
-    @staticmethod                           
-    def group_id_choices(question_dict, i):  
-        if i != "group_root":               
-            return                          
-            
+    @staticmethod
+    def group_id_choices(question_dict, i):
+        if i != "group_root":
+            return
+
         if envdict['site'] in site_nodes_dict:
             question_dict[i].choices = get_all_group_ids()
         else:
@@ -88,9 +88,9 @@ class Handle:
 
         # top of the list is the default answer choice
         if question_dict['AGCM_LM'].answer == '72':
-            question_dict[i].choices = ['NL3', 'v12', 'ICA']
+            question_dict[i].choices = ['NL3', 'v12', 'v14', 'ICA']
         else:
-            question_dict[i].choices = ['v12', 'NL3', 'ICA']
+            question_dict[i].choices = ['v14', 'v12', 'NL3', 'ICA']
 
     @staticmethod
     def OCEAN_type_valid(question_dict, i):
@@ -110,11 +110,11 @@ class Handle:
                         # c360     30x36      180x1080   36x30        1440x1080    75
                         # c180     20x36      180x1080   36x20        2880x2240    75
                         # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
-                        
+
                         Please select a valid Atmospheric resolution!""")
         elif question_dict['OCEAN_type'].answer == 'MIT' and question_dict['AGCM_grid'].answer != "c90":
             sys.exit("You MUST select c90 atmospheric resolution for MIT ocean!")
-    
+
     @staticmethod
     def MOM6_resolution_choices(question_dict, i):
         if i != 'MOM6_resolution':
@@ -124,8 +124,8 @@ class Handle:
         elif question_dict['AGCM_grid'].answer == "c90":
             question_dict['MOM6_resolution'].choices = ['o540']
         elif question_dict['AGCM_grid'].answer == "c180":
-            question_dict['MOM6_resolution'].choices = ['o720 (1/2-deg,  720x576  Tripolar)', 
-                                                       'o1440 (1/4-deg, 1440x1080  Tripolar)', 
+            question_dict['MOM6_resolution'].choices = ['o720 (1/2-deg,  720x576  Tripolar)',
+                                                       'o1440 (1/4-deg, 1440x1080  Tripolar)',
                                                        'o2880 (1/8-deg, 2880x2240 Tripolar)']
         elif question_dict['AGCM_grid'].answer == "c360":
             question_dict['MOM6_resolution'].choices = ['o1440 (1/4-deg, 1440x1080  Tripolar)']
@@ -221,7 +221,7 @@ def get_all_group_ids() -> list:
     """
     Run the Linux groups command to create the list
     of all the user's group ids.
- 
+
     Returns
     -------
     group_ids : list
@@ -230,11 +230,11 @@ def get_all_group_ids() -> list:
     # Use the subprocess module to get all the possible group ids
     groups_output = subprocess.check_output(["groups"], text=True)
     groups_output = groups_output.strip().split()
- 
+
     # Only select ids which second to fourth characters are integers
     # Some of the ids are purely characters and should not be considered.
     group_ids = [item for item in groups_output if item[1:4].isdigit()]
- 
+
     return group_ids
 
 

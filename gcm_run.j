@@ -10,7 +10,6 @@
 #{{ run_q }}
 #{{ batch_group_full }}
 #{{ batch_joinouterr }}
-#@BATCH_NAME -o gcm_run.o@RSTDATE
 
 #######################################################################
 #                         System Settings
@@ -25,6 +24,17 @@ limit stacksize unlimited
 #######################################################################
 
 setenv ARCH `uname`
+
+if ($ARCH == Darwin) then
+   set GSED = `which gsed`
+   if ( "$GSED" != "" ) then
+      set ISED = ( $GSED -i )
+   else
+      set ISED = ( sed -i.bak )
+   endif
+else
+   set ISED = ( sed -i )
+endif
 
 setenv SITE             {{ site }}
 setenv GEOSDIR          {{ install_path }}
@@ -45,6 +55,15 @@ if ( $?BASEDIR ) then
     setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
 endif
 
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
+endif
+
 setenv RUN_CMD "{{ run_command }}"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
@@ -61,6 +80,18 @@ setenv  HOMDIR  {{ exp_dir }}
 
 setenv  RSTDATE @RSTDATE
 setenv  GCMEMIP @GCMEMIP
+
+#######################################################################
+#                          DSL configuration
+#######################################################################
+
+if ( $?USE_DSL ) then
+   if ( $?PYTHONPATH ) then
+      setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+   else
+      setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+   endif
+endif
 
 #######################################################################
 #                 Create Experiment Sub-Directories
@@ -340,6 +371,8 @@ endif
 
 {{ ocean.MOM6 }}cp -f  $HOMDIR/MOM_input .
 {{ ocean.MOM6 }}cp -f  $HOMDIR/MOM_override .
+{{ ocean.DATAATM }} cp -f  $HOMDIR/MOM_saltrestore .
+{{ ocean.DATAATM }}cp -f  $HOMDIR/MOM_dataatm .
 {{ ocean.CICE6 }}cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
@@ -743,37 +776,10 @@ if( {{ ocean.res }} != DE0360xPE0180 ) then
     endif
 endif
 
-# Which ExtData are we using
-set  EXTDATA2G_TRUE = `grep -i '^\s*USE_EXTDATA2G:\s*\.TRUE\.'    CAP.rc | wc -l`
-
 # Select proper AMIP GOCART Emission RC Files
 # -------------------------------------------
 if( ${EMISSIONS} == AMIP_EMISSIONS ) then
-    if( $EXTDATA2G_TRUE == 0 ) then
-       set AMIP_Transition_Date = 20000301
-
-       # Before 2000-03-01, we need to use AMIP.20C which has different
-       # emissions (HFED instead of QFED) valid before 2000-03-01. Note
-       # that if you make a change to anything in $EXPDIR/RC/AMIP or
-       # $EXPDIR/RC/AMIP.20C, you might need to make a change in the other
-       # directory to be consistent. Some files in AMIP.20C are symlinks to
-       # that in AMIP but others are not.
-
-       if( $nymdc < ${AMIP_Transition_Date} ) then
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP.20C
-            if( $nymdf > ${AMIP_Transition_Date} ) then
-             set nymdf = ${AMIP_Transition_Date}
-             set oldstring = `grep '^\s*END_DATE:' CAP.rc`
-             set newstring = "END_DATE: $nymdf $nhmsf"
-             /bin/mv CAP.rc CAP.tmp
-                        cat CAP.tmp | sed -e "s?$oldstring?$newstring?g" > CAP.rc
-            endif
-       else
-            set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-       endif
-    else
-       set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
-    endif
+    set AMIP_EMISSIONS_DIRECTORY = $EXPDIR/RC/AMIP
 
     if( $AGCM_LM == 72 ) then
         cp ${AMIP_EMISSIONS_DIRECTORY}/*.rc .
@@ -820,12 +826,10 @@ endif
 
 {{ ocean.coupled }}set HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
 
-{{ ocean.coupled }} sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
-{{ MOM5 }} sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
-{{ MOM5 }}        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
-{{ ocean.MOM6 }} sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
+{{ ocean.coupled }} $ISED -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
+{{ ocean.MOM6 }} $ISED -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
 {{ ocean.MOM6 }}        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
-{{ ocean.CICE6 }} sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
+{{ ocean.CICE6 }} $ISED -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
 
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -836,60 +840,25 @@ if( $AGCM_LM  != 72 ) then
 
 endif
 
-# Rename big ExtData files that are not needed
-# --------------------------------------------
-set            SC_TRUE = `grep -i '^\s*ENABLE_STRATCHEM:\s*\.TRUE\.'     GEOS_ChemGridComp.rc | wc -l`
-if (          $SC_TRUE == 0 && -e StratChem_ExtData.rc          ) /bin/mv          StratChem_ExtData.rc          StratChem_ExtData.rc.NOT_USED
-set           GMI_TRUE = `grep -i '^\s*ENABLE_GMICHEM:\s*\.TRUE\.'       GEOS_ChemGridComp.rc | wc -l`
-if (         $GMI_TRUE == 0 && -e GMI_ExtData.rc                ) /bin/mv                GMI_ExtData.rc                GMI_ExtData.rc.NOT_USED
-set           GCC_TRUE = `grep -i '^\s*ENABLE_GEOSCHEM:\s*\.TRUE\.'      GEOS_ChemGridComp.rc | wc -l`
-if (         $GCC_TRUE == 0 && -e GEOSCHEMchem_ExtData.rc       ) /bin/mv       GEOSCHEMchem_ExtData.rc       GEOSCHEMchem_ExtData.rc.NOT_USED
-set         CARMA_TRUE = `grep -i '^\s*ENABLE_CARMA:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $CARMA_TRUE == 0 && -e CARMAchem_GridComp_ExtData.rc ) /bin/mv CARMAchem_GridComp_ExtData.rc CARMAchem_GridComp_ExtData.rc.NOT_USED
-set           DNA_TRUE = `grep -i '^\s*ENABLE_DNA:\s*\.TRUE\.'           GEOS_ChemGridComp.rc | wc -l`
-if (         $DNA_TRUE == 0 && -e DNA_ExtData.rc                ) /bin/mv                DNA_ExtData.rc                DNA_ExtData.rc.NOT_USED
-set         ACHEM_TRUE = `grep -i '^\s*ENABLE_ACHEM:\s*\.TRUE\.'         GEOS_ChemGridComp.rc | wc -l`
-if (       $ACHEM_TRUE == 0 && -e ACHEM_ExtData.rc              ) /bin/mv              ACHEM_ExtData.rc              ACHEM_ExtData.rc.NOT_USED
-
 {{ atmos.mp_turn_off_wsub_extdata }}# 1MOM and GFDL microphysics do not use WSUB_CLIM
 {{ atmos.mp_turn_off_wsub_extdata }}# -------------------------------------------------
-if ($EXTDATA2G_TRUE == 0 ) then
-   {{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.rc WSUB_ExtData.tmp
-   {{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/^WSUB_CLIM/ s#ExtData.*#/dev/null#' > WSUB_ExtData.rc
-else
-   {{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
-   {{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
-endif
+{{ atmos.mp_turn_off_wsub_extdata }}/bin/mv WSUB_ExtData.yaml WSUB_ExtData.tmp
+{{ atmos.mp_turn_off_wsub_extdata }}cat WSUB_ExtData.tmp | sed -e '/collection:/ s#WSUB_SWclim.*#/dev/null#' > WSUB_ExtData.yaml
 {{ atmos.mp_turn_off_wsub_extdata }}/bin/rm WSUB_ExtData.tmp
 
-# Generate the complete ExtData.rc
-# --------------------------------
-if(-e ExtData.rc )    /bin/rm -f   ExtData.rc
-set  extdata_files = `/bin/ls -1 *_ExtData.rc`
+# Construct extdata.yaml list for all components based on RC files
+# ----------------------------------------------------------------
+$GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
 
-# Switch to MODIS v6.1 data after Nov 2021
-if( $EXTDATA2G_TRUE == 0 ) then
-   set MODIS_Transition_Date = 20211101
-   if ( ${EMISSIONS} == OPS_EMISSIONS && ${MODIS_Transition_Date} <= $nymdc ) then
-       cat $extdata_files | sed 's|\(qfed2.emis_.*\).006.|\1.061.|g' > ExtData.rc
-   else
-   cat $extdata_files > ExtData.rc
-   endif
-endif
-
-if( $EXTDATA2G_TRUE == 1 ) then
-
-  $GEOSBIN/construct_extdata_yaml_list.py GEOS_ChemGridComp.rc
-  touch ExtData.rc
-
-endif
+# Keep this due to MAPL expectation of an ExtData.rc file, but it is not actually used for anything
+touch ExtData.rc
 
 {{ atmos.RRTMGP_RADIATION }} # Move GOCART to use RRTMGP Bands
 {{ atmos.RRTMGP_RADIATION }} # -------------------------------
 {{ atmos.RRTMGP_RADIATION }} set instance_files = `/bin/ls -1 *_instance*.rc`
 {{ atmos.RRTMGP_RADIATION }} foreach instance ($instance_files)
    {{ atmos.RRTMGP_RADIATION }} /bin/mv $instance $instance.tmp
-   {{ atmos.RRTMGP_RADIATION }} cat $instance.tmp | sed -e '/\bRRTMG\b/ s#RRTMG#RRTMGP#' > $instance
+   {{ atmos.RRTMGP_RADIATION }} cat $instance.tmp | sed -E -e 's/(^|[^[:alnum:]_])RRTMG([^[:alnum:]_]|$)/\1RRTMGP\2/' > $instance
    {{ atmos.RRTMGP_RADIATION }} /bin/rm $instance.tmp
 {{ atmos.RRTMGP_RADIATION }} end
 
@@ -934,10 +903,10 @@ endif
 {{ ocean.CICE6 }} ncdump -h INPUT/iced.nc | grep 'apnd' > /dev/null
 {{ ocean.CICE6 }} if( $status == 0 ) then
 {{ ocean.CICE6 }}    echo 'pond state in restart, turn on restart flag if not already'
-{{ ocean.CICE6 }}    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
+{{ ocean.CICE6 }}    $ISED -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.false\./    restart_pond_lvl  = .true./' ice_in
 {{ ocean.CICE6 }} else
 {{ ocean.CICE6 }}    echo 'pond state NOT in restart, turn off restart flag if already on'
-{{ ocean.CICE6 }}    sed -i -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
+{{ ocean.CICE6 }}    $ISED -E 's/^[[:space:]]*restart_pond_lvl[[:space:]]*=[[:space:]]*\.true\./    restart_pond_lvl  = .false./' ice_in
 {{ ocean.CICE6 }} endif
 
 # Test Openwater Restart for Number of tiles correctness
@@ -960,24 +929,24 @@ endif
 # Check for MERRA2OX Consistency
 # ------------------------------
 
-# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# The MERRA2OX pchem file is only valid until 202608, so this is a first
 # attempt at a check to make sure you aren't using it and are past the date
 
 # Check for MERRA2OX by looking at AGCM.rc
 set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
 
-# If it is 39, we are using MERRA2OX
-if ( $PCHEM_CLIM_YEARS == 39 ) then
+# If it is 48, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 48 ) then
 
    # Grab the date from cap_restart
    set YEARMON = `cat cap_restart | cut -c1-6`
 
    # Set a magic date
-   set MERRA2OX_END_DATE = "201706"
+   set MERRA2OX_END_DATE = "202608"
 
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
-      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 202608. This file is only valid until this time."
       exit 8
    endif
 endif
@@ -1010,9 +979,6 @@ if( $REPLAY_MODE == 'Exact' | $REPLAY_MODE == 'Regular' ) then
      # ---------------------------------------------
      /bin/mv -f GAAS_GridComp_ExtData.yaml GAAS_GridComp_ExtData.yaml.tmpl
      cat GAAS_GridComp_ExtData.yaml.tmpl | sed -e "s?das.aod_?chem/Y%y4/M%m2/${ANA_EXPID}.aod_?g" > GAAS_GridComp_ExtData.yaml
-
-     /bin/mv -f GAAS_GridComp_ExtData.rc GAAS_GridComp_ExtData.rc.tmpl
-     cat GAAS_GridComp_ExtData.rc.tmpl | sed -e "s?das.aod_?chem/Y%y4/M%m2/${ANA_EXPID}.aod_?g" > GAAS_GridComp_ExtData.rc
 
      /bin/ln -sf ${ANA_LOCATION}/chem .
      /bin/ln -sf ${ANA_LOCATION}/${REPLAY_FILE_TYPE} .

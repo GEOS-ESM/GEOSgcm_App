@@ -5,6 +5,7 @@
  {{ atmos.FV_stretch_fac }}
  {{ atmos.target_lon }}
  {{ atmos.target_lat }}
+ {{ atmos.run_hydrostatic }}
 /
 
 &main_nml

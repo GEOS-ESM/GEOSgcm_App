@@ -15,6 +15,15 @@ setenv GEOSETC          {{ INSTALLDIR }}/etc
 setenv GEOSUTIL         {{ INSTALLDIR }}
 
 source $GEOSBIN/g5_modules
+
+if ( $?USE_DSL ) then
+    if ( $?PYTHONPATH ) then
+        setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+    else
+        setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+    endif
+endif
+
 # We only prepend to DY/LD_LIBRARY_PATH if it exists
 if ( $?{{ LD_LIBRARY_PATH_CMD }} ) then
    setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${GEOSDIR}/lib"
@@ -24,6 +33,14 @@ endif
 # We only add BASEDIR to the {{ LD_LIBRARY_PATH_CMD }} if BASEDIR is defined (i.e., not running with Spack)
 if ( $?BASEDIR ) then
    setenv {{ LD_LIBRARY_PATH_CMD }} "${{'{'}}{{LD_LIBRARY_PATH_CMD}}{{'}'}}:${BASEDIR}/${ARCH}/lib"
+endif
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
 endif
 
 setenv RUN_CMD "{{ RUN_CMD }}"

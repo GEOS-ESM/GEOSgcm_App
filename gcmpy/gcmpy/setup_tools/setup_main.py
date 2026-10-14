@@ -20,13 +20,13 @@ from gcmpy.setup_tools.geos_ops import copy_src_tarfile
 from gcmpy.setup_tools.setup_envs import envdict, pathdict
 from gcmpy.setup_tools.process_questions import ask_questions
 from gcmpy.setup_tools.clone import (
-        yaml_receipt, 
-        yaml_input_exp, 
+        yaml_receipt,
+        yaml_input_exp,
         clone_exp
         )
 from gcmpy.utils.path_ops import copy_file
 from gcmpy.utils.yaml_ops import (
-        read_yaml_file_full, 
+        read_yaml_file_full,
         write_dict_into_yaml
         )
 from gcmpy.utils.color_ops import Color
@@ -200,7 +200,7 @@ class SetupGCM:
     def set_nodes(self):
         node_params = determine_nodes(
                 io_server=self.expConfig['io_server'],
-                nx=self.atmos['nx'], 
+                nx=self.atmos['nx'],
                 ny=self.atmos['ny'],
                 num_cpus=self.num_CPUs,
                 history_rc_file=f"{pathdict['etc']}/{self.expConfig['history_template']}"
@@ -597,8 +597,8 @@ class SetupGCM:
             file_content = search_replace_in_string(r'(LAND_PARAMS:\s*).*', r'\1Icarus', file_content)
             file_content = search_replace_in_string(r'(Z0_FORMULATION:\s*).*', r'\1 2', file_content)
 
-        # If LM=72, we set SNOW_ALBEDO_INFO to 0
-        if self.atmos['lm'] == 72:
+        # If land is ICA or NL3, we set SNOW_ALBEDO_INFO to 0
+        if self.atmos['bcs'] == 'ICA' or self.atmos['bcs'] == 'NL3':
             file_content = search_replace_in_string(r'(SNOW_ALBEDO_INFO:\s*).*', r'\1 0', file_content)
 
         with open(surfacegridcomp, 'w') as file:
@@ -775,7 +775,7 @@ class SetupGCM:
                 'atmos.dt', 'atmos.conv_dt', 'atmos.chem_dt', 'atmos.dt_solar',
                 'atmos.dt_irrad', 'atmos.dt_ocean'
         ]
-        
+
 
         def _resolve(dotted_key):
             obj = jinja_dict
@@ -863,10 +863,10 @@ class SetupGCM:
         os.chmod(f"{exp_dir}/forecasts/gcm_forecast.tmpl", 0o644)
         os.chmod(f"{exp_dir}/plot/gcm_plot.tmpl", 0o644)
 
-# raises expections                           
-class Exceptions:                             
-    # Displays usage information to user      
-    def print_usage():                        
+# raises expections
+class Exceptions:
+    # Displays usage information to user
+    def print_usage():
         print(Color.GREEN + pathdict['SCRIPTNAME'] + ", a setup script for the GEOS GCM\n\n" +  \
                 "\tUsage: " + pathdict['SCRIPTNAME'] + " [optional flag]\n\n" +                 \
                 "\t    --link         Link GEOSgcm.x into experiment directory\n" +             \
@@ -875,17 +875,17 @@ class Exceptions:
                 "\n\nIf invoked alone, the script runs as normal." +                            \
                 "\nFor more information, please contact Matt Thompson, Scott Rabenhorst, or Shayon Shakoorzadeh.\n")
         exit(1)
-                                              
+
     # Display misconfiguration messages to the user
-    def raise_user_exception(msg):            
-        print(msg)                            
-        exit(1)                               
-                                              
-    def raise_fatal_exception(msg):           
-        Exceptions.raiseuserexception(msg)    
-        exit(1)                               
-                                              
+    def raise_user_exception(msg):
+        print(msg)
+        exit(1)
+
+    def raise_fatal_exception(msg):
+        Exceptions.raiseuserexception(msg)
+        exit(1)
+
     # This function will clean output files if script is interrupted
-    def cleanup():                  
+    def cleanup():
         pass
 
