@@ -26,6 +26,7 @@
 /
 
 &gfdl_mp_nml
+ do_scale_dep = .F.
 /
 
 &gfdl_cloud_microphysics_nml
