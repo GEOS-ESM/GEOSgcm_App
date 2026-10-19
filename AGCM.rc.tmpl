@@ -683,9 +683,9 @@ MAPL_ENABLE_BOOTSTRAP: {{ boot }}
 {{ ocean.modelatm }}CATCH_INTERNAL_CHECKPOINT_FILE:         catch_internal_checkpoint
 {{ ocean.modelatm }}CATCH_INTERNAL_CHECKPOINT_TYPE:         {{ checkpoint_type }}
 
-{{ ocean.modelatm }}ROUTE_INTERNAL_RESTART_FILE:            route_internal_rst
-{{ ocean.modelatm }}ROUTE_INTERNAL_CHECKPOINT_FILE:         route_internal_checkpoint
-{{ ocean.modelatm }}ROUTE_INTERNAL_CHECKPOINT_TYPE:         {{ checkpoint_type }}
+{{ ocean.modelatm }}{{ land.run_route }}ROUTE_INTERNAL_RESTART_FILE:            route_internal_rst
+{{ ocean.modelatm }}{{ land.run_route }}ROUTE_INTERNAL_CHECKPOINT_FILE:         route_internal_checkpoint
+{{ ocean.modelatm }}{{ land.run_route }}ROUTE_INTERNAL_CHECKPOINT_TYPE:         {{ checkpoint_type }}
 
 {{ ocean.modelatm }}CATCHCNCLM40_INTERNAL_RESTART_FILE:     catchcn_internal_rst
 {{ ocean.modelatm }}CATCHCNCLM40_INTERNAL_CHECKPOINT_FILE:  catchcn_internal_checkpoint

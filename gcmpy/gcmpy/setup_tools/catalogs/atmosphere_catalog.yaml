@@ -463,15 +463,15 @@ microphysics:
     chem_dt: 450
     RRTMGP_RADIATION: '#DELETE'
     RRTMG_RADIATION: ''
-    KLID:
-      '181+': '19.0'
-      '137': '14.0'
-      '91': '13.0'
-      '72': '14.0'
   GFDL_1M:
     BACM_1M: '#'
     GFDL_1M: ''
     MGB2_2M: '#'
+    KLID:
+      '181': '19.0'
+      '137': '14.0'
+      '91': '13.0'
+      '72': '14.0'
   MGB2_2M:
     BACM_1M: '#'
     GFDL_1M: '#'

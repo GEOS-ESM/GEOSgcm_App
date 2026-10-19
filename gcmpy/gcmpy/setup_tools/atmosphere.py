@@ -81,18 +81,18 @@ def _build_microphysics(atmos: dict, catalog: CatalogSearch, expConfig: dict, ca
         atmos['RRTMG_RADIATION'] = '#DELETE'
         atmos['RRTMGP_RADIATION'] = ''
 
-    # KLID: only set for BACM_1M; keyed by lm in catalog
-    if expConfig['MOIST_version'] == 'BACM_1M':
+    # KLID: only set for GFDL_1M; keyed by lm in catalog
+    if expConfig['MOIST_version'] == 'GFDL_1M':
         lm = atmos['lm']
         if lm >= 181:
-            klid_key = '181+'
+            klid_key = '181'
         elif lm == 137:
             klid_key = '137'
         elif lm == 91:
             klid_key = '91'
         else:
             klid_key = '72'
-        atmos['KLID'] = catalog_data['microphysics']['BACM_1M']['KLID'][klid_key]
+        atmos['KLID'] = catalog_data['microphysics']['GFDL_1M']['KLID'][klid_key]
 
 
 def _build_wsub(atmos: dict, catalog: CatalogSearch, expConfig: dict):

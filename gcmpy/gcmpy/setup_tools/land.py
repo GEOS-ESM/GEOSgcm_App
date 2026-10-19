@@ -59,6 +59,7 @@ def get_land_config(expConfig: dict) -> dict:
 
     land['bcs']   = bcs
     land['model'] = model
+    land['run_route'] = '#'
 
     _build_defaults(land, catalog)
     _build_bcs(land, catalog, bcs)
