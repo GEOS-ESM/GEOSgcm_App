@@ -262,11 +262,12 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
             scratch_dir / "HISTORY.rc", scratch_dir / "AGCM.rc"
         )
 
-    # gcm_run.j:436-540 -- build/select the GEOSgcm.x executable
-    # (native vs. singularity; singularity raises NotImplementedError).
+    # gcm_run.j:436-540 -- select the GEOSgcm.x executable (gcmpy launches
+    # $GEOSBIN/GEOSgcm.x directly; EXPDIR fallback for custom builds.
+    # Singularity raises NotImplementedError).
     from gcmpy.run_tools.executable_setup import setup_executable
 
-    geosexe, singularity_run = setup_executable(exp_dir, scratch_dir, run_config)
+    geosexe, singularity_run = setup_executable(geosbin, exp_dir, run_config)
 
     # gcm_run.j:541-708 -- staging initial restarts.
     from gcmpy.run_tools.stage_restarts import fetch_restarts

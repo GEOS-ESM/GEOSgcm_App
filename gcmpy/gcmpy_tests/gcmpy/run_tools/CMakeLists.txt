@@ -3,6 +3,7 @@ set (programs
 	__init__.py
 	test_archiver.py
 	test_cap_files_ops.py
+	test_executable_setup.py
 	test_extdata.py
 	test_gcm_run_sh_env.py
 	test_gcm_run_submit.py
