@@ -58,7 +58,16 @@ class Handle:
 
         my_site = envdict['site']
         if my_site in site_nodes_dict:
-            question_dict[i].choices = list(site_nodes_dict[my_site].keys())
+            # questionary.select starts on the first choice (load_question
+            # passes no 'default'), so put the upstream gcm_setup default
+            # there: NCCS 'mil' (gcm_setup:447), NAS 'rom' (gcm_setup:473).
+            defaults = {'NCCS': 'mil', 'NAS': 'rom'}
+            keys = list(site_nodes_dict[my_site].keys())
+            default = defaults.get(my_site)
+            if default in keys:
+                keys.remove(default)
+                keys.insert(0, default)
+            question_dict[i].choices = keys
         else:
             exit(1)
 
@@ -101,14 +110,14 @@ class Handle:
             sys.exit("""# For MOM6 we currently have only 4 allowed ocean resolutions (1/2, 1/4, 1/8 deg)
                         # based on the atmospheric resolution (c180 and c360). The allowed are:
                         #
-                        # Atm Res  Atm NXxNY  Atm IMxJM  Ocean NXxNY  Ocean IMxJM  Ocean LM
-                        # -------  ---------  ---------  -----------  -----------  --------
-                        # c12      1x6        12x72      3x2          72x36        50
-                        # c90      5x36       90x540     90x2         540x458      50
-                        # c180     30x36      180x1080   36x30        1440x1080    75
-                        # c180     24x36      180x1080   36x24        720x576      75
-                        # c360     30x36      180x1080   36x30        1440x1080    75
-                        # c180     20x36      180x1080   36x20        2880x2240    75
+                        # Atm Res  Atm NXxNY  Atm IMxJM   Ocean NXxNY  Ocean IMxJM  Ocean LM
+                        # -------  ---------  ----------  -----------  -----------  --------
+                        # c12      1x6        12x72       3x2          72x36        50
+                        # c90      5x36       90x540      90x2         540x458      50
+                        # c180     20x96      180x1080    40x48        720x576      75
+                        # c180     20x96      180x1080    48x40        1440x1080    75
+                        # c180     20x96      180x1080    48x40        2880x2240    75
+                        # c360     20x96      360x2160    48x40        1440x1080    75
                         # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
 
                         Please select a valid Atmospheric resolution!""")
@@ -124,8 +133,8 @@ class Handle:
         elif question_dict['AGCM_grid'].answer == "c90":
             question_dict['MOM6_resolution'].choices = ['o540']
         elif question_dict['AGCM_grid'].answer == "c180":
-            question_dict['MOM6_resolution'].choices = ['o720 (1/2-deg,  720x576  Tripolar)',
-                                                       'o1440 (1/4-deg, 1440x1080  Tripolar)',
+            question_dict['MOM6_resolution'].choices = ['o1440 (1/4-deg, 1440x1080  Tripolar) (Default)',
+                                                       'o720 (1/2-deg,  720x576  Tripolar)',
                                                        'o2880 (1/8-deg, 2880x2240 Tripolar)']
         elif question_dict['AGCM_grid'].answer == "c360":
             question_dict['MOM6_resolution'].choices = ['o1440 (1/4-deg, 1440x1080  Tripolar)']

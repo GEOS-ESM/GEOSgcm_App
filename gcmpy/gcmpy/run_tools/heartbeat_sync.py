@@ -10,7 +10,7 @@ MOM5 support has been removed from gcmpy entirely (OCEAN_type only offers
 'MOM6'/'MIT'), so the MOM5 branch from gcm_run.j is intentionally omitted
 here.
 
-Replaces lines 792 (comment)-839 of gcm_run.j (the ocean.coupled/MOM6/
+Replaces lines 799 (comment)-841 of gcm_run.j (the ocean.coupled/MOM6/
 CICE6 HEARTBEAT_DT sync block and the final *.yaml L72 patch).
 """
 

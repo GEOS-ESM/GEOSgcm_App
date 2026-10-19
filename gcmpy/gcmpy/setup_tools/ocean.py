@@ -99,16 +99,20 @@ def _build_seaice(ocean: dict, catalog: CatalogSearch, expConfig: dict):
 def _build_data_atmosphere(ocean: dict, catalog: CatalogSearch, expConfig: dict, catalog_data: dict):
     """Populate data atmosphere fields from the data_atmosphere catalog section."""
 
-    # The catalog uses string keys 'true'/'false'; normalize the bool expConfig
+    # The catalog uses string keys 'true'/'false'; normalize the expConfig
     # value so _search_recursive can navigate into the correct sub-dict.
-    da_str = str(expConfig['OCEAN_data_atmosphere']).lower()   # 'true' or 'false'
+    # None (yaml key absent / null) means "no data atmosphere" -> 'false';
+    # otherwise str(None).lower()='none' would match neither key and the
+    # catalog search second-pass would fall through into the 'true' branch.
+    da = expConfig['OCEAN_data_atmosphere']
+    da_str = 'false' if da is None else str(da).lower()   # 'true' or 'false'
 
     # Temporarily inject the string key into config values so the recursive
     # search can navigate into the matching 'true'/'false' sub-dict.
     saved = catalog.config
     catalog.config = {**expConfig, '_da_key': da_str}
 
-    for field in ['modelatm', 'use_data_ATM4OCN']:
+    for field in ['modelatm', 'use_data_ATM4OCN', 'DATAATM']:
         ocean[field] = catalog.get_value(field, 'data_atmosphere')
 
     catalog.config = saved
@@ -154,5 +158,20 @@ def get_ocean_config(expConfig: dict) -> dict:
 
     _build_seaice(ocean, catalog, expConfig)
     _build_data_atmosphere(ocean, catalog, expConfig, catalog_data)
+
+    # A YAML null (a bare `coupled:` / `CICE6:` / `MOM6:` key) reaches us as
+    # None.  The old csh tooling treated an empty shell variable as "line
+    # stays active", so None must become '' rather than be forwarded:
+    #   * Jinja would otherwise print the literal "None" into AGCM.rc
+    #     ("None OCEAN_NAME: MOM6"), which the rc parser folds into the key
+    #     name and thereby disables the coupled ocean/CICE configuration;
+    #   * run-side flag_ops.is_enabled() tests `value == ""`, so a None
+    #     coupled/MOM6/CICE6 flag would read as *inactive* at run time
+    #     (heartbeat sync, restart staging, resources).
+    # (A genuinely absent catalog key still returns None from get_value and
+    # is left alone by the builders, e.g. atmosphere.py's fall-through guard.)
+    for key, value in ocean.items():
+        if value is None:
+            ocean[key] = ''
 
     return ocean

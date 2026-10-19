@@ -3,7 +3,6 @@ from pathlib import Path
 from gcmpy.run_tools.extdata import (
     generate_extdata_file,
     patch_wsub_extdata,
-    prune_chem_collections,
     stage_extdata,
 )
 
@@ -15,36 +14,6 @@ ENABLE_CARMA: .FALSE.
 ENABLE_DNA: .FALSE.
 ENABLE_ACHEM: .FALSE.
 """
-
-
-def test_prune_renames_only_disabled_collections(tmp_path):
-    (tmp_path / "GEOS_ChemGridComp.rc").write_text(CHEM_RC)
-    (tmp_path / "StratChem_ExtData.rc").write_text("disabled")
-    (tmp_path / "GMI_ExtData.rc").write_text("enabled")
-
-    prune_chem_collections(tmp_path)
-
-    # Disabled component -> renamed out of the way (gcm_run.j:841-852).
-    assert (tmp_path / "StratChem_ExtData.rc.NOT_USED").exists()
-    assert not (tmp_path / "StratChem_ExtData.rc").exists()
-    # Enabled component untouched.
-    assert (tmp_path / "GMI_ExtData.rc").exists()
-
-
-def test_prune_missing_chem_rc_treats_all_disabled(tmp_path):
-    # gcm_run.j's `grep ... | wc -l` yields 0 for a missing file, so every
-    # gated collection is renamed even without GEOS_ChemGridComp.rc.
-    (tmp_path / "StratChem_ExtData.rc").write_text("x")
-    (tmp_path / "DNA_ExtData.rc").write_text("x")
-
-    prune_chem_collections(tmp_path)
-
-    assert (tmp_path / "StratChem_ExtData.rc.NOT_USED").exists()
-    assert (tmp_path / "DNA_ExtData.rc.NOT_USED").exists()
-
-
-def test_prune_missing_everything_is_noop(tmp_path):
-    prune_chem_collections(tmp_path)
 
 
 def test_patch_wsub_extdata_redirects_wsub_clim(tmp_path):
@@ -113,7 +82,9 @@ def test_stage_extdata_orchestrates_all_steps(tmp_path):
 
     stage_extdata(rc_dir, geosbin, turn_off_wsub=True)
 
-    assert (rc_dir / "StratChem_ExtData.rc.NOT_USED").exists()
+    # The .NOT_USED prune was removed with the new gcm_run.j: chem
+    # ExtData files are left in place regardless of enable flags.
+    assert (rc_dir / "StratChem_ExtData.rc").exists()
     assert (rc_dir / "GMI_ExtData.rc").exists()
     assert "collection: /dev/null" in (rc_dir / "WSUB_ExtData.yaml").read_text()
     assert (rc_dir / "extdata.yaml").exists()

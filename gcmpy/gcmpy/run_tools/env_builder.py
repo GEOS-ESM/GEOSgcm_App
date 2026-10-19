@@ -5,7 +5,7 @@ Sets up OMP_NUM_THREADS, KMP_AFFINITY, stack sizes, and patches
 GWD_GridComp.rc for threaded runs. Provides a matching teardown to
 restore the environment after GEOSgcm.x completes.
 
-Replaces lines 1149-1160 and 1196-1199 of gcm_run.j.
+Replaces lines 1061-1072 and 1107-1109 of gcm_run.j.
 """
 
 import os

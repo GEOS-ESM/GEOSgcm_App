@@ -218,6 +218,19 @@ def test_openwater_tile_counts_mismatch_exits_7(tmp_path):
     assert excinfo.value.code == 7
 
 
+def test_openwater_launcher_expands_geosbin_env(tmp_path, monkeypatch):
+    scratch, geosbin, _ = _openwater_fixture(
+        tmp_path, expected_lines=3, reported_total=3
+    )
+    _write_executable(
+        geosbin / "esma_mpirun",
+        "#!/bin/bash\nshift\nexec \"$@\"\n",
+    )
+    monkeypatch.setenv("GEOSBIN", str(geosbin))
+
+    validate_openwater_tiles(scratch, geosbin, "$GEOSBIN/esma_mpirun")
+
+
 def test_openwater_without_helper_is_skipped(tmp_path):
     scratch = tmp_path / "scratch"
     scratch.mkdir()
@@ -236,7 +249,7 @@ def test_openwater_missing_tile_data_counts_zero(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# gcm_run.j:960-983 -- MERRA2OX consistency check
+# gcm_run.j:929-950 -- MERRA2OX consistency check
 # ---------------------------------------------------------------------------
 
 def _merra2ox_fixture(tmp_path, pchem_line, cap_restart):
@@ -248,7 +261,7 @@ def _merra2ox_fixture(tmp_path, pchem_line, cap_restart):
 
 def test_merra2ox_after_validity_end_exits_8(tmp_path):
     _merra2ox_fixture(
-        tmp_path, "pchem_clim_years: 39", "20180701 210000"
+        tmp_path, "pchem_clim_years: 48", "20260901 210000"
     )
 
     with pytest.raises(SystemExit) as excinfo:
@@ -259,7 +272,7 @@ def test_merra2ox_after_validity_end_exits_8(tmp_path):
 
 def test_merra2ox_before_validity_end_passes(tmp_path):
     _merra2ox_fixture(
-        tmp_path, "pchem_clim_years: 39", "20170501 210000"
+        tmp_path, "pchem_clim_years: 48", "20260701 210000"
     )
 
     check_merra2ox_dates(tmp_path)

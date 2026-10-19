@@ -231,7 +231,7 @@ def strip_gcmrun_cnfrootc_lines(
     Drop HISTORY.rc lines that reference the 'CNFROOTC' history field when
     the CatchmentCN land model is active.
 
-    Replaces gcm_run.j:399-403:
+    Replaces gcm_run.j:432-436:
 
         {{ land.GCMRUN_catchment }}set LSM_CHOICE = `grep LSM_CHOICE: AGCM.rc | cut -d':' -f2`
         {{ land.GCMRUN_catchment }}if ($LSM_CHOICE == 2) then

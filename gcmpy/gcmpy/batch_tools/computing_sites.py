@@ -2,7 +2,7 @@
 sites_list = ['NCCS', 'NAS']
 
 site_nodes_dict = {
-        'NCCS': dict(mil=40, cas=120),
+        'NCCS': dict(mil=120, cas=40),
         'NAS': dict(bro=24, sky=40, cas=40, rom=120, mil=120, tur=240)
         }
 #site_nodes_dict = {
@@ -42,11 +42,11 @@ job_script_header['NAS'] = dict(
         batch_jobname = "PBS -N",
         batch_outputname = "PBS -o ",
         batch_joinouterr = "PBS -j oe -k oed",
-        run_ft = "6:00:00",
-        run_t = "8:00:00",
-        post_t = "8:00:00",
+        run_ft = "4:00:00",
+        run_t = "4:00:00",
+        post_t = "4:00:00",
         plot_t = "8:00:00",
-        archive_t = "8:00:00",
+        archive_t = "4:00:00",
         run_q = f"PBS -q normal",
         post_q = f"PBS -q normal",
         plot_q = f"PBS -q normal",
@@ -62,9 +62,9 @@ job_script_header['NCCS'] = dict(
         batch_jobname = "SBATCH --job-name=",
         batch_outputname = "SBATCH --output=",
         batch_joinouterr = "DELETE",
-        run_ft = "06:00:00",
-        run_t  = "12:00:00",
-        post_t = "8:00:00",
+        run_ft = "4:00:00",
+        run_t  = "4:00:00",
+        post_t = "4:00:00",
         plot_t = "12:00:00",
         archive_t = "2:00:00",
         move_q = "SBATCH --partition=datamove",
@@ -75,27 +75,27 @@ job_script_header['NCCS'] = dict(
         )
 
 job_script_header['AWS'] = dict(
-        batch_cmd        = "sbatch", 
-        batch_group      = "#DELETE", 
-        batch_time       = "SBATCH --time=", 
-        batch_jobname    = "SBATCH --job-name=", 
-        batch_outputname = "SBATCH --output=", 
-        batch_joinouterr = "DELETE", 
-        run_ft           = "06:00:00", 
-        run_t            = "12:00:00", 
-        post_t           = "8:00:00", 
-        plot_t           = "12:00:00", 
-        archive_t        = "1:00:00", 
-        post_q           = "NULL", 
-        plot_q           = "NULL", 
-        move_q           = "NULL", 
-        archive_q        = "NULL", 
-        plot_p           = f"SBATCH --nodes=4 --ntasks=4", 
-        archive_p        = "SBATCH --ntasks=1", 
+        batch_cmd        = "sbatch",
+        batch_group      = "#DELETE",
+        batch_time       = "SBATCH --time=",
+        batch_jobname    = "SBATCH --job-name=",
+        batch_outputname = "SBATCH --output=",
+        batch_joinouterr = "DELETE",
+        run_ft           = "4:00:00",
+        run_t            = "4:00:00",
+        post_t           = "4:00:00",
+        plot_t           = "12:00:00",
+        archive_t        = "1:00:00",
+        post_q           = "NULL",
+        plot_q           = "NULL",
+        move_q           = "NULL",
+        archive_q        = "NULL",
+        plot_p           = f"SBATCH --nodes=4 --ntasks=4",
+        archive_p        = "SBATCH --ntasks=1",
         move_p           = "SBATCH --ntasks=1"
         )
 
-job_script_header['Azure'] = job_script_header['AWS'] 
+job_script_header['Azure'] = job_script_header['AWS']
 
 job_script_header['Other'] = dict(
         batch_cmd = "sbatch",
@@ -104,9 +104,9 @@ job_script_header['Other'] = dict(
         batch_jobname = "SBATCH --job-name=",
         batch_outputname = "SBATCH --output=",
         batch_joinouterr = "DELETE",
-        run_ft = "06:00:00",
-        run_t  = "12:00:00",
-        post_t = "8:00:00",
+        run_ft = "4:00:00",
+        run_t  = "4:00:00",
+        post_t = "4:00:00",
         plot_t = "12:00:00",
         archive_t = "1:00:00",
         run_q = "NULL",

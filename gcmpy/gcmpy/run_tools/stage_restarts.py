@@ -4,7 +4,7 @@ stage_restarts.py
 Identifies and copies the required initial restarts to the scratch directory.
 Handles face vs tile restart layout detection and AGCM.rc configuration.
 
-Replaces lines 494-664 of gcm_run.j.
+Replaces lines 541-676 of gcm_run.j.
 """
 
 import re
@@ -307,13 +307,13 @@ def stage_coupled_input(exp_dir: Path, scratch_dir: Path) -> None:
     """
     Seed scratch INPUT/ from the experiment's RESTART/ directory.
 
-    Replaces gcm_run.j:617-620 (runs once, before the segment loop):
+    Replaces gcm_run.j:666-670 (runs once, before the segment loop):
 
         {{ ocean.coupled }} /bin/mkdir INPUT
         {{ ocean.coupled }} cp $EXPDIR/RESTART/* INPUT
 
     The model then refreshes INPUT/ from its own scratch RESTART/ output
-    after each segment (gcm_run.j:1237, mirrored in archiver.py), but the
+    after each segment (gcm_run.j:1207, mirrored in archiver.py), but the
     initial contents must come from the experiment. Only files are copied:
     plain csh `cp` without -r fails on subdirectories, and a missing
     $EXPDIR/RESTART makes the glob fail without aborting the script.
@@ -430,7 +430,7 @@ def force_num_readers_1_for_binary_restarts(
     +-style bootstrapping of missing files can occur in MAPL (pbinary
     cannot do this, but pnc4 can).
 
-    Replaces (gcm_run.j:647-664):
+    Replaces (gcm_run.j:673-676):
         set found_binary = 0
         foreach rst ( $rst_file_names )
            if (-e $rst) then
@@ -484,7 +484,7 @@ def fetch_restarts(
     """
     Top-level entry point: parse restart names, detect and configure the face
     layout, copy restarts to scratch (seed coupled INPUT/ from the
-    experiment's RESTART/, gcm_run.j:617-620), and archive the initial set.
+    experiment's RESTART/, gcm_run.j:666-670), and archive the initial set.
 
     Args:
         exp_dir:          Experiment directory.
@@ -503,7 +503,7 @@ def fetch_restarts(
 
     Returns:
         True if restarts are stored in face-decomposed layout. Callers need
-        this later (gcm_run.j:901-921 -- ridge-scheme GWD restart handling)
+        this later (gcm_run.j:870-890 -- ridge-scheme GWD restart handling)
         to decide whether to patch NCAR_NRDG in AGCM.rc.
     """
     # Parse restart and checkpoint names
@@ -523,7 +523,7 @@ def fetch_restarts(
         gcmemip, rstdate, wavewatch,
     )
 
-    # gcm_run.j:617-620 -- coupled runs seed scratch INPUT/ from the
+    # gcm_run.j:666-670 -- coupled runs seed scratch INPUT/ from the
     # experiment's RESTART/ directory (before the initial archive below).
     if coupled:
         stage_coupled_input(exp_dir, scratch_dir)
@@ -535,7 +535,7 @@ def fetch_restarts(
         expid, gcmver, bctag, bcrslv, coupled, wavewatch,
     )
 
-    # gcm_run.j:647-664 -- if any restart is binary, force NUM_READERS to 1
+    # gcm_run.j:673-676 -- if any restart is binary, force NUM_READERS to 1
     # so +-style MAPL bootstrapping works (pbinary cannot do it).
     force_num_readers_1_for_binary_restarts(
         scratch_dir, agcm_rc_path, rst_file_names

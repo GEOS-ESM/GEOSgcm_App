@@ -66,25 +66,33 @@ class CatalogSearch:
             return _NOT_FOUND
 
         # First pass: descend into sub-dicts whose key matches a config value.
+        matched_config_section = False
         for section_name, section_data in catalog_section.items():
             if not isinstance(section_data, dict):
                 continue
             if section_name not in config_values:
                 continue
+            matched_config_section = True
             result = self._search_recursive(target, section_data)
             if result is not _NOT_FOUND:
                 return result
 
         # Second pass: transparent pass-through for structural grouping keys
         # (e.g. 'resolutions', 'resolution') that are not config values.
-        for section_name, section_data in catalog_section.items():
-            if not isinstance(section_data, dict):
-                continue
-            if section_name in config_values:
-                continue
-            result = self._search_recursive(target, section_data)
-            if result is not _NOT_FOUND:
-                return result
+        # Only runs when NO config-matched section exists at this level; if a
+        # config-matched section was found (e.g. resolutions -> c12) but the
+        # target is absent within it, the correct result is "unset" -- falling
+        # through into sibling sections (e.g. a stretched c270 defining conus)
+        # would leak another resolution's settings.
+        if not matched_config_section:
+            for section_name, section_data in catalog_section.items():
+                if not isinstance(section_data, dict):
+                    continue
+                if section_name in config_values:
+                    continue
+                result = self._search_recursive(target, section_data)
+                if result is not _NOT_FOUND:
+                    return result
 
         return _NOT_FOUND
 

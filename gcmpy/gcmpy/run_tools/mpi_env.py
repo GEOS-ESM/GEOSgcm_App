@@ -7,7 +7,7 @@ experiment-setup time by SetupGCM.mpistacksettings() -- run_config
 process's environment, since gcm_run.sh/gcm_run.py no longer render or
 execute gcm_run.j as a csh script.
 
-Replaces lines 977-981 of gcm_run.j.
+Replaces lines 955-959 of gcm_run.j.
 """
 
 import os

@@ -2,6 +2,7 @@
 set (programs
 	__init__.py
 	test_node_ops.py
+	test_site_nodes.py
 	)
 
 install (

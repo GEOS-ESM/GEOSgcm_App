@@ -150,7 +150,16 @@ def submit_job(config_path: Path, run_config: dict) -> subprocess.CompletedProce
     gcm_run_sh = Path(bin_path) / "gcm_run.sh"
     sbatch_args = build_sbatch_args(run_config)
 
-    cmd = ["sbatch", *sbatch_args, str(gcm_run_sh), str(config_path)]
+    # The job script sources ${GEOSBIN}/g5_modules.sh, but inside a SLURM
+    # job BASH_SOURCE points at the spool copy -- so GEOSBIN must arrive via
+    # the submission environment rather than be rediscovered in-job.
+    cmd = [
+        "sbatch",
+        *sbatch_args,
+        f"--export=ALL,GEOSBIN={bin_path}",
+        str(gcm_run_sh),
+        str(config_path),
+    ]
     print(f"Submitting: {' '.join(cmd)}")
 
     return subprocess.run(cmd, check=True)
@@ -168,7 +177,7 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
     staging.
 
     This corresponds to everything in gcm_run.j that happens *before* the
-    `while ( $counter <= ${NUM_SGMT} )` segment loop starts (gcm_run.j:673).
+    `while ( $counter <= ${NUM_SGMT} )` segment loop starts (gcm_run.j:709).
     The segment loop itself lives in run_segments() below, which calls this
     once and then iterates up to NUM_SGMT times within the same job --
     matching the original script's job/resubmit cadence (one job runs up
@@ -181,7 +190,7 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
         segment_control, expid, gcmver, bctag, bcrslv, coupled, wavewatch,
         collections, gcmemip, rstdate, rst_by_face.
     """
-    # gcm_run.j:142-241 -- experiment run parameters + CPU/node over-spec check.
+    # gcm_run.j:178-273 -- experiment run parameters + CPU/node over-spec check.
     from gcmpy.run_tools.run_resources import resolve_run_resources
     from gcmpy.utils.flag_ops import is_enabled
 
@@ -190,7 +199,7 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
     agcm_rc_file = exp_dir / "AGCM.rc"
     resources = resolve_run_resources(agcm_rc_file, run_config)
 
-    # gcm_run.j:241-311 -- GCMEMIP setup (regrid v11.5.2 REMIP restarts,
+    # gcm_run.j:273-348 -- GCMEMIP setup (regrid v11.5.2 REMIP restarts,
     # create CAP.rc/cap_restart under $EXPDIR/restarts/$RSTDATE).
     gcmemip = run_config.get("GCMEMIP", False)
     rstdate = run_config.get("RSTDATE", "")
@@ -209,25 +218,26 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
             run_config["bc_base"],
         )
 
-    # gcm_run.j:65-71, 355-384 -- experiment base + HISTORY collection dirs.
+    # gcm_run.j:96-107, 399-416 -- experiment base + HISTORY collection dirs.
     from gcmpy.run_tools.history_dirs import ensure_exp_base_dirs, create_history_collection_dirs
 
     ensure_exp_base_dirs(exp_dir)
     collections = create_history_collection_dirs(exp_dir, exp_dir / "HISTORY.rc")
 
-    # gcm_run.j:~86-141 -- scratch directory creation (TSE_TMPDIR handling).
+    # gcm_run.j:113-169 -- scratch directory creation (TSE_TMPDIR handling).
     from gcmpy.run_tools.scratchdir_ops import create_scratchdir
 
     scratch_dir_name = f"scratch.{rstdate}" if gcmemip else "scratch"
     scratch_dir = Path(create_scratchdir(str(exp_dir), scratch_dir_name))
 
-    # gcm_run.j:311-355 -- move to scratch + copy RC files from $HOMDIR.
+    # gcm_run.j:313-360 -- move to scratch + copy RC files from $HOMDIR.
     from gcmpy.run_tools.scratch_setup import populate_scratch_from_home
     from gcmpy.run_tools.agcm_file_ops import get_GIGATRAJ
 
     gigatraj_file = get_GIGATRAJ(agcm_rc_file) or ""
     mom6 = is_enabled(run_config["ocean"].get("MOM6", "#DELETE"))
     cice6 = is_enabled(run_config["ocean"].get("CICE6", "#DELETE"))
+    dataatm = is_enabled(run_config["ocean"].get("DATAATM", "#DELETE"))
 
     segment_control = populate_scratch_from_home(
         exp_dir,
@@ -238,9 +248,10 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
         gigatraj_file=gigatraj_file,
         mom6=mom6,
         cice6=cice6,
+        dataatm=dataatm,
     )
 
-    # gcm_run.j:399-403 -- GCMRUN_catchment: strip CNFROOTC history
+    # gcm_run.j:432-436 -- GCMRUN_catchment: strip CNFROOTC history
     # fields when the CatchmentCN land model (LSM_CHOICE == 2) is
     # active. Flag gate lives here (Jinja line-prefix semantics), the
     # LSM_CHOICE check inside reads scratch AGCM.rc dynamically.
@@ -251,13 +262,13 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
             scratch_dir / "HISTORY.rc", scratch_dir / "AGCM.rc"
         )
 
-    # gcm_run.j:403-494 -- build/select the GEOSgcm.x executable
+    # gcm_run.j:436-540 -- build/select the GEOSgcm.x executable
     # (native vs. singularity; singularity raises NotImplementedError).
     from gcmpy.run_tools.executable_setup import setup_executable
 
     geosexe, singularity_run = setup_executable(exp_dir, scratch_dir, run_config)
 
-    # gcm_run.j:494-645 -- staging initial restarts.
+    # gcm_run.j:541-708 -- staging initial restarts.
     from gcmpy.run_tools.stage_restarts import fetch_restarts
     from gcmpy.run_tools.restart_metadata import determine_wavewatch
 
@@ -318,7 +329,7 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
 def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     """
     Run one segment iteration of the GCM job (one pass through gcm_run.j's
-    `while ( $counter <= ${NUM_SGMT} )` loop body, lines 673-1399).
+    `while ( $counter <= ${NUM_SGMT} )` loop body, lines 709-1349).
 
     Wires up every ported gcmpy/run_tools module in the original's order:
     ExtData assembly, linkbcs, pre-run checks, MPI environment,
@@ -334,11 +345,11 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     gcmemip = job_context["gcmemip"]
     rstdate = job_context["rstdate"]
 
-    # gcm_run.j:673-682 -- copy CAP.rc from $HOMDIR (or GCMEMIP restarts
+    # gcm_run.j:709-718 -- copy CAP.rc from $HOMDIR (or GCMEMIP restarts
     # dir) and normalize whitespace, ready for this segment's run.
     import shutil
 
-    # gcm_run.j:678 -- drop any EGRESS left by a previous segment so a
+        # gcm_run.j:711 -- drop any EGRESS left by a previous segment so a
     # failed launch can't be masked by the stale file.
     (scratch_dir / "EGRESS").unlink(missing_ok=True)
 
@@ -353,7 +364,7 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
 
     cap_rc_dest.write_text(normalize_whitespace(cap_rc_dest.read_text()))
 
-    # gcm_run.j:682-750 -- Current/Ending/Segment-Finish date-time
+    # gcm_run.j:718-786 -- Current/Ending/Segment-Finish date-time
     # variables, END_DATE clamp, non-Reynolds-SST year-boundary clamp.
     from gcmpy.run_tools.segment_time import compute_segment_finish_time
 
@@ -363,25 +374,17 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
         run_config["ocean"]["res"],
     )
 
-    # gcm_run.j:745-791 -- select the AMIP emissions directory (with
-    # MODIS/AMIP.20C transition-date clamp) and stage AMIP emissions.
-    from gcmpy.run_tools.emissions import select_amip_emissions_directory, stage_amip_emissions
+    # gcm_run.j:781-790 -- stage AMIP emissions.
+    from gcmpy.run_tools.emissions import stage_amip_emissions
 
     if run_config["gocart"]["emissions"] == "AMIP_EMISSIONS":
-        amip_subdir, time_vars["segment_finish_date"] = select_amip_emissions_directory(
-            cap_rc_dest,
-            time_vars["current_date"],
-            time_vars["segment_finish_date"],
-            time_vars["segment_finish_time"],
-        )
         stage_amip_emissions(
             exp_dir / "RC",
             scratch_dir,
             job_context["resources"]["AGCM_LM"],
-            amip_subdir=amip_subdir,
         )
 
-    # gcm_run.j:792-813 -- WW3 start/end date injection (no-op if
+    # gcm_run.j:799-820 -- WW3 start/end date injection (no-op if
     # ww3_multi.nml isn't present -- see ww3_ops.py's module docstring).
     from gcmpy.run_tools.ww3_ops import set_ww3_dates
 
@@ -394,7 +397,7 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
             time_vars["experiment_end_time"],
         )
 
-    # gcm_run.j:814-839 -- ocean heartbeat DT sync + final *.yaml L72 patch.
+    # gcm_run.j:821-841 -- ocean heartbeat DT sync + final *.yaml L72 patch.
     from gcmpy.run_tools.heartbeat_sync import sync_heartbeat_dt, patch_yaml_levels
 
     sync_heartbeat_dt(
@@ -405,10 +408,10 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     )
     patch_yaml_levels(scratch_dir, job_context["resources"]["AGCM_LM"])
 
-    # gcm_run.j:839-885 -- ExtData assembly: prune ExtData files for
-    # disabled chem components, patch WSUB_CLIM for microphysics that
-    # don't use it, and run construct_extdata_yaml_list.py (ExtData2G;
-    # extdata1g support was removed from gcmpy).
+    # gcm_run.j:842-854 -- ExtData assembly: patch WSUB_CLIM for
+    # microphysics that don't use it, and run
+    # construct_extdata_yaml_list.py (ExtData2G; extdata1g support was
+    # removed from gcmpy).
     from gcmpy.run_tools.extdata import stage_extdata
 
     stage_extdata(
@@ -422,7 +425,7 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
         ),
     )
 
-    # gcm_run.j:886-983, 996-1022 -- per-segment pre-launch steps (see
+    # gcm_run.j:856-993 -- per-segment pre-launch steps (see
     # gcmpy/run_tools/pre_run.py for the individual gcm_run.j citations).
     from gcmpy.run_tools.pre_run import (
         check_merra2ox_dates,
@@ -435,18 +438,18 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     )
     from gcmpy.utils.flag_ops import is_enabled
 
-    # gcm_run.j:886-894 -- move GOCART over to RRTMGP bands.
+    # gcm_run.j:856-863 -- move GOCART over to RRTMGP bands.
     if is_enabled(run_config["atmos"].get("RRTMGP_RADIATION", "")):
         rename_rrtmgp_instance_files(scratch_dir)
 
-    # gcm_run.j:384-403, 886-900 -- boundary dataset linking (linkbcs).
+    # gcm_run.j:350, 430, 868 -- boundary dataset linking (linkbcs).
     # The manifest (linkbcs.yaml) itself is generated once at experiment-
     # setup time by SetupGCM.stage_bcs(); this re-applies it every segment.
     from gcmpy.run_tools.linkbcs_ops import apply_linkbcs
 
     apply_linkbcs(scratch_dir, job_context["geosbin"], scratch_dir / "cap_restart")
 
-    # gcm_run.j:901-983 -- GWD ridge restart, tile.bin, CICE6 pond state,
+    # gcm_run.j:870-950 -- GWD ridge restart, tile.bin, CICE6 pond state,
     # openwater tile-count validation, MERRA2OX date guard.
     configure_gwd_restarts(scratch_dir, job_context["rst_by_face"])
     ensure_tile_bin(scratch_dir, job_context["geosbin"])
@@ -457,24 +460,24 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     )
     check_merra2ox_dates(scratch_dir)
 
-    # gcm_run.j:977-981 -- MPI environment variables.
+    # gcm_run.j:955-963 -- MPI environment variables.
     from gcmpy.run_tools.mpi_env import apply_setenv_block
 
     apply_setenv_block(run_config.get("mpi_config"))
     apply_setenv_block(run_config["ocean"].get("mpt_shepherd"))
 
-    # gcm_run.j:984-986 -- run bundleParser.py.
+    # gcm_run.j:961-963 -- run bundleParser.py.
     subprocess.run(["python3", "bundleParser.py"], cwd=scratch_dir, check=True)
 
-    # gcm_run.j:996-1022 -- REPLAY-mode GAAS/forcing-file linking.
+    # gcm_run.j:967-993 -- REPLAY-mode GAAS/forcing-file linking.
     configure_replay(scratch_dir)
 
-    # gcm_run.j:1149-1160 -- OpenMP environment setup.
+    # gcm_run.j:1061-1072 -- OpenMP environment setup.
     from gcmpy.run_tools.env_builder import setup_omp_env, teardown_omp_env
 
     setup_omp_env(scratch_dir)
 
-    # gcm_run.j:1162-1194 -- launch GEOSgcm.x.
+    # gcm_run.j:1077-1109 -- launch GEOSgcm.x.
     from gcmpy.run_tools.mpi_runner import run_gcm
 
     resources = job_context["resources"]
@@ -490,16 +493,16 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
         num_oserver_nodes=resources["NUM_OSERVER_NODES"],
         num_backend_pes=resources["NUM_BACKEND_PES"],
         singularity_run=job_context["singularity_run"],
-        # gcm_run.j:1120-1121 {{ ocean.preload }} -- raw catalog prefix
+        # gcm_run.j:1086-1087 {{ ocean.preload }} -- raw catalog prefix
         # (empty for uncoupled runs); run_gcm() resolves $GEOSDIR etc.
         ocean_preload=run_config.get("ocean", {}).get("preload") or None,
         max_attempts=3 if run_config.get("several_tries") else 1,
     )
 
-    # gcm_run.j:1136-1139 -- reset OpenMP threads.
+    # gcm_run.j:1107-1109 -- reset OpenMP threads.
     teardown_omp_env(scratch_dir)
 
-    # gcm_run.j:1226-1312 -- rename final checkpoints -> restarts, move
+    # gcm_run.j:1196-1290 -- rename final checkpoints -> restarts, move
     # intermediate checkpoints, build the restart tarball (archiver.py).
     from gcmpy.run_tools.archiver import archive_checkpoints
     from gcmpy.run_tools.stage_restarts import read_edate
@@ -519,7 +522,7 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
         wavewatch=job_context["wavewatch"],
     )
 
-    # gcm_run.j:1314-1352 -- HISTORY files to holding, MOM6/CICE6 output.
+    # gcm_run.j:1283-1320 -- HISTORY files to holding, MOM6/CICE6 output.
     from gcmpy.run_tools.post_run import (
         move_history_to_holding,
         move_ocean_outputs,
@@ -536,9 +539,9 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
         cice6=job_context["cice6"],
     )
 
-    # gcm_run.j:1355-1378 -- post-processing and cycled forecasts. The
+    # gcm_run.j:1321-1345 -- post-processing and cycled forecasts. The
     # original wraps these in `if ($rc == 0)`, but rc is only ever set to
-    # 0 -- GEOSgcm.x failure exits the script at gcm_run.j:1127-1138.
+    # 0 -- GEOSgcm.x failure exits the script at gcm_run.j:1100-1107.
     run_post_processing(exp_dir, run_config.get("install_path", ""))
     run_forecast_setup(
         scratch_dir,
@@ -551,15 +554,15 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
 
 def run_segments(config_path: Path, run_config: dict) -> bool:
     """
-    Run up to NUM_SGMT segments within this job (gcm_run.j:673-1399's
+    Run up to NUM_SGMT segments within this job (gcm_run.j:709-1349's
     `while ( $counter <= ${NUM_SGMT} )` loop), then copy the finished
-    restarts back to the experiment directory (gcm_run.j:1403-1431).
+    restarts back to the experiment directory (gcm_run.j:1365-1405).
 
     A segment loop iteration ends early once cap_restart has reached the
-    experiment's END_DATE (gcm_run.j:1384-1391). The original's
-    `if ($rc != 0)` escape at lines 1392-1394 is dead code -- rc is only
+    experiment's END_DATE (gcm_run.j:1347-1356). The original's
+    `if ($rc != 0)` escape at lines 1357-1359 is dead code -- rc is only
     ever set to 0, since GEOSgcm.x failure exits the script earlier
-    (1127-1138) -- so failures surface here as raised exceptions from
+    (1100-1107) -- so failures surface here as raised exceptions from
     run_one_segment() instead.
 
     Returns:
@@ -576,17 +579,17 @@ def run_segments(config_path: Path, run_config: dict) -> bool:
         run_one_segment(job_context, run_config, counter)
         counter += 1
 
-        # gcm_run.j:1384-1391 -- stop early once cap_restart has reached
+        # gcm_run.j:1347-1356 -- stop early once cap_restart has reached
         # the experiment's END_DATE.
         capdate = (job_context["scratch_dir"] / "cap_restart").read_text()[:8]
         if capdate >= enddate:
             break
 
-    # gcm_run.j:1384-1385 -- re-read for the resubmit decision below
+    # gcm_run.j:1347-1348 -- re-read for the resubmit decision below
     # (also covers NUM_SGMT == 0, where the loop body never ran).
     capdate = (job_context["scratch_dir"] / "cap_restart").read_text()[:8]
 
-    # gcm_run.j:1403-1431 -- copy restarts (+ cap_restart, ww3, RESTART/)
+    # gcm_run.j:1365-1405 -- copy restarts (+ cap_restart, ww3, RESTART/)
     # back to the experiment directory (or restarts/$RSTDATE for GCMEMIP).
     from gcmpy.run_tools.post_run import copy_restarts_to_exp_dir
 
@@ -599,7 +602,7 @@ def run_segments(config_path: Path, run_config: dict) -> bool:
         coupled=job_context["coupled"],
     )
 
-    # gcm_run.j:1434-1441 -- resubmit only while the end date is ahead.
+    # gcm_run.j:1395-1405 -- resubmit only while the end date is ahead.
     return capdate < enddate
 
 

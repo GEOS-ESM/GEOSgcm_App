@@ -1,5 +1,6 @@
 set (programs
 	__init__.py
+	load_questions.py
 	atmospheric_model.yaml  
 	exp_setup.yaml
 	ocean_model.yaml

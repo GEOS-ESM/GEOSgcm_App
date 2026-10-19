@@ -10,7 +10,7 @@ Assumes the scratch directory itself has already been created (and
 cleaned, if pre-existing) by gcmpy.run_tools.scratchdir_ops.create_scratchdir --
 this module only *populates* it.
 
-Replaces lines 311-355 of gcm_run.j.
+Replaces lines 313-360 of gcm_run.j.
 """
 
 import glob
@@ -37,6 +37,7 @@ def populate_scratch_from_home(
     gigatraj_file: str = "",
     mom6: bool = False,
     cice6: bool = False,
+    dataatm: bool = False,
 ) -> dict:
     """
     Top-level entry point: populate the scratch directory with RC files,
@@ -56,6 +57,7 @@ def populate_scratch_from_home(
         gigatraj_file: Optional GIGATRAJ_PARCELS_FILE name to copy, if set.
         mom6:          True if running the MOM6 ocean model.
         cice6:         True if running the CICE6 seaice model.
+        dataatm:       True if running with a data atmosphere for the ocean.
 
     Returns:
         dict with keys END_DATE, NUM_SGMT, FCST_SEGMENT, USE_SHMEM, parsed
@@ -120,6 +122,12 @@ def populate_scratch_from_home(
     # -- Coupled-ocean/seaice input files --
     if mom6:
         for fname in ("MOM_input", "MOM_override"):
+            src = exp_dir / fname
+            if src.exists():
+                shutil.copy2(src, scratch_dir / fname)
+
+    if dataatm:
+        for fname in ("MOM_saltrestore", "MOM_dataatm"):
             src = exp_dir / fname
             if src.exists():
                 shutil.copy2(src, scratch_dir / fname)

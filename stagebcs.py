@@ -94,7 +94,10 @@ class SymlinkCreator:
 
         # experiment type
         self.extdata_files = catalog.get_value('extdata_files', 'experiment_type')
-        self.chem_dir = self.boundary_dir / catalog.get_value('chem_dir', 'experiment_type')
+        if self.config.get('chem_dir'):
+            self.chem_dir = Path(self.config['chem_dir'])
+        else:
+            self.chem_dir = self.boundary_dir / catalog.get_value('chem_dir', 'experiment_type')
         self.fvInput_dir = catalog.get_value('fvInput_dir', 'experiment_type')
 
         # land
@@ -149,18 +152,21 @@ class SymlinkCreator:
         self.topo_src_dir = self.boundary_dir / self.atmos_bcs / "TOPO" / self.stream / self.atmos_tag / "smoothed"
 
         # sst_dir
-        if not self.coupled and self.ocean_res == "1440x720":
-            self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/SST/{self.ocean_res}"
-        elif not self.coupled:
-            self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/realtime/{self.sst_name}/{self.ocean_res}"
-
-        if self.site != "NAS" and self.site != "NCCS" and not self.coupled:
-            self.sst_dir = self.boundary_dir / "SST" / self.ocean_res
-        elif self.coupled:
-            self.sst_dir = self.coupled_dir / f"SST/MERRA2/{self.ocean_res}/v1"
+        if self.config.get('sst_dir'):
+            self.sst_dir = Path(self.config['sst_dir'])
         else:
-            #exception
-            pass
+            if not self.coupled and self.ocean_res == "1440x720":
+                self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/SST/{self.ocean_res}"
+            elif not self.coupled:
+                self.sst_dir = self.boundary_dir / self.fvInput_dir / f"g5gcm/bcs/realtime/{self.sst_name}/{self.ocean_res}"
+
+            if self.site != "NAS" and self.site != "NCCS" and not self.coupled:
+                self.sst_dir = self.boundary_dir / "SST" / self.ocean_res
+            elif self.coupled:
+                self.sst_dir = self.coupled_dir / f"SST/MERRA2/{self.ocean_res}/v1"
+            else:
+                #exception
+                pass
 
     def topo_paths(self) -> dict:
         paths = {

@@ -31,6 +31,9 @@ emissions:
     ox_relaxtime: '0.00'
   AMIP:
     MERRA2OX_species: ''
+    # Matches the merra-2 species staged by stagebcs (bcs_catalog.yaml
+    # pchem_species/merra-2: MERRA2OX.197902-201706 = 39 years; see also
+    # AMIP_csh AGCM.rc pchem_clim_years: 39).
     pchem_clim_years: 39
     ox_relaxtime: '259200.'
 

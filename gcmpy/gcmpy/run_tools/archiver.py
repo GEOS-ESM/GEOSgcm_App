@@ -4,7 +4,7 @@ restarts/archiver.py
 Post-run logic that takes _checkpoint files, renames them, strips EXPIDs,
 and builds the restart tarballs for the next segment.
 
-Replaces lines 1226-1312 of gcm_run.j.
+Replaces lines 1196-1290 of gcm_run.j.
 """
 
 import subprocess
@@ -248,7 +248,7 @@ def tar_restarts(
     RESTART.${edate} tree for coupled runs).
 
     Callers must have copied the stamped files into restarts_dir first --
-    matching gcm_run.j, which always copies there (lines 1266-1272) but
+    matching gcm_run.j, which always copies there (lines 1236-1242) but
     only tars for full-segment runs.
 
     Replaces:
@@ -320,7 +320,7 @@ def archive_checkpoints(
       4. (1260) Remove stale bare `*_rst` files from scratch.
       5. (1288) Promote the latest ww3 checkpoint to clean `restart.ww3`
          in scratch (the stamped copy lands in step 6).
-      6. (1266-1272) Copy all stamped files into the restarts directory
+      6. (1236-1242) Copy all stamped files into the restarts directory
          (always, even for forecast-segment runs).
       7. (1302-1311) Tar the stamped files (full segments only).
       8. (1274-1286) Strip stamps from files in scratch for the next
@@ -365,7 +365,7 @@ def archive_checkpoints(
     if wavewatch:
         ww3_restart = archive_wavewatch(scr_dir)
 
-    # gcm_run.j:1266-1272 -- stamped restarts are copied into the
+    # gcm_run.j:1236-1242 -- stamped restarts are copied into the
     # experiment restarts directory for every segment; only the tar below
     # is conditional on a full-segment run.
     for stamped in sorted(scr_dir.glob(f"{expid}.*_rst.{suffix}.*")):

@@ -10,7 +10,7 @@ AGCM_LM:
   type:           'text'
   prompt:         'Enter the atmospheric models VERTICAL resolution:'
   choices:        ''
-  default_answer: '181'
+  default_answer: '72'
   follows_up:     ''
 
 MOIST_version:

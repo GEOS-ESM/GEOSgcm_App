@@ -1,8 +1,8 @@
 """
 pre_run.py
 
-Per-segment pre-launch steps ported from gcm_run.j (lines 886-983 and
-996-1022): GOCART RRTMGP instance-file renaming, ridge-scheme GWD restart
+Per-segment pre-launch steps ported from gcm_run.j (lines 856-993):
+GOCART RRTMGP instance-file renaming, ridge-scheme GWD restart
 handling, tile.bin generation, CICE6 pond-state restart flagging, openwater
 restart tile-count validation, MERRA2OX pchem date guard, and REPLAY-mode
 GAAS/forcing-file linking.
@@ -26,7 +26,7 @@ from pathlib import Path
 
 def rename_rrtmgp_instance_files(scratch_dir: Path) -> None:
     """
-    gcm_run.j:886-894 -- move GOCART over to RRTMGP bands.
+    gcm_run.j:856-863 -- move GOCART over to RRTMGP bands.
 
     For every `*_instance*.rc` file, rewrite standalone `RRTMG` tokens to
     `RRTMGP` (the `\\b` guard leaves existing `RRTMGP` occurrences alone,
@@ -42,7 +42,7 @@ def rename_rrtmgp_instance_files(scratch_dir: Path) -> None:
 
 def configure_gwd_restarts(scratch_dir: Path, rst_by_face: bool) -> None:
     """
-    gcm_run.j:901-921 -- get the proper ridge-scheme GWD internal restart.
+    gcm_run.j:870-890 -- get the proper ridge-scheme GWD internal restart.
 
     With face-decomposed restarts the generated gwd_internal_face_x_rst
     files are used (warning only; the original's face-copy loop is
@@ -71,7 +71,7 @@ def configure_gwd_restarts(scratch_dir: Path, rst_by_face: bool) -> None:
 
 def ensure_tile_bin(scratch_dir: Path, geosbin: Path) -> None:
     """
-    gcm_run.j:923-925 -- build tile.bin from tile.data if absent.
+    gcm_run.j:892-893 -- build tile.bin from tile.data if absent.
 
     tile.data itself is a symlink created earlier in the segment by
     apply_linkbcs(); this only handles the (frequent) case where the
@@ -95,7 +95,7 @@ def ensure_tile_bin(scratch_dir: Path, geosbin: Path) -> None:
 
 def configure_cice6_pond_restart(scratch_dir: Path) -> None:
     """
-    gcm_run.j:933-942 -- detect the CICE6 pond state in the restart and
+    gcm_run.j:902-913 -- detect the CICE6 pond state in the restart and
     align the `restart_pond_lvl` flag in ice_in accordingly (only reached
     for CICE6-coupled runs).
     """
@@ -139,7 +139,7 @@ def validate_openwater_tiles(
     scratch_dir: Path, geosbin: Path, run_cmd: str
 ) -> None:
     """
-    gcm_run.j:943-958 -- verify that openwater_internal_rst holds the same
+    gcm_run.j:912-927 -- verify that openwater_internal_rst holds the same
     number of tiles as tile.data expects (i.e. restarts match the ocean).
 
     Runs rs_numtiles.x on a single PE when the helper is installed, and
@@ -161,7 +161,9 @@ def validate_openwater_tiles(
         expected = 0
 
     # `$RUN_CMD 1 rs_numtiles.x openwater_internal_rst` -- one PE.
-    cmd = shlex.split(run_cmd) + [
+    from gcmpy.run_tools.mpi_runner import _tokenize_command
+
+    cmd = _tokenize_command(run_cmd, "run_command") + [
         "1",
         str(rs_numtiles),
         "openwater_internal_rst",
@@ -187,10 +189,10 @@ def validate_openwater_tiles(
 
 def check_merra2ox_dates(scratch_dir: Path) -> None:
     """
-    gcm_run.j:960-983 -- guard against running past the MERRA2OX pchem
-    climatology's validity end (201706).
+    gcm_run.j:929-950 -- guard against running past the MERRA2OX pchem
+    climatology's validity end (202608).
 
-    pchem_clim_years == 39 identifies MERRA2OX; exits 8 if the segment
+    pchem_clim_years == 48 identifies MERRA2OX; exits 8 if the segment
     start date in cap_restart is later than the magic date.
     """
     agcm_rc = scratch_dir / "AGCM.rc"
@@ -201,16 +203,16 @@ def check_merra2ox_dates(scratch_dir: Path) -> None:
             pchem_clim_years = fields[1] if len(fields) > 1 else None
             break
 
-    if pchem_clim_years != "39":
+    if pchem_clim_years != "48":
         return
 
     cap_restart = scratch_dir / "cap_restart"
     lines = cap_restart.read_text().splitlines()
     yearmon = lines[0][:6] if lines else ""
-    if yearmon > "201706":
+    if yearmon > "202608":
         print(
             "You seem to be using MERRA2OX pchem species file, but your "
-            f"simulation date [{yearmon}] is after 201706. This file is "
+            f"simulation date [{yearmon}] is after 202608. This file is "
             "only valid until this time."
         )
         sys.exit(8)
@@ -218,7 +220,7 @@ def check_merra2ox_dates(scratch_dir: Path) -> None:
 
 def configure_replay(scratch_dir: Path) -> None:
     """
-    gcm_run.j:996-1022 -- in REPLAY mode, redirect the GAAS AOD ExtData
+    gcm_run.j:967-993 -- in REPLAY mode, redirect the GAAS AOD ExtData
     entries to the analysis experiment's output and symlink its forcing
     files into the run directory.
 

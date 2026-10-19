@@ -1,13 +1,13 @@
 """
 post_run.py
 
-Post-segment steps ported from gcm_run.j (lines 1314-1431): moving HISTORY
+Post-segment steps ported from gcm_run.j (lines 1283-1405): moving HISTORY
 files to the holding directory, moving MOM6/CICE6 output files out of
 scratch, triggering post-processing / cycled forecasts, and copying the
 segment's finished restarts back into the experiment directory so the next
 job (or a manual restart) can pick them up.
 
-Note on `rc`: gcm_run.j hard-exits on GEOSgcm.x failure (lines 1127-1138)
+Note on `rc`: gcm_run.j hard-exits on GEOSgcm.x failure (lines 1100-1107)
 and only ever assigns `rc = 0` on the surviving path, so its
 `if ($rc == 0)` guards around post-processing are always true -- everything
 below belongs to the success path only (failures surface as
@@ -31,7 +31,7 @@ def move_history_to_holding(
     Move this segment's HISTORY files from scratch into the experiment's
     per-collection holding directories.
 
-    Replaces (gcm_run.j:1314-1333):
+    Replaces (gcm_run.j:1283-1302):
         cd $SCRDIR
         foreach collection ( $collections )
            /bin/mv `/bin/ls -1 *.${collection}.*` $EXPDIR/holding/$collection
@@ -56,7 +56,7 @@ def move_ocean_outputs(
     cice6: bool,
 ) -> None:
     """
-    Move coupled-ocean model output out of scratch (gcm_run.j:1337-1352).
+    Move coupled-ocean model output out of scratch (gcm_run.j:1306-1320).
 
     MOM6:  ocean_state/prog_z/sfc_ave/forcing .nc -> MOM_Output/<dset>.<edate>.nc
     CICE6: iceh.*.nc                              -> CICE_Output/
@@ -90,7 +90,7 @@ def move_ocean_outputs(
 
 def run_post_processing(exp_dir: Path, install_path: str) -> None:
     """
-    Run the GEOS post-processing script (gcm_run.j:1356-1361).
+    Run the GEOS post-processing script (gcm_run.j:1325-1330).
 
     Replaces:
         $GEOSUTIL/post/gcmpost.script -source $EXPDIR -movefiles
@@ -132,7 +132,7 @@ def run_forecast_setup(
 ) -> None:
     """
     Trigger a cycled-REPLAY forecast for this segment
-    (gcm_run.j:1363-1378; gated on FCST_SEGMENT != 00000000).
+    (gcm_run.j:1331-1345; gated on FCST_SEGMENT != 00000000).
 
     Replaces:
         set nday  = `echo $FSEGMENT | bc`
@@ -151,7 +151,7 @@ def run_forecast_setup(
         exp_dir:     Experiment directory; CAP.rc is read from here ($HOMDIR).
         fsegment:    CAP.rc FCST_SEGMENT value; '00000000' means no forecast.
         nymdc:       Segment start date (YYYYMMDD) read from cap_restart
-                     *before* GEOSgcm.x advanced it (gcm_run.j:691-692).
+                     *before* GEOSgcm.x advanced it (gcm_run.j:727-728).
         nhmsc:       Segment start time (HHMMSS), same provenance.
     """
     if fsegment == "00000000":
@@ -214,7 +214,7 @@ def copy_restarts_to_exp_dir(
 ) -> None:
     """
     Copy the segment's finished restarts back to the experiment directory
-    after the segment loop (gcm_run.j:1403-1431).
+    after the segment loop (gcm_run.j:1365-1405).
 
     GCMEMIP runs restore into restarts/$RSTDATE/ (the directory the job
     started from); normal runs restore into the experiment directory

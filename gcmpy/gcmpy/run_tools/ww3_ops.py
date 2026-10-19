@@ -12,7 +12,7 @@ happens to be manually present, so this is currently unreachable in
 practice for gcmpy-generated experiments, similar to MIT ocean/singularity.
 It's still implemented correctly for when/if WW3 support is added.
 
-Replaces lines 792-813 of gcm_run.j.
+Replaces lines 799-820 of gcm_run.j.
 """
 
 import re

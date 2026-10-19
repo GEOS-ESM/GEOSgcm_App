@@ -1,6 +1,7 @@
 
-set (programs
+	set (programs
 	__init__.py
+	test_catalog_ops.py
 	test_path_ops.py  
 	test_regex_ops.py  
 	test_run_cmd_ops.py  

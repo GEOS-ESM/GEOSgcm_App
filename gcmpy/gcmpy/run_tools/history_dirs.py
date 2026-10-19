@@ -4,7 +4,7 @@ history_dirs.py
 Creates the experiment's base subdirectories and the per-HISTORY-collection
 output/holding directories.
 
-Replaces lines 65-71 and 355-384 of gcm_run.j.
+Replaces lines 96-107 and 399-416 of gcm_run.j.
 """
 
 from pathlib import Path

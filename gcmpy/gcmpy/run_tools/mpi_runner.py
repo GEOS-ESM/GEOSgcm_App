@@ -3,7 +3,7 @@ execution/mpi_runner.py
 
 Builds and executes the srun / mpiexec command to run GEOSgcm.x.
 
-Replaces lines 1162-1194 of gcm_run.j.
+Replaces lines 1077-1109 of gcm_run.j.
 """
 
 import os
@@ -56,7 +56,7 @@ def _parse_ocean_preload(raw: str | None, geosdir: Path) -> dict[str, str] | Non
     The catalog stores a csh command prefix such as
     `env LD_PRELOAD=$GEOSDIR/lib/libmom6.so:$GEOSDIR/lib/libcice6.so`
     (or `env DYLD_INSERT_LIBRARIES=...` on macOS), which gcm_run.j embeds
-    verbatim in the launch line (gcm_run.j:1120-1121) for the shell to
+    verbatim in the launch line (gcm_run.j:1086-1087) for the shell to
     expand. Here we strip the `env` wrapper and expand `$GEOSDIR` against
     the experiment's GEOS directory (GEOSBIN lives at $GEOSDIR/bin).
 
@@ -243,7 +243,7 @@ def run_gcm(
         else []
     )
 
-    # gcm_run.j:1120-1121 -- {{ ocean.preload }} sits in front of the
+    # gcm_run.j:1086-1087 -- {{ ocean.preload }} sits in front of the
     # launch command; resolve it into launch-time environment variables.
     preload_env = _parse_ocean_preload(ocean_preload, Path(geosbin).parent)
 

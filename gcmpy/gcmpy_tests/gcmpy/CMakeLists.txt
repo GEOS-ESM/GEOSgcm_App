@@ -1,6 +1,7 @@
 add_subdirectory(utils)
 add_subdirectory(run_tools)
 add_subdirectory(batch_tools)
+add_subdirectory(setup_tools)
 
 set (programs
 	__init__.py

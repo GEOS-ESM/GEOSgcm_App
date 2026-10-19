@@ -63,6 +63,7 @@ class SetupGCM:
         self.real_bind_path      = ''
         self.base_bind_path      = ''
         self.checkpoint_type     = 'default'
+        self.MOM5                = '#DELETE'   # MOM5 support removed from gcmpy
         self.observer_frq        = 0
         self.dastuning           = '#'
         self.oana_provider       = 'PCHEM'
@@ -129,30 +130,37 @@ class SetupGCM:
 
     def set_num_CPUs(self):
         if envdict['site'] == 'NCCS':
-            '''
-            NCCS currently recommends that users do not run with
-            48 cores per n_CPUs on SCU16 due to OS issues and
-            recommends that CPU-intensive works run with 46 or less
-            cores. As 45 is a multiple of 3, it's the best value
-            that doesn't waste too much
-            '''
+            # Upstream gcm_setup ASKPROC (gcm_setup:453-458): mil (Milan,
+            # default) uses 120 of 128 cores/node, cas (Cascade Lake) uses
+            # 40 of 46.  The processor question was already answered by
+            # ask_questions() -- honor it (the old loop-over-the-map kept
+            # only the last entry and could never yield 'mil').
             node_map = site_nodes_dict['NCCS']
-            for proc_type in node_map:
-                self.expConfig['processor'] = proc_type
-                self.num_CPUs = node_map[proc_type]
+            proc = self.expConfig.get('processor') or 'mil'
+            if proc not in node_map:
+                print(Color.RED + f"ERROR: unknown processor '{proc}' for "
+                      f"site NCCS (choose from {list(node_map)}).")
+                sys.exit(1)
+            self.expConfig['processor'] = proc
+            self.num_CPUs = node_map[proc]
 
         elif envdict['site'] == 'NAS':
+            # Upstream gcm_setup:477-516 -- the raw answer (default rom)
+            # maps onto NAS's processor names plus a per-type core count.
             node_map = site_nodes_dict['NAS']
-            for proc_type in node_map:
-                if proc_type in ['rom', 'mil', 'cas']:
-                    self.expConfig['processor'] = f"{proc_type}_ait"
-                elif proc_type in ['bro', 'sky']:
-                    self.expConfig['processor'] = f"{proc_type}_ele"
-                elif proc_type in ['tur']:
-                    self.expConfig['processor'] = f"{proc_type}_ath"
-                else:
-                    self.expConfig['processor'] = proc_type
-                self.num_CPUs = node_map[proc_type]
+            proc = self.expConfig.get('processor') or 'rom'
+            raw = proc.split('_')[0]   # tolerate 'mil_ait' from a driver yaml
+            if raw not in node_map:
+                print(Color.RED + f"ERROR: unknown processor '{proc}' for "
+                      f"site NAS (choose from {list(node_map)}).")
+                sys.exit(1)
+            self.num_CPUs = node_map[raw]
+            if raw in ['bro', 'sky']:
+                self.expConfig['processor'] = f"{raw}_ele"
+            elif raw == 'tur':
+                self.expConfig['processor'] = f"{raw}_ath"
+            else:
+                self.expConfig['processor'] = f"{raw}_ait"
 
         elif envdict['site'] == 'AWS' or envdict['site'] == 'AZURE':
             # Because we do not know the name of the model or the number of CPUs
@@ -598,7 +606,7 @@ class SetupGCM:
             file_content = search_replace_in_string(r'(Z0_FORMULATION:\s*).*', r'\1 2', file_content)
 
         # If land is ICA or NL3, we set SNOW_ALBEDO_INFO to 0
-        if self.atmos['bcs'] == 'ICA' or self.atmos['bcs'] == 'NL3':
+        if self.land['bcs'] == 'ICA' or self.land['bcs'] == 'NL3':
             file_content = search_replace_in_string(r'(SNOW_ALBEDO_INFO:\s*).*', r'\1 0', file_content)
 
         with open(surfacegridcomp, 'w') as file:
@@ -625,13 +633,26 @@ class SetupGCM:
 
     # Modify MOM input files to match HEARTBEAT
     def config_heartbeat(self):
+        # Upstream gcm_setup sets `DT = $HEARTBEAT` and, for coupled runs,
+        # `OCEAN_DT = $HEARTBEAT` ("the ocean model must have the same time
+        # step as the atmosphere" -- gcm_setup:1360-1365), then patches
+        # ice_in/MOM_override with $OCEAN_DT (gcm_setup:2637-2656).
+        # atmos['dt'] is the HEARTBEAT_DT answer. atmos['dt_ocean'] is
+        # OGCM_RUN_DT instead: it is a catalog value that heartbeat_sync
+        # re-writes to HEARTBEAT_DT in scratch at run time, so it must not
+        # be used here (it is an int, which also broke the concatenation).
+        ocean_dt = str(self.atmos['dt'])
+
         # We need to change the dt in ice_in for CICE6
         if self.ocean['seaice_model'] == 'CICE6':
             file_path = f"{self.expConfig['exp_dir']}/ice_in"
             with open(file_path, 'r') as file:
                 content = file.read()
 
-            file_content = search_replace_in_string(r"^(\s*dt\s*=\s*)[0-9]+(\.[0-9]+)?", r"\1" + self.atmos['dt_ocean'], content)
+            # (?m): search_replace_in_string passes no re.MULTILINE flag and
+            # the target line sits mid-file (csh sed is line-oriented).
+            # \g<1> (not \1): "\1" + "450" would parse as octal escape \145.
+            file_content = search_replace_in_string(r"(?m)^([ \t]*dt[ \t]*=[ \t]*)[0-9]+(\.[0-9]+)?", rf"\g<1>{ocean_dt}", content)
 
             with open(file_path, 'w') as file:
                 file.write(file_content)
@@ -645,8 +666,8 @@ class SetupGCM:
             with open(f"{self.expConfig['exp_dir']}/MOM_override", 'r') as file:
                 file_content = file.read()
 
-            file_content = search_replace_in_string(r'DT\s*=\s*.*', rf"DT = {self.atmos['dt_ocean']}", file_content)
-            file_content = search_replace_in_string(r'DT_THERM\s*=\s*.*', rf"DT_THERM = {self.atmos['dt_ocean']}", file_content)
+            file_content = search_replace_in_string(r'DT\s*=\s*.*', rf"DT = {ocean_dt}", file_content)
+            file_content = search_replace_in_string(r'DT_THERM\s*=\s*.*', rf"DT_THERM = {ocean_dt}", file_content)
 
             with open(f"{self.expConfig['exp_dir']}/MOM_override", 'w') as file:
                 file.write(file_content)
@@ -688,6 +709,8 @@ class SetupGCM:
             # gcmpy's config model (matches the most common production
             # default -- MERRA-2 Ozone Data).
             'pchem_species': 'merra-2',
+            'sst_dir': self.sst_dir,
+            'chem_dir': self.chem_dir,
         }
 
         if self.ocean['running_ocean']:
@@ -789,6 +812,29 @@ class SetupGCM:
 
         write_dict_into_yaml(exp_yaml_fname, jinja_dict)
 
+        # csh-name aliases.  Upstream gcm_setup rendered every template
+        # through one big sed table of UPPER_CASE names (gcm_setup:2091-2327)
+        # on top of the dotted names Jinja uses now.  The coupled-only files
+        # (plotocn.j and confocn.py -> __init__.py) still carry those
+        # placeholders; Jinja's Undefined silently renders them as nothing
+        # ("set EXPID=", "expid=''", "basin_mask='/basin_mask/x/...'"), which
+        # the csh never produced.  Aliases are added after the run yaml is
+        # written so that receipt keeps only the gcmpy-native keys.
+        jinja_dict.update({
+            'EXPID':     self.expConfig['experiment_id'],
+            'EXPDSC':    self.expConfig['experiment_description'],
+            'EXPDIR':    str(self.exp_dir),
+            'HOMDIR':    str(self.exp_dir),
+            'GEOSDIR':   str(pathdict['install']),
+            'COUPLEDIR': str(getattr(self, 'coupled_dir', '')),
+            'PLOT_T':    str(getattr(self, 'plot_t', '')),
+            'AGCM_IM':   self.atmos['im'],
+            'AGCM_JM':   self.atmos['jm'],
+            'OGCM_IM':   self.ocean.get('IM') or '',
+            'OGCM_JM':   self.ocean.get('JM') or '',
+            'OGCM_LM':   self.ocean.get('LM') or '',
+        })
+
         # this is an edge-case that can't be handled with jinja2
         for file in self.templates:
             with open(f"{self.exp_dir}/{file}", 'r') as tmpl:
@@ -854,6 +900,12 @@ class SetupGCM:
         os.rename(f"{exp_dir}/CAP.rc.tmpl", f"{exp_dir}/CAP.rc")
         os.rename(f"{exp_dir}/AGCM.rc.tmpl", f"{exp_dir}/AGCM.rc")
         os.rename(f"{exp_dir}/{self.ocean['history_template']}", f"{exp_dir}/HISTORY.rc")
+
+        # write initial cap_restart (segment start date) if absent
+        cap_restart_path = os.path.join(exp_dir, "cap_restart")
+        if not os.path.exists(cap_restart_path):
+            with open(cap_restart_path, "w") as f:
+                f.write(f"{self.begin_date}\n")
 
         # update file permissions
         os.chmod(f"{exp_dir}/CAP.rc", 0o755)

@@ -28,13 +28,26 @@ ulimit -s unlimited
 #           (gcm_run.j:26-50)
 #######################################################################
 
-# GEOSBIN is expected to already be set in the submitting environment
-# (it is exported by gcm_setup / the site module environment). Fall back
-# to the directory containing this script if it is not.
+# GEOSBIN is passed by gcm_run.py at submission time
+# (--export=ALL,GEOSBIN=...). Fall back to the directory containing this
+# script -- but only if that directory really looks like an install bin/:
+# inside a SLURM job, BASH_SOURCE[0] is the spool copy (slurm_script), so
+# a blind fallback would point GEOSBIN at /var/spool/slurmd/job<id>/.
 if [ -z "${GEOSBIN}" ]; then
-    GEOSBIN="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    export GEOSBIN
+    _geosbin_candidate="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "${_geosbin_candidate}/g5_modules.sh" ]; then
+        GEOSBIN="${_geosbin_candidate}"
+    fi
+    unset _geosbin_candidate
 fi
+
+if [ -z "${GEOSBIN}" ] || [ ! -f "${GEOSBIN}/g5_modules.sh" ]; then
+    echo "gcm_run.sh: cannot locate g5_modules.sh (GEOSBIN='${GEOSBIN:-}')." >&2
+    echo "  GEOSBIN must be provided at submission time; submit this job" >&2
+    echo "  via gcm_run.py, which passes --export=ALL,GEOSBIN=..." >&2
+    exit 1
+fi
+export GEOSBIN
 
 export ARCH="$(uname)"
 
@@ -53,7 +66,12 @@ else
     export SITE=""
 fi
 
-source "${GEOSBIN}/g5_modules"
+source "${GEOSBIN}/g5_modules.sh"
+
+# gcm_run.j:88-97 -- DSL configuration: expose the GEOS Python libs.
+if [ -n "${USE_DSL:-}" ]; then
+    export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}${GEOSDIR}/lib/Python/"
+fi
 
 # gcm_run.j:36-45 -- prepend to DY/LD_LIBRARY_PATH (DYLD on macOS), and
 # add BASEDIR when defined (i.e., not running with Spack).

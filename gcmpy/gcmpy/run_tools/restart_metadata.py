@@ -5,7 +5,7 @@ Resolves small bits of run metadata needed to call
 gcmpy.run_tools.stage_restarts.fetch_restarts() that aren't simple
 dict lookups -- currently just WaveWatch3 detection.
 
-Replaces lines 595-598 of gcm_run.j.
+Replaces lines 653-656 of gcm_run.j.
 """
 
 from pathlib import Path

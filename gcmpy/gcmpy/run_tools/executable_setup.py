@@ -7,7 +7,7 @@ are not yet supported by gcmpy (singularity_build/singularity_sandbox are
 currently unreachable in the setup_tools config model -- see
 setup_main.py:59-61 -- so this is intentionally not implemented here).
 
-Replaces lines 403-494 of gcm_run.j.
+Replaces lines 436-540 of gcm_run.j.
 """
 
 import shutil

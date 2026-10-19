@@ -10,7 +10,7 @@ linkbcs.py, substituting the current segment's year (derived from
 cap_restart via packtoiso.py) into any remaining '{{ year }}' placeholders
 (e.g. SST/sea-ice data file paths).
 
-Replaces lines 384-403 and 886-900 of gcm_run.j (the linkbcs.tmpl
+Replaces lines 350, 430 and 868 of gcm_run.j (the linkbcs.tmpl
 invocation and the "Link Boundary Conditions for Appropriate Date" step).
 """
 

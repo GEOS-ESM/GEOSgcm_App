@@ -11,7 +11,7 @@ source used historically for GCMEMIP initialization -- the hardcoded
 source directory is parameterized (remip_source_dir) but defaults to the
 exact path gcm_run.j used.
 
-Replaces lines 241-311 of gcm_run.j.
+Replaces lines 273-348 of gcm_run.j.
 """
 
 import re

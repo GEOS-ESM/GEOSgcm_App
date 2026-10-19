@@ -140,7 +140,7 @@ resolutions:
     gridname: PE180x1080-CF
     res_dateline: 180x1080
     conv_dt: 600
-    chem_dt: 1200
+    chem_dt: 1800
     dt_solar: 3600
     dt_irrad: 3600
     job_sgmt: '00000016'
@@ -149,11 +149,11 @@ resolutions:
     num_readers: 2
     res: CF0180x6C
     nx:
-      MOM6: 30
+      MOM6: 20
       MIT: null   # runtime fallback: ocean_nx
       data_ocean: 20
     ny:
-      MOM6: 36
+      MOM6: 96
       MIT: null   # runtime fallback: ocean_ny
       data_ocean: 120
     dt_ocean:
@@ -195,7 +195,7 @@ resolutions:
     gridname: PE360x2160-CF
     res_dateline: 360x2160
     conv_dt: 450
-    chem_dt: 900
+    chem_dt: 1800
     dt_solar: 3600
     dt_irrad: 3600
     dt_ocean: 3600
@@ -205,8 +205,12 @@ resolutions:
     post_NDS: 12
     nx_convert: 4
     res: CF0360x6C
-    nx: 30
-    ny: 180
+    nx:
+      MOM6: 20
+      data_ocean: 30
+    ny:
+      MOM6: 96
+      data_ocean: 180
 
   c540:
     im: 540
@@ -217,7 +221,7 @@ resolutions:
     gridname: PE540x3240-CF
     res_dateline: 540x3240
     conv_dt: 300
-    chem_dt: 900
+    chem_dt: 1800
     dt_solar: 3600
     dt_irrad: 3600
     dt_ocean: 3600
@@ -242,7 +246,7 @@ resolutions:
     gridname: PE720x4320-CF
     res_dateline: 720x4320
     conv_dt: 300
-    chem_dt: 600
+    chem_dt: 1200
     dt_solar: 3600
     dt_irrad: 3600
     dt_ocean: 3600
@@ -265,7 +269,7 @@ resolutions:
     gridname: PE1080x6480-CF
     res_dateline: 1080x6480
     conv_dt: 300
-    chem_dt: 600
+    chem_dt: 900
     dt_solar: 1800
     dt_irrad: 1800
     dt_ocean: 1800
@@ -290,7 +294,7 @@ resolutions:
     gridname: PE1120x6720-CF
     res_dateline: 1120x6720
     conv_dt: 300
-    chem_dt: 600
+    chem_dt: 1200
     dt_solar: 3600
     dt_irrad: 3600
     dt_ocean: 3600
@@ -313,10 +317,10 @@ resolutions:
     gridname: PE1440x8640-CF
     res_dateline: 1440x8640
     conv_dt: 300
-    chem_dt: 600
-    dt_solar: 1200
-    dt_irrad: 1200
-    dt_ocean: 1200
+    chem_dt: 900
+    dt_solar: 1800
+    dt_irrad: 1800
+    dt_ocean: 1800
     num_readers: 6
     job_sgmt: '00000001'
     num_sgmt: 1
@@ -361,10 +365,10 @@ resolutions:
     gridname: PE2160x12960-CF
     res_dateline: 2160x12960
     conv_dt: 300
-    chem_dt: 300
-    dt_solar: 900
-    dt_irrad: 900
-    dt_ocean: 900
+    chem_dt: 900
+    dt_solar: 1800
+    dt_irrad: 1800
+    dt_ocean: 1800
     num_readers: 6
     job_sgmt: '00000005'
     num_sgmt: 1
@@ -386,10 +390,10 @@ resolutions:
     gridname: PE2880x17280-CF
     res_dateline: 2880x17280
     conv_dt: 300
-    chem_dt: 300
-    dt_solar: 900
-    dt_irrad: 900
-    dt_ocean: 900
+    chem_dt: 900
+    dt_solar: 1800
+    dt_irrad: 1800
+    dt_ocean: 1800
     num_readers: 6
     job_sgmt: '00000001'
     num_sgmt: 1
@@ -410,10 +414,10 @@ resolutions:
     gridname: PE4320x25920-CF
     res_dateline: 4320x25920
     conv_dt: 300
-    chem_dt: 300
-    dt_solar: 900
-    dt_irrad: 900
-    dt_ocean: 900
+    chem_dt: 900
+    dt_solar: 1800
+    dt_irrad: 1800
+    dt_ocean: 1800
     num_readers: 6
     job_sgmt: '00000005'
     num_sgmt: 1
@@ -435,10 +439,10 @@ resolutions:
     gridname: PE5760x34560-CF
     res_dateline: 5760x34560
     conv_dt: 300
-    chem_dt: 300
-    dt_solar: 600
-    dt_irrad: 600
-    dt_ocean: 600
+    chem_dt: 900
+    dt_solar: 1800
+    dt_irrad: 1800
+    dt_ocean: 1800
     num_readers: 6
     job_sgmt: '00000001'
     num_sgmt: 1

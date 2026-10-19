@@ -38,7 +38,13 @@ def _build_resolution(atmos: dict, catalog: CatalogSearch, expConfig: dict,
         'nx', 'ny',
     ]
     for field in res_fields:
-        atmos[field] = catalog.get_value(field, 'resolutions')
+        value = catalog.get_value(field, 'resolutions')
+        # None = the resolution section does not define the field; keep the
+        # value from defaults (set by _build_defaults) instead of clobbering
+        # it.  Also prevents cross-resolution fall-through leaks (e.g. a
+        # plain grid inheriting a stretched sibling's conus).
+        if value is not None:
+            atmos[field] = value
 
     # MIT at c180: nx/ny are null in catalog — use runtime ocean values.
     if atmos.get('nx') is None:
@@ -52,12 +58,28 @@ def _build_microphysics(atmos: dict, catalog: CatalogSearch, expConfig: dict, ca
     micro_fields = [
         'BACM_1M', 'GFDL_1M', 'MGB2_2M',
         'RRTMGP_RADIATION', 'RRTMG_RADIATION',
-        'conv_dt', 'chem_dt',
     ]
     for field in micro_fields:
         value = catalog.get_value(field, 'microphysics')
         if value is not None:
             atmos[field] = value
+
+    # conv_dt/chem_dt overrides exist only under BACM_1M (gcm_setup forces
+    # 450 for BACM); other micro choices keep the resolution values. The
+    # recursive catalog search would otherwise fall through into the BACM
+    # sub-block for every micro choice.
+    if expConfig['MOIST_version'] == 'BACM_1M':
+        atmos['conv_dt'] = catalog_data['microphysics']['BACM_1M']['conv_dt']
+        atmos['chem_dt'] = catalog_data['microphysics']['BACM_1M']['chem_dt']
+
+    # Radiation is keyed off vertical levels (gcm_setup): LM == 72 -> RRTMG,
+    # otherwise -> RRTMGP. Overrides the micro-keyed catalog values.
+    if atmos['lm'] == 72:
+        atmos['RRTMG_RADIATION'] = ''
+        atmos['RRTMGP_RADIATION'] = '#DELETE'
+    else:
+        atmos['RRTMG_RADIATION'] = '#DELETE'
+        atmos['RRTMGP_RADIATION'] = ''
 
     # KLID: only set for BACM_1M; keyed by lm in catalog
     if expConfig['MOIST_version'] == 'BACM_1M':
@@ -88,6 +110,21 @@ def _build_conus(atmos: dict, catalog: CatalogSearch, catalog_data: dict):
     # FV_stretch_fac for enabled case incorporates the runtime stretch_factor value
     if section == 'enabled':
         atmos['FV_stretch_fac'] = f"stretch_fac = {atmos['stretch_factor']}"
+
+
+def _build_fv3_flags(atmos: dict):
+    """SHALLOW cumulus and hydrostatic run flags, keyed off LM (gcm_setup)."""
+    if atmos['lm'] == 72:
+        atmos['SHALLOW_UW'] = ''
+        atmos['SHALLOW_SHOC'] = '#'
+    else:
+        atmos['SHALLOW_UW'] = '#'
+        atmos['SHALLOW_SHOC'] = ''
+
+    if atmos['lm'] != 72 and atmos['im'] <= 720:
+        atmos['run_hydrostatic'] = 'hydrostatic = .true.'
+    else:
+        atmos['run_hydrostatic'] = ''
 
 
 def _build_clim(atmos: dict):
@@ -126,6 +163,7 @@ def get_atmos_config(expConfig: dict, ocean_nx=None, ocean_ny=None) -> dict:
     _build_resolution(atmos, catalog, expConfig, ocean_nx, ocean_ny)
     _build_microphysics(atmos, catalog, expConfig, catalog_data)
     _build_wsub(atmos, catalog, expConfig)
+    _build_fv3_flags(atmos)
     _build_conus(atmos, catalog, catalog_data)
     _build_clim(atmos)
 

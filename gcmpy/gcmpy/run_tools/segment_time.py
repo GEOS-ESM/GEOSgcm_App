@@ -5,7 +5,7 @@ Computes the Current/Ending/Segment-Finish date-time variables for one
 segment iteration of the GCM run loop, including the END_DATE clamp and
 the non-Reynolds-SST year-boundary clamp (which rewrites CAP.rc).
 
-Replaces lines 673-750 of gcm_run.j.
+Replaces lines 709-786 of gcm_run.j.
 """
 
 import re

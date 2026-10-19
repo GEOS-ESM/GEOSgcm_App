@@ -5,7 +5,7 @@ Resolves per-job experiment run parameters (NX/NY/AGCM grid dims, IO
 server node counts, and CPU/node resource allocation), and checks for
 over-specification of CPU resources against the actual batch allocation.
 
-Replaces lines 142-241 of gcm_run.j.
+Replaces lines 178-273 of gcm_run.j.
 """
 
 import math
