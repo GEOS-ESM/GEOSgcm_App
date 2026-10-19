@@ -174,6 +174,6 @@ def test_context_covers_new_upstream_vars(jinja_context):
     assert jinja_context['atmos']['chem_dt'] == 1800
     assert jinja_context['ocean']['DATAATM'] == '#DELETE'
     # AMIP emissions use the merra-2 MERRA2OX species staged by stagebcs
-    # (bcs_catalog pchem_species/merra-2: 197902-201706 -> 39 years).
-    assert jinja_context['gocart']['pchem_clim_years'] == 39
+    # (bcs_catalog pchem_species/merra-2: 197902-202608 -> 48 years).
+    assert jinja_context['gocart']['pchem_clim_years'] == 48
     assert jinja_context['MOM5'] == '#DELETE'
