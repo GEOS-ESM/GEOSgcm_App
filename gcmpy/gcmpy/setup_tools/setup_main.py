@@ -757,16 +757,18 @@ class SetupGCM:
     def stage_run_code(self):
         """
         Copy the run-relevant part of the installed gcmpy package into
-        $EXPDIR/gcmpy so the experiment carries its own copy of the run
-        code (invoked as `python3 $EXPDIR/gcmpy/gcm_run.py --config
-        run_<expid>.yaml`), stamped at setup time.
+        the experiment directory so the experiment carries its own copy
+        of the run code, stamped at setup time:
 
-        Copies gcm_run.py plus the gcmpy package minus the setup-only
-        pieces: setup_tools/, geos_settings/, tests, and the other
-        top-level setup entry points (gcm_setup.py, gcm_create.py,
-        gcm_configure.py). The layout mirrors install/bin/gcmpy so the
-        absolute imports (gcmpy.run_tools..., gcmpy.utils...) resolve
-        against the experiment-local copy.
+            $EXPDIR/gcm_run.py       (script)
+            $EXPDIR/gcmpy/           (package: run_tools/, batch_tools/,
+                                      utils/ -- setup-only pieces excluded)
+
+        Invoke from the experiment directory as
+        `python3 gcm_run.py --config run_<expid>.yaml`: the script's
+        directory ($EXPDIR) lands on sys.path, so the absolute imports
+        (gcmpy.run_tools..., gcmpy.utils...) resolve against the
+        experiment-local package.
 
         Note: the batch/in-job path still executes the install copy --
         gcm_run.sh (staged by the installer, not by gcmpy) execs
@@ -775,7 +777,7 @@ class SetupGCM:
         gcm_run by hand from the experiment directory.
         """
         src = Path(pathdict['bin']) / 'gcmpy'
-        dst = Path(self.exp_dir) / 'gcmpy'
+        exp_dir = Path(self.exp_dir)
 
         ignore = shutil.ignore_patterns(
             'setup_tools',
@@ -790,7 +792,8 @@ class SetupGCM:
             '*.md',
             '*.log',
         )
-        shutil.copytree(src, dst, dirs_exist_ok=True, ignore=ignore)
+        shutil.copy2(src / 'gcm_run.py', exp_dir / 'gcm_run.py')
+        shutil.copytree(src / 'gcmpy', exp_dir / 'gcmpy', dirs_exist_ok=True, ignore=ignore)
 
 
     # Templating helper function -- Removes lines marked with "#DELETE"

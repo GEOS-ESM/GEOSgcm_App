@@ -1,9 +1,10 @@
 """
 Run-code staging: ``SetupGCM.stage_run_code()`` copies the run-relevant
-part of the installed gcmpy package into ``$EXPDIR/gcmpy`` (mirroring
-install/bin/gcmpy's layout so absolute imports resolve), excluding the
-setup-only pieces (setup_tools/, geos_settings/, tests, other setup
-entry points, __pycache__).
+part of the installed gcmpy package into the experiment directory --
+``$EXPDIR/gcm_run.py`` plus the package at ``$EXPDIR/gcmpy`` (so the
+script directory lands on sys.path and absolute imports resolve),
+excluding the setup-only pieces (setup_tools/, geos_settings/, tests,
+other setup entry points, __pycache__).
 """
 
 from pathlib import Path
@@ -54,26 +55,27 @@ def test_stage_run_code_copies_run_side_only(tmp_path, monkeypatch):
     inst = _bare_setup(exp_dir)
     inst.stage_run_code()
 
-    dst = exp_dir / "gcmpy"
-    # Run-side code is staged, mirroring the install layout.
-    assert (dst / "gcm_run.py").is_file()
-    assert (dst / "gcmpy" / "__init__.py").is_file()
-    for pkg in ("run_tools", "batch_tools", "utils"):
-        assert (dst / "gcmpy" / pkg / "mod.py").is_file()
+    # gcm_run.py sits at the experiment root; the package (minus
+    # setup-only pieces) directly under $EXPDIR/gcmpy.
+    assert (exp_dir / "gcm_run.py").is_file()
+    pkg = exp_dir / "gcmpy"
+    assert (pkg / "__init__.py").is_file()
+    for run_pkg in ("run_tools", "batch_tools", "utils"):
+        assert (pkg / run_pkg / "mod.py").is_file()
     # Setup-only pieces are excluded.
-    assert not (dst / "gcmpy" / "setup_tools").exists()
-    assert not (dst / "gcmpy" / "geos_settings").exists()
-    assert not (dst / "gcmpy_tests").exists()
-    assert not (dst / "gcmpy_doc").exists()
-    assert not (dst / "gcm_setup.py").exists()
-    assert not (dst / "gcm_create.py").exists()
-    assert not (dst / "gcm_configure.py").exists()
-    assert not (dst / "README.md").exists()
-    assert not (dst / "gcmpy_event_tracking.log").exists()
+    assert not (pkg / "setup_tools").exists()
+    assert not (pkg / "geos_settings").exists()
+    assert not (exp_dir / "gcmpy_tests").exists()
+    assert not (exp_dir / "gcmpy_doc").exists()
+    assert not (exp_dir / "gcm_setup.py").exists()
+    assert not (exp_dir / "gcm_create.py").exists()
+    assert not (exp_dir / "gcm_configure.py").exists()
+    assert not (exp_dir / "README.md").exists()
+    assert not (exp_dir / "gcmpy_event_tracking.log").exists()
+    assert not (exp_dir / ".pytest_cache").exists()
     # Byte-code caches and pytest caches are never copied.
-    assert not list(dst.rglob("__pycache__"))
-    assert not list(dst.rglob("*.pyc"))
-    assert not (dst / ".pytest_cache").exists()
+    assert not list(pkg.rglob("__pycache__"))
+    assert not list(pkg.rglob("*.pyc"))
 
 
 def test_stage_run_code_idempotent(tmp_path, monkeypatch):
@@ -89,4 +91,5 @@ def test_stage_run_code_idempotent(tmp_path, monkeypatch):
     # A second setup over the same experiment dir must not fail.
     inst.stage_run_code()
 
-    assert (exp_dir / "gcmpy" / "gcm_run.py").is_file()
+    assert (exp_dir / "gcm_run.py").is_file()
+    assert (exp_dir / "gcmpy" / "run_tools" / "mod.py").is_file()
