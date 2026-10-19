@@ -636,6 +636,7 @@ def main() -> None:
         if env_dict and nx and ny:
             run_config.update(get_batch_resources(nx, ny, env_dict))
 
+        os.environ["GEOSBIN"] = str(run_config.get("bin_path", ""))
         execute(config_path, run_config)
     else:
         # We're on a login node (invoked by a human or gcm_setup.py) --
