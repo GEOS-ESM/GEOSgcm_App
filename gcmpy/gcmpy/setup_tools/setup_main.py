@@ -316,27 +316,28 @@ class SetupGCM:
             self.post_q           = f"SBATCH --constraint={self.expConfig['processor']}"
             self.plot_q           = f"SBATCH --constraint={self.expConfig['processor']}"
             self.post_p           = f"SBATCH --nodes={NPCUS} --ntasks-per-node={self.num_CPUs}"
-            self.boundary_dir     = "/discover/nobackup/projects/gmao"
-            self.bc_base          = f"{self.boundary_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
+            gmao_project_dir      = "/discover/nobackup/projects/gmao"
+            self.boundary_dir     = f"{gmao_project_dir}/share/gmao_ops"
+            self.bc_base          = f"{gmao_project_dir}/bcs_shared/fvInput/ExtData/esm/tiles"
             self.bcs_dir          = f"{self.bc_base}/{self.land['bcs']}"
             self.replay_ana_expID       = "x0039"
             self.replay_ana_location    = f"{self.boundary_dir}/g6dev/ltakacs/x0039"
             self.M2_replay_ana_location = f"{self.boundary_dir}/merra2/data"
-            self.bcs_input_base = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/atmosphere"
+            self.bcs_input_base = f"{gmao_project_dir}/bcs_shared/make_bcs_inputs/atmosphere"
 
             # define location of SST Boundary Conditions
             oceanres    = f"{self.ocean['IM']}x{self.ocean['JM']}"
             if oceanres == "1440x720":
-                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/SST/{oceanres}"
+                self.sst_dir = f"{self.boundary_dir}/fvInput/g5gcm/bcs/SST/{oceanres}"
             elif self.ocean['gridtyp'] == "MITLLC":
                 self.sst_dir = "/discover/nobackup/estrobac/geos5/SSTDIR"
             else:
-                self.sst_dir = f"{os.environ.get('SHARE')}/gmao_ops/fvInput/g5gcm/bcs/realtime/{self.ocean['sst_name']}/{oceanres}"
+                self.sst_dir = f"{self.boundary_dir}/fvInput/g5gcm/bcs/realtime/{self.ocean['sst_name']}/{oceanres}"
 
-            self.chem_dir         = f"{os.environ.get('SHARE')}/gmao_ops/fvInput_nc3"
+            self.chem_dir         = f"{self.boundary_dir}/fvInput_nc3"
             self.work_dir         = f"/discover/nobackup/{os.environ.get('LOGNAME')}"
-            self.gwdrs_dir        = f"{self.boundary_dir}/osse2/stage/BCS_FILES/GWD_RIDGE"
-            self.coupled_dir      = f"{self.boundary_dir}/bcs_shared/make_bcs_inputs/ocean"
+            self.gwdrs_dir        = f"{self.boundary_dir}/GWD_RIDGE"
+            self.coupled_dir      = f"{gmao_project_dir}/bcs_shared/make_bcs_inputs/ocean"
 
 
         elif envdict['site'] == "AWS" or envdict['site'] == "Azure":
