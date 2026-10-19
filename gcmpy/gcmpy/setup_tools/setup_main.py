@@ -322,7 +322,7 @@ class SetupGCM:
             self.bcs_dir          = f"{self.bc_base}/{self.land['bcs']}"
             self.replay_ana_expID       = "x0039"
             self.replay_ana_location    = f"{self.boundary_dir}/g6dev/ltakacs/x0039"
-            self.M2_replay_ana_location = f"{self.boundary_dir}/merra2/data"
+            self.M2_replay_ana_location = f"{gmao_project_dir}/merra2/data"
             self.bcs_input_base = f"{gmao_project_dir}/bcs_shared/make_bcs_inputs/atmosphere"
 
             # define location of SST Boundary Conditions
