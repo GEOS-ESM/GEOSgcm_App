@@ -8,6 +8,7 @@ set (programs
 	test_config_key_coverage.py
 	test_csh_template_aliases.py
 	test_ocean_config.py
+	test_run_code_staging.py
 	test_template_vars.py
 	)
 

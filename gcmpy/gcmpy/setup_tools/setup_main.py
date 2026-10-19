@@ -751,6 +751,48 @@ class SetupGCM:
         )
 
 
+    # ------------------------------------------------------------------
+    # Run-side code staging
+    # ------------------------------------------------------------------
+    def stage_run_code(self):
+        """
+        Copy the run-relevant part of the installed gcmpy package into
+        $EXPDIR/gcmpy so the experiment carries its own copy of the run
+        code (invoked as `python3 $EXPDIR/gcmpy/gcm_run.py --config
+        run_<expid>.yaml`), stamped at setup time.
+
+        Copies gcm_run.py plus the gcmpy package minus the setup-only
+        pieces: setup_tools/, geos_settings/, tests, and the other
+        top-level setup entry points (gcm_setup.py, gcm_create.py,
+        gcm_configure.py). The layout mirrors install/bin/gcmpy so the
+        absolute imports (gcmpy.run_tools..., gcmpy.utils...) resolve
+        against the experiment-local copy.
+
+        Note: the batch/in-job path still executes the install copy --
+        gcm_run.sh (staged by the installer, not by gcmpy) execs
+        ${GEOSBIN}/gcmpy/gcm_run.py with GEOSBIN=bin_path -- so resubmits
+        keep using install's copy; this exp-local tree is for running
+        gcm_run by hand from the experiment directory.
+        """
+        src = Path(pathdict['bin']) / 'gcmpy'
+        dst = Path(self.exp_dir) / 'gcmpy'
+
+        ignore = shutil.ignore_patterns(
+            'setup_tools',
+            'geos_settings',
+            'gcmpy_tests',
+            'gcmpy_doc',
+            'gcm_setup.py',
+            'gcm_create.py',
+            'gcm_configure.py',
+            '__pycache__',
+            '.pytest_cache',
+            '*.md',
+            '*.log',
+        )
+        shutil.copytree(src, dst, dirs_exist_ok=True, ignore=ignore)
+
+
     # Templating helper function -- Removes lines marked with "#DELETE"
     def cleanup(self, file_path):
         with open(file_path, 'r') as file:

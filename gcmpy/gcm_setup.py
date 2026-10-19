@@ -62,6 +62,7 @@ def main():
     experiment.config_heartbeat()
     experiment.template()
     experiment.stage_bcs()
+    experiment.stage_run_code()
     experiment.organize_exp_dir()
 
 if __name__ == "__main__":
