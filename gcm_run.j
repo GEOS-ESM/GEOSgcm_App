@@ -336,6 +336,60 @@ chmod +x linkbcs
 @GCMRUN_CATCHCNif ($LSM_CHOICE == 2) then
 @GCMRUN_CATCHCN  grep -v "'CNFROOTC'" HISTORY.rc > Hist_tmp.rc && mv Hist_tmp.rc HISTORY.rc
 @GCMRUN_CATCHCNendif
+
+#######################################################################
+#         PythonBridge / GEOSpyD environment for GEOS-MLT
+#######################################################################
+
+@GEOSMLT if ( ! $?MODULESHOME ) then
+@GEOSMLT   if ( -f /usr/share/modules/init/csh ) then
+@GEOSMLT     source /usr/share/modules/init/csh
+@GEOSMLT   else if ( -f /usr/share/lmod/lmod/init/csh ) then
+@GEOSMLT     source /usr/share/lmod/lmod/init/csh
+@GEOSMLT   endif
+@GEOSMLT endif
+
+# Use the same GEOSpyD version as @env/g5_modules
+@GEOSMLT module load python/GEOSpyD/24.11.3-0/3.12
+
+# Derive the active GEOSpyD environment path
+@GEOSMLT setenv MLRAD_ENV `python -c "import sys; print(sys.prefix)"`
+@GEOSMLT setenv PATH ${MLRAD_ENV}/bin:${PATH}
+@GEOSMLT rehash
+
+# Use Python modules and ML radiation resources from the installed GEOS tree
+@GEOSMLT set MAPL_PY = ${GEOSDIR}/lib/Python
+@GEOSMLT setenv GEOS_MLRAD_DATA_DIR ${GEOSDIR}/share/GEOSmlrad
+
+# F107/AP forcing has already been staged from the experiment RC directory
+@GEOSMLT setenv GEOS_MLRAD_F107_AP_PATH ${SCRDIR}/F107_ap_appended.txt
+
+@GEOSMLT if ( $?PYTHONPATH ) then
+@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}:${PYTHONPATH}
+@GEOSMLT else
+@GEOSMLT     setenv PYTHONPATH ${MAPL_PY}
+@GEOSMLT endif
+
+@GEOSMLT echo "### PYBRIDGE SANITY CHECK START ###"
+@GEOSMLT python -c "import sys; print('PYTHON=', sys.executable); print('PREFIX=', sys.prefix)"
+@GEOSMLT python -c "import cffi; import MAPL_PythonBridge; print('MAPL_PYBRIDGE_IMPORT_OK')"
+@GEOSMLT python -c "import geos_mlrad_driver; print('GEOS_MLRAD_DRIVER_IMPORT_OK')"
+@GEOSMLT echo "### PYBRIDGE SANITY CHECK END ###"
+
+#######################################################################
+#         NRLMSIS for GEOS-MLT
+#######################################################################
+
+@GEOSMLT if ( ! -r msis21.parm ) then
+@GEOSMLT   echo "ERROR: Missing MSIS parameter file: msis21.parm"
+@GEOSMLT   exit 2
+@GEOSMLT endif
+
+@GEOSMLT if ( ! -r F107_ap_appended.txt ) then
+@GEOSMLT   echo "ERROR: Missing MSIS forcing file: F107_ap_appended.txt"
+@GEOSMLT   exit 2
+@GEOSMLT endif
+
 #######################################################################
 #                  Setup executable
 #######################################################################
@@ -759,21 +813,6 @@ if( $wavewatch ) then
     cat ww3_multi.nml.tmp | sed -e "s?$oldstring?$newstring?g" > ww3_multi.nml
     /bin/rm ww3_multi.nml.tmp
 endif
-
-@COUPLED# gcm_setup will make sure AGCM.rc, MOM_override and CICE6 use a Ocean DT
-@COUPLED# consistent with CAP.rc HEARTBEAT_DT. But a user might change the
-@COUPLED# HEARTBEAT_DT in CAP.rc at run time, so we need to update the dt in
-@COUPLED# the other files
-
-@COUPLEDset HEARTBEAT_DT = `grep '^\s*HEARTBEAT_DT:' CAP.rc | cut -d: -f2 | awk '{print $1}'`
-
-@COUPLED sed -i -e "s/OGCM_RUN_DT: [0-9]\+\(\.[0-9]\+\)\?/OGCM_RUN_DT: $HEARTBEAT_DT/g" AGCM.rc
-@MOM5 sed -i -e "s/dt_cpld = [0-9]\+\(\.[0-9]\+\)\?,/dt_cpld = $HEARTBEAT_DT,/g" \
-@MOM5        -e "s/dt_atmos = [0-9]\+\(\.[0-9]\+\)\?,/dt_atmos = $HEARTBEAT_DT,/g" MOM_override
-@MOM6 sed -i -e "s/DT = [0-9]\+\(\.[0-9]\+\)\?/DT = $HEARTBEAT_DT/g" \
-@MOM6        -e "s/DT_THERM = [0-9]\+\(\.[0-9]\+\)\?/DT_THERM = $HEARTBEAT_DT/g" MOM_override
-@CICE6 sed -i -E "s/^([[:space:]]*dt[[:space:]]*=[[:space:]]*)[0-9]+(\.[0-9]+)?/\1${HEARTBEAT_DT}/" ice_in
-
 
 if( $AGCM_LM  != 72 ) then
     set files = `/bin/ls  *.yaml`
@@ -1287,7 +1326,7 @@ end
 @MOM5     if(! -e $EXPDIR/MOM_Output) mkdir -p $EXPDIR/MOM_Output
 @MOM5     /bin/mv $SCRDIR/$dset.nc $EXPDIR/MOM_Output/$dset.${edate}.nc
 @MOM5  endif
-@MOM5  end
+@MOM5  end 
 @MOM6  foreach dset ( $dsets )
 @MOM6  set num = `/bin/ls -1 $dset.nc | wc -l`
 @MOM6  if($num != 0) then
