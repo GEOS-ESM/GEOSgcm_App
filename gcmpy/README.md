@@ -27,6 +27,20 @@ utility functions.
 - Event tracking mechanism
 - Easy integration of new features
 
+## Tests
+
+From the `gcmpy` directory, using Python 3.13:
+
+```sh
+python -m pip install -r requirements-test.txt
+python -m pytest gcmpy_tests -q
+```
+
+The `Python Tests` GitHub Actions workflow runs the full suite on Linux for
+every pull request, without building the model. It can also be run manually.
+Some tests exercise Linux shell scripts and the `file` command; macOS results
+may differ.
+
 ## Authors
 
 - GEOS SI-Team
