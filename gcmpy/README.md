@@ -53,6 +53,7 @@ top level of the experiment's `run_<expid>.yaml`:
 
 ```yaml
 stop_after_run: true
+skip_initial_restart_archive: true
 ```
 
 This skips checkpoint archiving, output moves, post-processing, restart
@@ -61,8 +62,27 @@ them before rerunning the experiment. Model failures still fail the job.
 Omitting the setting or using `false` keeps the normal workflow. Use unquoted
 YAML booleans, not strings.
 
-The flag does not change the model run duration: configure `CAP.rc` for your
+`skip_initial_restart_archive` independently skips the pre-launch archive of
+the input restarts. Omitting it or using `false` preserves that archive.
+Restart staging and binary-reader configuration still run. This flag alone
+does not skip post-model checkpoint archiving; use both flags above for a
+test that leaves outputs in scratch without either restart archive.
+
+Neither flag changes the model run duration: configure `CAP.rc` for your
 desired test duration (for example, one day with one segment).
+
+## Restart staging
+
+Generated run YAML includes `stage_restarts_in_scratch: copy`. Older YAML
+without this key also copies restart inputs into scratch. Set it to `link`
+to use symlinks instead, including monthly checkpoints, face restarts,
+WaveWatch restarts, and coupled `INPUT/` files. Other values fail before
+restart staging or archiving.
+
+Link mode assumes the model reads, but does not modify, its input restarts:
+writes through these links would change the originals. It does not change
+boundary-condition staging, archiving, or restart copy-back. Coupled outputs
+replace the initial `INPUT/` links with copies for subsequent segments.
 
 ## Tests
 

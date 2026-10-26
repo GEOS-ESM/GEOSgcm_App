@@ -391,6 +391,8 @@ def run_job_setup(config_path: Path, run_config: dict) -> dict:
         rstdate=rstdate,
         coupled=coupled,
         wavewatch=wavewatch,
+        skip_initial_restart_archive=run_config.get('skip_initial_restart_archive', False),
+        stage_restarts_in_scratch=run_config.get('stage_restarts_in_scratch', 'copy'),
     )
 
     return {

@@ -1,7 +1,7 @@
 """
 stage_restarts.py
 
-Identifies and copies the required initial restarts to the scratch directory.
+Identifies and stages the required initial restarts in the scratch directory.
 Handles face vs tile restart layout detection and AGCM.rc configuration.
 
 Replaces lines 541-676 of gcm_run.j.
@@ -256,6 +256,16 @@ def configure_face_settings(agcm_rc_path: Path, rst_by_face: bool) -> None:
 # Copying restarts to scratch
 # ---------------------------------------------------------------------------
 
+def _stage_restart_file(src: Path, dest: Path, mode: str) -> None:
+    # Never copy through a link left by an earlier staging pass.
+    if dest.is_symlink() or (mode == 'link' and dest.exists()):
+        dest.unlink()
+    if mode == 'link':
+        dest.symlink_to(src.resolve())
+    else:
+        shutil.copy2(src, dest)
+
+
 def copy_restarts_to_scratch(
     exp_dir: Path,
     scratch_dir: Path,
@@ -264,12 +274,12 @@ def copy_restarts_to_scratch(
     gcmemip: bool,
     rstdate: str,
     wavewatch: bool = False,
+    mode: str = 'copy',
 ) -> None:
     """
-    Copy restart and checkpoint files into the scratch directory.
+    Copy or link restart and monthly checkpoint files into scratch.
 
-    Files are copied concurrently (mirroring the original `cp ... &` / `wait`
-    pattern). Missing files are silently skipped, matching the original
+    Missing files are silently skipped, matching the original
     `if(-e ...)` guards.
 
     Args:
@@ -280,6 +290,7 @@ def copy_restarts_to_scratch(
         gcmemip:           True if this is a GCMEMIP run.
         rstdate:           Restart date string for the GCMEMIP source path.
         wavewatch:         True if WaveWatch3 is enabled (copies restart.ww3).
+        mode:              'copy' (default) or 'link'.
     """
     if gcmemip:
         src_dir = exp_dir / "restarts" / rstdate
@@ -291,19 +302,19 @@ def copy_restarts_to_scratch(
     for name in all_names:
         src = src_dir / name
         if src.exists():
-            shutil.copy2(src, scratch_dir / name)
+            _stage_restart_file(src, scratch_dir / name, mode)
 
     if not gcmemip and wavewatch:
         src = src_dir / "restart.ww3"
         if src.exists():
-            shutil.copy2(src, scratch_dir / "restart.ww3")
+            _stage_restart_file(src, scratch_dir / "restart.ww3", mode)
 
 
 # ---------------------------------------------------------------------------
 # Coupled-input staging
 # ---------------------------------------------------------------------------
 
-def stage_coupled_input(exp_dir: Path, scratch_dir: Path) -> None:
+def stage_coupled_input(exp_dir: Path, scratch_dir: Path, mode: str = 'copy') -> None:
     """
     Seed scratch INPUT/ from the experiment's RESTART/ directory.
 
@@ -321,6 +332,7 @@ def stage_coupled_input(exp_dir: Path, scratch_dir: Path) -> None:
     Args:
         exp_dir:    Experiment directory (source RESTART/ lives here).
         scratch_dir: Scratch/run directory (INPUT/ is created here).
+        mode:        'copy' (default) or 'link'.
     """
     # csh `mkdir INPUT` errors harmlessly when it already exists; the
     # Python equivalent is an idempotent create.
@@ -333,7 +345,7 @@ def stage_coupled_input(exp_dir: Path, scratch_dir: Path) -> None:
 
     for item in restart_dir.iterdir():
         if item.is_file():
-            shutil.copy2(item, input_dir / item.name)
+            _stage_restart_file(item, input_dir / item.name, mode)
 
 
 # ---------------------------------------------------------------------------
@@ -414,7 +426,8 @@ def archive_initial_restarts(
             src = scratch_dir / rst
             if not src.exists():
                 continue
-            tar.add(src, arcname=f"{expid}.{rst}.{suffix}")
+            # Archive the data, not scratch staging links to external restarts.
+            tar.add(src.resolve(), arcname=f"{expid}.{rst}.{suffix}")
 
         if coupled:
             tar.add(exp_dir / "RESTART", arcname=f"RESTART.{edate}")
@@ -480,10 +493,12 @@ def fetch_restarts(
     rstdate: str = "",
     coupled: bool = False,
     wavewatch: bool = False,
+    skip_initial_restart_archive: bool = False,
+    stage_restarts_in_scratch: str = 'copy',
 ) -> bool:
     """
     Top-level entry point: parse restart names, detect and configure the face
-    layout, copy restarts to scratch (seed coupled INPUT/ from the
+    layout, stage restarts in scratch (seed coupled INPUT/ from the
     experiment's RESTART/, gcm_run.j:666-670), and archive the initial set.
 
     Args:
@@ -500,12 +515,17 @@ def fetch_restarts(
         rstdate:          Restart date string (required when gcmemip=True).
         coupled:          True for coupled (MOM6/CICE) runs.
         wavewatch:        True if WaveWatch3 is enabled.
+        skip_initial_restart_archive: Skip only the pre-launch restart archive.
+        stage_restarts_in_scratch: 'copy' (default) or 'link' for restart inputs.
 
     Returns:
         True if restarts are stored in face-decomposed layout. Callers need
         this later (gcm_run.j:870-890 -- ridge-scheme GWD restart handling)
         to decide whether to patch NCAR_NRDG in AGCM.rc.
     """
+    if stage_restarts_in_scratch not in ('copy', 'link'):
+        raise ValueError("stage_restarts_in_scratch must be 'copy' or 'link'")
+
     # Parse restart and checkpoint names
     rst_names = _parse_agcm_restarts(agcm_rc_path)
     monthly_chk_names = _parse_monthly_checkpoints(history_rc_path)
@@ -517,23 +537,23 @@ def fetch_restarts(
     # Expand any non-tile restarts into face-numbered variants if needed
     rst_file_names = _expand_face_restarts(rst_names, rst_by_face)
 
-    # Copy everything to the scratch directory
+    # Stage restart inputs in scratch.
     copy_restarts_to_scratch(
         exp_dir, scratch_dir, rst_file_names, monthly_chk_names,
-        gcmemip, rstdate, wavewatch,
+        gcmemip, rstdate, wavewatch, stage_restarts_in_scratch,
     )
 
     # gcm_run.j:666-670 -- coupled runs seed scratch INPUT/ from the
     # experiment's RESTART/ directory (before the initial archive below).
     if coupled:
-        stage_coupled_input(exp_dir, scratch_dir)
+        stage_coupled_input(exp_dir, scratch_dir, stage_restarts_in_scratch)
 
     # Archive the initial restarts (no-op if already archived for this date)
-    #if archive == True
-    archive_initial_restarts(
-        exp_dir, scratch_dir, rst_file_names, cap_restart_path,
-        expid, gcmver, bctag, bcrslv, coupled, wavewatch,
-    )
+    if not skip_initial_restart_archive:
+        archive_initial_restarts(
+            exp_dir, scratch_dir, rst_file_names, cap_restart_path,
+            expid, gcmver, bctag, bcrslv, coupled, wavewatch,
+        )
 
     # gcm_run.j:673-676 -- if any restart is binary, force NUM_READERS to 1
     # so +-style MAPL bootstrapping works (pbinary cannot do it).

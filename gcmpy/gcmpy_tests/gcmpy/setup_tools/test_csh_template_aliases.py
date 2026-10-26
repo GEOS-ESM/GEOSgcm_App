@@ -125,6 +125,7 @@ def test_csh_aliases_do_not_leak_into_the_run_yaml(tmp_path, monkeypatch):
     setup.template()
 
     receipt = (exp_dir / 'run_test_exp.yaml').read_text()
+    assert 'stage_restarts_in_scratch: copy\n' in receipt
     assert 'EXPID:' not in receipt
     assert 'OGCM_IM:' not in receipt
     assert 'expid: test_exp' in receipt or 'experiment_id: test_exp' in receipt

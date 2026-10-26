@@ -821,6 +821,7 @@ class SetupGCM:
             'install_path': str(pathdict['install']),
             'bin_path': str(pathdict['bin']),
             'etc_path': str(pathdict['etc']),
+            'stage_restarts_in_scratch': 'copy',
         }
 
         '''

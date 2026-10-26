@@ -193,12 +193,17 @@ def test_archive_wavewatch_keeps_clean_name_in_scratch(tmp_path):
 
 
 @needs_file
-def test_archive_coupled_copies_restart_dir_and_inputs(tmp_path):
+@pytest.mark.parametrize('linked_input', [False, True])
+def test_archive_coupled_copies_restart_dir_and_inputs(tmp_path, linked_input):
     exp_dir = tmp_path / "exp"
     scratch = _segment_fixture(exp_dir)
     (scratch / "INPUT").mkdir()
     (scratch / "RESTART").mkdir()
     (scratch / "RESTART" / "ocean_internal_rst").write_text("ocean")
+    original = exp_dir / 'original_ocean_rst'
+    original.write_text('original ocean')
+    if linked_input:
+        (scratch / 'INPUT' / 'ocean_internal_rst').symlink_to(original)
 
     archive_checkpoints(
         scratch,
@@ -218,3 +223,6 @@ def test_archive_coupled_copies_restart_dir_and_inputs(tmp_path):
         exp_dir / "restarts" / "RESTART.e20000301_21z" / "ocean_internal_rst"
     ).exists()
     assert (scratch / "INPUT" / "ocean_internal_rst").exists()
+    assert not (scratch / 'INPUT' / 'ocean_internal_rst').is_symlink()
+    assert (scratch / 'INPUT' / 'ocean_internal_rst').read_text() == 'ocean'
+    assert original.read_text() == 'original ocean'
