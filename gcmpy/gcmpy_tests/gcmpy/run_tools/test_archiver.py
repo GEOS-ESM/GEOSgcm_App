@@ -22,7 +22,8 @@ needs_file = pytest.mark.skipif(
 
 
 def _write_binary(path: Path):
-    path.write_bytes(bytes(range(256)) * 8)
+    # Ascending bytes can be recognized as a Targa image by file(1).
+    path.write_bytes(b"\x00\xff" * 1024)
 
 
 def _write_netcdf(path: Path):
