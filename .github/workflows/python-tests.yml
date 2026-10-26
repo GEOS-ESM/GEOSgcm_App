@@ -13,8 +13,12 @@ concurrency:
 
 jobs:
   pytest:
-    name: gcmpy pytest
-    runs-on: ubuntu-slim
+    name: gcmpy pytest (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-slim, macos-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     defaults:
       run:

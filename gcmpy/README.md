@@ -54,10 +54,10 @@ python -m pip install -r requirements-test.txt
 python -m pytest gcmpy_tests -q
 ```
 
-The `Python Tests` GitHub Actions workflow runs the full suite on Linux for
-every pull request, without building the model. It can also be run manually.
-Some tests exercise Linux shell scripts and the `file` command; macOS results
-may differ.
+The `Python Tests` GitHub Actions workflow runs the full suite on Linux and
+macOS for every pull request, without building the model. It can also be run
+manually. Both jobs run independently so a failure on one OS does not cancel
+the other.
 
 ## Authors
 
