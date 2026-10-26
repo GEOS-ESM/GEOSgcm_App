@@ -5,7 +5,7 @@
  `gcmpy`is a Python tool performing GEOS related operations.
 It is meant to provide a flexible and robust way to automate
 processes such as the creation of experiment directory, 
-the submittion of SLURM job, editing experiment related files,
+the submission of Slurm/PBS jobs, editing experiment related files,
 etc.
 
 It consists of a set of interfaces that are accessible to
@@ -26,6 +26,25 @@ utility functions.
 - Compatibility with Git repositories
 - Event tracking mechanism
 - Easy integration of new features
+
+## Run-job allocation
+
+`gcm_run.py` uses `sbatch` at NCCS and `qsub` at NAS, as selected by the
+experiment YAML's `batch_cmd`. Before each submission or resubmission it reads
+the current decomposition from `AGCM.rc` and recalculates the node count:
+`ceil(NX * NY / tasks_per_node)`, plus `IOSERVER_NODES` when IOSERVER is enabled.
+Coupled runs use `OGCM.NX`/`OGCM.NY`, matching the model-launch resource logic.
+
+For example, changing 4×24 to 10×60 requests five model nodes at 120 tasks per
+node instead of one. Reducing the layout also reduces the request. The saved
+`atmos.nx/ny` and node count in `run_p` do not override the current layout.
+Tasks per node and other resource qualifiers remain configured in `run_p`
+(Slurm `--ntasks-per-node`, PBS `mpiprocs`/`ncpus`); NAS processor models and
+other select qualifiers are preserved. PBS supports the generated single,
+homogeneous `select` request, not heterogeneous `+`-separated chunks.
+
+This does not resize an already-running job. Change the layout before
+submission; an insufficient existing allocation still fails the runtime check.
 
 ## Stop after a test run
 

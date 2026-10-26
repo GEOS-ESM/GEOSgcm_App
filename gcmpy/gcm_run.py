@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-  * If SLURM_JOB_ID is NOT set, we're being run on a login node (by a
+  * If neither SLURM_JOB_ID nor PBS_JOBID is set, we're on a login node (by a
     human, or by gcm_setup.py right after it writes run_<expid>.yaml) to
     kick off the very first segment. We build the equivalent `sbatch`
     command-line flags from the site/experiment batch parameters that
     used to be Jinja-rendered into the #SBATCH header (batch_time/run_t,
     run_p, run_q, batch_jobname/run_n, batch_group_full,
     batch_outputname, ...) and submit the (static, non-templated)
-    gcm_run.sh job script via `sbatch` -- see submit_job()/build_sbatch_args().
+    gcm_run.sh job script via `sbatch` or `qsub`. Node counts are refreshed
+    from AGCM.rc for every submission.
 
-  * If SLURM_JOB_ID IS set, we're running inside an allocated SLURM job
+  * If SLURM_JOB_ID or PBS_JOBID is set, we're inside an allocated batch job
     (invoked by gcm_run.sh). We run the actual per-segment GCM run loop
     (staging restarts, emissions, ExtData, launching GEOSgcm.x, archiving
     restarts/checkpoints, ...), and -- if more segments remain --
@@ -27,7 +28,9 @@ and are documented at their call sites.
 """
 
 import argparse
+import math
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -35,6 +38,10 @@ from pathlib import Path
 import yaml
 
 from gcmpy.batch_tools.batch_environ import load_env_vars, get_batch_resources
+from gcmpy.run_tools.agcm_file_ops import (
+    get_nx_ny, get_ogcm_coupled_overrides, get_ioserver_params,
+)
+from gcmpy.utils.flag_ops import is_enabled
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +98,7 @@ def _sbatch_args_from_field(value) -> list:
     Values of "DELETE"/"NULL" (used as placeholders for sites/fields that
     don't apply, e.g. PBS-only fields on SLURM sites) are skipped. Values
     that still use PBS syntax (site == "NAS") are also skipped here --
-    Only SLURM (`sbatch`) sites are supported today.
+    PBS headers are handled separately by build_qsub_args().
     """
     if not value:
         return []
@@ -110,6 +117,30 @@ def _sbatch_args_from_field(value) -> list:
     return value.split()
 
 
+def submission_nodes(run_config: dict, per_node: int) -> tuple[int, int]:
+    """Read the current layout without using the submitting job's allocation."""
+    if per_node <= 0:
+        raise ValueError('Tasks per node must be positive')
+    agcm_rc = Path(run_config['exp_dir']) / 'AGCM.rc'
+    if not agcm_rc.is_file():
+        raise FileNotFoundError(f'Cannot size batch allocation: {agcm_rc} is missing')
+    nx, ny = get_nx_ny(agcm_rc)
+    if is_enabled(run_config['ocean']['coupled']):
+        nx, ny, _ = get_ogcm_coupled_overrides(agcm_rc)
+    if nx <= 0 or ny <= 0:
+        raise ValueError('AGCM.rc NX and NY must be positive')
+    model_pes = nx * ny
+    nodes = math.ceil(model_pes / per_node)
+    total_pes = model_pes
+    if int(run_config['expConfig']['io_server']) == 1:
+        io_nodes, _ = get_ioserver_params(agcm_rc)
+        if io_nodes < 0:
+            raise ValueError('AGCM.rc IOSERVER_NODES must not be negative')
+        nodes += io_nodes
+        total_pes = nodes * per_node
+    return nodes, total_pes
+
+
 def build_sbatch_args(run_config: dict) -> list:
     """
     Build the full list of `sbatch` resource flags for the run job from an
@@ -120,7 +151,21 @@ def build_sbatch_args(run_config: dict) -> list:
     args += _sbatch_args_from_field(
         f"{run_config.get('batch_time', '')}{run_config.get('run_t', '')}"
     )
-    args += _sbatch_args_from_field(run_config.get("run_p"))
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    parser.add_argument('--nodes', '-N')
+    parser.add_argument('--ntasks', '-n')
+    parser.add_argument('--ntasks-per-node', type=int)
+    options, other_args = parser.parse_known_args(
+        _sbatch_args_from_field(run_config.get('run_p'))
+    )
+    per_node = options.ntasks_per_node
+    if per_node is None:
+        per_node = int(run_config['num_CPUs'])
+    nodes, total_pes = submission_nodes(run_config, per_node)
+    args += [f'--nodes={nodes}', f'--ntasks-per-node={per_node}']
+    if options.ntasks is not None:
+        args.append(f'--ntasks={total_pes}')
+    args += other_args
     args += _sbatch_args_from_field(
         f"{run_config.get('batch_jobname', '')}{run_config.get('run_n', '')}"
     )
@@ -135,11 +180,40 @@ def build_sbatch_args(run_config: dict) -> list:
     return args
 
 
+def build_qsub_args(run_config: dict) -> list:
+    """Translate generated NAS headers, resizing the homogeneous select request."""
+    def field(value):
+        value = str(value or '').strip()
+        if value in ('DELETE', '#DELETE', 'NULL', ''):
+            return []
+        if not value.startswith('PBS '):
+            raise ValueError(f'Expected a PBS header, got {value!r}')
+        return value[4:].split()
+
+    resource_args = field(run_config['run_p'])
+    selects = [arg for arg in resource_args if arg.startswith('select=')]
+    if len(selects) != 1 or not re.fullmatch(r'select=\d+(?::[^+\s]+)*', selects[0]):
+        raise ValueError('Expected one homogeneous PBS select request in run_p')
+    select = selects[0]
+    qualifiers = dict(part.split('=', 1) for part in select.split(':')[1:])
+    per_node = int(qualifiers.get('mpiprocs', qualifiers.get('ncpus', run_config['num_CPUs'])))
+    nodes, _ = submission_nodes(run_config, per_node)
+    resized = re.sub(r'^select=\d+', f'select={nodes}', select)
+    resource_args[resource_args.index(select)] = resized
+    return (
+        field(f"{run_config['batch_time']}{run_config['run_t']}")
+        + resource_args
+        + field(f"{run_config['batch_jobname']} {run_config['run_n']}")
+        + field(run_config.get('run_q'))
+        + field(run_config.get('batch_group_full'))
+        + field(run_config.get('batch_joinouterr'))
+    )
+
+
 def submit_job(config_path: Path, run_config: dict) -> subprocess.CompletedProcess:
     """
-    Submit gcm_run.sh via `sbatch`, passing the experiment's config path
-    through to the in-job invocation, and the site/experiment
-    resource request as sbatch CLI flags (see build_sbatch_args()).
+    Submit gcm_run.sh via the configured scheduler, resizing from AGCM.rc.
+    Slurm receives the config as a script argument; PBS receives it via -v.
     """
     bin_path = run_config.get("bin_path")
     if not bin_path:
@@ -148,6 +222,21 @@ def submit_job(config_path: Path, run_config: dict) -> subprocess.CompletedProce
         )
 
     gcm_run_sh = Path(bin_path) / "gcm_run.sh"
+    batch_cmd = run_config.get('batch_cmd', 'sbatch')
+    if batch_cmd == 'qsub':
+        # qsub does not accept script arguments; pass the config via the environment.
+        config_path = Path(config_path).resolve()
+        if ',' in str(config_path) or ',' in str(bin_path):
+            raise ValueError('PBS environment paths must not contain commas')
+        cmd = [
+            'qsub', *build_qsub_args(run_config), '-V', '-S', '/bin/bash',
+            '-v', f'GEOSBIN={bin_path},GEOS_RUN_CONFIG={config_path}',
+            str(gcm_run_sh),
+        ]
+        print(f"Submitting: {' '.join(cmd)}")
+        return subprocess.run(cmd, check=True)
+    if batch_cmd != 'sbatch':
+        raise ValueError(f'Unsupported batch command: {batch_cmd!r}')
     sbatch_args = build_sbatch_args(run_config)
 
     # The job script sources ${GEOSBIN}/g5_modules.sh, but inside a SLURM
@@ -613,7 +702,7 @@ def run_segments(config_path: Path, run_config: dict) -> bool:
 
 def execute(config_path: Path, run_config: dict) -> None:
     """
-    In-job entrypoint (invoked by gcm_run.sh, detected via SLURM_JOB_ID):
+    In-job entrypoint (invoked by gcm_run.sh, detected via the scheduler job ID):
     run up to NUM_SGMT segments, then resubmit for the next job's worth of
     segments (if any) using the same sbatch-flag logic as the login-node
     submit path -- no shell-side resubmission loop required.
@@ -631,7 +720,7 @@ def main() -> None:
     config_path = Path(args.config)
     run_config = import_yaml(config_path)
 
-    if "SLURM_JOB_ID" in os.environ:
+    if "SLURM_JOB_ID" in os.environ or "PBS_JOBID" in os.environ:
         # We're running inside an allocated SLURM job (invoked by gcm_run.sh).
         # Batch resources (NCPUS, NUM_MODEL_NODES, ...) are only needed once
         # we're actually inside the running job, launching GEOSgcm.x.

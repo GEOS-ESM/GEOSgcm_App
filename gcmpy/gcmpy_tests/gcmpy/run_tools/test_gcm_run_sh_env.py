@@ -31,7 +31,9 @@ def _make_fake_install(tmp_path: Path) -> Path:
     (bin_dir / "g5_modules.sh").write_text("# fake module init\n")
     (etc_dir / "SITE.rc").write_text("SITE_NAME discover\n")
     (bin_dir / "gcmpy" / "gcm_run.py").write_text(
-        "import os, resource\n"
+        "import os, resource, sys\n"
+        "print(f'CONFIG={sys.argv[-1]}')\n"
+        "print(f'CWD={os.getcwd()}')\n"
         "for key in ('ARCH', 'GEOSDIR', 'GEOSUTIL', 'GEOSETC', 'SITE',\n"
         "            'GEOSBIN', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH', 'PATH', 'BASEDIR'):\n"
         "    print(f\"{key}={os.environ.get(key, '')}\")\n"
@@ -62,6 +64,22 @@ def _run_gcm_run_sh(bin_dir: Path, extra_env: dict | None = None) -> dict:
 
 def test_gcm_run_sh_exists():
     assert GCM_RUN_SH.is_file()
+
+
+def test_pbs_wrapper_receives_config_without_script_arguments(tmp_path):
+    bin_dir = _make_fake_install(tmp_path)
+    config = tmp_path / 'run_exp.yaml'
+    result = subprocess.run(
+        ['bash', str(GCM_RUN_SH)],
+        env={
+            'PATH': os.environ['PATH'], 'GEOSBIN': str(bin_dir),
+            'GEOS_RUN_CONFIG': str(config), 'PBS_JOBID': '123.pbs',
+            'PBS_O_WORKDIR': str(tmp_path),
+        },
+        capture_output=True, text=True, check=True,
+    )
+    assert f'CONFIG={config}' in result.stdout.splitlines()
+    assert f'CWD={tmp_path.resolve()}' in result.stdout.splitlines()
 
 
 def test_gcm_run_sh_exports_arch_env(tmp_path):
