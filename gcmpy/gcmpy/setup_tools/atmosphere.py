@@ -46,6 +46,10 @@ def _build_resolution(atmos: dict, catalog: CatalogSearch, expConfig: dict,
         if value is not None:
             atmos[field] = value
 
+    # Coupled ocean and sea ice must use the actual heartbeat, including user overrides.
+    if expConfig.get('OCEAN_coupled'):
+        atmos['dt_ocean'] = atmos['dt']
+
     # MIT at c180: nx/ny are null in catalog — use runtime ocean values.
     if atmos.get('nx') is None:
         atmos['nx'] = ocean_nx
@@ -136,6 +140,15 @@ def _build_clim(atmos: dict):
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
+
+def get_heartbeat_default(expConfig: dict):
+    """Return the catalog recommendation; the user's heartbeat remains authoritative."""
+    catalog_data = load_catalog(CATALOG_PATH)
+    heartbeat = catalog_data['microphysics'][expConfig['MOIST_version']].get('heartbeat')
+    if heartbeat is None:
+        heartbeat = CatalogSearch(catalog_data, expConfig).get_value('heartbeat', 'resolutions')
+    return heartbeat
+
 
 def get_atmos_config(expConfig: dict, ocean_nx=None, ocean_ny=None) -> dict:
     """

@@ -634,14 +634,7 @@ class SetupGCM:
 
     # Modify MOM input files to match HEARTBEAT
     def config_heartbeat(self):
-        # Upstream gcm_setup sets `DT = $HEARTBEAT` and, for coupled runs,
-        # `OCEAN_DT = $HEARTBEAT` ("the ocean model must have the same time
-        # step as the atmosphere" -- gcm_setup:1360-1365), then patches
-        # ice_in/MOM_override with $OCEAN_DT (gcm_setup:2637-2656).
-        # atmos['dt'] is the HEARTBEAT_DT answer. atmos['dt_ocean'] is
-        # OGCM_RUN_DT instead: it is a catalog value that heartbeat_sync
-        # re-writes to HEARTBEAT_DT in scratch at run time, so it must not
-        # be used here (it is an int, which also broke the concatenation).
+        # Coupled ocean and sea ice use HEARTBEAT_DT, including user overrides.
         ocean_dt = str(self.atmos['dt'])
 
         # We need to change the dt in ice_in for CICE6
@@ -986,4 +979,3 @@ class Exceptions:
     # This function will clean output files if script is interrupted
     def cleanup():
         pass
-

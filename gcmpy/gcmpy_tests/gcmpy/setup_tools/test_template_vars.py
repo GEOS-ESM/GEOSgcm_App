@@ -171,7 +171,9 @@ def test_context_covers_new_upstream_vars(jinja_context):
     assert jinja_context['atmos']['run_hydrostatic'] == 'hydrostatic = .true.'
     assert jinja_context['atmos']['nx'] == 20
     assert jinja_context['atmos']['ny'] == 96
-    assert jinja_context['atmos']['chem_dt'] == 1800
+    assert jinja_context['atmos']['conv_dt'] == 450
+    assert jinja_context['atmos']['chem_dt'] == 900
+    assert jinja_context['atmos']['dt_ocean'] == jinja_context['atmos']['dt'] == 600
     assert jinja_context['ocean']['DATAATM'] == '#DELETE'
     # AMIP emissions use the merra-2 MERRA2OX species staged by stagebcs
     # (bcs_catalog pchem_species/merra-2: 197902-202608 -> 48 years).
