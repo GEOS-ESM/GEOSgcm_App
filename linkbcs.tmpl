@@ -4,6 +4,10 @@ setenv BCSDIR    @BCSDIR
 @DATAOCEANsetenv SSTDIR    @SSTDIR
 @COUPLEDsetenv CPLDIR @COUPLEDIR/@OCNMODEL
 setenv CHMDIR    @CHMDIR
+# Use the custom GEOS-MLT L111 input directory.
+if ( @AGCM_LM == 111 ) then
+    setenv CHMDIR /discover/nobackup/awlee4/GEOSgcm/inputs/vertical_remap/L111/fvInput
+endif
 setenv BCRSLV    @ATMOStag_@OCEANtag
 
 @MOM5setenv SSTDIR  @COUPLEDIR/SST/MERRA2/@OGCM_IMx@OGCM_JM/v1
