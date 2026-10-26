@@ -130,11 +130,8 @@ class SetupGCM:
 
     def set_num_CPUs(self):
         if envdict['site'] == 'NCCS':
-            # Upstream gcm_setup ASKPROC (gcm_setup:453-458): mil (Milan,
-            # default) uses 120 of 128 cores/node, cas (Cascade Lake) uses
-            # 40 of 46.  The processor question was already answered by
-            # ask_questions() -- honor it (the old loop-over-the-map kept
-            # only the last entry and could never yield 'mil').
+            # Milan uses 120 of 128 cores/node; NCCS Cascade Lake is retired.
+            # Honor the processor selected by ask_questions().
             node_map = site_nodes_dict['NCCS']
             proc = self.expConfig.get('processor') or 'mil'
             if proc not in node_map:
