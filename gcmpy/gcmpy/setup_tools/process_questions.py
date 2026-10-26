@@ -1,12 +1,11 @@
 import yaml, re, os, subprocess, sys
 
 from gcmpy.setup_tools.generate_question import Question
-from gcmpy.setup_tools.atmosphere import get_heartbeat_default
+from gcmpy.setup_tools.atmosphere import get_heartbeat_default, get_io_server_default
 from gcmpy.utils.color_ops import Color
 from gcmpy.setup_tools.setup_envs import envdict
 from gcmpy.setup_tools.questions.load_questions import load_yamls
 from gcmpy.geos_settings.horizontal_resolution import (
-        atmos_horizontal_res,
         mit_horizontal_res,
         ocean_res_default_dict
         )
@@ -31,11 +30,7 @@ class Handle:
     def io_server_default(question_dict, i):
         if i != 'io_server':
             return
-        AGCM_grid = question_dict['AGCM_grid'].answer
-        if AGCM_grid in atmos_horizontal_res:
-            question_dict[i].default = True
-        else:
-            question_dict[i].default = False
+        question_dict[i].default = get_io_server_default(question_dict['AGCM_grid'].answer)
 
     @staticmethod
     def MOIST_version_default(question_dict, i):

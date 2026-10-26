@@ -141,6 +141,11 @@ def _build_clim(atmos: dict):
 # Public entry point
 # ---------------------------------------------------------------------------
 
+def get_io_server_default(agcm_grid: str) -> bool:
+    """Return the resolution's recommended IOSERVER prompt default."""
+    return load_catalog(CATALOG_PATH)['resolutions'][agcm_grid]['io_server']
+
+
 def get_heartbeat_default(expConfig: dict):
     """Return the catalog recommendation; the user's heartbeat remains authoritative."""
     catalog_data = load_catalog(CATALOG_PATH)

@@ -4,6 +4,7 @@
 # formulaic from im (im = numeric part of AGCM_grid, e.g. c48 -> im=48).
 # Actual dt, lm, and microphysics come from expConfig; heartbeat is a recommendation.
 # Coupled dt_ocean follows the actual heartbeat, not the data-ocean value below.
+# io_server is a prompt recommendation; the user's answer remains authoritative.
 
 defaults:
   use_SHMEM: 0
@@ -33,6 +34,7 @@ defaults:
 
 resolutions:
   c12:
+    io_server: false
     heartbeat: 1200
     im: 12
     jm: 72
@@ -61,6 +63,7 @@ resolutions:
       data_ocean: 12
 
   c24:
+    io_server: false
     heartbeat: 1200
     im: 24
     jm: 144
@@ -85,6 +88,7 @@ resolutions:
     ny: 24
 
   c48:
+    io_server: false
     heartbeat: 1200
     im: 48
     jm: 288
@@ -107,6 +111,7 @@ resolutions:
     ny: 36
 
   c90:
+    io_server: false
     heartbeat: 900
     im: 90
     jm: 540
@@ -134,6 +139,7 @@ resolutions:
     dt_ocean: 3600
 
   c180:
+    io_server: true
     heartbeat:
       MOM6: 450
       MIT: 450
@@ -171,6 +177,7 @@ resolutions:
     dt_ocean: 3600
 
   c270:
+    io_server: true
     heartbeat: 600
     im: 270
     jm: 1620
@@ -197,6 +204,7 @@ resolutions:
     ny: 240
 
   c360:
+    io_server: true
     heartbeat: 450
     im: 360
     jm: 2160
@@ -224,6 +232,7 @@ resolutions:
       data_ocean: 180
 
   c540:
+    io_server: true
     heartbeat: 300
     im: 540
     jm: 3240
@@ -250,6 +259,7 @@ resolutions:
     ny: 360
 
   c720:
+    io_server: true
     heartbeat: 300
     im: 720
     jm: 4320
@@ -274,6 +284,7 @@ resolutions:
     ny: 240
 
   c1080:
+    io_server: true
     heartbeat: 150
     im: 1080
     jm: 6480
@@ -300,6 +311,7 @@ resolutions:
     ny: 480
 
   c1120:
+    io_server: true
     heartbeat: 300
     im: 1120
     jm: 6720
@@ -324,6 +336,7 @@ resolutions:
     ny: 360
 
   c1440:
+    io_server: true
     heartbeat: 150
     im: 1440
     jm: 8640
@@ -348,6 +361,7 @@ resolutions:
     ny: 480
 
   c1536:
+    io_server: true
     heartbeat: 75
     im: 1536
     jm: 9216
@@ -374,6 +388,7 @@ resolutions:
     ny: 360
 
   c2160:
+    io_server: true
     heartbeat: 75
     im: 2160
     jm: 12960
@@ -400,6 +415,7 @@ resolutions:
     ny: 960
 
   c2880:
+    io_server: true
     heartbeat: 75
     im: 2880
     jm: 17280
@@ -425,6 +441,7 @@ resolutions:
     ny: 480
 
   c4320:
+    io_server: true
     heartbeat: 75
     im: 4320
     jm: 25920
@@ -451,6 +468,7 @@ resolutions:
     ny: 480
 
   c5760:
+    io_server: true
     heartbeat: 75
     im: 5760
     jm: 34560

@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 from gcmpy.setup_tools.atmosphere import get_atmos_config, get_heartbeat_default
 from gcmpy.setup_tools.process_questions import Handle
+from gcmpy.setup_tools.generate_question import Question
 from gcmpy.setup_tools.questions.load_questions import load_yamls
 
 
@@ -127,3 +128,25 @@ def test_heartbeat_question_follows_ocean_choices():
     for key in ('AGCM_grid', 'MOIST_version', 'OCEAN_coupled', 'OCEAN_type'):
         assert order.index(key) < order.index('heartbeat')
     assert not questions['heartbeat']['follows_up']
+
+
+@pytest.mark.parametrize('resolution', RESOLUTION_TIMESTEPS)
+@pytest.mark.parametrize('answer', [False, True])
+def test_io_server_default_and_user_choice(resolution, answer, monkeypatch):
+    expected = resolution not in ('c12', 'c24', 'c48', 'c90')
+    question = Question('io_server', 'confirm', 'Use IOSERVER?', '', '', '')
+    questions = {'AGCM_grid': SimpleNamespace(answer=resolution), 'io_server': question}
+    Handle.io_server_default(questions, 'io_server')
+    assert question.default is expected
+
+    def confirm(prompt, default):
+        assert default is expected
+        return SimpleNamespace(ask=lambda: answer)
+
+    monkeypatch.setattr('gcmpy.setup_tools.generate_question.questionary.confirm', confirm)
+    question.load_question(questions)
+    assert question.answer is answer
+
+
+def test_io_server_default_ignores_other_questions():
+    Handle.io_server_default({}, 'AGCM_grid')
