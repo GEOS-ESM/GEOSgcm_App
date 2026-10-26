@@ -20,8 +20,14 @@ fi
 
 umask 022
 
-# gcm_run.j:21 -- limit stacksize unlimited
-ulimit -s unlimited
+export ARCH="$(uname)"
+
+# macOS caps the stack; raise its soft limit to the permitted hard limit.
+if [ "${ARCH}" = "Darwin" ]; then
+    ulimit -S -s "$(ulimit -H -s)"
+else
+    ulimit -s unlimited
+fi
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -48,8 +54,6 @@ if [ -z "${GEOSBIN}" ] || [ ! -f "${GEOSBIN}/g5_modules.sh" ]; then
     exit 1
 fi
 export GEOSBIN
-
-export ARCH="$(uname)"
 
 # GEOSBIN is $install/bin; derive the install root and etc directory
 # from it (gcm_run.j baked GEOSDIR/GEOSETC/GEOSUTIL in via Jinja).
