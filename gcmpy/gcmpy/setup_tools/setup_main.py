@@ -937,12 +937,6 @@ class SetupGCM:
         os.rename(f"{exp_dir}/AGCM.rc.tmpl", f"{exp_dir}/AGCM.rc")
         os.rename(f"{exp_dir}/{self.ocean['history_template']}", f"{exp_dir}/HISTORY.rc")
 
-        # write initial cap_restart (segment start date) if absent
-        cap_restart_path = os.path.join(exp_dir, "cap_restart")
-        if not os.path.exists(cap_restart_path):
-            with open(cap_restart_path, "w") as f:
-                f.write(f"{self.begin_date}\n")
-
         # update file permissions
         os.chmod(f"{exp_dir}/CAP.rc", 0o755)
         os.chmod(f"{exp_dir}/fvcore_layout.rc", 0o755)
