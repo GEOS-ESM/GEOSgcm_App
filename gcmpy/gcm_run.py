@@ -503,6 +503,10 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     # gcm_run.j:1107-1109 -- reset OpenMP threads.
     teardown_omp_env(scratch_dir)
 
+    if run_config.get("stop_after_run", False):
+        print(f"stop_after_run enabled: leaving model outputs in {scratch_dir}")
+        sys.exit(0)
+
     # gcm_run.j:1196-1290 -- rename final checkpoints -> restarts, move
     # intermediate checkpoints, build the restart tarball (archiver.py).
     from gcmpy.run_tools.archiver import archive_checkpoints

@@ -27,6 +27,24 @@ utility functions.
 - Event tracking mechanism
 - Easy integration of new features
 
+## Stop after a test run
+
+To stop immediately after the first successful model segment, add this at the
+top level of the experiment's `run_<expid>.yaml`:
+
+```yaml
+stop_after_run: true
+```
+
+This skips checkpoint archiving, output moves, post-processing, restart
+copy-back, and job resubmission. Model outputs remain in scratch; preserve
+them before rerunning the experiment. Model failures still fail the job.
+Omitting the setting or using `false` keeps the normal workflow. Use unquoted
+YAML booleans, not strings.
+
+The flag does not change the model run duration: configure `CAP.rc` for your
+desired test duration (for example, one day with one segment).
+
 ## Tests
 
 From the `gcmpy` directory, using Python 3.13:
