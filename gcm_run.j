@@ -986,14 +986,14 @@ endif
 # Check for MERRA2OX by looking at AGCM.rc
 set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
 
-# If it is 39, we are using MERRA2OX
-if ( $PCHEM_CLIM_YEARS == 39 ) then
+# If it is 48, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 48 ) then
 
    # Grab the date from cap_restart
    set YEARMON = `cat cap_restart | cut -c1-6`
 
    # Set a magic date
-   set MERRA2OX_END_DATE = "201706"
+   set MERRA2OX_END_DATE = "202606"
 
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
