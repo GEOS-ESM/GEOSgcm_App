@@ -6,12 +6,17 @@
 # Usage (normally invoked by gcm_run.py once it decides to submit, not
 # run by hand):
 #   sbatch [sbatch resource flags...] gcm_run.sh <path/to/run_config.yaml>
+#   qsub [PBS resource flags...] -v GEOS_RUN_CONFIG=<absolute config path> gcm_run.sh
 #
 #######################################################################
 
 set -e
 
-CONFIG_FILE="$1"
+CONFIG_FILE="${1:-${GEOS_RUN_CONFIG:-}}"
+
+if [ -n "${PBS_O_WORKDIR:-}" ]; then
+    cd "${PBS_O_WORKDIR}"
+fi
 
 if [ -z "${CONFIG_FILE}" ]; then
     echo "usage: gcm_run.sh <run_config.yaml>" >&2
@@ -20,8 +25,14 @@ fi
 
 umask 022
 
-# gcm_run.j:21 -- limit stacksize unlimited
-ulimit -s unlimited
+export ARCH="$(uname)"
+
+# macOS caps the stack; raise its soft limit to the permitted hard limit.
+if [ "${ARCH}" = "Darwin" ]; then
+    ulimit -S -s "$(ulimit -H -s)"
+else
+    ulimit -s unlimited
+fi
 
 #######################################################################
 #           Architecture Specific Environment Variables
@@ -29,7 +40,7 @@ ulimit -s unlimited
 #######################################################################
 
 # GEOSBIN is passed by gcm_run.py at submission time
-# (--export=ALL,GEOSBIN=...). Fall back to the directory containing this
+# (Slurm --export or PBS -v). Fall back to the directory containing this
 # script -- but only if that directory really looks like an install bin/:
 # inside a SLURM job, BASH_SOURCE[0] is the spool copy (slurm_script), so
 # a blind fallback would point GEOSBIN at /var/spool/slurmd/job<id>/.
@@ -44,12 +55,10 @@ fi
 if [ -z "${GEOSBIN}" ] || [ ! -f "${GEOSBIN}/g5_modules.sh" ]; then
     echo "gcm_run.sh: cannot locate g5_modules.sh (GEOSBIN='${GEOSBIN:-}')." >&2
     echo "  GEOSBIN must be provided at submission time; submit this job" >&2
-    echo "  via gcm_run.py, which passes --export=ALL,GEOSBIN=..." >&2
+    echo "  via gcm_run.py, which exports GEOSBIN for Slurm or PBS." >&2
     exit 1
 fi
 export GEOSBIN
-
-export ARCH="$(uname)"
 
 # GEOSBIN is $install/bin; derive the install root and etc directory
 # from it (gcm_run.j baked GEOSDIR/GEOSETC/GEOSUTIL in via Jinja).
@@ -93,4 +102,7 @@ fi
 #                 Hand off to the Python orchestrator
 #######################################################################
 
+# Mark completion so direct Python launches can initialize through this
+# internal wrapper without entering an exec loop.
+export GEOS_RUN_ENV_READY="${GEOSBIN}"
 exec python3 "${GEOSBIN}/gcmpy/gcm_run.py" --config "${CONFIG_FILE}"

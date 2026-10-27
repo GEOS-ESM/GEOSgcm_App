@@ -2,13 +2,9 @@
 sites_list = ['NCCS', 'NAS']
 
 site_nodes_dict = {
-        'NCCS': dict(mil=120, cas=40),
+        'NCCS': dict(mil=120),
         'NAS': dict(bro=24, sky=40, cas=40, rom=120, mil=120, tur=240)
         }
-#site_nodes_dict = {
-#        'NCCS': ['mil', 'cas'],
-#        'NAS': ["rom", "mil", "sky", "cas", "bro", "tur"]
-#        }
 
 """
   As far as possible, define the following parameters:
@@ -122,7 +118,6 @@ job_script_header['Other'] = dict(
         archive_p = "NULL",
         move_p = "NULL"
         )
-
 
 
 

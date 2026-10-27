@@ -1,13 +1,12 @@
 import yaml, re, os, subprocess, sys
 
 from gcmpy.setup_tools.generate_question import Question
+from gcmpy.setup_tools.atmosphere import get_heartbeat_default, get_io_server_default
 from gcmpy.utils.color_ops import Color
 from gcmpy.setup_tools.setup_envs import envdict
 from gcmpy.setup_tools.questions.load_questions import load_yamls
 from gcmpy.geos_settings.horizontal_resolution import (
-        atmos_horizontal_res,
         mit_horizontal_res,
-        heartbeat_dict,
         ocean_res_default_dict
         )
 from gcmpy.batch_tools.computing_sites import site_nodes_dict
@@ -31,11 +30,7 @@ class Handle:
     def io_server_default(question_dict, i):
         if i != 'io_server':
             return
-        AGCM_grid = question_dict['AGCM_grid'].answer
-        if AGCM_grid in atmos_horizontal_res:
-            question_dict[i].default = True
-        else:
-            question_dict[i].default = False
+        question_dict[i].default = get_io_server_default(question_dict['AGCM_grid'].answer)
 
     @staticmethod
     def MOIST_version_default(question_dict, i):
@@ -149,21 +144,9 @@ class Handle:
     def heartbeat_default(question_dict, i):
         if i != "heartbeat":
             return
-        '''
-        Default heartbeat is determined by atmospheric resolution.
-        Of course, this just the recommended value. The user can
-        enter whatever value they like
-        '''
-        heartbeat = ""
-        horizontal_res = question_dict["AGCM_grid"].answer
-        heartbeat = heartbeat_dict[horizontal_res]
-
-        # Per W. Putman recommendation, set heartbeat to 450s anytime BACM_1M is selected
-        if question_dict["MOIST_version"].answer == "BACM_1M":
-            heartbeat = 450
-
+        expConfig = {key: question.answer for key, question in question_dict.items()}
         # ((IMPORTANT: default must be type string due to some limitation in questionary))
-        question_dict[i].default = str(heartbeat)
+        question_dict[i].default = str(get_heartbeat_default(expConfig))
 
 
     @staticmethod
@@ -308,4 +291,3 @@ def ask_questions():
     del question_dict
 
     return expConfig
-

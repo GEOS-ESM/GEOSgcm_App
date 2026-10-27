@@ -20,13 +20,6 @@ MOIST_version:
   default_answer: ''
   follows_up:     ''
 
-heartbeat:
-  type:           'text'
-  prompt:         'Enter a number (in seconds) for HEARTBEAT_DT (press ENTER for recommended value):'
-  choices:        ''
-  default_answer: ''
-  follows_up:     ''
-
 io_server:
   type:           'confirm'
   prompt:         'Would you like to IOSERVER?'

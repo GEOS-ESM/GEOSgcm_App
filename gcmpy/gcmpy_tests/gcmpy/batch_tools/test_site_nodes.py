@@ -1,28 +1,28 @@
-"""
-Site node-map parity and set_num_CPUs behavior.
+"""Supported site processors and set_num_CPUs behavior after NCCS cas retirement."""
 
-Upstream gcm_setup hard-codes cores-per-node (gcm_setup:455/458 for NCCS,
-503-516 for NAS).  gcmpy's site_nodes_dict must match: the NCCS entries
-were once swapped (mil=40/cas=120), so sbatch asked for 120 CPUs on
-46-CPU cas nodes and died with "CPU count per node can not be
-satisfied".  set_num_CPUs must also honor the answered 'processor'
-question instead of clobbering it with the last map entry (which made
-'mil' unreachable).
-"""
+from types import SimpleNamespace
 
 import pytest
 
+import gcmpy.setup_tools.process_questions as process_questions
 import gcmpy.setup_tools.setup_main as setup_main
 from gcmpy.batch_tools.computing_sites import site_nodes_dict
 from gcmpy.setup_tools.setup_main import SetupGCM
 from gcmpy_tests.gcmpy.setup_tools.test_template_vars import _exp_config
 
 
-def test_site_nodes_dict_matches_upstream_gcm_setup():
-    assert site_nodes_dict['NCCS'] == {'mil': 120, 'cas': 40}
+def test_site_nodes_dict_supported_processors():
+    assert site_nodes_dict['NCCS'] == {'mil': 120}
     assert site_nodes_dict['NAS'] == {
         'bro': 24, 'sky': 40, 'cas': 40, 'rom': 120, 'mil': 120, 'tur': 240,
     }
+
+
+def test_nccs_processor_choices_only_offer_milan(monkeypatch):
+    monkeypatch.setitem(process_questions.envdict, 'site', 'NCCS')
+    questions = {'processor': SimpleNamespace(choices=[])}
+    process_questions.Handle.processor_choices(questions, 'processor')
+    assert questions['processor'].choices == ['mil']
 
 
 def _make_setup(tmp_path, monkeypatch, site, **exp_overrides):
@@ -37,7 +37,7 @@ def _make_setup(tmp_path, monkeypatch, site, **exp_overrides):
     return SetupGCM(cfg)
 
 
-@pytest.mark.parametrize('processor, cpus', [('mil', 120), ('cas', 40)])
+@pytest.mark.parametrize('processor, cpus', [('mil', 120)])
 def test_nccs_set_num_CPUs_honors_answer(tmp_path, monkeypatch, processor, cpus):
     exp = _make_setup(tmp_path, monkeypatch, 'NCCS', processor=processor)
     exp.set_num_CPUs()
@@ -52,10 +52,12 @@ def test_nccs_set_num_CPUs_defaults_to_mil(tmp_path, monkeypatch):
     assert exp.expConfig['processor'] == 'mil'
 
 
-def test_nccs_set_num_CPUs_rejects_unknown_processor(tmp_path, monkeypatch):
-    exp = _make_setup(tmp_path, monkeypatch, 'NCCS', processor='xeon')
-    with pytest.raises(SystemExit):
+@pytest.mark.parametrize('processor', ['xeon', 'cas'])
+def test_nccs_set_num_CPUs_rejects_unsupported_processor(tmp_path, monkeypatch, processor):
+    exp = _make_setup(tmp_path, monkeypatch, 'NCCS', processor=processor)
+    with pytest.raises(SystemExit) as exc:
         exp.set_num_CPUs()
+    assert exc.value.code == 1
 
 
 @pytest.mark.parametrize('processor, cpus, expected', [

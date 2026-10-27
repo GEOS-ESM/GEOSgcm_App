@@ -6,6 +6,7 @@ import sys
 import glob
 import math
 import shutil
+import shlex
 import subprocess
 import yaml
 import argparse
@@ -51,6 +52,7 @@ class SetupGCM:
         self.exp_dir            = self.expConfig['exp_dir']
         self.restart_by_oserver = 'NO'
         self.several_tries      = ''
+        self.mpi_environment    = {}
         self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text()
         self.linkx              = False
 
@@ -130,11 +132,8 @@ class SetupGCM:
 
     def set_num_CPUs(self):
         if envdict['site'] == 'NCCS':
-            # Upstream gcm_setup ASKPROC (gcm_setup:453-458): mil (Milan,
-            # default) uses 120 of 128 cores/node, cas (Cascade Lake) uses
-            # 40 of 46.  The processor question was already answered by
-            # ask_questions() -- honor it (the old loop-over-the-map kept
-            # only the last entry and could never yield 'mil').
+            # Milan uses 120 of 128 cores/node; NCCS Cascade Lake is retired.
+            # Honor the processor selected by ask_questions().
             node_map = site_nodes_dict['NCCS']
             proc = self.expConfig.get('processor') or 'mil'
             if proc not in node_map:
@@ -435,11 +434,8 @@ class SetupGCM:
 
         # load mpi config from YAML
         mpidict = read_yaml_file_full(f"{pathdict['config']}/mpi_config.yaml")
-        #with open(f"{pathdict['config']}/mpi_config.yaml") as file:
-        #    mpidict = yaml.load(file, Loader=yaml.FullLoader)
-
         # retrieve config from correlating mpi setting being used
-        self.mpi_config = mpidict.get(envdict['mpi'])
+        self.mpi_environment = dict(mpidict.get(envdict['mpi']) or {})
 
         # restart by oserver if using openmpi or mvapich
         if envdict['mpi'] == 'openmpi' or envdict['mpi'] == 'mvapich':
@@ -453,7 +449,7 @@ class SetupGCM:
             # to run. We believe this is due to LD_PRELOAD. For now we only set
             # this for coupled runs.
             if self.ocean['running_ocean']:
-                self.ocean['mpt_shepherd'] = "setenv MPI_SHEPHERD true"
+                self.mpi_environment['MPI_SHEPHERD'] = 'true'
 
             # Also, for low res runs (c12, c24, c48) at NAS with MPT,
             # MPT has an issue with writing restarts on a single node
@@ -465,7 +461,7 @@ class SetupGCM:
                 self.restart_by_oserver = 'YES'
 
         if envdict['mpi'] == 'intelmpi' and (envdict['site'] == 'NCCS' or envdict['site'] == 'NAS'):
-            self.mpi_config += f"\n{mpidict.get('intelmpi_NASA')}"
+            self.mpi_environment.update(mpidict['intelmpi_NASA'])
 
         # Check for gwd_internal for Ridge Scheme
         # For ICA and NL3 the gwd files are in a non-bcs location
@@ -634,14 +630,7 @@ class SetupGCM:
 
     # Modify MOM input files to match HEARTBEAT
     def config_heartbeat(self):
-        # Upstream gcm_setup sets `DT = $HEARTBEAT` and, for coupled runs,
-        # `OCEAN_DT = $HEARTBEAT` ("the ocean model must have the same time
-        # step as the atmosphere" -- gcm_setup:1360-1365), then patches
-        # ice_in/MOM_override with $OCEAN_DT (gcm_setup:2637-2656).
-        # atmos['dt'] is the HEARTBEAT_DT answer. atmos['dt_ocean'] is
-        # OGCM_RUN_DT instead: it is a catalog value that heartbeat_sync
-        # re-writes to HEARTBEAT_DT in scratch at run time, so it must not
-        # be used here (it is an int, which also broke the concatenation).
+        # Coupled ocean and sea ice use HEARTBEAT_DT, including user overrides.
         ocean_dt = str(self.atmos['dt'])
 
         # We need to change the dt in ice_in for CICE6
@@ -831,6 +820,9 @@ class SetupGCM:
             'install_path': str(pathdict['install']),
             'bin_path': str(pathdict['bin']),
             'etc_path': str(pathdict['etc']),
+            'stage_restarts_in_scratch': 'copy',
+            'print_run_environment': False,
+            'cpus_per_node': None,
         }
 
         '''
@@ -856,7 +848,21 @@ class SetupGCM:
         exp_yaml_fname = Path(self.exp_dir) / f"run_{self.expConfig['experiment_id']}.yaml"
         #exp_yaml_dict = {k: _resolve(k) for k in exp_yaml_file_vars}
 
+        # Shell syntax belongs only in legacy CSH template context, not in
+        # the Python runner's configuration. Copy ocean to avoid mutating self.
+        jinja_dict.pop('mpi_config', None)
+        jinja_dict['ocean'] = dict(self.ocean)
+        jinja_dict['ocean'].pop('mpt_shepherd', None)
         write_dict_into_yaml(exp_yaml_fname, jinja_dict)
+
+        # Archive/post/forecast scripts still use CSH. Derive their settings
+        # from the same mapping so there is only one source of MPI defaults.
+        jinja_dict['mpi_config'] = '\n'.join(
+            f'unsetenv {name}' if value is None else
+            f'setenv {name} {shlex.quote(value)}'
+            for name, value in self.mpi_environment.items()
+        )
+        jinja_dict['ocean']['mpt_shepherd'] = ''
 
         # csh-name aliases.  Upstream gcm_setup rendered every template
         # through one big sed table of UPPER_CASE names (gcm_setup:2091-2327)
@@ -947,12 +953,6 @@ class SetupGCM:
         os.rename(f"{exp_dir}/AGCM.rc.tmpl", f"{exp_dir}/AGCM.rc")
         os.rename(f"{exp_dir}/{self.ocean['history_template']}", f"{exp_dir}/HISTORY.rc")
 
-        # write initial cap_restart (segment start date) if absent
-        cap_restart_path = os.path.join(exp_dir, "cap_restart")
-        if not os.path.exists(cap_restart_path):
-            with open(cap_restart_path, "w") as f:
-                f.write(f"{self.begin_date}\n")
-
         # update file permissions
         os.chmod(f"{exp_dir}/CAP.rc", 0o755)
         os.chmod(f"{exp_dir}/fvcore_layout.rc", 0o755)
@@ -986,4 +986,3 @@ class Exceptions:
     # This function will clean output files if script is interrupted
     def cleanup():
         pass
-
