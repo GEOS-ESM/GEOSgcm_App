@@ -27,7 +27,7 @@ def segment_run(tmp_path, monkeypatch):
             "configure_gwd_restarts", "ensure_tile_bin",
             "validate_openwater_tiles", "check_merra2ox_dates", "configure_replay",
         ],
-        "mpi_env": ["apply_setenv_block"],
+        "mpi_env": ["apply_mpi_environment"],
         "env_builder": ["setup_omp_env", "teardown_omp_env"],
         "mpi_runner": ["run_gcm"],
         "stage_restarts": ["read_edate"],
@@ -97,6 +97,13 @@ def test_print_environment_setting_reaches_launcher(segment_run, setting):
         config['print_run_environment'] = setting
     gcm_run.execute('run_test.yaml', config)
     assert mocks['run_gcm'].call_args.kwargs['print_run_environment'] is (setting is True)
+
+
+def test_mpi_environment_reaches_runtime_helper(segment_run):
+    config, mocks = segment_run
+    config['mpi_environment'] = {'MPI_TEST': '12', 'PMI_RANK': None}
+    gcm_run.execute('run_test.yaml', config)
+    mocks['apply_mpi_environment'].assert_called_once_with(config)
 
 
 @pytest.mark.parametrize("setting", [None, False])

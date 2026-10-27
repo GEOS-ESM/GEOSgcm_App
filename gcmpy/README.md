@@ -63,6 +63,52 @@ homogeneous `select` request, not heterogeneous `+`-separated chunks.
 This does not resize an already-running job. Change the layout before
 submission; an insufficient existing allocation still fails the runtime check.
 
+## MPI environment settings
+
+New experiments include a top-level `mpi_environment` mapping in
+`run_<expid>.yaml`, populated with the selected MPI-stack/site defaults:
+
+```yaml
+mpi_environment:
+  I_MPI_ADJUST_ALLREDUCE: "12"
+  I_MPI_ADJUST_GATHERV: "3"
+  I_MPI_FABRICS: "shm:ofi"
+  I_MPI_OFI_PROVIDER: "psm3"
+  FI_PSM3_CONN_TIMEOUT: "120"
+  # I_MPI_DEBUG: "9"
+```
+
+Edit this mapping before the next invocation; no rerun of setup is needed.
+Values must be strings or `null`: quote numbers and boolean-like values such
+as `"true"` and `"yes"`. An empty string (`""`) sets an empty environment value;
+`null` removes an inherited variable. To remove an override altogether, delete
+its entry (the inherited environment then applies). Use `mpi_environment: {}`
+for no overrides. Values are literal: do not add `setenv`/`export`, shell quoting,
+or `$VARIABLE` substitutions. YAML quotation marks are syntax, not part of the
+value. These settings control environment variables, not MPI command-line flags.
+
+For example, MPT defaults include:
+
+```yaml
+mpi_environment:
+  MPI_MEMMAP_OFF: ""
+  PMI_RANK: null
+  MPI_SHEPHERD: "true"  # Enabled by setup only for coupled MPT runs
+```
+
+Existing experiments using `mpi_config` and `ocean.mpt_shepherd` shell-style
+blocks remain supported, including valueless `setenv` and literal-name
+`unsetenv` statements. If both old blocks and the new mapping are present, the
+old blocks are applied first, and mapping entries override them. An empty
+mapping does not disable legacy blocks; remove those blocks when migrating.
+The legacy parser does not perform general shell evaluation or unquoting.
+Newly generated YAML omits those shell-style fields. Legacy CSH post/archive/
+forecast templates still receive shell commands derived from the same mapping
+at setup time; editing run YAML later affects the Python runner, not those
+already-rendered scripts.
+
+Use `print_run_environment: true` to inspect the effective launch environment.
+
 ## Print the model-launch environment
 
 To print the environment passed to the MPI launcher, add this at the top

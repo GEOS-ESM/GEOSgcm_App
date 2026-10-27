@@ -16,6 +16,7 @@ would have written.
 from pathlib import Path
 
 import yaml
+import pytest
 
 import gcmpy.setup_tools.setup_main as sm
 from gcmpy.setup_tools.setup_main import SetupGCM
@@ -78,6 +79,66 @@ def test_generated_run_yaml_defaults_environment_logging_off(tmp_path, monkeypat
     setup.template()
     config = yaml.safe_load((exp_dir / 'run_test_exp.yaml').read_text())
     assert config['print_run_environment'] is False
+
+
+@pytest.mark.parametrize('site', ['NCCS', 'NAS', 'DESKTOP'])
+@pytest.mark.parametrize('mpi', ['intelmpi', 'openmpi', 'mvapich', 'mpich', 'mpt'])
+def test_generated_run_yaml_uses_mpi_mapping(tmp_path, monkeypatch, site, mpi):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    mpi_settings = yaml.safe_load(
+        (Path(sm.__file__).parent / 'config' / 'mpi_config.yaml').read_text()
+    )
+    monkeypatch.setitem(sm.pathdict, 'config', Path(sm.__file__).parent / 'config')
+    monkeypatch.setitem(sm.envdict, 'mpi', mpi)
+    monkeypatch.setitem(sm.envdict, 'site', site)
+    setup.gwdrs_dir = str(tmp_path)
+    setup.mpistacksettings()
+    # Exercise the actual legacy templates, not a second hand-written renderer.
+    repo = Path(sm.__file__).resolve().parents[3]
+    templates = ['gcm_post.j', 'gcm_archive.j', 'gcm_forecast.tmpl']
+    for template in templates:
+        (exp_dir / template).write_text((repo / template).read_text())
+    setup.templates = templates
+    setup.template()
+    text = (exp_dir / 'run_test_exp.yaml').read_text()
+    config = yaml.safe_load(text)
+    expected = dict(mpi_settings[mpi] or {})
+    if mpi == 'intelmpi' and site in ('NCCS', 'NAS'):
+        expected.update(mpi_settings['intelmpi_NASA'])
+    if mpi == 'mpt':
+        expected['MPI_SHEPHERD'] = 'true'
+    assert config['mpi_environment'] == expected
+    assert 'mpi_config' not in config
+    assert 'mpt_shepherd' not in config['ocean']
+    assert 'setenv ' not in text
+    assert 'unsetenv ' not in text
+    for template in templates:
+        rendered = (exp_dir / template).read_text()
+        assert '{{ mpi_config }}' not in rendered
+        if mpi == 'mpt':
+            assert "setenv MPI_MEMMAP_OFF ''\n" in rendered
+            assert 'unsetenv PMI_RANK\n' in rendered
+            assert rendered.count('setenv MPI_SHEPHERD true') == 1
+        if mpi == 'openmpi':
+            assert "setenv OMPI_MCA_sharedfp '^lockedfile,individual'" in rendered
+        if mpi == 'intelmpi' and site in ('NCCS', 'NAS'):
+            assert 'setenv I_MPI_FABRICS shm:ofi' in rendered
+
+
+def test_uncoupled_mpt_does_not_enable_shepherd(tmp_path, monkeypatch):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    monkeypatch.setitem(sm.pathdict, 'config', Path(sm.__file__).parent / 'config')
+    monkeypatch.setitem(sm.envdict, 'mpi', 'mpt')
+    setup.ocean['running_ocean'] = False
+    setup.gwdrs_dir = str(tmp_path)
+    setup.mpistacksettings()
+    assert 'MPI_SHEPHERD' not in setup.mpi_environment
+    assert setup.several_tries == '/u/scicon/tools/bin/several_tries'
+    assert setup.restart_by_oserver == 'YES'
 
 
 def test_plotocn_and_confocn_render_csh_names(tmp_path, monkeypatch):

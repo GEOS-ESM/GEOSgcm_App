@@ -555,10 +555,9 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
     check_merra2ox_dates(scratch_dir)
 
     # gcm_run.j:955-963 -- MPI environment variables.
-    from gcmpy.run_tools.mpi_env import apply_setenv_block
+    from gcmpy.run_tools.mpi_env import apply_mpi_environment
 
-    apply_setenv_block(run_config.get("mpi_config"))
-    apply_setenv_block(run_config["ocean"].get("mpt_shepherd"))
+    apply_mpi_environment(run_config)
 
     # gcm_run.j:961-963 -- run bundleParser.py.
     subprocess.run(["python3", "bundleParser.py"], cwd=scratch_dir, check=True)

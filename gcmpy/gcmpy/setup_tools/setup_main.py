@@ -6,6 +6,7 @@ import sys
 import glob
 import math
 import shutil
+import shlex
 import subprocess
 import yaml
 import argparse
@@ -51,6 +52,7 @@ class SetupGCM:
         self.exp_dir            = self.expConfig['exp_dir']
         self.restart_by_oserver = 'NO'
         self.several_tries      = ''
+        self.mpi_environment    = {}
         self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text()
         self.linkx              = False
 
@@ -432,11 +434,8 @@ class SetupGCM:
 
         # load mpi config from YAML
         mpidict = read_yaml_file_full(f"{pathdict['config']}/mpi_config.yaml")
-        #with open(f"{pathdict['config']}/mpi_config.yaml") as file:
-        #    mpidict = yaml.load(file, Loader=yaml.FullLoader)
-
         # retrieve config from correlating mpi setting being used
-        self.mpi_config = mpidict.get(envdict['mpi'])
+        self.mpi_environment = dict(mpidict.get(envdict['mpi']) or {})
 
         # restart by oserver if using openmpi or mvapich
         if envdict['mpi'] == 'openmpi' or envdict['mpi'] == 'mvapich':
@@ -450,7 +449,7 @@ class SetupGCM:
             # to run. We believe this is due to LD_PRELOAD. For now we only set
             # this for coupled runs.
             if self.ocean['running_ocean']:
-                self.ocean['mpt_shepherd'] = "setenv MPI_SHEPHERD true"
+                self.mpi_environment['MPI_SHEPHERD'] = 'true'
 
             # Also, for low res runs (c12, c24, c48) at NAS with MPT,
             # MPT has an issue with writing restarts on a single node
@@ -462,7 +461,7 @@ class SetupGCM:
                 self.restart_by_oserver = 'YES'
 
         if envdict['mpi'] == 'intelmpi' and (envdict['site'] == 'NCCS' or envdict['site'] == 'NAS'):
-            self.mpi_config += f"\n{mpidict.get('intelmpi_NASA')}"
+            self.mpi_environment.update(mpidict['intelmpi_NASA'])
 
         # Check for gwd_internal for Ridge Scheme
         # For ICA and NL3 the gwd files are in a non-bcs location
@@ -848,7 +847,21 @@ class SetupGCM:
         exp_yaml_fname = Path(self.exp_dir) / f"run_{self.expConfig['experiment_id']}.yaml"
         #exp_yaml_dict = {k: _resolve(k) for k in exp_yaml_file_vars}
 
+        # Shell syntax belongs only in legacy CSH template context, not in
+        # the Python runner's configuration. Copy ocean to avoid mutating self.
+        jinja_dict.pop('mpi_config', None)
+        jinja_dict['ocean'] = dict(self.ocean)
+        jinja_dict['ocean'].pop('mpt_shepherd', None)
         write_dict_into_yaml(exp_yaml_fname, jinja_dict)
+
+        # Archive/post/forecast scripts still use CSH. Derive their settings
+        # from the same mapping so there is only one source of MPI defaults.
+        jinja_dict['mpi_config'] = '\n'.join(
+            f'unsetenv {name}' if value is None else
+            f'setenv {name} {shlex.quote(value)}'
+            for name, value in self.mpi_environment.items()
+        )
+        jinja_dict['ocean']['mpt_shepherd'] = ''
 
         # csh-name aliases.  Upstream gcm_setup rendered every template
         # through one big sed table of UPPER_CASE names (gcm_setup:2091-2327)
