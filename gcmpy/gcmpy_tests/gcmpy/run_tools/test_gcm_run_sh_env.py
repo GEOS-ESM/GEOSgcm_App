@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-GCM_RUN_SH = Path(__file__).resolve().parents[4] / "gcm_run.sh"
+GCM_RUN_SH = Path(__file__).resolve().parents[3] / "gcm_run.sh"
 LD_VAR = "DYLD_LIBRARY_PATH" if os.uname().sysname == "Darwin" else "LD_LIBRARY_PATH"
 
 

@@ -28,7 +28,6 @@ file (GLOB templates CONFIGURE_DEPENDS *.tmpl)
 
 set (programs
    gcm_run.j
-   gcm_run.sh
    gcm_regress.j
    gcm_post.j
    gcm_archive.j
