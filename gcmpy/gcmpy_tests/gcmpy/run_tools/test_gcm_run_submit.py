@@ -20,6 +20,7 @@ import pytest
 
 import gcm_run
 from gcmpy.batch_tools.computing_sites import site_nodes_dict
+from gcmpy.run_tools.run_resources import _resolve_ncpus_per_node
 
 BIN_PATH = "/fake/install/bin"
 
@@ -299,3 +300,109 @@ def test_pbs_rejects_heterogeneous_select(captured_sbatch):
     with pytest.raises(ValueError, match='homogeneous'):
         gcm_run.submit_job(Path('run_exp.yaml'), cfg)
     assert captured_sbatch == {}
+
+
+@pytest.mark.parametrize('scheduler', ['sbatch', 'qsub'])
+@pytest.mark.parametrize('per_node,model_nodes', [(60, 2), (40, 3), (120, 1)])
+@pytest.mark.parametrize('io_nodes', [0, 2])
+def test_cpus_per_node_overrides_saved_resources(captured_sbatch, monkeypatch, scheduler,
+                                               per_node, model_nodes, io_nodes):
+    cfg = _pbs_config() if scheduler == 'qsub' else _run_config()
+    cfg['cpus_per_node'] = per_node
+    cfg['expConfig']['io_server'] = int(io_nodes > 0)
+    # Neither inherited allocation nor stale setup metadata drives submission.
+    monkeypatch.setenv('SLURM_NTASKS_PER_NODE', '120')
+    monkeypatch.setenv('SLURM_NTASKS', '120')
+    cfg['atmos'] = {'nx': 10, 'ny': 60}
+    Path('AGCM.rc').write_text(
+        f'NX: 4\nNY: 24\nIOSERVER_NODES: {io_nodes}\nNUM_BACKEND_PES: 1\n'
+    )
+    original_run_p = cfg['run_p']
+    if scheduler == 'sbatch':
+        cfg['run_p'] += ' --ntasks=240 --exclusive'
+    else:
+        cfg['run_p'] += ':mem=100gb'
+
+    gcm_run.submit_job(Path('run_exp.yaml'), cfg)
+
+    cmd = captured_sbatch['cmd']
+    if scheduler == 'sbatch':
+        assert f'--nodes={model_nodes + io_nodes}' in cmd
+        assert f'--ntasks-per-node={per_node}' in cmd
+        expected_total = (model_nodes + io_nodes) * per_node if io_nodes else 96
+        assert f'--ntasks={expected_total}' in cmd
+        assert '--exclusive' in cmd
+        assert sum(arg.startswith('--ntasks-per-node=') for arg in cmd) == 1
+        assert cfg['run_p'] == original_run_p + ' --ntasks=240 --exclusive'
+    else:
+        assert (
+            f'select={model_nodes + io_nodes}:ncpus={per_node}:mpiprocs={per_node}'
+            ':model=mil:mem=100gb' in cmd
+        )
+        assert cfg['run_p'] == original_run_p + ':mem=100gb'
+
+
+@pytest.mark.parametrize('scheduler', ['sbatch', 'qsub'])
+@pytest.mark.parametrize('value', [0, -1, True, False, 60.0, '60', '', [], {}])
+def test_invalid_cpus_per_node_does_not_submit(captured_sbatch, scheduler, value):
+    cfg = _pbs_config() if scheduler == 'qsub' else _run_config()
+    cfg['cpus_per_node'] = value
+    with pytest.raises(ValueError, match='cpus_per_node must be a positive YAML integer'):
+        gcm_run.submit_job(Path('run_exp.yaml'), cfg)
+    assert captured_sbatch == {}
+
+
+@pytest.mark.parametrize('scheduler', ['sbatch', 'qsub'])
+def test_null_cpus_per_node_preserves_legacy_request(captured_sbatch, scheduler):
+    cfg = _pbs_config() if scheduler == 'qsub' else _run_config()
+    gcm_run.submit_job(Path('run_exp.yaml'), cfg)
+    original_cmd = captured_sbatch['cmd']
+    cfg['cpus_per_node'] = None
+    gcm_run.submit_job(Path('run_exp.yaml'), cfg)
+    assert captured_sbatch['cmd'] == original_cmd
+
+
+@pytest.mark.parametrize('scheduler', ['sbatch', 'qsub'])
+def test_resubmission_uses_cpus_per_node_override(captured_sbatch, monkeypatch, scheduler):
+    cfg = _pbs_config() if scheduler == 'qsub' else _run_config()
+    cfg['cpus_per_node'] = 60
+    Path('AGCM.rc').write_text('NX: 4\nNY: 24\n')
+    monkeypatch.setattr(gcm_run, 'run_segments', lambda *args: True)
+    gcm_run.execute(Path('run_exp.yaml'), cfg)
+    cmd = captured_sbatch['cmd']
+    if scheduler == 'sbatch':
+        assert '--nodes=2' in cmd and '--ntasks-per-node=60' in cmd
+    else:
+        assert 'select=2:ncpus=60:mpiprocs=60:model=mil' in cmd
+
+
+def test_cpus_per_node_uses_coupled_layout(captured_sbatch):
+    cfg = _run_config(cpus_per_node=60, ocean={'coupled': ''})
+    Path('AGCM.rc').write_text('NX: 4\nNY: 24\nOGCM.NX: 11\nOGCM.NY: 60\nOGCM.LM: 75\n')
+    gcm_run.submit_job(Path('run_exp.yaml'), cfg)
+    assert '--nodes=11' in captured_sbatch['cmd']
+
+
+@pytest.mark.parametrize('select', ['select=99:ncpus=120:model=mil', 'select=99:model=mil'])
+def test_pbs_override_adds_missing_per_node_fields(captured_sbatch, select):
+    cfg = _pbs_config(cpus_per_node=60)
+    cfg['run_p'] = f'PBS -l {select}'
+    gcm_run.submit_job(Path('run_exp.yaml'), cfg)
+    request = next(arg for arg in captured_sbatch['cmd'] if arg.startswith('select='))
+    qualifiers = dict(part.split('=', 1) for part in request.split(':')[1:])
+    assert request.startswith('select=4:')
+    assert qualifiers == {'ncpus': '60', 'mpiprocs': '60', 'model': 'mil'}
+
+
+@pytest.mark.parametrize('scheduler', ['sbatch', 'qsub'])
+def test_runtime_uses_actual_allocation_not_submission_override(monkeypatch, tmp_path, scheduler):
+    monkeypatch.delenv('SLURM_NTASKS_PER_NODE', raising=False)
+    monkeypatch.delenv('SLURM_CPUS_ON_NODE', raising=False)
+    monkeypatch.delenv('PBS_NODEFILE', raising=False)
+    if scheduler == 'sbatch':
+        monkeypatch.setenv('SLURM_NTASKS_PER_NODE', '120')
+    else:
+        nodefile = tmp_path / 'nodes'
+        nodefile.write_text('node1\n' * 120 + 'node2\n' * 120)
+        monkeypatch.setenv('PBS_NODEFILE', str(nodefile))
+    assert _resolve_ncpus_per_node(_run_config(cpus_per_node=60)) == 120

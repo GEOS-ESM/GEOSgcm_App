@@ -79,6 +79,8 @@ def test_generated_run_yaml_defaults_environment_logging_off(tmp_path, monkeypat
     setup.template()
     config = yaml.safe_load((exp_dir / 'run_test_exp.yaml').read_text())
     assert config['print_run_environment'] is False
+    assert 'cpus_per_node' in config
+    assert config['cpus_per_node'] is None
 
 
 @pytest.mark.parametrize('site', ['NCCS', 'NAS', 'DESKTOP'])

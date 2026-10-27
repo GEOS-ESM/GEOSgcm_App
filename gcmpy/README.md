@@ -55,12 +55,35 @@ Coupled runs use `OGCM.NX`/`OGCM.NY`, matching the model-launch resource logic.
 For example, changing 4×24 to 10×60 requests five model nodes at 120 tasks per
 node instead of one. Reducing the layout also reduces the request. The saved
 `atmos.nx/ny` and node count in `run_p` do not override the current layout.
-Tasks per node and other resource qualifiers remain configured in `run_p`
-(Slurm `--ntasks-per-node`, PBS `mpiprocs`/`ncpus`); NAS processor models and
-other select qualifiers are preserved. PBS supports the generated single,
-homogeneous `select` request, not heterogeneous `+`-separated chunks.
+To override the site's default MPI ranks per node, edit the top-level setting
+in **`run_<expid>.yaml`** (not the setup YAML):
 
-This does not resize an already-running job. Change the layout before
+```yaml
+cpus_per_node: 60
+```
+
+For `NX=4`, `NY=24`, this requests two model nodes at 60 ranks per node,
+even if the saved Milan resource string specifies 120. There is no need to
+edit `run_p` or its saved node count. The override applies to every submission
+and resubmission made by the Python runner. To submit from a login node:
+
+```bash
+python3 ./gcm_run.py --config run_<expid>.yaml
+```
+
+New experiments include `cpus_per_node: null`. Missing or `null` preserves
+the existing `run_p` setting (Slurm `--ntasks-per-node`, PBS `mpiprocs` falling
+back to `ncpus`, then `num_CPUs`). An override must be a positive, unquoted YAML
+integer. It replaces Slurm `--ntasks-per-node` or both PBS `ncpus` and `mpiprocs`;
+NAS processor models and other select qualifiers are preserved. This controls
+MPI ranks per node, not OpenMP threads per rank or physical node capacity.
+PBS supports the generated single, homogeneous `select` request, not
+heterogeneous `+`-separated chunks.
+
+This does not resize an already-running job or change the initial allocation
+when you invoke `sbatch`/`qsub` yourself: that allocation is controlled by the
+scheduler command's flags. Inside a job, resource checks use the actual
+allocation, not this override. Change the layout and override before runner-managed
 submission; an insufficient existing allocation still fails the runtime check.
 
 ## MPI environment settings

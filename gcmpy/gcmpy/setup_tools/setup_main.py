@@ -822,6 +822,7 @@ class SetupGCM:
             'etc_path': str(pathdict['etc']),
             'stage_restarts_in_scratch': 'copy',
             'print_run_environment': False,
+            'cpus_per_node': None,
         }
 
         '''

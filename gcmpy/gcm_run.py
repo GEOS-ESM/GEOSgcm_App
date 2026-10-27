@@ -119,6 +119,14 @@ def _sbatch_args_from_field(value) -> list:
     return value.split()
 
 
+def _cpus_per_node_override(run_config: dict) -> int | None:
+    """Validate the optional MPI-ranks-per-node submission override."""
+    value = run_config.get('cpus_per_node')
+    if value is not None and (type(value) is not int or value <= 0):
+        raise ValueError('cpus_per_node must be a positive YAML integer or null')
+    return value
+
+
 def submission_nodes(run_config: dict, per_node: int) -> tuple[int, int]:
     """Read the current layout without using the submitting job's allocation."""
     if per_node <= 0:
@@ -160,7 +168,9 @@ def build_sbatch_args(run_config: dict) -> list:
     options, other_args = parser.parse_known_args(
         _sbatch_args_from_field(run_config.get('run_p'))
     )
-    per_node = options.ntasks_per_node
+    per_node = _cpus_per_node_override(run_config)
+    if per_node is None:
+        per_node = options.ntasks_per_node
     if per_node is None:
         per_node = int(run_config['num_CPUs'])
     nodes, total_pes = submission_nodes(run_config, per_node)
@@ -198,9 +208,14 @@ def build_qsub_args(run_config: dict) -> list:
         raise ValueError('Expected one homogeneous PBS select request in run_p')
     select = selects[0]
     qualifiers = dict(part.split('=', 1) for part in select.split(':')[1:])
-    per_node = int(qualifiers.get('mpiprocs', qualifiers.get('ncpus', run_config['num_CPUs'])))
+    per_node = _cpus_per_node_override(run_config)
+    if per_node is None:
+        per_node = int(qualifiers.get('mpiprocs', qualifiers.get('ncpus', run_config['num_CPUs'])))
+    else:
+        # This control requests MPI ranks, not a hybrid ranks/threads layout.
+        qualifiers.update(ncpus=str(per_node), mpiprocs=str(per_node))
     nodes, _ = submission_nodes(run_config, per_node)
-    resized = re.sub(r'^select=\d+', f'select={nodes}', select)
+    resized = f'select={nodes}' + ''.join(f':{key}={value}' for key, value in qualifiers.items())
     resource_args[resource_args.index(select)] = resized
     return (
         field(f"{run_config['batch_time']}{run_config['run_t']}")
