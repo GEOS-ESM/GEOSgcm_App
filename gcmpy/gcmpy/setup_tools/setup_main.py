@@ -822,6 +822,7 @@ class SetupGCM:
             'bin_path': str(pathdict['bin']),
             'etc_path': str(pathdict['etc']),
             'stage_restarts_in_scratch': 'copy',
+            'print_run_environment': False,
         }
 
         '''

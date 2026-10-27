@@ -29,6 +29,23 @@ utility functions.
 
 ## Run-job allocation
 
+`gcm_run.py` is the user entry point. Inside an existing Slurm allocation, run:
+
+```bash
+python3 ./gcm_run.py --config run_<expid>.yaml
+```
+
+It can also be launched directly with `sbatch` (supply the desired scheduler
+resource flags before the script name):
+
+```bash
+sbatch [resource flags] ./gcm_run.py --config run_<expid>.yaml
+```
+
+Both paths automatically initialize the runtime environment, including
+`UDUNITS2_XML_PATH`, through the internal `gcm_run.sh` wrapper. Users do not
+need to source `g5_modules.sh` or invoke the wrapper themselves.
+
 `gcm_run.py` uses `sbatch` at NCCS and `qsub` at NAS, as selected by the
 experiment YAML's `batch_cmd`. Before each submission or resubmission it reads
 the current decomposition from `AGCM.rc` and recalculates the node count:
@@ -45,6 +62,29 @@ homogeneous `select` request, not heterogeneous `+`-separated chunks.
 
 This does not resize an already-running job. Change the layout before
 submission; an insufficient existing allocation still fails the runtime check.
+
+## Print the model-launch environment
+
+To print the environment passed to the MPI launcher, add this at the top
+level of the experiment's `run_<expid>.yaml`:
+
+```yaml
+print_run_environment: true
+```
+
+Before each launch attempt, the log includes a marked, alphabetically sorted
+`NAME=value` block, including module setup, `UDUNITS2_XML_PATH`, and any ocean
+preloads. This is the environment passed to the launcher, not a dump from
+each remote MPI rank. Omitting the setting or using `false` disables it.
+New experiments include `print_run_environment: false` explicitly.
+Use unquoted YAML booleans.
+
+Values with credential-like names (passwords, tokens, secrets, and keys) are
+redacted in the log only; the actual launch environment is unchanged.
+Redaction is name-based and cannot catch every possible secret, so review
+the log before sharing it. Embedded line breaks are escaped as `\n`/`\r`;
+other control characters use `\xNN` notation so terminal color settings
+and other escape sequences are displayed rather than executed.
 
 ## Stop after a test run
 

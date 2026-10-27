@@ -77,6 +77,59 @@ def test_submit_job_requires_bin_path():
         gcm_run.submit_job(Path("run_exp.yaml"), {})
 
 
+@pytest.mark.parametrize('scheduler_id', ['SLURM_JOB_ID', 'PBS_JOBID'])
+@pytest.mark.parametrize('previous_install', [None, '/another/install/bin'])
+def test_direct_job_initializes_runtime(monkeypatch, tmp_path, scheduler_id, previous_install):
+    bin_dir = tmp_path / 'install' / 'bin'
+    bin_dir.mkdir(parents=True)
+    wrapper = bin_dir / 'gcm_run.sh'
+    wrapper.write_text('# fake wrapper\n')
+    cfg = _run_config(bin_path=str(bin_dir))
+    monkeypatch.delenv('SLURM_JOB_ID', raising=False)
+    monkeypatch.delenv('PBS_JOBID', raising=False)
+    monkeypatch.delenv('GEOS_RUN_ENV_READY', raising=False)
+    if previous_install:
+        monkeypatch.setenv('GEOS_RUN_ENV_READY', previous_install)
+    monkeypatch.setenv(scheduler_id, '123')
+    monkeypatch.setenv('GEOSBIN', '/stale/install/bin')
+    monkeypatch.setattr(gcm_run, 'capture_arguments', lambda: SimpleNamespace(config='run_exp.yaml'))
+    monkeypatch.setattr(gcm_run, 'import_yaml', lambda path: cfg)
+    monkeypatch.setattr(gcm_run, 'execute', lambda *args: pytest.fail('Must initialize before executing'))
+
+    class ExecCalled(Exception):
+        pass
+
+    def fake_execve(executable, argv, env):
+        assert executable == '/bin/bash'
+        assert argv == ['bash', str(wrapper), str(Path('run_exp.yaml').resolve())]
+        assert env['GEOSBIN'] == str(bin_dir)
+        assert env[scheduler_id] == '123'
+        raise ExecCalled
+
+    monkeypatch.setattr(gcm_run.os, 'execve', fake_execve)
+    with pytest.raises(ExecCalled):
+        gcm_run.main()
+
+
+def test_initialized_runtime_does_not_reexec(monkeypatch):
+    monkeypatch.setenv('GEOS_RUN_ENV_READY', BIN_PATH)
+    monkeypatch.setattr(gcm_run.os, 'execve', lambda *args: pytest.fail('Already initialized'))
+    gcm_run.ensure_runtime_environment(Path('run_exp.yaml'), _run_config())
+
+
+def test_runtime_requires_bin_path():
+    with pytest.raises(KeyError, match='bin_path'):
+        gcm_run.ensure_runtime_environment(Path('run_exp.yaml'), {})
+
+
+def test_runtime_requires_wrapper(monkeypatch, tmp_path):
+    monkeypatch.delenv('GEOS_RUN_ENV_READY', raising=False)
+    with pytest.raises(FileNotFoundError, match='Cannot initialize runtime'):
+        gcm_run.ensure_runtime_environment(
+            Path('run_exp.yaml'), _run_config(bin_path=str(tmp_path)),
+        )
+
+
 def test_submit_job_builds_resource_flags(captured_sbatch):
     gcm_run.submit_job(Path("run_exp.yaml"), _run_config())
 
@@ -177,6 +230,7 @@ def test_missing_agcm_does_not_submit(captured_sbatch, scheduler):
 
 def test_pbs_job_enters_execute_instead_of_resubmitting(monkeypatch):
     cfg = _pbs_config()
+    monkeypatch.setenv('GEOS_RUN_ENV_READY', BIN_PATH)
     monkeypatch.delenv('SLURM_JOB_ID', raising=False)
     monkeypatch.setenv('PBS_JOBID', '123.pbs')
     monkeypatch.setattr(gcm_run, 'capture_arguments', lambda: SimpleNamespace(config='run_exp.yaml'))

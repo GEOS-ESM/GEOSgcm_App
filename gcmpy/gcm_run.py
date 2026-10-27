@@ -10,8 +10,10 @@
     gcm_run.sh job script via `sbatch` or `qsub`. Node counts are refreshed
     from AGCM.rc for every submission.
 
-  * If SLURM_JOB_ID or PBS_JOBID is set, we're inside an allocated batch job
-    (invoked by gcm_run.sh). We run the actual per-segment GCM run loop
+  * If SLURM_JOB_ID or PBS_JOBID is set, we're inside an allocation. Direct
+    Python invocations first initialize the runtime through gcm_run.sh;
+    users do not need to invoke that internal wrapper themselves.
+    We run the actual per-segment GCM run loop
     (staging restarts, emissions, ExtData, launching GEOSgcm.x, archiving
     restarts/checkpoints, ...), and -- if more segments remain --
     resubmit for the next segment using the same submit_job() code path
@@ -589,6 +591,7 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
         # (empty for uncoupled runs); run_gcm() resolves $GEOSDIR etc.
         ocean_preload=run_config.get("ocean", {}).get("preload") or None,
         max_attempts=3 if run_config.get("several_tries") else 1,
+        print_run_environment=run_config.get("print_run_environment", False),
     )
 
     # gcm_run.j:1107-1109 -- reset OpenMP threads.
@@ -717,13 +720,42 @@ def execute(config_path: Path, run_config: dict) -> None:
 # Entrypoint
 # ---------------------------------------------------------------------------
 
+def ensure_runtime_environment(config_path: Path, run_config: dict) -> None:
+    """Initialize the runtime for direct Python launches inside allocations.
+
+    A scheduler job ID does not imply gcm_run.sh has run: users may launch
+    this script with sbatch or directly inside an interactive allocation.
+    Re-exec through the internal wrapper so module changes, library paths,
+    stack limits, and UDUNITS setup all apply to the Python process too.
+    The wrapper marks completion to avoid an exec loop.
+    """
+    bin_path = run_config.get("bin_path")
+    if not bin_path:
+        raise KeyError("run_config is missing 'bin_path' (GEOSBIN)")
+    bin_path = str(bin_path)
+    if os.environ.get("GEOS_RUN_ENV_READY") == bin_path:
+        return
+
+    wrapper = Path(bin_path) / "gcm_run.sh"
+    if not wrapper.is_file():
+        raise FileNotFoundError(f"Cannot initialize runtime: {wrapper} not found")
+    env = os.environ.copy()
+    env["GEOSBIN"] = bin_path
+    os.execve(
+        "/bin/bash",
+        ["bash", str(wrapper), str(config_path.resolve())],
+        env,
+    )
+
+
 def main() -> None:
     args = capture_arguments()
     config_path = Path(args.config)
     run_config = import_yaml(config_path)
 
     if "SLURM_JOB_ID" in os.environ or "PBS_JOBID" in os.environ:
-        # We're running inside an allocated SLURM job (invoked by gcm_run.sh).
+        ensure_runtime_environment(config_path, run_config)
+        # We're running inside an allocation with the runtime initialized.
         # Batch resources (NCPUS, NUM_MODEL_NODES, ...) are only needed once
         # we're actually inside the running job, launching GEOSgcm.x.
         nx = run_config.get("atmos", {}).get("nx")

@@ -15,6 +15,8 @@ would have written.
 
 from pathlib import Path
 
+import yaml
+
 import gcmpy.setup_tools.setup_main as sm
 from gcmpy.setup_tools.setup_main import SetupGCM
 
@@ -66,6 +68,16 @@ def _coupled_setup(tmp_path, monkeypatch, exp_dir):
     setup.coupled_dir = '/coupled/bcs'
     setup.plot_t = '12:00:00'
     return setup
+
+
+def test_generated_run_yaml_defaults_environment_logging_off(tmp_path, monkeypatch):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    setup.templates = []
+    setup.template()
+    config = yaml.safe_load((exp_dir / 'run_test_exp.yaml').read_text())
+    assert config['print_run_environment'] is False
 
 
 def test_plotocn_and_confocn_render_csh_names(tmp_path, monkeypatch):

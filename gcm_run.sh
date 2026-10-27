@@ -102,4 +102,7 @@ fi
 #                 Hand off to the Python orchestrator
 #######################################################################
 
+# Mark completion so direct Python launches can initialize through this
+# internal wrapper without entering an exec loop.
+export GEOS_RUN_ENV_READY="${GEOSBIN}"
 exec python3 "${GEOSBIN}/gcmpy/gcm_run.py" --config "${CONFIG_FILE}"

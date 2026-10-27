@@ -90,6 +90,15 @@ def test_stop_after_successful_run(segment_run, capsys):
     assert "stop_after_run enabled: leaving model outputs in" in capsys.readouterr().out
 
 
+@pytest.mark.parametrize('setting', [None, False, True])
+def test_print_environment_setting_reaches_launcher(segment_run, setting):
+    config, mocks = segment_run
+    if setting is not None:
+        config['print_run_environment'] = setting
+    gcm_run.execute('run_test.yaml', config)
+    assert mocks['run_gcm'].call_args.kwargs['print_run_environment'] is (setting is True)
+
+
 @pytest.mark.parametrize("setting", [None, False])
 def test_normal_workflow_without_stop_flag(segment_run, setting):
     config, mocks = segment_run

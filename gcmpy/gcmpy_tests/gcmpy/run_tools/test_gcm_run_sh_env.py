@@ -13,6 +13,7 @@ import os
 import resource
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -35,7 +36,8 @@ def _make_fake_install(tmp_path: Path) -> Path:
         "print(f'CONFIG={sys.argv[-1]}')\n"
         "print(f'CWD={os.getcwd()}')\n"
         "for key in ('ARCH', 'GEOSDIR', 'GEOSUTIL', 'GEOSETC', 'SITE',\n"
-        "            'GEOSBIN', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH', 'PATH', 'BASEDIR'):\n"
+        "            'GEOSBIN', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH', 'PATH', 'BASEDIR',\n"
+        "            'GEOS_RUN_ENV_READY', 'UDUNITS2_XML_PATH'):\n"
         "    print(f\"{key}={os.environ.get(key, '')}\")\n"
         "soft, hard = resource.getrlimit(resource.RLIMIT_STACK)\n"
         "print(f'STACK_SOFT={soft}')\n"
@@ -93,6 +95,35 @@ def test_gcm_run_sh_exports_arch_env(tmp_path):
     assert env["GEOSUTIL"] == str(bin_dir.parent)
     assert env["GEOSETC"] == str(bin_dir.parent / "etc")
     assert env["SITE"] == "discover"
+    assert env["GEOS_RUN_ENV_READY"] == str(bin_dir)
+
+
+def test_gcm_run_sh_exports_module_environment(tmp_path):
+    bin_dir = _make_fake_install(tmp_path)
+    xml_path = tmp_path / "udunits2.xml"
+    (bin_dir / "g5_modules.sh").write_text(
+        f'export UDUNITS2_XML_PATH="{xml_path}"\n'
+    )
+    env = _run_gcm_run_sh(bin_dir)
+    assert env["UDUNITS2_XML_PATH"] == str(xml_path)
+
+
+def test_python_bootstrap_reaches_initialized_python(tmp_path):
+    bin_dir = _make_fake_install(tmp_path)
+    shutil.copy(GCM_RUN_SH, bin_dir / 'gcm_run.sh')
+    xml_path = tmp_path / 'udunits2.xml'
+    (bin_dir / 'g5_modules.sh').write_text(
+        f'export UDUNITS2_XML_PATH="{xml_path}"\n'
+    )
+    result = subprocess.run(
+        [sys.executable, '-c',
+         'from pathlib import Path; import gcm_run; '
+         f'gcm_run.ensure_runtime_environment(Path("run_exp.yaml"), {{"bin_path": {str(bin_dir)!r}}})'],
+        env={'PATH': os.environ['PATH'], 'SLURM_JOB_ID': '123'},
+        capture_output=True, text=True, check=True,
+    )
+    assert f'UDUNITS2_XML_PATH={xml_path}' in result.stdout.splitlines()
+    assert f'GEOS_RUN_ENV_READY={bin_dir}' in result.stdout.splitlines()
 
 
 def test_gcm_run_sh_prepends_geosdir_lib(tmp_path):
