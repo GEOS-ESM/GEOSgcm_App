@@ -2972,11 +2972,37 @@ set OLDEXPDIR=`awk '/^setenv +EXPDIR/ {print $3}' $CLONEDIR/gcm_run.j`
 set   OLDUSER=`/bin/ls -l $CLONEDIR/gcm_run.j | awk '{print $3}'`
 
 setenv ARCH      `uname`
-setenv GEOSDIR  /`grep "setenv GEOSDIR" $CLONEDIR/gcm_run.j | cut -d'/' -f2-`
+# Read only an active assignment, never comments or shell expressions.
+# Require one literal absolute path (optionally quoted, without whitespace).
+set OLDGEOSDIR = ( `awk '\
+   /^[[:space:]]*setenv[[:space:]]+GEOSDIR([[:space:]]|$)/ {\
+      count++;\
+      path = $3;\
+      quote = substr(path, 1, 1);\
+      if (quote == "\042" || quote == "\047") {\
+         if (length(path) < 2 || substr(path, length(path), 1) != quote) invalid = 1;\
+         path = substr(path, 2, length(path) - 2);\
+      }\
+      if (path !~ /^\// || path ~ /[\044\140\042\047]/) invalid = 1;\
+      if (NF > 3 && $4 !~ /^#/) invalid = 1;\
+   }\
+   END { if (count == 1 && invalid == 0) print path }\
+' "$CLONEDIR/gcm_run.j"` )
+if ( $#OLDGEOSDIR != 1 ) then
+   echo "Cannot determine GEOSDIR from ${CLONEDIR}/gcm_run.j."
+   echo "Expected exactly one uncommented setenv GEOSDIR assignment with a literal absolute path (without whitespace)."
+   exit 1
+endif
+setenv GEOSDIR  "$OLDGEOSDIR[1]"
+unset OLDGEOSDIR
 setenv GEOSSRC  ${GEOSDIR}
 setenv GEOSBIN  ${GEOSDIR}/bin
 setenv GEOSETC  ${GEOSDIR}/etc
 setenv GEOSUTIL ${GEOSDIR}
+if ( ! -r "${GEOSETC}/.AGCM_VERSION" ) then
+   echo "Cannot read ${GEOSETC}/.AGCM_VERSION from the cloned experiment's GEOSDIR."
+   exit 1
+endif
 setenv GCMVER   `cat ${GEOSETC}/.AGCM_VERSION`
 
 # -------------------------------------------------
