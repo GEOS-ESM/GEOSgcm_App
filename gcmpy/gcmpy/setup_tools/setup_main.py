@@ -825,35 +825,33 @@ class SetupGCM:
             'cpus_per_node': None,
         }
 
-        '''
-        # select specific variables to be seen in the experiment yaml
-        exp_yaml_file_vars = [
-                'site', 'exp_dir', 'install_path',
-                'atmos.nx', 'atmos.ny',
-                'expConfig.io_server',
-                'expConfig.processor', 'num_CPUs',
-                'atmos.im', 'atmos.jm', 'atmos.lm', 'ocean.IM', 'ocean.JM',
-                'atmos.dt', 'atmos.conv_dt', 'atmos.chem_dt', 'atmos.dt_solar',
-                'atmos.dt_irrad', 'atmos.dt_ocean'
-        ]
-
-
-        def _resolve(dotted_key):
-            obj = jinja_dict
-            for part in dotted_key.split('.'):
-                obj = obj[part] if isinstance(obj, dict) else getattr(obj, part)
-            return obj
-        '''
-
+        # Keep the full context for templates, but only runtime and known
+        # experiment-tool settings in the generated Python runner config.
+        catalog_path = Path(pathdict['config']) / 'run_yaml_fields.yaml'
+        with catalog_path.open() as catalog_file:
+            catalog = yaml.safe_load(catalog_file)
+        if (not isinstance(catalog, dict) or set(catalog) != {'top_level', 'nested'}
+                or not isinstance(catalog['top_level'], list) or not catalog['top_level']
+                or not all(isinstance(key, str) and key for key in catalog['top_level'])
+                or not isinstance(catalog['nested'], dict) or not catalog['nested']
+                or not all(isinstance(key, str) and key and isinstance(fields, list)
+                           and fields and all(isinstance(field, str) and field for field in fields)
+                           for key, fields in catalog['nested'].items())
+                or set(catalog['top_level']) & set(catalog['nested'])):
+            raise ValueError(f'Invalid run YAML field catalog: {catalog_path}')
+        run_keys = set(catalog['top_level'])
+        nested_keys = catalog['nested']
+        run_dict = {
+            key: ({name: value for name, value in values.items() if name in nested_keys[key]}
+                  if key in nested_keys else values)
+            for key, values in jinja_dict.items()
+            if key in run_keys or key in nested_keys
+        }
         exp_yaml_fname = Path(self.exp_dir) / f"run_{self.expConfig['experiment_id']}.yaml"
-        #exp_yaml_dict = {k: _resolve(k) for k in exp_yaml_file_vars}
+        write_dict_into_yaml(exp_yaml_fname, run_dict)
 
-        # Shell syntax belongs only in legacy CSH template context, not in
-        # the Python runner's configuration. Copy ocean to avoid mutating self.
-        jinja_dict.pop('mpi_config', None)
+        # Copy ocean to avoid mutating self when adding legacy CSH settings.
         jinja_dict['ocean'] = dict(self.ocean)
-        jinja_dict['ocean'].pop('mpt_shepherd', None)
-        write_dict_into_yaml(exp_yaml_fname, jinja_dict)
 
         # Archive/post/forecast scripts still use CSH. Derive their settings
         # from the same mapping so there is only one source of MPI defaults.

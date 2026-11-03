@@ -29,6 +29,16 @@ utility functions.
 
 ## Run-job allocation
 
+New experiments write a focused `run_<expid>.yaml` containing settings used by
+the Python runner and known experiment tools. The setup YAML remains the setup
+record, and template-only settings still go into the generated scripts and RC
+files. Existing, larger run YAML files remain supported and are not rewritten.
+External tools that read other fields from newly generated run YAML may need to
+use the setup YAML or generated files instead.
+The fields selected for new run YAML files are listed in
+`gcmpy/setup_tools/config/run_yaml_fields.yaml`; entries are copied when present,
+so the catalog includes optional settings as well as required ones.
+
 `gcm_run.py` is the user entry point. Inside an existing Slurm allocation, run:
 
 ```bash

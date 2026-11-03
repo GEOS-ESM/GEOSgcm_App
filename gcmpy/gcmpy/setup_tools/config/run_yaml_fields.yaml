@@ -1,0 +1,61 @@
+# Fields copied into new run_<expid>.yaml files when present in setup context.
+# Keep this catalog in sync with the Python runner and known experiment tools.
+top_level:
+  - exp_dir
+  - bin_path
+  - etc_path
+  - install_path
+  - batch_cmd
+  - batch_time
+  - batch_jobname
+  - batch_outputname
+  - batch_joinouterr
+  - batch_group_full
+  - run_t
+  - run_n
+  - run_q
+  - run_p
+  - num_CPUs
+  - cpus_per_node
+  - run_command
+  - bc_base
+  - bcs_dir
+  - coupled_dir
+  - sst_dir
+  - grid_dir
+  - abcs_dir
+  - stage_restarts_in_scratch
+  - skip_initial_restart_archive
+  - GCMEMIP
+  - RSTDATE
+  - several_tries
+  - mpi_environment
+  - print_run_environment
+  - stop_after_run
+  - singularity_build
+
+nested:
+  expConfig:
+    - experiment_id
+    - io_server
+  atmos:
+    - res
+    - nx
+    - ny
+    - mp_turn_off_wsub_extdata
+    - RRTMGP_RADIATION
+  ocean:
+    - coupled
+    - out
+    - MOM6
+    - CICE6
+    - DATAATM
+    - res
+    - data
+    - model
+    - preload
+  land:
+    - bcs
+    - GCMRUN_catchment
+  gocart:
+    - emissions

@@ -18,6 +18,7 @@ from pathlib import Path
 import yaml
 import pytest
 
+import gcm_run
 import gcmpy.setup_tools.setup_main as sm
 from gcmpy.setup_tools.setup_main import SetupGCM
 
@@ -31,6 +32,7 @@ def _coupled_setup(tmp_path, monkeypatch, exp_dir):
     monkeypatch.setitem(sm.pathdict, 'install', tmp_path)
     monkeypatch.setitem(sm.pathdict, 'bin', tmp_path / 'bin')
     monkeypatch.setitem(sm.pathdict, 'etc', etc)
+    monkeypatch.setitem(sm.pathdict, 'config', Path(sm.__file__).parent / 'config')
 
     for key, value in {
         'site': 'NCCS',
@@ -81,6 +83,144 @@ def test_generated_run_yaml_defaults_environment_logging_off(tmp_path, monkeypat
     assert config['print_run_environment'] is False
     assert 'cpus_per_node' in config
     assert config['cpus_per_node'] is None
+
+
+def test_run_yaml_fields_follow_catalog_without_restricting_templates(tmp_path, monkeypatch):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    config_dir = tmp_path / 'config'
+    config_dir.mkdir()
+    (config_dir / 'run_yaml_fields.yaml').write_text(
+        'top_level: [exp_dir, plot_t, absent_optional]\n'
+        'nested:\n  expConfig: [experiment_id, experiment_description]\n'
+    )
+    monkeypatch.setitem(sm.pathdict, 'config', config_dir)
+    (exp_dir / 'context.tmpl').write_text('{{ ocean.history_template }}')
+    setup.templates = ['context.tmpl']
+    setup.template()
+
+    config = yaml.safe_load((exp_dir / 'run_test_exp.yaml').read_text())
+    assert config == {
+        'expConfig': {'experiment_id': 'test_exp', 'experiment_description': 'csh alias test'},
+        'exp_dir': str(exp_dir), 'plot_t': '12:00:00',
+    }
+    assert (exp_dir / 'context.tmpl').read_text() == 'HISTORY.AOGCM.rc.tmpl'
+
+
+@pytest.mark.parametrize('catalog', [
+    '',
+    'top_level: exp_dir\nnested: {expConfig: [experiment_id]}\n',
+    'top_level: [exp_dir, 4]\nnested: {expConfig: [experiment_id]}\n',
+    'top_level: [exp_dir]\nnested: [expConfig]\n',
+    'top_level: [exp_dir]\nnested: {expConfig: experiment_id}\n',
+    'top_level: [exp_dir]\nnested: {expConfig: [null]}\n',
+    'top_level: [expConfig]\nnested: {expConfig: [experiment_id]}\n',
+])
+def test_invalid_run_yaml_catalog_does_not_overwrite_config(tmp_path, monkeypatch, catalog):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    config_dir = tmp_path / 'config'
+    config_dir.mkdir()
+    (config_dir / 'run_yaml_fields.yaml').write_text(catalog)
+    monkeypatch.setitem(sm.pathdict, 'config', config_dir)
+    run_yaml = exp_dir / 'run_test_exp.yaml'
+    run_yaml.write_text('existing: value\n')
+
+    with pytest.raises(ValueError, match='Invalid run YAML field catalog'):
+        setup.template()
+    assert run_yaml.read_text() == 'existing: value\n'
+
+
+def test_missing_run_yaml_catalog_does_not_overwrite_config(tmp_path, monkeypatch):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    monkeypatch.setitem(sm.pathdict, 'config', tmp_path)
+    run_yaml = exp_dir / 'run_test_exp.yaml'
+    run_yaml.write_text('existing: value\n')
+
+    with pytest.raises(FileNotFoundError, match='run_yaml_fields.yaml'):
+        setup.template()
+    assert run_yaml.read_text() == 'existing: value\n'
+
+
+def test_unparseable_run_yaml_catalog_does_not_overwrite_config(tmp_path, monkeypatch):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    (tmp_path / 'run_yaml_fields.yaml').write_text('top_level: [broken\n')
+    monkeypatch.setitem(sm.pathdict, 'config', tmp_path)
+    run_yaml = exp_dir / 'run_test_exp.yaml'
+    run_yaml.write_text('existing: value\n')
+
+    with pytest.raises(yaml.YAMLError):
+        setup.template()
+    assert run_yaml.read_text() == 'existing: value\n'
+
+
+@pytest.mark.parametrize('coupled', [False, True])
+@pytest.mark.parametrize('scheduler', ['slurm', 'pbs'])
+def test_focused_run_yaml_keeps_runtime_settings_and_full_template_context(
+        tmp_path, monkeypatch, coupled, scheduler):
+    exp_dir = tmp_path / 'exp'
+    exp_dir.mkdir()
+    setup = _coupled_setup(tmp_path, monkeypatch, exp_dir)
+    setup.ocean['coupled'] = '' if coupled else '#DELETE'
+    setup.ocean['preload'] = 'libtest.so'
+    setup.atmos['mp_turn_off_wsub_extdata'] = 'YES'
+    setup.GCMEMIP = True
+    setup.RSTDATE = '20000101'
+    setup.stop_after_run = True
+    setup.skip_initial_restart_archive = True
+    setup.grid_dir = '/grid'
+    setup.abcs_dir = '/abcs'
+    setup.num_CPUs = 40
+    setup.run_t = '1:00:00'
+    setup.run_n = 'test_RUN'
+    if scheduler == 'slurm':
+        setup.batch_time = 'SBATCH --time='
+        setup.batch_jobname = 'SBATCH --job-name='
+        setup.run_p = 'SBATCH --nodes=1 --ntasks-per-node=40'
+    else:
+        setup.batch_time = 'PBS -l walltime='
+        setup.batch_jobname = 'PBS -N'
+        setup.run_p = 'PBS -l select=1:ncpus=40:mpiprocs=40:model=cas'
+        setup.batch_group = 'PBS -W group_list='
+    (exp_dir / 'AGCM.rc').write_text('NX: 4\nNY: 24\nOGCM.NX: 4\nOGCM.NY: 24\nOGCM.LM: 50\n')
+    (exp_dir / 'context.tmpl').write_text(
+        '{{ expConfig.experiment_description }}|{{ atmos.im }}|'
+        '{{ ocean.history_template }}|{{ plot_t }}\n'
+    )
+    setup.templates = ['context.tmpl']
+    setup.template()
+
+    config = yaml.safe_load((exp_dir / 'run_test_exp.yaml').read_text())
+    assert config['expConfig'] == {'experiment_id': 'test_exp', 'io_server': 0}
+    assert set(config['atmos']) == {
+        'res', 'nx', 'ny', 'mp_turn_off_wsub_extdata', 'RRTMGP_RADIATION',
+    }
+    assert set(config['ocean']) == {
+        'coupled', 'out', 'MOM6', 'CICE6', 'DATAATM', 'res', 'data', 'model', 'preload',
+    }
+    assert set(config['land']) == {'bcs', 'GCMRUN_catchment'}
+    assert set(config['gocart']) == {'emissions'}
+    assert config['ocean']['preload'] == 'libtest.so'
+    assert config['atmos']['mp_turn_off_wsub_extdata'] == 'YES'
+    assert config['GCMEMIP'] is True and config['RSTDATE'] == '20000101'
+    assert config['stop_after_run'] is True and config['skip_initial_restart_archive'] is True
+    assert config['grid_dir'] == '/grid' and config['abcs_dir'] == '/abcs'
+    assert 'templates' not in config and 'plot_t' not in config
+    assert 'history_template' not in config['ocean']
+    assert setup.ocean['history_template'] == 'HISTORY.AOGCM.rc.tmpl'
+    assert (exp_dir / 'context.tmpl').read_text() == (
+        'csh alias test|12|HISTORY.AOGCM.rc.tmpl|12:00:00'
+    )
+    if scheduler == 'slurm':
+        assert '--nodes=3' in gcm_run.build_sbatch_args(config)
+    else:
+        assert 'select=3:ncpus=40:mpiprocs=40:model=cas' in gcm_run.build_qsub_args(config)
 
 
 @pytest.mark.parametrize('site', ['NCCS', 'NAS', 'DESKTOP'])
