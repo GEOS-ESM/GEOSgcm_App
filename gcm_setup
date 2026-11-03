@@ -358,6 +358,45 @@ endif
 
 
 #######################################################################
+#   GEOS-MLT Option
+#######################################################################
+
+ASKGEOSMLT:
+
+
+set DEFAULT_GEOSMLT = FALSE
+
+echo "Use ${C1}GEOSMLT Modifications${CN}? (Default: ${C2}${DEFAULT_GEOSMLT}${CN})"
+set   USE_GEOSMLT = $<
+
+if( .$USE_GEOSMLT == . ) then
+   set USE_GEOSMLT = $DEFAULT_GEOSMLT
+else
+   set USE_GEOSMLT = `echo $USE_GEOSMLT | tr "[:lower:]" "[:upper:]"`
+   if(  $USE_GEOSMLT == "Y"     | \
+        $USE_GEOSMLT == "YES"   | \
+        $USE_GEOSMLT == "T"     | \
+        $USE_GEOSMLT == "TRUE"  ) set USE_GEOSMLT = TRUE
+   if(  $USE_GEOSMLT == "N"     | \
+        $USE_GEOSMLT == "NO"    | \
+        $USE_GEOSMLT == "F"     | \
+        $USE_GEOSMLT == "FALSE" ) set USE_GEOSMLT = FALSE
+
+   if( "$USE_GEOSMLT" != "TRUE" & "$USE_GEOSMLT" != "FALSE" ) then
+      echo
+      echo "Use ${C1}GEOS-MLT mods${CN} must be set equal to ${C2}TRUE/YES${CN} or ${C2}FALSE/NO${CN}!"
+      goto ASKGEOSMLT
+   endif
+endif
+
+if ( "$USE_GEOSMLT" == "TRUE" ) then
+   set GEOSMLT = ""
+else
+   set GEOSMLT = "#"
+endif
+# --- awlee
+
+#######################################################################
 #            Test to see if you want to use ioserver
 #######################################################################
 
@@ -1408,6 +1447,13 @@ else
    set FV_HWT        = ''
 endif
 
+# Settings for GEOS_MLT
+if ( "$USE_GEOSMLT" == "TRUE" ) then
+   set GEOS_MLT = ".TRUE."
+else
+   set GEOS_MLT = ".FALSE."
+endif
+
 if ($CONUS == '#') then
   set SCHMIDT     = "do_schmidt  = .false."
   set STRETCH_FAC = "stretch_fac = 1.0"
@@ -2352,6 +2398,7 @@ s?@GEOSSRC?$GEOSSRC?g
 s?@GEOSBIN?$GEOSBIN?g
 s?@GEOSETC?$GEOSETC?g
 s?@GEOSUTIL?$GEOSUTIL?g
+s?@GEOSMLT?$GEOSMLT?g
 s?@SINGULARITY_BUILD?$SINGULARITY_BUILD?g
 s?@NATIVE_BUILD?$NATIVE_BUILD?g
 s?@MPT_SHEPHERD?$MPT_SHEPHERD?g
@@ -2507,6 +2554,7 @@ EOF
 
 cat >> $HOMDIR/sedfile << EOF
 
+s^@GEOS_MLT^$GEOS_MLT^g
 s^@HYDROSTATIC^$HYDROSTATIC^g
 s?@FV_SCHMIDT?$SCHMIDT?g
 s?@FV_STRETCH_FAC?$STRETCH_FAC?g
