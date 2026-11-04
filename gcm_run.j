@@ -93,6 +93,7 @@ if ( $?USE_DSL ) then
    setenv NDSL_CONSTANTS GEOS
    setenv NDSL_LITERAL_PRECISION 32
    setenv NDSL_LOGLEVEL INFO
+   setenv NDSL_UNSAFE_MODE True
    setenv PYTHONWARNINGS "ignore"
 endif
 
