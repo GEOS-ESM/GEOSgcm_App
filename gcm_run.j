@@ -56,6 +56,15 @@ if ( $?BASEDIR ) then
     setenv PATH "${PATH}:${BASEDIR}/${ARCH}/bin"
 endif
 
+# Spack preserves macOS fallback paths under SPACK_DYLD_* because SIP strips DYLD_* from child processes.
+if ( $?SPACK_DYLD_FALLBACK_LIBRARY_PATH ) then
+    if ( $?DYLD_FALLBACK_LIBRARY_PATH ) then
+        setenv DYLD_FALLBACK_LIBRARY_PATH "${SPACK_DYLD_FALLBACK_LIBRARY_PATH}:${DYLD_FALLBACK_LIBRARY_PATH}"
+    else
+        setenv DYLD_FALLBACK_LIBRARY_PATH "$SPACK_DYLD_FALLBACK_LIBRARY_PATH"
+    endif
+endif
+
 setenv RUN_CMD "@RUN_CMD"
 
 setenv GCMVER `cat $GEOSETC/.AGCM_VERSION`
@@ -375,6 +384,8 @@ endif
 
 @MOM6cp -f  $HOMDIR/MOM_input .
 @MOM6cp -f  $HOMDIR/MOM_override .
+@DATAATMcp -f  $HOMDIR/MOM_saltrestore .
+@DATAATMcp -f  $HOMDIR/MOM_dataatm .
 @CICE6cp -f  $HOMDIR/ice_in .
 
 if( $GCMEMIP == TRUE ) then
@@ -933,24 +944,24 @@ endif
 # Check for MERRA2OX Consistency
 # ------------------------------
 
-# The MERRA2OX pchem file is only valid until 201706, so this is a first
+# The MERRA2OX pchem file is only valid until 202608, so this is a first
 # attempt at a check to make sure you aren't using it and are past the date
 
 # Check for MERRA2OX by looking at AGCM.rc
 set PCHEM_CLIM_YEARS = `awk '/pchem_clim_years/ {print $2}' AGCM.rc`
 
-# If it is 39, we are using MERRA2OX
-if ( $PCHEM_CLIM_YEARS == 39 ) then
+# If it is 48, we are using MERRA2OX
+if ( $PCHEM_CLIM_YEARS == 48 ) then
 
    # Grab the date from cap_restart
    set YEARMON = `cat cap_restart | cut -c1-6`
 
    # Set a magic date
-   set MERRA2OX_END_DATE = "201706"
+   set MERRA2OX_END_DATE = "202608"
 
    # String comparison seems to work here...
    if ( $YEARMON > $MERRA2OX_END_DATE ) then
-      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 201706. This file is only valid until this time."
+      echo "You seem to be using MERRA2OX pchem species file, but your simulation date [${YEARMON}] is after 202608. This file is only valid until this time."
       exit 8
    endif
 endif
