@@ -84,14 +84,8 @@ else
    setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
 endif
 if ( $?USE_DSL ) then
-   # manually point to Fortran interface code
-   setenv PYTHONPATH ${GEOSDIR}/../src/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSmoist_GridComp/pyMoist:${PYTHONPATH}
-   setenv PYTHONPATH ${GEOSDIR}/../src/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSsuperdyn_GridComp/@FVdycoreCubed_GridComp/python/interface:${PYTHONPATH}
-
-   setenv PYTHONWARNINGS "ignore"
-
    setenv FV3_DACEMODE BuildAndRun
-   setenv GEOS_DSL_BACKEND orch:dace:cpu:KJI
+   setenv GEOS_DSL_BACKEND UNSET
    # PYFV3 cannot currently support KJI backends, so force IJK
    setenv GEOS_DSL_PYFV3_BACKEND $GEOS_DSL_BACKEND:s/KJI/IJK/
    setenv GT_CACHE_ROOT ${EXPDIR}/.DSL_CACHE
@@ -99,6 +93,7 @@ if ( $?USE_DSL ) then
    setenv NDSL_CONSTANTS GEOS
    setenv NDSL_LITERAL_PRECISION 32
    setenv NDSL_LOGLEVEL INFO
+   setenv PYTHONWARNINGS "ignore"
 endif
 
 #######################################################################
