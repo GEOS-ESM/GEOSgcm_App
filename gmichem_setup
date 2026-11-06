@@ -2142,6 +2142,9 @@ setenv OMPI_MCA_coll_tuned_barrier_algorithm 0
 setenv OMPI_MCA_coll_tuned_use_dynamic_rules 1
 # disable file locks
 setenv OMPI_MCA_sharedfp "^lockedfile,individual"
+# disable han collectives
+# https://github.com/geoschem/GCHP/issues/578
+setenv OMPI_MCA_coll ^han
 EOF
 
 # The below settings seem to be recommended for hybrid
