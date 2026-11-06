@@ -1,9 +1,9 @@
 # GEOSgcm_App: previous architectural decisions
 
 **Audience:** coding agents and developers working on the `GEOSgcm_App` repository.
-**Describes:** the MAPL2 line, branch `develop`.
-**Verified against:** `GEOSgcm_App` @ `9ef207f` (2026-11-05).
-**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `0f2e0fb`).
+**Describes:** the MAPL3 line, branch `release/MAPL-v3`.
+**Verified against:** `GEOSgcm_App` @ `e65517a` (2026-11-06).
+**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `f50622d`).
 Other fixtures (for example GEOSadas, GEOSldas) may place this repository
 elsewhere; paths inside this repository do not change.
 

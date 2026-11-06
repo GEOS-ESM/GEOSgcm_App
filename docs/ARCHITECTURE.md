@@ -1,11 +1,25 @@
 # GEOSgcm_App: run-time setup, templates and the run script
 
 **Audience:** coding agents and developers working on the `GEOSgcm_App` repository or arriving at an experiment directory and asking where its files came from.
-**Describes:** the MAPL2 line, branch `develop`.
-**Verified against:** `GEOSgcm_App` @ `9ef207f` (2026-11-05). Fixture neighbours were read in the GEOSgcm fixture checkout (`GEOSgcm` @ `0f2e0fb`, `MAPL` @ `dc0eec14`).
-**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `0f2e0fb`): `src/Applications/@GEOSgcm_App`, entry `GEOSgcm_App` (`tag: v3.1.0`, `develop: develop`).
+**Describes:** the MAPL3 line, branch `release/MAPL-v3`.
+**Verified against:** `GEOSgcm_App` @ `e65517a` (2026-11-06). Fixture neighbours were read in the GEOSgcm MAPL3 fixture checkout (`GEOSgcm` @ `f50622d`, `release/MAPL-v3`).
+**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `f50622d`): `src/Applications/@GEOSgcm_App`, entry `GEOSgcm_App` (`branch: release/MAPL-v3`, `develop: develop`).
 Other fixtures (for example GEOSadas, GEOSldas) may place this repository
 elsewhere; paths inside this repository do not change.
+
+> **Build status on this line:** `GEOSgcm.x` is not built, and nothing in this
+> repository is built. `src/CMakeLists.txt` in the fixture has
+> `# add_subdirectory(Applications)     # not yet ported to MAPL3 - restore when ported`,
+> so this repository's `CMakeLists.txt` is not read. The file itself no longer
+> builds `GEOSgcm.x`: it defines only `idfupd.x`, and `GEOSgcm.F90` is deleted
+> on `release/MAPL-v3` (the MAPL2-line `CMakeLists.txt` target `GEOSgcm.x` is
+> removed). The setup scripts and templates are the MAPL2-line files, unchanged
+> (the diff from the MAPL2 line is `.circleci/config.yml`, the workflow,
+> `CMakeLists.txt`, `GEOSgcm.F90` and `idfupd.F90`); they name components
+> (`GEOS_GcmGridComp`, ocean, surface, moist, ...) that the fixture does not
+> build on this line (see the fixture's `docs/ARCHITECTURE.md`). On this line
+> the parent's documents are not written yet; the MAPL2-line versions are on
+> its `develop` branch.
 
 Paths are relative to this repository unless stated. "Fixture" paths start
 with `src/`. Unlabelled statements are Verified and carry a citation.
@@ -30,22 +44,31 @@ batch job: section 6. Surprises: sections 7 to 11.
 
 ## 1. What the repository is
 
-- A collection of one main program, one small utility program, setup scripts,
+- A collection of one small utility program (on the MAPL2 line also the main
+  program), setup scripts,
   job-script templates and resource-file templates. It holds no model physics
-  (`CMakeLists.txt`, `GEOSgcm.F90`).
-- `GEOSgcm.x` (`GEOSgcm.F90`, program `GEOS5_Main`) builds a MAPL `MAPL_Cap`
-  named `'GCM'` with `GEOS_GcmGridCompMod`'s `SetServices` as the root and
-  calls `cap%run`. All run-time behaviour comes from files in the run directory
+  (`CMakeLists.txt`).
+- `GEOSgcm.x` is the executable the setup and run scripts expect (`gcm_setup`,
+  `gcm_run.j`). On the MAPL2 line it comes from `GEOSgcm.F90` (program
+  `GEOS5_Main`, a MAPL `MAPL_Cap` named `'GCM'` with `GEOS_GcmGridCompMod`'s
+  `SetServices` as root). On this line `GEOSgcm.F90` is deleted and
+  `CMakeLists.txt` has no `GEOSgcm.x` target; no source for it is in this
+  repository. Run-time behaviour would come from files in the run directory
   (sections 4 and 5). The root component is documented in the
   GEOSgcm_GridComp architecture (`../../../Components/@GEOSgcm_GridComp/docs/ARCHITECTURE.md` in the fixture).
 - `idfupd.x` (`idfupd.F90`) is a separate MAPL/ESMF application that reads
   `IDFUPD.rc` and updates restart fields with an incremental digital-filter
   correction (`idfupd.F90`, header comment; `ESMF_ConfigLoadFile ... 'IDFUPD.rc'`).
-  *Unverified:* who calls it; nothing in this repository does.
-- Parent: the GEOSgcm fixture (`src/Applications/CMakeLists.txt`:
-  `esma_add_subdirectories(GEOSgcm_App UMD_Etc CPLFCST_Etc)`); see its
+  *Unverified:* who calls it; nothing in this repository does. Changes from the
+  MAPL2 line in `idfupd.F90`: adds `use MAPL_PackedTimeMod, only:
+  MAPL_UnpackDateTime => UnpackDateTime`; the `GETFILE`/`FREE_FILE` pair for
+  `cap_restart` is replaced by `open(newunit=UNIT, ...)`/`close(UNIT)`.
+- Parent: the GEOSgcm fixture (`src/CMakeLists.txt` comments out
+  `add_subdirectory(Applications)` on this line; `src/Applications/CMakeLists.txt`
+  lists `GEOSgcm_App UMD_Etc CPLFCST_Etc`). On this line the parent's documents
+  are not written yet; the MAPL2-line versions are on its `develop` branch. See its
   AGENTS.md (`../../../../AGENTS.md` in the fixture) and
-  docs/ARCHITECTURE.md (`../../../../docs/ARCHITECTURE.md` in the fixture) (section 5).
+  docs/ARCHITECTURE.md (`../../../../docs/ARCHITECTURE.md` in the fixture).
 - Children: none. Components that consume the resource keys are in other
   repositories (section 5 links to their documents).
 
@@ -56,7 +79,7 @@ is installed (`*.tmpl` and three resource files to `etc/`; listed scripts to `bi
 
 | Role | Files | Installed to |
 |---|---|---|
-| Programs | `GEOSgcm.F90` -> `GEOSgcm.x` (links `GEOSgcm_GridComp`, ESMF, OpenMP; jemalloc when found); `idfupd.F90` -> `idfupd.x` | `bin/` |
+| Programs | `idfupd.F90` -> `idfupd.x` (`CMakeLists.txt` links `GEOSgcm_GridComp`, ESMF; on this line the fixture's `@GEOSgcm_GridComp/CMakeLists.txt` has that library block commented out, so the target does not exist in the fixture's build); `GEOSgcm.F90` and its `GEOSgcm.x` target are deleted on this line | `bin/` |
 | Setup scripts (csh; `configure_file(... @ONLY)`) | `gcm_setup`, `gmichem_setup`, `geoschemchem_setup`, `stratchem_setup`, `set_resolution_params.csh` | `bin/` |
 | Other setup scripts | `gcm_forecast.setup`, `gcm_emip.setup` (csh), `scm_setup` (bash) | `bin/` (copied verbatim) |
 | Job scripts filled by `gcm_setup` | `gcm_run.j`, `gcm_regress.j`, `gcm_post.j`, `gcm_archive.j`, `gcm_quickplot.csh`, `gcm_moveplot.j` (`gcm_setup`, `FILES` list) | `bin/` |
@@ -159,9 +182,11 @@ Files in `$EXPDIR/RC` and HOMDIR are copied into SCRDIR by `gcm_run.j`: first
 file overrides an `RC/` file of the same name (`gcm_run.j`, "Move to Scratch
 Directory and Copy RC Files from Home Directory").
 
+The template keys and their MAPL citations in this section and in section 5 describe the MAPL2 cap (MAPL `release/v2`, files such as `gridcomps/Cap/MAPL_CapGridComp.F90`), which these templates were written for. MAPL `develop` (this line) has a different cap (`gridcomps/Cap/CapGridComp.F90`, YAML configuration) that is not described here.
+
 | Generated file | From | Read by (at run time) |
 |---|---|---|
-| `CAP.rc` | `CAP.rc.tmpl` | `GEOSgcm.x` main driver: default name `CAP.rc` (`Shared/@MAPL/gridcomps/Cap/CapOptions.F90`; `--cap_rc`, `FargparseCLI.F90`); also `gcm_run.j`, which greps `END_DATE`, `NUM_SGMT`, `FCST_SEGMENT`, `USE_SHMEM`, `JOB_SGMT`, `HEARTBEAT_DT` |
+| `CAP.rc` | `CAP.rc.tmpl` | `GEOSgcm.x` main driver: default name `CAP.rc` (`CapOptions.F90`; `--cap_rc`, `FargparseCLI.F90`); also `gcm_run.j`, which greps `END_DATE`, `NUM_SGMT`, `FCST_SEGMENT`, `USE_SHMEM`, `JOB_SGMT`, `HEARTBEAT_DT` |
 | `AGCM.rc` | `AGCM.rc.tmpl` | the cap loads it as the root configuration (`CAP.rc`, `ROOT_CF: AGCM.rc`; `MAPL_CapGridComp.F90`, `initialize_gc`); components read it through `MAPL_GetResource` and `ESMF_ConfigGetAttribute`; `gcm_run.j` greps and edits the scratch copy |
 | `HISTORY.rc` | a History template | the MAPL History component (`CAP.rc`, `HIST_CF`; `MAPL_CapGridComp.F90`, `initialize_gc`); `gcm_run.j` (collection directories, `.monthly:` checkpoint names); `bundleParser.py` (appends tracer-increment tables to `AGCM.rc`); `gcm_setup` (counts collections for I/O server sizing) |
 | `extdata.yaml` | built by `construct_extdata_yaml_list.py` from `GEOS_ChemGridComp.rc` | the ExtData component (`ExtDataGridCompNG.F90`, `EXTDATA_YAML_FILE:` default `extdata.yaml`) |
@@ -195,6 +220,8 @@ the value.
 
 ### 5.1 `CAP.rc` (read by the MAPL cap)
 
+The template keys and their MAPL citations in this section and in section 5 describe the MAPL2 cap (MAPL `release/v2`, files such as `gridcomps/Cap/MAPL_CapGridComp.F90`), which these templates were written for. MAPL `develop` (this line) has a different cap (`gridcomps/Cap/CapGridComp.F90`, YAML configuration) that is not described here.
+
 | Key | Meaning | Set by |
 |---|---|---|
 | `ROOT_NAME: GCM`, `ROOT_CF: AGCM.rc`, `HIST_CF: HISTORY.rc` | names of root component and config files (`MAPL_CapGridComp.F90`, `initialize_gc`) | fixed in `CAP.rc.tmpl` |
@@ -209,7 +236,7 @@ the value.
 | Key | Effect and consumer | Set by |
 |---|---|---|
 | `NX`, `NY` | process layout; read from the root config by the cap (`MAPL_CapGridComp.F90`, `initialize_gc`) | `@NX`, `@NY` |
-| `AGCM_IM/JM/LM`, `AGCM.GRID_TYPE`, `AGCM.GRIDNAME`, `AGCM.IM_WORLD`, `AGCM.LM`, `AGCM.NF`/`AGCM.JM_WORLD` (one of the two kept by `@CUBE_AGCM`/`@LATLON_AGCM`) | atmosphere grid; prefixed keys are read by MAPL grid creation (`Shared/@MAPL/generic/MAPL_Generic.F90`, `MAPL_GridCreate`) | `@AGCM_*`, `@GRID_TYPE` |
+| `AGCM_IM/JM/LM`, `AGCM.GRID_TYPE`, `AGCM.GRIDNAME`, `AGCM.IM_WORLD`, `AGCM.LM`, `AGCM.NF`/`AGCM.JM_WORLD` (one of the two kept by `@CUBE_AGCM`/`@LATLON_AGCM`) | atmosphere grid; prefixed keys are read by MAPL grid creation (`MAPL_Generic.F90`, `MAPL_GridCreate`) | `@AGCM_*`, `@GRID_TYPE` |
 | `AGCM.STRETCH_FACTOR`, `AGCM.TARGET_LAT/LON` (line prefix `@CONUS`) | stretched grid | `CONUS` in `set_resolution_params.csh` |
 | `OGCM.GRID_TYPE`, `OGCM.GRIDNAME`, `OGCM.IM_WORLD`, `OGCM.JM_WORLD`, `OGCM.LM`, `OGCM.NX/NY` (`@COUPLED`), `OGCM.GRIDSPEC` (`@MOM5`, `@MOM6`, `@MIT`), `OGCM.POLE`/`DATELINE`/`NF` (`@DATAOCEAN`) | ocean grid | `@OGCM_*` |
 | `IOSERVER_NODES`, `NUM_BACKEND_PES` | read by `gcm_run.j`, passed as `--nodes_output_server`, `--npes_backend_pernode` (`gcm_run.j`, `IOSERVER_OPTIONS`) | `gcm_setup`, "Architecture Specific Variables" |
@@ -233,7 +260,7 @@ the value.
 | `OCEAN_NAME`, `SEAICE_NAME`, `USE_CICE_Thermo`, `USE_DATASEA`, `USE_DATASEAICE` (`@COUPLED` lines), `USE_DATA_ATM4OCN`, `USE_WAVES` | `GEOS_GcmGridComp.F90`, `GEOS_OgcmGridComp.F90`, `GEOS_SeaIceGridComp.F90`, `GEOS_OceanGridComp.F90` -> GEOSgcm_GridComp (`../../../Components/@GEOSgcm_GridComp/docs/ARCHITECTURE.md` in the fixture), Ocean repository (`../../../Components/@GEOSgcm_GridComp/GEOSogcm_GridComp/@GEOS_OceanGridComp/docs/ARCHITECTURE.md` in the fixture) | `@OCEAN_NAME`, `@CICE4`, `@CICE6`, `@USE_DATA_ATM4OCN`; `USE_WAVES: 0` literal |
 
 Keys read by components but absent from the template are listed in the
-fixture document (`../../../../docs/ARCHITECTURE.md` in the fixture) (section 5).
+fixture document (`../../../../docs/ARCHITECTURE.md` in the fixture).
 
 ### 5.4 Menu choices in `gcm_setup` that change structure
 
@@ -326,7 +353,7 @@ none in `scm_setup`).
 
 - **MAPL cap**: `GEOSgcm.x` takes `--npes_model`, `--nodes_output_server`,
   `--oserver_type`, `--npes_backend_pernode`, `--logging_config`, `--cap_rc`,
-  `--egress_file` (`Shared/@MAPL/gridcomps/Cap/FargparseCLI.F90`). The cap reads
+  `--egress_file` (`FargparseCLI.F90`). The cap reads
   `CAP.rc`; the script reads the same file with `grep`.
 - **GEOS_Util** (`src/Shared/@GMAO_Shared/@GEOS_Util/post`): `gcmpost.script`,
   `plot.rc`, `post.rc`, `binarytile.x`, `rs_numtiles.x`, `tick`.
@@ -342,9 +369,11 @@ none in `scm_setup`).
 
 ## 9. Build and CI
 
-`CMakeLists.txt`: two executables, the install lists of section 2, and
+`CMakeLists.txt`: one executable (`idfupd.x`; `GEOSgcm.x` is removed on this
+line), the install lists of section 2, and
 `configure_file(... @ONLY)` for the setup scripts and `.AGCM_VERSION`. No test
-target. CI workflows are listed in [AGENTS.md](../AGENTS.md).
+target. On this line the fixture does not add this repository to the build
+(`src/CMakeLists.txt`). CI workflows are listed in [AGENTS.md](../AGENTS.md).
 
 ## 10. Known traps
 
