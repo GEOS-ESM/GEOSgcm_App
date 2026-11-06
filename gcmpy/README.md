@@ -11,9 +11,13 @@ etc.
 It consists of a set of interfaces that are accessible to
 users to perform specific tasks:
 
-- `run_gcm_setup.py`: Create and experiment directory either
-   from scratch or from a YAML configuration file.
-- __More to come...__
+- `gcm_setup.py`: Create an experiment directory either
+   interactively or from a YAML configuration file (`--yaml`).
+- `gcm_run.py`: Submit and run the model (`--config run_<expid>.yaml`).
+
+Full user and developer documentation is in [`gcmpy_doc/`](gcmpy_doc/README.md)
+(start with the [Quick Start](gcmpy_doc/Quick-Start.md)) and is mirrored on the
+[GEOSgcm_App wiki](https://github.com/GEOS-ESM/GEOSgcm_App/wiki/gcmpy-Guide).
 
 Underneath, the tool implements a collection of classes
 (handling various tasks) that are supported by low level
