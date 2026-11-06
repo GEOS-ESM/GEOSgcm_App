@@ -20,11 +20,11 @@ source subdirectories.
   traps, observations. Read first.
 - `docs/decisions.md`: why setup, templates and the run script are arranged
   this way.
-- Fixture: [AGENTS.md](../../../AGENTS.md) and
-  [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) (section 5 summarises
+- Fixture: AGENTS.md (`../../../AGENTS.md` in the fixture) and
+  docs/ARCHITECTURE.md (`../../../docs/ARCHITECTURE.md` in the fixture) (section 5 summarises
   this repository).
 - Components that read the generated resource files:
-  [GEOSgcm_GridComp AGENTS.md](../../Components/@GEOSgcm_GridComp/AGENTS.md).
+  GEOSgcm_GridComp AGENTS.md (`../../Components/@GEOSgcm_GridComp/AGENTS.md` in the fixture).
 
 ## Rules
 

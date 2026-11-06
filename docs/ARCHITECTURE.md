@@ -37,15 +37,15 @@ batch job: section 6. Surprises: sections 7 to 11.
   named `'GCM'` with `GEOS_GcmGridCompMod`'s `SetServices` as the root and
   calls `cap%run`. All run-time behaviour comes from files in the run directory
   (sections 4 and 5). The root component is documented in the
-  [GEOSgcm_GridComp architecture](../../../Components/@GEOSgcm_GridComp/docs/ARCHITECTURE.md).
+  GEOSgcm_GridComp architecture (`../../../Components/@GEOSgcm_GridComp/docs/ARCHITECTURE.md` in the fixture).
 - `idfupd.x` (`idfupd.F90`) is a separate MAPL/ESMF application that reads
   `IDFUPD.rc` and updates restart fields with an incremental digital-filter
   correction (`idfupd.F90`, header comment; `ESMF_ConfigLoadFile ... 'IDFUPD.rc'`).
   *Unverified:* who calls it; nothing in this repository does.
 - Parent: the GEOSgcm fixture (`src/Applications/CMakeLists.txt`:
   `esma_add_subdirectories(GEOSgcm_App UMD_Etc CPLFCST_Etc)`); see its
-  [AGENTS.md](../../../../AGENTS.md) and
-  [docs/ARCHITECTURE.md](../../../../docs/ARCHITECTURE.md) (section 5).
+  AGENTS.md (`../../../../AGENTS.md` in the fixture) and
+  docs/ARCHITECTURE.md (`../../../../docs/ARCHITECTURE.md` in the fixture) (section 5).
 - Children: none. Components that consume the resource keys are in other
   repositories (section 5 links to their documents).
 
@@ -166,7 +166,7 @@ Directory and Copy RC Files from Home Directory").
 | `HISTORY.rc` | a History template | the MAPL History component (`CAP.rc`, `HIST_CF`; `MAPL_CapGridComp.F90`, `initialize_gc`); `gcm_run.j` (collection directories, `.monthly:` checkpoint names); `bundleParser.py` (appends tracer-increment tables to `AGCM.rc`); `gcm_setup` (counts collections for I/O server sizing) |
 | `extdata.yaml` | built by `construct_extdata_yaml_list.py` from `GEOS_ChemGridComp.rc` | the ExtData component (`ExtDataGridCompNG.F90`, `EXTDATA_YAML_FILE:` default `extdata.yaml`) |
 | `ExtData.rc` | `touch` in `gcm_run.j` ("kept ... MAPL expectation ... not actually used") | the cap loads `EXTDATA_CF` (default `ExtData.rc`) |
-| `input.nml` | `fvcore_layout.rc` appended by `gcm_run.j` | the FV dynamical core ([FVdycoreCubed](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSsuperdyn_GridComp/@FVdycoreCubed_GridComp/docs/ARCHITECTURE.md); namelists `fv_core_nml`, ...). *Unverified:* the reader; `FV_StateMod.F90` has a comment that `fvcore_layout.rc` is "linked to input.nml" |
+| `input.nml` | `fvcore_layout.rc` appended by `gcm_run.j` | the FV dynamical core (FVdycoreCubed (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSsuperdyn_GridComp/@FVdycoreCubed_GridComp/docs/ARCHITECTURE.md` in the fixture); namelists `fv_core_nml`, ...). *Unverified:* the reader; `FV_StateMod.F90` has a comment that `fvcore_layout.rc` is "linked to input.nml" |
 | `linkbcs` | `linkbcs.tmpl` | executed by `gcm_run.j` (`./linkbcs`): creates `ExtData/` links, `tile.data`, `tile.bin`/`tile.nc4`, `species.data`, `visdf.dat`, `lai.data`, ... |
 | `logging.yaml` | `logging.yaml` | `GEOSgcm.x --logging_config 'logging.yaml'` (`gcm_run.j`) |
 | `gcm_post.j`, `gcm_archive.j`, `gcm_plot.tmpl` | same | filled again by `$GEOSUTIL/post/gcmpost.script` (`@COLLECTION`, `@YYYYMM`) (`gcm_post.j`; fixture `src/Shared/@GMAO_Shared/@GEOS_Util/post/gcmpost.script`) |
@@ -221,19 +221,19 @@ the value.
 
 | Key | Consumer and document | Set by |
 |---|---|---|
-| `DYCORE` | `GEOS_SuperdynGridComp.F90`, `SetServices` (default `FV3`) -> [Agcm](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/ARCHITECTURE.md) | `@DYCORE` (`FV3`) |
-| `CONVPAR_OPTION` | `GEOS_MoistGridComp.F90`, `SetServices` -> [Moist](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSmoist_GridComp/ARCHITECTURE.md) | `GF`; `NONE` at `c2880`, `c5760` |
+| `DYCORE` | `GEOS_SuperdynGridComp.F90`, `SetServices` (default `FV3`) -> Agcm (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/ARCHITECTURE.md` in the fixture) | `@DYCORE` (`FV3`) |
+| `CONVPAR_OPTION` | `GEOS_MoistGridComp.F90`, `SetServices` -> Moist (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSmoist_GridComp/ARCHITECTURE.md` in the fixture) | `GF`; `NONE` at `c2880`, `c5760` |
 | `CLDMICR_OPTION` (lines `@BACM_1M_`, `@GFDL_1M_`, `@MGB2_2M_`) and `GFDL_MP_KLID` | Moist, same file | the prompt; `KLID` from LM |
-| `SHALLOW_OPTION` (lines `@SHALLOW_UW`, `@SHALLOW_SHOC`) | Moist; with SHOC also `TURBULENCE_DO_SHOC`, `EDMF_DOMF`, `TURBULENCE_SHC_LENFAC*` (`GEOS_TurbulenceGridComp.F90`) -> [Turbulence](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSturbulence_GridComp/ARCHITECTURE.md) | UW if LM = 72, else SHOC (`gcm_setup`, "Set shallow cumulus option") |
-| `USE_RRTMGP_IRRAD`, `USE_RRTMGP_SORAD` (`@RRTMGP_RADIATION`), `USE_RRTMG_IRRAD`, `USE_RRTMG_SORAD` (`@RRTMG_RADIATION`) | `rad_utils.F90`, `choose_irrad_scheme`, `choose_solar_scheme`: RRTMGP if its flag is non-zero, else RRTMG if set, else the third scheme (`USE_CHOU`) -> [Radiation repository](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSradiation_GridComp/docs/ARCHITECTURE.md) | RRTMG if LM = 72, else RRTMGP (`gcm_setup`, "Set Radiation model") |
+| `SHALLOW_OPTION` (lines `@SHALLOW_UW`, `@SHALLOW_SHOC`) | Moist; with SHOC also `TURBULENCE_DO_SHOC`, `EDMF_DOMF`, `TURBULENCE_SHC_LENFAC*` (`GEOS_TurbulenceGridComp.F90`) -> Turbulence (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSturbulence_GridComp/ARCHITECTURE.md` in the fixture) | UW if LM = 72, else SHOC (`gcm_setup`, "Set shallow cumulus option") |
+| `USE_RRTMGP_IRRAD`, `USE_RRTMGP_SORAD` (`@RRTMGP_RADIATION`), `USE_RRTMG_IRRAD`, `USE_RRTMG_SORAD` (`@RRTMG_RADIATION`) | `rad_utils.F90`, `choose_irrad_scheme`, `choose_solar_scheme`: RRTMGP if its flag is non-zero, else RRTMG if set, else the third scheme (`USE_CHOU`) -> Radiation repository (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSradiation_GridComp/docs/ARCHITECTURE.md` in the fixture) | RRTMG if LM = 72, else RRTMGP (`gcm_setup`, "Set Radiation model") |
 | `SOLAR_DT`, `IRRAD_DT`, `GF_DT`, `UW_DT`, `GOCART2G_DT`, `GOCART_DT`, `HEMCO_DT`, `ACHEM_DT`, `PCHEM_DT` | component time steps (examples: `GEOS_GF_InterfaceMod.F90`, `GF_DT:`; surface children, `SOLAR_DT:`) | `@SOLAR_DT`, `@IRRAD_DT`, `@CONV_DT`, `@CHEM_DT` |
-| `NCAR_NRDG` | `GEOS_GwdGridComp.F90` -> [GWD](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSgwd_GridComp/ARCHITECTURE.md) | `gcm_setup`: 16, or 0 when the ridge file is absent; `gcm_run.j` may reset to 0 |
-| `LSM_CHOICE`, `TILING_FILE`, `*_FILE` boundary datasets | `GEOS_SurfaceGridComp.F90` and children -> [Surface](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSsurface_GridComp/ARCHITECTURE.md) | `@LSM_CHOICE`; files created by `linkbcs` |
-| `RATS_PROVIDER`, `ANALYSIS_OX_PROVIDER`, `AERO_PROVIDER`, `<species>_PROVIDER` (`CH4`, `CO2`), `*_FRIENDLIES`, `pchem_clim_years`, `OX_RELAXTIME` | `GEOS_ChemGridComp.F90`, `SetServices`; `GEOS_PChemGridComp.F90`; `GEOS_PhysicsGridComp.F90` (`CO2_PROVIDER`) -> [Chemistry repository](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSchem_GridComp/docs/ARCHITECTURE.md), [GOCART](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSchem_GridComp/@GOCART/docs/ARCHITECTURE.md) | `PCHEM`, `GOCART2G`, `none`, ...; variants change them (7.1) |
-| `OCEAN_NAME`, `SEAICE_NAME`, `USE_CICE_Thermo`, `USE_DATASEA`, `USE_DATASEAICE` (`@COUPLED` lines), `USE_DATA_ATM4OCN`, `USE_WAVES` | `GEOS_GcmGridComp.F90`, `GEOS_OgcmGridComp.F90`, `GEOS_SeaIceGridComp.F90`, `GEOS_OceanGridComp.F90` -> [GEOSgcm_GridComp](../../../Components/@GEOSgcm_GridComp/docs/ARCHITECTURE.md), [Ocean repository](../../../Components/@GEOSgcm_GridComp/GEOSogcm_GridComp/@GEOS_OceanGridComp/docs/ARCHITECTURE.md) | `@OCEAN_NAME`, `@CICE4`, `@CICE6`, `@USE_DATA_ATM4OCN`; `USE_WAVES: 0` literal |
+| `NCAR_NRDG` | `GEOS_GwdGridComp.F90` -> GWD (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSgwd_GridComp/ARCHITECTURE.md` in the fixture) | `gcm_setup`: 16, or 0 when the ridge file is absent; `gcm_run.j` may reset to 0 |
+| `LSM_CHOICE`, `TILING_FILE`, `*_FILE` boundary datasets | `GEOS_SurfaceGridComp.F90` and children -> Surface (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/GEOSsurface_GridComp/ARCHITECTURE.md` in the fixture) | `@LSM_CHOICE`; files created by `linkbcs` |
+| `RATS_PROVIDER`, `ANALYSIS_OX_PROVIDER`, `AERO_PROVIDER`, `<species>_PROVIDER` (`CH4`, `CO2`), `*_FRIENDLIES`, `pchem_clim_years`, `OX_RELAXTIME` | `GEOS_ChemGridComp.F90`, `SetServices`; `GEOS_PChemGridComp.F90`; `GEOS_PhysicsGridComp.F90` (`CO2_PROVIDER`) -> Chemistry repository (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSchem_GridComp/docs/ARCHITECTURE.md` in the fixture), GOCART (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSchem_GridComp/@GOCART/docs/ARCHITECTURE.md` in the fixture) | `PCHEM`, `GOCART2G`, `none`, ...; variants change them (7.1) |
+| `OCEAN_NAME`, `SEAICE_NAME`, `USE_CICE_Thermo`, `USE_DATASEA`, `USE_DATASEAICE` (`@COUPLED` lines), `USE_DATA_ATM4OCN`, `USE_WAVES` | `GEOS_GcmGridComp.F90`, `GEOS_OgcmGridComp.F90`, `GEOS_SeaIceGridComp.F90`, `GEOS_OceanGridComp.F90` -> GEOSgcm_GridComp (`../../../Components/@GEOSgcm_GridComp/docs/ARCHITECTURE.md` in the fixture), Ocean repository (`../../../Components/@GEOSgcm_GridComp/GEOSogcm_GridComp/@GEOS_OceanGridComp/docs/ARCHITECTURE.md` in the fixture) | `@OCEAN_NAME`, `@CICE4`, `@CICE6`, `@USE_DATA_ATM4OCN`; `USE_WAVES: 0` literal |
 
 Keys read by components but absent from the template are listed in the
-[fixture document](../../../../docs/ARCHITECTURE.md) (section 5).
+fixture document (`../../../../docs/ARCHITECTURE.md` in the fixture) (section 5).
 
 ### 5.4 Menu choices in `gcm_setup` that change structure
 
@@ -373,7 +373,7 @@ target. CI workflows are listed in [AGENTS.md](../AGENTS.md).
    in `gcm_setup`, "Architecture Specific Variables".
 10. **Optional blocks are off by default.** Replay and IAU keys (`REPLAY_*`,
     `MKIAU_*`, `ASSIMILATION_CYCLE`, `CORRECTOR_DURATION`, `AINC_FILE`,
-    `PRECIP_FILE*`; consumers: [GEOSagcm_GridComp](../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/ARCHITECTURE.md)),
+    `PRECIP_FILE*`; consumers: GEOSagcm_GridComp (`../../../Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/ARCHITECTURE.md` in the fixture)),
     bias-correction keys (`AGCM_INTERNAL_*`, `AGCM_ALPHA/BETA` under `@FORCEGCM`,
     `AGCM_IMPORT_RESTART_FILE` under `@FORCEDAS`) and `DUAL_OCEAN` are comments
     or deleted lines in the generated `AGCM.rc`; replay is switched on by editing it.
