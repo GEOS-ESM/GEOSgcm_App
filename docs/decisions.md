@@ -9,7 +9,7 @@ elsewhere; paths inside this repository do not change.
 
 Only what is easy to see now; see [ARCHITECTURE.md](ARCHITECTURE.md) for
 context. The fixture-level decision on templates is in the
-[fixture decisions](../../../../docs/decisions.md).
+fixture decisions (`../../../../docs/decisions.md` in the fixture).
 
 ### Experiment files made by `sed` placeholders and `#DELETE` line markers
 - Pattern: templates hold `@NAME` placeholders; `gcm_setup` writes a `sedfile`
