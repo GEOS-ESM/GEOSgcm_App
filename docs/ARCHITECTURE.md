@@ -17,9 +17,7 @@ elsewhere; paths inside this repository do not change.
 > (the diff from the MAPL2 line is `.circleci/config.yml`, the workflow,
 > `CMakeLists.txt`, `GEOSgcm.F90` and `idfupd.F90`); they name components
 > (`GEOS_GcmGridComp`, ocean, surface, moist, ...) that the fixture does not
-> build on this line (see the fixture's `docs/ARCHITECTURE.md`). On this line
-> the parent's documents are not written yet; the MAPL2-line versions are on
-> its `develop` branch.
+> build on this line (see the fixture's `docs/ARCHITECTURE.md`).
 
 Paths are relative to this repository unless stated. "Fixture" paths start
 with `src/`. Unlabelled statements are Verified and carry a citation.
@@ -65,8 +63,7 @@ batch job: section 6. Surprises: sections 7 to 11.
   `cap_restart` is replaced by `open(newunit=UNIT, ...)`/`close(UNIT)`.
 - Parent: the GEOSgcm fixture (`src/CMakeLists.txt` comments out
   `add_subdirectory(Applications)` on this line; `src/Applications/CMakeLists.txt`
-  lists `GEOSgcm_App UMD_Etc CPLFCST_Etc`). On this line the parent's documents
-  are not written yet; the MAPL2-line versions are on its `develop` branch. See its
+  lists `GEOSgcm_App UMD_Etc CPLFCST_Etc`). See its
   AGENTS.md (`../../../../AGENTS.md` in the fixture) and
   docs/ARCHITECTURE.md (`../../../../docs/ARCHITECTURE.md` in the fixture).
 - Children: none. Components that consume the resource keys are in other

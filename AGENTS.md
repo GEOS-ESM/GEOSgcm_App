@@ -24,9 +24,7 @@ program; that file is deleted on this line.
 > (the diff from the MAPL2 line is `.circleci/config.yml`, the workflow,
 > `CMakeLists.txt`, `GEOSgcm.F90` and `idfupd.F90`); they name components
 > (`GEOS_GcmGridComp`, ocean, surface, moist, ...) that the fixture does not
-> build on this line (see the fixture's `docs/ARCHITECTURE.md`). On this line
-> the parent's documents are not written yet; the MAPL2-line versions are on
-> its `develop` branch.
+> build on this line (see the fixture's `docs/ARCHITECTURE.md`).
 
 ## Documents
 
@@ -35,8 +33,7 @@ program; that file is deleted on this line.
   traps, observations. Read first.
 - `docs/decisions.md`: why setup, templates and the run script are arranged
   this way.
-- Fixture (on this line the parent's documents are not written yet; the
-  MAPL2-line versions are on its `develop` branch): AGENTS.md (`../../../AGENTS.md` in the fixture) and
+- Fixture: AGENTS.md (`../../../AGENTS.md` in the fixture) and
   docs/ARCHITECTURE.md (`../../../docs/ARCHITECTURE.md` in the fixture).
 - Components that read the generated resource files:
   GEOSgcm_GridComp AGENTS.md (`../../Components/@GEOSgcm_GridComp/AGENTS.md` in the fixture).
