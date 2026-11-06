@@ -7,6 +7,7 @@ Replaces lines 1077-1109 of gcm_run.j.
 """
 
 import os
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -18,6 +19,32 @@ class GEOSRunError(RuntimeError):
 
 class EgressMissingError(RuntimeError):
     """Raised when GEOSgcm.x exits cleanly but EGRESS file is absent."""
+
+
+def _print_run_environment(env: dict[str, str]) -> None:
+    """Log the launch environment without exposing obvious credentials.
+
+    Redaction is name-based and intentionally conservative; this is not a
+    guarantee that arbitrary environment values contain no sensitive data.
+    Escape control characters so values cannot change terminal state and
+    each variable occupies one log line.
+    """
+    sensitive_name = re.compile(
+        r"PASSWORD|PASSWD|TOKEN|SECRET|CREDENTIAL|API_?KEY|ACCESS_?KEY|"
+        r"PRIVATE_?KEY|AUTHORIZATION|COOKIE",
+        re.IGNORECASE,
+    )
+    print("=== BEGIN model-launch environment (credential values redacted) ===", flush=True)
+    for name, value in sorted(env.items()):
+        value = "<redacted>" if sensitive_name.search(name) else value
+        value = value.replace("\r", r"\r").replace("\n", r"\n")
+        value = re.sub(
+            r"[\x00-\x1f\x7f-\x9f]",
+            lambda match: f"\\x{ord(match.group()):02x}",
+            value,
+        )
+        print(f"{name}={value}", flush=True)
+    print("=== END model-launch environment ===", flush=True)
 
 
 def _build_ioserver_args(
@@ -204,6 +231,7 @@ def run_gcm(
     singularity_run: str | None = None,
     ocean_preload: str | None = None,
     max_attempts: int = 1,
+    print_run_environment: bool = False,
 ) -> None:
     """
     Build and execute the MPI command to run GEOSgcm.x, then verify success.
@@ -232,6 +260,8 @@ def run_gcm(
                            into launch-time environment variables; None or
                            '' skips preloading.
         max_attempts:      Number of launch attempts before giving up (native builds only).
+        print_run_environment: Log the sorted MPI-launcher environment before each
+                           attempt, redacting values with credential-like names.
 
     Raises:
         GEOSRunError:      If GEOSgcm.x exits with a non-zero return code on all attempts.
@@ -260,6 +290,8 @@ def run_gcm(
 
     run_status = None
     for attempt in range(1, attempts + 1):
+        if print_run_environment:
+            _print_run_environment(env)
         result = subprocess.run(cmd, env=env, cwd=scr_dir)
         run_status = result.returncode
         if run_status == 0:

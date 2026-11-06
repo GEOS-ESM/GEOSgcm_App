@@ -71,3 +71,10 @@ OCEAN_data_atmosphere:
   follows_up:
     - ['OCEAN_coupled', [True]]
 # ----------------------------------------------------------------------------------------------
+
+heartbeat:
+  type:           'text'
+  prompt:         'Enter a number (in seconds) for HEARTBEAT_DT (press ENTER for recommended value):'
+  choices:        ''
+  default_answer: ''
+  follows_up:     ''

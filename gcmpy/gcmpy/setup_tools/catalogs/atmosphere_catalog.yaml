@@ -2,7 +2,9 @@
 # Fields that are derived at runtime from AGCM_grid (im, jm, gridfile, res,
 # gridname, res_dateline, hist_im, hist_jm) are stored here since they are
 # formulaic from im (im = numeric part of AGCM_grid, e.g. c48 -> im=48).
-# Only dt, lm, and microphysics are runtime-only (from expConfig).
+# Actual dt, lm, and microphysics come from expConfig; heartbeat is a recommendation.
+# Coupled dt_ocean follows the actual heartbeat, not the data-ocean value below.
+# io_server is a prompt recommendation; the user's answer remains authoritative.
 
 defaults:
   use_SHMEM: 0
@@ -32,6 +34,8 @@ defaults:
 
 resolutions:
   c12:
+    io_server: false
+    heartbeat: 1200
     im: 12
     jm: 72
     hist_im: 48
@@ -59,6 +63,8 @@ resolutions:
       data_ocean: 12
 
   c24:
+    io_server: false
+    heartbeat: 1200
     im: 24
     jm: 144
     hist_im: 96
@@ -82,6 +88,8 @@ resolutions:
     ny: 24
 
   c48:
+    io_server: false
+    heartbeat: 1200
     im: 48
     jm: 288
     hist_im: 180
@@ -103,6 +111,8 @@ resolutions:
     ny: 36
 
   c90:
+    io_server: false
+    heartbeat: 900
     im: 90
     jm: 540
     hist_im: 360
@@ -126,12 +136,14 @@ resolutions:
       MIT: 36
       MOM6: 36
       data_ocean: 60
-    dt_ocean:
-      MIT: 900
-      MOM6: 900
-      data_ocean: 3600
+    dt_ocean: 3600
 
   c180:
+    io_server: true
+    heartbeat:
+      MOM6: 450
+      MIT: 450
+      data_ocean: 600
     im: 180
     jm: 1080
     hist_im: 720
@@ -139,8 +151,14 @@ resolutions:
     gridfile: Gnomonic_c180.dat
     gridname: PE180x1080-CF
     res_dateline: 180x1080
-    conv_dt: 600
-    chem_dt: 1800
+    conv_dt:
+      MOM6: 450
+      MIT: 450
+      data_ocean: 600
+    chem_dt:
+      MOM6: 900
+      MIT: 900
+      data_ocean: 1800
     dt_solar: 3600
     dt_irrad: 3600
     job_sgmt: '00000016'
@@ -156,12 +174,11 @@ resolutions:
       MOM6: 96
       MIT: null   # runtime fallback: ocean_ny
       data_ocean: 120
-    dt_ocean:
-      MOM6: 600
-      MIT: 600
-      data_ocean: 3600
+    dt_ocean: 3600
 
   c270:
+    io_server: true
+    heartbeat: 600
     im: 270
     jm: 1620
     hist_im: 1080
@@ -187,6 +204,8 @@ resolutions:
     ny: 240
 
   c360:
+    io_server: true
+    heartbeat: 450
     im: 360
     jm: 2160
     hist_im: 1440
@@ -213,6 +232,8 @@ resolutions:
       data_ocean: 180
 
   c540:
+    io_server: true
+    heartbeat: 300
     im: 540
     jm: 3240
     hist_im: 2160
@@ -238,6 +259,8 @@ resolutions:
     ny: 360
 
   c720:
+    io_server: true
+    heartbeat: 300
     im: 720
     jm: 4320
     hist_im: 2880
@@ -261,6 +284,8 @@ resolutions:
     ny: 240
 
   c1080:
+    io_server: true
+    heartbeat: 150
     im: 1080
     jm: 6480
     hist_im: 4320
@@ -286,6 +311,8 @@ resolutions:
     ny: 480
 
   c1120:
+    io_server: true
+    heartbeat: 300
     im: 1120
     jm: 6720
     hist_im: 4480
@@ -309,6 +336,8 @@ resolutions:
     ny: 360
 
   c1440:
+    io_server: true
+    heartbeat: 150
     im: 1440
     jm: 8640
     hist_im: 5760
@@ -332,6 +361,8 @@ resolutions:
     ny: 480
 
   c1536:
+    io_server: true
+    heartbeat: 75
     im: 1536
     jm: 9216
     hist_im: 6144
@@ -357,6 +388,8 @@ resolutions:
     ny: 360
 
   c2160:
+    io_server: true
+    heartbeat: 75
     im: 2160
     jm: 12960
     hist_im: 8640
@@ -382,6 +415,8 @@ resolutions:
     ny: 960
 
   c2880:
+    io_server: true
+    heartbeat: 75
     im: 2880
     jm: 17280
     hist_im: 11520
@@ -406,6 +441,8 @@ resolutions:
     ny: 480
 
   c4320:
+    io_server: true
+    heartbeat: 75
     im: 4320
     jm: 25920
     hist_im: 17280
@@ -431,6 +468,8 @@ resolutions:
     ny: 480
 
   c5760:
+    io_server: true
+    heartbeat: 75
     im: 5760
     jm: 34560
     hist_im: 23040
@@ -456,6 +495,7 @@ resolutions:
 
 microphysics:
   BACM_1M:
+    heartbeat: 450
     BACM_1M: ''
     GFDL_1M: '#'
     MGB2_2M: '#'

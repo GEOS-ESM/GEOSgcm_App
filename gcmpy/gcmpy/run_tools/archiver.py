@@ -353,6 +353,9 @@ def archive_checkpoints(
             if input_dir.is_dir():
                 for item in restart_src.iterdir():
                     if item.is_file():
+                        # Initial INPUT files may be links to the user's restarts.
+                        if (input_dir / item.name).is_symlink():
+                            (input_dir / item.name).unlink()
                         shutil.copy2(item, input_dir / item.name)
             else:
                 print(f"WARNING: {input_dir} not found; skipping RESTART/* INPUT")

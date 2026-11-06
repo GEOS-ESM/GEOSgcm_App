@@ -1,10 +1,9 @@
 """
-BCS-staging fixes: initial ``cap_restart`` creation and site-aware
+User-supplied ``cap_restart`` preservation and site-aware
 ``sst_dir``/``chem_dir`` propagation into the stagebcs/linkbcs pipeline.
 
-gcmpy setup previously never wrote ``$EXPDIR/cap_restart`` (the run-side
-``read_edate`` requires it for initial-restart archiving), and
-``stagebcs.py`` composed SST/ExtData roots from ``boundary_dir`` plus
+Users supply ``cap_restart`` with their restarts; setup must not invent a
+restart date. ``stagebcs.py`` composed SST/ExtData roots from ``boundary_dir`` plus
 catalog relative names, which misses NCCS's ``share/gmao_ops`` prefix.
 These tests pin the fixed behavior, including the o1 (Reynolds) data-ocean
 ``bcrslv`` that matches the on-disk land-tile directories.
@@ -31,7 +30,6 @@ def _load_stagebcs():
 
 def _bare_setup(tmp_path):
     inst = SetupGCM.__new__(SetupGCM)
-    inst.begin_date = '18910301 000000'
     inst.expConfig = {'exp_dir': str(tmp_path)}
     inst.ocean = {'history_template': 'HISTORY.AGCM.rc.tmpl'}
     for name in [
@@ -45,16 +43,14 @@ def _bare_setup(tmp_path):
     return inst
 
 
-def test_organize_exp_dir_writes_initial_cap_restart(tmp_path, monkeypatch):
+def test_organize_exp_dir_does_not_create_cap_restart(tmp_path, monkeypatch):
     inst = _bare_setup(tmp_path)
     monkeypatch.setattr(setup_main, 'copy_src_tarfile', lambda *a, **k: None)
     monkeypatch.setattr(inst, 'make_RESTART_dir', lambda: None)
 
     inst.organize_exp_dir()
 
-    cap_restart = tmp_path / "cap_restart"
-    assert cap_restart.is_file()
-    assert cap_restart.read_text() == '18910301 000000\n'
+    assert not (tmp_path / "cap_restart").exists()
 
 
 def test_organize_exp_dir_preserves_existing_cap_restart(tmp_path, monkeypatch):

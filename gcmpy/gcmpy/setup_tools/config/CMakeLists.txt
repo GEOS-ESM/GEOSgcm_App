@@ -1,6 +1,7 @@
 set (programs
 	__init__.py
 	mpi_config.yaml
+	run_yaml_fields.yaml
 	)
 
 foreach (file ${programs})

@@ -39,6 +39,7 @@ def main():
         clone_exp(expConfig)
         copy_src_tarfile(expConfig['exp_dir'])
         print("Successfully created a clone!")
+        print(f"Experiment can be found in {expConfig['exp_dir']}")
         exit()
 
     experiment = SetupGCM(expConfig)
@@ -64,6 +65,7 @@ def main():
     experiment.stage_bcs()
     experiment.stage_run_code()
     experiment.organize_exp_dir()
+    print(f"Experiment can be found in {expConfig['exp_dir']}")
 
 if __name__ == "__main__":
     main()

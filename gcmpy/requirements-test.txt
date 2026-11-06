@@ -1,0 +1,5 @@
+pytest
+PyYAML
+questionary
+Jinja2
+netCDF4
