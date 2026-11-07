@@ -439,7 +439,6 @@ if ( $SITE == 'NCCS' ) then
 
    echo "Enter the ${C1}Processor Type${CN} you wish to run on:"
    echo "   ${C2}mil  (Milan)${CN} (default)"
-   echo "   ${C2}cas  (Cascade Lake)${CN}"
    echo " "
    set MODEL = `echo $<`
    set MODEL = `echo $MODEL | tr "[:upper:]" "[:lower:]"`
@@ -447,15 +446,11 @@ if ( $SITE == 'NCCS' ) then
       set MODEL = 'mil'
    endif
 
-   if( $MODEL != 'mil' & \
-       $MODEL != 'cas' ) goto ASKPROC
+   if( $MODEL != 'mil' ) goto ASKPROC
 
    if ($MODEL == 'mil') then
       # For even division, use 120 cores per node
       set NCPUS_PER_NODE = 120
-   else if ($MODEL == 'cas') then
-      # For even division, use  40 cores per node
-      set NCPUS_PER_NODE = 40
    endif
 
 else if ( $SITE == 'NAS' ) then
@@ -1558,8 +1553,6 @@ else if( $SITE == 'NCCS' ) then
               setenv    POST_P  "SBATCH --nodes=1 --ntasks-per-node=${NCPUS_PER_NODE}"        # PE Configuration for gcm_post.j
               if      ($MODEL == 'mil') then
                  setenv PLOT_P  "SBATCH --constraint=${MODEL} --nodes=1 --ntasks-per-node=24 --mem=488G"  # PE Configuration for gcm_plot.j
-              else if ($MODEL == 'cas') then
-                 setenv PLOT_P  "SBATCH --constraint=${MODEL} --nodes=1 --ntasks-per-node=10 --mem=185G"  # PE Configuration for gcm_plot.j
               else
                  setenv PLOT_P  "SBATCH --nodes=4 --ntasks=4"                                 # PE Configuration for gcm_plot.j
               endif
