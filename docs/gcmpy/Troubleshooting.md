@@ -6,6 +6,8 @@
 | `FileNotFoundError` for `.../gcmpy/setup_tools/config/...` or `SITE.rc` during setup | Setup was not run from `$INSTALL/bin/gcmpy`. Change to that directory and run it again. |
 | Setup exits right after the group ID question | The site is neither NCCS nor NAS. Group selection is only supported at those sites. |
 | `ERROR: unknown processor 'cas' for NCCS` | Cascade Lake has been retired at NCCS. Use `mil`. |
+| `Cannot identify NAS setup OS` | Setup requires RHEL 8 (TOSS4) or RHEL 9 (TOSS5); check `/etc/os-release` and run on the intended NAS frontend. |
+| `processor ... is not supported on this NAS setup OS` | Change the YAML processor to a choice listed in the error, or use the appropriate NAS frontend and installation. |
 | Run fails because `cap_restart` or a restart is missing | Setup no longer creates `cap_restart`. Create it (`YYYYMMDD HHMMSS`) and copy in the restarts. |
 | Run aborts saying both grid and face restarts exist | Remove either `fvcore_internal_rst` or the `*_face_*_rst` files. Don't mix the two layouts. |
 | `Cannot size batch allocation: .../AGCM.rc is missing` | `exp_dir` in the run YAML is wrong, or `AGCM.rc` was moved. |

@@ -48,8 +48,12 @@ Several defaults depend on earlier answers:
   ocean). Whatever you enter is used, and coupled runs also use it as the
   ocean/sea ice time step.
 - **Processor**: NCCS offers `mil` (Milan, 120 ranks per node). Cascade Lake
-  (`cas`) has been retired. NAS offers `rom` (default), `bro`, `sky`, `cas`,
-  `mil` and `tur`.
+  (`cas`) has been retired. At NAS, setup on RHEL 8 (TOSS4) offers `rom`
+  (default), `mil`, `cas`, `bro` and `sky`; setup on RHEL 9 (TOSS5) offers
+  only `tur` (Turin, 240 ranks per node). YAML-driven setup validates the
+  same choices. This uses the OS running setup, not the build OS: use an
+  installation built for that OS. Existing experiments and clones are not
+  checked.
 - **Experiment directory**: the parent directory you used last time (saved in
   `~/.EXPDIRroot`), or `/discover/nobackup/$USER/<expid>` at NCCS and
   `/nobackup/$USER/<expid>` at NAS.

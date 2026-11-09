@@ -1,3 +1,4 @@
+import platform
 
 sites_list = ['NCCS', 'NAS']
 
@@ -5,6 +6,22 @@ site_nodes_dict = {
         'NCCS': dict(mil=120),
         'NAS': dict(bro=24, sky=40, cas=40, rom=120, mil=120, tur=240)
         }
+
+
+def nas_processor_nodes():
+    """Return NAS processors compatible with the OS running setup, default first."""
+    try:
+        release = platform.freedesktop_os_release()
+    except OSError:
+        release = {}
+    major = release.get('VERSION_ID', '').split('.')[0]
+    if release.get('ID') == 'rhel' and major == '8':
+        processors = ('rom', 'mil', 'cas', 'bro', 'sky')
+    elif release.get('ID') == 'rhel' and major == '9':
+        processors = ('tur',)
+    else:
+        raise SystemExit('ERROR: Cannot identify NAS setup OS as RHEL 8 (TOSS4) or RHEL 9 (TOSS5); check /etc/os-release.')
+    return {name: site_nodes_dict['NAS'][name] for name in processors}
 
 """
   As far as possible, define the following parameters:
@@ -118,7 +135,5 @@ job_script_header['Other'] = dict(
         archive_p = "NULL",
         move_p = "NULL"
         )
-
-
 
 

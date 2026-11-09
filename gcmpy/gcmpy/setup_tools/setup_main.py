@@ -35,7 +35,8 @@ from gcmpy.utils.regex_ops import search_replace_in_string
 from gcmpy.batch_tools.node_ops import determine_nodes
 from gcmpy.batch_tools.computing_sites import (
         job_script_header,
-        site_nodes_dict
+        site_nodes_dict,
+        nas_processor_nodes
         )
 
 # combines all models (Atmos, Ocean, Land, Gocart) into one big one
@@ -144,14 +145,12 @@ class SetupGCM:
             self.num_CPUs = node_map[proc]
 
         elif envdict['site'] == 'NAS':
-            # Upstream gcm_setup:477-516 -- the raw answer (default rom)
-            # maps onto NAS's processor names plus a per-type core count.
-            node_map = site_nodes_dict['NAS']
-            proc = self.expConfig.get('processor') or 'rom'
+            node_map = nas_processor_nodes()
+            proc = self.expConfig.get('processor') or next(iter(node_map))
             raw = proc.split('_')[0]   # tolerate 'mil_ait' from a driver yaml
             if raw not in node_map:
-                print(Color.RED + f"ERROR: unknown processor '{proc}' for "
-                      f"site NAS (choose from {list(node_map)}).")
+                print(Color.RED + f"ERROR: processor '{proc}' is not supported on this NAS setup OS "
+                      f"(choose from {list(node_map)}).")
                 sys.exit(1)
             self.num_CPUs = node_map[raw]
             if raw in ['bro', 'sky']:
