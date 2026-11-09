@@ -10,7 +10,6 @@ gcmpy/
 ├── gcm_run.py              # entry point: submit (login node) / execute (in job)
 ├── gcm_run.sh              # internal job wrapper, installed to $INSTALL/bin
 ├── requirements-test.txt   # pytest, PyYAML, questionary, Jinja2, netCDF4
-├── gcmpy_doc/              # these documents
 ├── gcmpy_tests/gcmpy/      # pytest suite, mirrors the package layout
 └── gcmpy/
     ├── batch_tools/        # site/processor tables, Slurm/PBS env, IOSERVER math
@@ -26,7 +25,10 @@ gcmpy/
     └── utils/              # yaml, catalog, path, regex, clock, file helpers
 ```
 
-CMake installs everything under `$INSTALL/bin/gcmpy/`, and installs
+These documents live in `docs/gcmpy/` at the repository root and are not
+installed.
+
+CMake installs the code under `$INSTALL/bin/gcmpy/`, and installs
 `gcm_run.sh` to `$INSTALL/bin/`. `setup_envs.py` contains `@MPI_STACK@`,
 which `configure_file` fills in, so **an uninstalled source tree cannot run
 setup**. Tests mock this where they need to.
@@ -179,7 +181,9 @@ Test layout mirrors the package:
 | YAML I/O | `utils/test_yaml_ops.py` |
 
 CI (`.github/workflows/python-tests.yml`) runs the same command on Linux and
-macOS for every pull request.
+macOS for every pull request. A separate **Docs Check** workflow
+(`.github/workflows/docs-check.yml`) posts a warning, without failing, when a
+pull request changes `gcmpy/` but not `docs/gcmpy/`.
 
 ## Conventions
 
@@ -190,5 +194,7 @@ macOS for every pull request.
 - Check user input before changing anything (see `apply_mpi_environment`).
 - Booleans in the run YAML are real YAML booleans. MPI environment values
   are strings.
-- Add or update tests in the matching `gcmpy_tests/` module, and update
-  these docs and `gcmpy/README.md` when behaviour visible to users changes.
+- Add or update tests in the matching `gcmpy_tests/` module.
+- Update `docs/gcmpy/` (and `gcmpy/README.md`, if it is affected) in the
+  same pull request as any change in behaviour. `AGENTS.md` at the repository
+  root maps code areas to the pages that describe them.

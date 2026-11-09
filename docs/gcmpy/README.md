@@ -4,9 +4,10 @@
 workflow. It creates GEOS GCM experiment directories and runs the model under
 Slurm (NCCS) or PBS (NAS).
 
-These pages are versioned with the code. They are mirrored to the
-[GEOSgcm_App wiki](https://github.com/GEOS-ESM/GEOSgcm_App/wiki/gcmpy-Guide);
-if the two disagree, the copy in the repository is authoritative.
+These pages are the only copy of the gcmpy documentation. The
+[GEOSgcm_App wiki](https://github.com/GEOS-ESM/GEOSgcm_App/wiki) just links
+here. Update these pages in the same pull request as the code change (see
+[`AGENTS.md`](../../AGENTS.md)).
 
 ## For users
 
@@ -28,7 +29,7 @@ if the two disagree, the copy in the repository is authoritative.
 
 ## Further reading
 
-- [`gcmpy/README.md`](../README.md): a short reference for the run-time
+- [`gcmpy/README.md`](../../gcmpy/README.md): a short reference for the run-time
   settings.
 - The [Developer Guide](Developer-Guide.md#run-pipeline) maps each
   `run_tools` module to the part of `gcm_run.j` it replaces.

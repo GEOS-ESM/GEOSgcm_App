@@ -15,9 +15,8 @@ users to perform specific tasks:
    interactively or from a YAML configuration file (`--yaml`).
 - `gcm_run.py`: Submit and run the model (`--config run_<expid>.yaml`).
 
-Full user and developer documentation is in [`gcmpy_doc/`](gcmpy_doc/README.md)
-(start with the [Quick Start](gcmpy_doc/Quick-Start.md)) and is mirrored on the
-[GEOSgcm_App wiki](https://github.com/GEOS-ESM/GEOSgcm_App/wiki/gcmpy-Guide).
+Full user and developer documentation is in [`docs/gcmpy/`](../docs/gcmpy/README.md)
+(start with the [Quick Start](../docs/gcmpy/Quick-Start.md)).
 
 Underneath, the tool implements a collection of classes
 (handling various tasks) that are supported by low level

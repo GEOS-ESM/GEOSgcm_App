@@ -1,0 +1,45 @@
+name: Docs Check
+
+# Soft reminder: warn (never fail) when gcmpy code changes without a
+# matching change under docs/gcmpy/. See AGENTS.md for the code-to-doc map.
+
+on:
+  pull_request:
+    paths:
+      - 'gcmpy/**'
+
+permissions:
+  contents: read
+
+jobs:
+  docs-reminder:
+    name: gcmpy docs updated?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - name: Compare changed paths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA")
+          code=$(printf '%s\n' "$changed" | grep '^gcmpy/' | grep -v '^gcmpy/gcmpy_tests/' || true)
+          docs=$(printf '%s\n' "$changed" | grep -E '^(docs/gcmpy/|gcmpy/README\.md$)' || true)
+          if [ -n "$code" ] && [ -z "$docs" ]; then
+            echo "::warning title=gcmpy docs not updated::This PR changes gcmpy code but not docs/gcmpy/. If behaviour that users or developers can see changed, update the matching page (see AGENTS.md); otherwise ignore this warning."
+            {
+              echo "### gcmpy docs not updated"
+              echo
+              echo "gcmpy code changed without a change under \`docs/gcmpy/\`:"
+              echo
+              printf '%s\n' "$code" | sed 's/^/- `/; s/$/`/'
+              echo
+              echo "If behaviour changed, update the matching page (see \`AGENTS.md\`). Otherwise, ignore this warning."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "OK: no gcmpy code changes, or docs were updated."
+          fi

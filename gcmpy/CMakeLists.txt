@@ -1,4 +1,3 @@
-add_subdirectory(gcmpy_doc)
 add_subdirectory(gcmpy_tests)
 add_subdirectory(gcmpy)
 
