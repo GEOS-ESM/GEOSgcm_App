@@ -3,7 +3,7 @@ import yaml, re, os, subprocess, sys
 from gcmpy.setup_tools.generate_question import Question
 from gcmpy.setup_tools.atmosphere import get_heartbeat_default, get_io_server_default
 from gcmpy.utils.color_ops import Color
-from gcmpy.setup_tools.setup_envs import envdict
+from gcmpy.setup_tools.setup_envs import envdict, pathdict
 from gcmpy.setup_tools.questions.load_questions import load_yamls
 from gcmpy.geos_settings.horizontal_resolution import (
         mit_horizontal_res,
@@ -54,7 +54,7 @@ class Handle:
         my_site = envdict['site']
         if my_site in site_nodes_dict:
             # questionary.select starts on the first choice.
-            nodes = nas_processor_nodes() if my_site == 'NAS' else site_nodes_dict[my_site]
+            nodes = nas_processor_nodes(pathdict.get('etc')) if my_site == 'NAS' else site_nodes_dict[my_site]
             question_dict[i].choices = list(nodes)
         else:
             exit(1)

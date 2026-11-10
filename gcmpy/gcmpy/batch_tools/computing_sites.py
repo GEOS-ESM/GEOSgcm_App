@@ -1,4 +1,6 @@
 import platform
+import re
+from pathlib import Path
 
 sites_list = ['NCCS', 'NAS']
 
@@ -8,20 +10,72 @@ site_nodes_dict = {
         }
 
 
-def nas_processor_nodes():
-    """Return NAS processors compatible with the OS running setup, default first."""
+# Default processor first.
+_NAS_OS_PROCESSORS = {
+    ('rhel', '8'): ('rom', 'mil', 'cas', 'bro', 'sky'),
+    ('rhel', '9'): ('tur',),
+}
+
+
+def host_os():
+    """Return (ID, major VERSION_ID) of the running OS; empty strings if unknown."""
     try:
         release = platform.freedesktop_os_release()
     except OSError:
         release = {}
-    major = release.get('VERSION_ID', '').split('.')[0]
-    if release.get('ID') == 'rhel' and major == '8':
-        processors = ('rom', 'mil', 'cas', 'bro', 'sky')
-    elif release.get('ID') == 'rhel' and major == '9':
-        processors = ('tur',)
-    else:
-        raise SystemExit('ERROR: Cannot identify NAS setup OS as RHEL 8 (TOSS4) or RHEL 9 (TOSS5); check /etc/os-release.')
-    return {name: site_nodes_dict['NAS'][name] for name in processors}
+    return release.get('ID', ''), release.get('VERSION_ID', '').split('.')[0]
+
+
+def build_os(etc):
+    """Return (ID, major version) from <etc>/OS.rc, or None for installs without it.
+
+    Malformed metadata exits rather than silently falling back to the host OS.
+    """
+    path = Path(etc) / 'OS.rc' if etc else None
+    if path is None or not path.is_file():
+        return None
+    fields = {}
+    for line in path.read_text().splitlines():
+        key, _, value = line.partition(':')
+        if key.strip():
+            fields[key.strip()] = value.strip()
+    version = fields.get('OS_VERSION', '')
+    if not fields.get('OS_ID') or not re.fullmatch(r'\d+(\.\d+)*', version):
+        raise SystemExit(f'ERROR: {path} is malformed: need OS_ID and a numeric OS_VERSION.')
+    return fields['OS_ID'], version.split('.')[0]
+
+
+def nas_processor_nodes(etc=None):
+    """Return NAS processors for the build OS (OS.rc), default first.
+
+    Without OS.rc, fall back to the OS running setup and warn.
+    """
+    os_key = build_os(etc)
+    label = 'build'
+    if os_key is None:
+        os_key, label = host_os(), 'setup'
+        print('WARNING: <install>/etc/OS.rc not found; the build OS cannot be verified, '
+              'using the OS running setup.')
+    if os_key not in _NAS_OS_PROCESSORS:
+        raise SystemExit(f'ERROR: Cannot identify NAS {label} OS as RHEL 8 (TOSS4) or RHEL 9 (TOSS5); '
+                         'check OS.rc or /etc/os-release.')
+    return {name: site_nodes_dict['NAS'][name] for name in _NAS_OS_PROCESSORS[os_key]}
+
+
+def check_nas_submit(etc, run_p):
+    """Exit unless the submitting OS matches the build OS and the PBS model in run_p.
+
+    TOSS5 jobs must be submitted from TOSS5 (and TOSS4 from TOSS4), including resubmission.
+    """
+    build, host = build_os(etc), host_os()
+    if build is not None and build != host:
+        raise SystemExit(f'ERROR: this install was built on {build[0]} {build[1]} but you are submitting from '
+                         f'{host[0]} {host[1]}; submit from a matching NAS login node.')
+    match = re.search(r'model=([a-z]+)', run_p)
+    model = match.group(1) if match else None
+    if model not in _NAS_OS_PROCESSORS.get(build or host, ()):
+        raise SystemExit(f"ERROR: run_p model '{model}' cannot run on {(build or host)[0]} {(build or host)[1]}; "
+                         'fix run_p in the run YAML or use a matching install.')
 
 """
   As far as possible, define the following parameters:

@@ -145,11 +145,11 @@ class SetupGCM:
             self.num_CPUs = node_map[proc]
 
         elif envdict['site'] == 'NAS':
-            node_map = nas_processor_nodes()
+            node_map = nas_processor_nodes(pathdict['etc'])
             proc = self.expConfig.get('processor') or next(iter(node_map))
             raw = proc.split('_')[0]   # tolerate 'mil_ait' from a driver yaml
             if raw not in node_map:
-                print(Color.RED + f"ERROR: processor '{proc}' is not supported on this NAS setup OS "
+                print(Color.RED + f"ERROR: processor '{proc}' is not supported on this NAS build OS "
                       f"(choose from {list(node_map)}).")
                 sys.exit(1)
             self.num_CPUs = node_map[raw]

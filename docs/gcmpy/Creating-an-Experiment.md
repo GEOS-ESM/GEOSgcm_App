@@ -48,12 +48,16 @@ Several defaults depend on earlier answers:
   ocean). Whatever you enter is used, and coupled runs also use it as the
   ocean/sea ice time step.
 - **Processor**: NCCS offers `mil` (Milan, 120 ranks per node). Cascade Lake
-  (`cas`) has been retired. At NAS, setup on RHEL 8 (TOSS4) offers `rom`
-  (default), `mil`, `cas`, `bro` and `sky`; setup on RHEL 9 (TOSS5) offers
-  only `tur` (Turin, 240 ranks per node). YAML-driven setup validates the
-  same choices. This uses the OS running setup, not the build OS: use an
-  installation built for that OS. Existing experiments and clones are not
-  checked.
+  (`cas`) has been retired. At NAS the choices follow the OS the model was
+  **built** on, read from `<install>/etc/OS.rc` (written by ESMA_cmake at
+  configure time): RHEL 8 (TOSS4) offers `rom` (default), `mil`, `cas`, `bro`
+  and `sky`; RHEL 9 (TOSS5) offers only `tur` (Turin, 240 ranks per node).
+  Only the distro ID and major version are compared, so 8.10 and 8.11 are
+  equivalent. This lets you set up a Turin experiment from a TOSS4 login node
+  with a TOSS5 build. If `OS.rc` is missing (older installs) setup prints a
+  warning and uses the OS running setup instead; a malformed `OS.rc` is an
+  error. YAML-driven setup validates the same choices. Existing experiments
+  and clones are not checked.
 - **Experiment directory**: the parent directory you used last time (saved in
   `~/.EXPDIRroot`), or `/discover/nobackup/$USER/<expid>` at NCCS and
   `/nobackup/$USER/<expid>` at NAS.

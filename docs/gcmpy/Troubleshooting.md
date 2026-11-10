@@ -6,8 +6,12 @@
 | `FileNotFoundError` for `.../gcmpy/setup_tools/config/...` or `SITE.rc` during setup | Setup was not run from `$INSTALL/bin/gcmpy`. Change to that directory and run it again. |
 | Setup exits right after the group ID question | The site is neither NCCS nor NAS. Group selection is only supported at those sites. |
 | `ERROR: unknown processor 'cas' for NCCS` | Cascade Lake has been retired at NCCS. Use `mil`. |
-| `Cannot identify NAS setup OS` | Setup requires RHEL 8 (TOSS4) or RHEL 9 (TOSS5); check `/etc/os-release` and run on the intended NAS frontend. |
-| `processor ... is not supported on this NAS setup OS` | Change the YAML processor to a choice listed in the error, or use the appropriate NAS frontend and installation. |
+| `Cannot identify NAS build OS` / `Cannot identify NAS setup OS` | The OS from `<install>/etc/OS.rc` (build) or `/etc/os-release` (setup, when `OS.rc` is missing) is not RHEL 8 (TOSS4) or RHEL 9 (TOSS5). |
+| `WARNING: <install>/etc/OS.rc not found` | The install predates build-OS metadata; setup used the OS running setup. Make sure it matches the OS the model was built on. |
+| `OS.rc is malformed` | `etc/OS.rc` needs `OS_ID` and a numeric `OS_VERSION`. Rebuild the install. |
+| `processor ... is not supported on this NAS build OS` | Change the YAML processor to a choice listed in the error, or use an installation built for the OS you want. |
+| `this install was built on rhel N but you are submitting from rhel M` | Submit from a NAS login node with the build's OS (TOSS5 for Turin). |
+| `run_p model '...' cannot run on rhel N` | Fix `model=` in `run_p` in the run YAML: `tur` needs a TOSS5 build, the other NAS processors need TOSS4. |
 | Run fails because `cap_restart` or a restart is missing | Setup no longer creates `cap_restart`. Create it (`YYYYMMDD HHMMSS`) and copy in the restarts. |
 | Run aborts saying both grid and face restarts exist | Remove either `fvcore_internal_rst` or the `*_face_*_rst` files. Don't mix the two layouts. |
 | `Cannot size batch allocation: .../AGCM.rc is missing` | `exp_dir` in the run YAML is wrong, or `AGCM.rc` was moved. |
