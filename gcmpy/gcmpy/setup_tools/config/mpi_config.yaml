@@ -17,6 +17,7 @@ openmpi:
   OMPI_MCA_coll_tuned_use_dynamic_rules: "1"
   # Disable file locks (no shell quotes in the actual environment value)
   OMPI_MCA_sharedfp: "^lockedfile,individual"
+  OMPI_MCA_coll: "^han"
 
 mvapich:
   MV2_ENABLE_AFFINITY: "0"
