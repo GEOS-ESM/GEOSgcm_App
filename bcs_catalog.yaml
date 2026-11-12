@@ -174,6 +174,14 @@ ocean_model:
       sst_file: dataoceanfile_OSTIA_REYNOLDS_ITR21C_SST
       ice_file: dataoceanfile_OSTIA_REYNOLDS_ITR21C_ICE
       kpar_file: SEAWIFS_KPAR_mon_clim
+  mit:
+    ogrid_type: MITLLC
+    llc90:
+      IM: 5400
+      JM: 15
+    llc270:
+      IM: 23040
+      JM: 30
 
 seaice_model:
   cice:

@@ -168,11 +168,11 @@ resolutions:
     res: CF0180x6C
     nx:
       MOM6: 20
-      MIT: null   # runtime fallback: ocean_nx
+      MIT: 8
       data_ocean: 20
     ny:
       MOM6: 96
-      MIT: null   # runtime fallback: ocean_ny
+      MIT: 96
       data_ocean: 120
     dt_ocean: 3600
 

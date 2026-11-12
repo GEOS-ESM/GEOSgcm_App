@@ -47,6 +47,14 @@ MOM6_resolution:
   follows_up:
     - ['OCEAN_type', ['MOM6']]
 
+MIT_resolution:
+  type:           'select'
+  prompt:         'Select the MITgcm LLC Ocean Resolution:'
+  choices:        ''
+  default_answer: ''
+  follows_up:
+    - ['OCEAN_type', ['MIT']]
+
 OGCM_LM:
   type:           'text'
   prompt:         'Enter the Ocean Model VERTICAL resolution (LM):'

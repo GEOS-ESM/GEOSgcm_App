@@ -23,6 +23,16 @@
 | Changes to `$EXPDIR/gcmpy/` have no effect in batch jobs | In-job runs use `$GEOSBIN/gcmpy/gcm_run.py`. Make the change in the source, then rebuild and install. |
 | Output disappeared after a `stop_after_run` test | `scratch/` is recreated at the start of every job. Copy the output out first. |
 | An experiment made with `gcm_create.py` has no `gcm_run.py` or `linkbcs.yaml` | This is a known gap. Use `gcm_setup.py --yaml FILE`. |
+| `You MUST select c90 or c180 atmospheric resolution for MIT ocean!` | MIT is only offered for c90 and c180. Pick one of those, or choose another ocean. |
+| `MIT <grid> requires <llc> with its matching compiled configuration.` | The LLC code does not match the atmosphere (`llc90` with c90, `llc270` with c180). Setup asks again, and a driver YAML with the wrong code stops setup with this message. |
+| `These MIT profiles are compiled with Nr=50; choose 50 levels.` | `LM` was changed from 50. Setup asks again. |
+| `ERROR: Atmosphere and compiled MIT ocean rank counts must agree.` | The atmosphere NX×NY does not equal the MIT rank count (360 for llc90, 768 for llc270). Check the `atmos` layout in the driver YAML, or the catalog. |
+| `ERROR: GEOS_MIT_BCS_PROFILE must be standard or G12_t4_MITC4.` | The variable has another value. Use one of the two names. |
+| `ERROR: G12_t4_MITC4 boundary conditions require C180 on NCCS/Discover.` | The G12 profile was forced for a grid or site it does not support. Unset `GEOS_MIT_BCS_PROFILE`. |
+| `ERROR: MIT tile grids in <file> do not match the selected atmosphere/ocean profile.` | The tile file's header names other grids. Check `GEOS_MIT_TILE` and the land tag (`GEOS_MIT_LAND_BCRSLV`). |
+| `ERROR: Invalid MIT tile header in <file>` or `MIT tile grids do not match the AGCM.rc grids` (run time) | The tile linked for this segment is not the one for this profile. Check the link in `scratch/tile.data`. |
+| `Missing MIT/CICE4 input(s): ...` (run time) | A file the MIT run needs is absent: a linked input, `libCICE4`, or `<exp_dir>/mit_input/data` / `data.exch2`. Restore it and run again. Remap is needed only with a data atmosphere. |
+| `MIT_SETUP.txt` shows `(stagebcs default)` for a path | That input is not overridden, so the standard file for the site is used. Set the `GEOS_MIT_*` variable if you need another. |
 
 ## Getting more information
 

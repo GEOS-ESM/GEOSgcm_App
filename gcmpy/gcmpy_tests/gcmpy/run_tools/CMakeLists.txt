@@ -8,6 +8,7 @@ set (programs
 	test_gcm_run_stop.py
 	test_gcm_run_sh_env.py
 	test_gcm_run_submit.py
+	test_mit_preflight.py
 	test_history_file_ops.py
 	test_mpi_runner.py
 	test_post_run.py

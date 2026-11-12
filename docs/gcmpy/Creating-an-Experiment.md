@@ -39,6 +39,9 @@ asked in this order:
 
 Several defaults depend on earlier answers:
 
+- **MIT ocean**: choosing MIT asks for an LLC resolution (`llc90` with c90,
+  `llc270` with c180; the matching one is listed first), allows only CICE4,
+  and asks for `LM`, which must be 50. See [MIT ocean](#mit-ocean-llc).
 - **IOSERVER**: the default comes from the `io_server` entry for the
   selected resolution in `catalogs/atmosphere_catalog.yaml`. It is off for
   c12–c90 and on for c180 and above. Your answer always wins.
@@ -91,6 +94,52 @@ When setup succeeds, the last line it prints is
 | `RC/` | Component resource files. |
 | `archive/`, `forecasts/`, `plot/`, `post/`, `regress/` | The csh helper scripts (`gcm_post.j`, `gcm_archive.j`, …). |
 | `RESTART/` | Coupled runs only: ocean and sea ice restarts go here. |
+| `MIT_SETUP.txt`, `mit_input/` | MIT runs only: the choices made (profile, build, layout, input paths), and the directory where you stage the MIT `data`/`data.exch2` files. |
+
+## MIT ocean (LLC)
+
+MIT is a coupled ocean choice for c90 and c180 atmospheres. It mirrors the
+csh `gcm_setup` MIT block (GEOSgcm_App PR #931).
+
+| Atmosphere | LLC | Compact grid | Tiles = MPI ranks | Atmosphere NX×NY | `MIT_CONFIG_ID` |
+| --- | --- | --- | --- | --- | --- |
+| c90 | `llc90` (1°) | 5400×15 | 360 | 10×36 | `c90_llc90_02` |
+| c180 | `llc270` (1/3°) | 23040×30 | 768 | 8×96 | `c180_llc270_01` |
+
+Setup checks:
+
+- The atmosphere is c90 or c180, and the LLC matches it.
+- The atmosphere rank count (NX×NY) equals the MIT rank count.
+- `LM` is 50 (the MIT profiles are compiled with 50 levels).
+- The MIT ocean uses CICE4 only.
+
+The executable is **not** built by setup. It must be built with
+`BUILD_MIT_OCEAN=ON` and the `MIT_CONFIG_ID` shown above, with `SIZE.h`
+matching the profile. An installed executable cannot switch between
+configurations. Check `CMakeCache.txt`, `SIZE.h` and `data.exch2` before
+you launch. The setup prints the required build, and `MIT_SETUP.txt` records
+it.
+
+Boundary conditions default to the standard files for the site, and the
+MIT inputs are taken from `<coupled_dir>/MIT/<IM>x<JM>/`. These environment
+variables override any of them at setup time (the same names as csh):
+
+| Variable | Overrides |
+| --- | --- |
+| `GEOS_MIT_BCS_PROFILE` | `standard` or `G12_t4_MITC4` |
+| `GEOS_MIT_BCSDIR`, `GEOS_MIT_LAND_BCRSLV` | Land boundary-condition root and tag |
+| `GEOS_MIT_CPLDIR` | Root of the MIT coupled inputs |
+| `GEOS_MIT_TILE`, `GEOS_MIT_RUNOFF`, `GEOS_MIT_GRIDSPEC` | Tile, runoff and `mit.ascii` files |
+| `GEOS_MIT_REMAP_NAME`, `GEOS_MIT_REMAP` | Data-atmosphere remap file and its link name |
+| `GEOS_MIT_KPAR`, `GEOS_MIT_INPUTDIR` | KPAR file and `INPUT` directory |
+| `GEOS_MIT_CICE_GRID`, `GEOS_MIT_CICE_KMT` | CICE4 grid and mask |
+
+`G12_t4_MITC4` is selected automatically for C180 on NCCS. Its paths are
+hardcoded to a working experiment's data, which is temporary. It will
+change, so do not rely on it for a new experiment.
+When the tile file is present, setup stops if its grid header does not match
+the atmosphere and ocean grids. Every segment also checks the MIT inputs after `linkbcs`, before
+`GEOSgcm.x` starts (see [Running the Model](Running-the-Model.md)).
 
 ## Before the first run
 

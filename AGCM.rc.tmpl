@@ -873,7 +873,7 @@ SEAICETHERMO_INTERNAL_CHECKPOINT_TYPE:  {{ checkpoint_type }}
 {{ ocean.CICE4 }}CICE4_INTERNAL_CHECKPOINT_FILE:        seaice_internal_checkpoint
 {{ ocean.CICE4 }}CICE4_INTERNAL_CHECKPOINT_TYPE:        {{ checkpoint_type }}
 
-{{ ocean.coupled }}OCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
+{{ ocean.coupled }}{{ ocean.internal_restart }}OCEAN_INTERNAL_RESTART_FILE:               ocean_internal_rst
 {{ ocean.coupled }}OCEAN_INTERNAL_CHECKPOINT_FILE:            ocean_internal_checkpoint
 {{ ocean.coupled }}OCEAN_INTERNAL_CHECKPOINT_TYPE:            {{ checkpoint_type }}
 

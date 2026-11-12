@@ -13,6 +13,7 @@ set (files
   mpi_runner.py
   archiver.py
   linkbcs_ops.py
+  mit_preflight.py
   stage_restarts.py
   run_resources.py
   scratch_setup.py

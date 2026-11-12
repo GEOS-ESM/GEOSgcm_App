@@ -9,6 +9,7 @@ set (programs
 	generate_question.py  
 	gocart.py  
 	land.py  
+	mit.py  
 	ocean.py  
 	process_questions.py  
 	geos_ops.py

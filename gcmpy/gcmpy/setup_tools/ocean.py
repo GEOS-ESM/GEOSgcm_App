@@ -1,7 +1,9 @@
+import os
 from pathlib import Path
 import yaml
 
 from gcmpy.utils.catalog_ops import CatalogSearch, load_catalog
+from gcmpy.setup_tools.mit import default_llc, mit_remap_name
 
 
 CATALOG_PATH = Path(__file__).parent / "catalogs" / "ocean_catalog.yaml"
@@ -21,7 +23,7 @@ def _build_coupled(ocean: dict, catalog: CatalogSearch, expConfig: dict):
         'name', 'gridtyp', 'grid_type', 'preload', 'MOM6', 'MIT',
         # resolution-specific
         'NX', 'NY', 'IM', 'JM', 'LM', 'IMO', 'JMO',
-        'res', 'kpar_file', 'gridname', 'nprocs',
+        'res', 'kpar_file', 'gridname', 'nprocs', 'mit_config_id',
     ]
 
     for field in coupled_fields:
@@ -141,6 +143,10 @@ def get_ocean_config(expConfig: dict) -> dict:
         Flat ocean configuration dictionary. Keys match the attribute names
         previously set on the Ocean class.
     """
+    # Drivers written before the MIT LLC question existed have no MIT_resolution.
+    if expConfig.get('OCEAN_type') == 'MIT' and not expConfig.get('MIT_resolution'):
+        expConfig = {**expConfig, 'MIT_resolution': default_llc(expConfig['AGCM_grid'])}
+
     catalog_data = load_catalog(CATALOG_PATH)
     catalog = CatalogSearch(catalog_data, expConfig)
     ocean = {}
@@ -151,6 +157,12 @@ def get_ocean_config(expConfig: dict) -> dict:
     ocean['history_template'] = expConfig['history_template']
     ocean['mpt_shepherd']     = ''   # mutated externally by setup_main if needed
 
+    # MIT-only values; empty for every other ocean.
+    ocean['llc']              = ''
+    ocean['mit_config_id']    = ''
+    ocean['mit_remap_name']   = ''
+    ocean['internal_restart'] = ''
+
     if ocean['running_ocean']:
         _build_coupled(ocean, catalog, expConfig)
     else:
@@ -158,6 +170,13 @@ def get_ocean_config(expConfig: dict) -> dict:
 
     _build_seaice(ocean, catalog, expConfig)
     _build_data_atmosphere(ocean, catalog, expConfig, catalog_data)
+
+    if ocean['running_ocean'] and expConfig['OCEAN_type'] == 'MIT':
+        ocean['llc']              = expConfig['MIT_resolution']
+        # csh PR #931: MIT manages its ocean state through pickups, so
+        # OCEAN_INTERNAL_RESTART_FILE is commented out in AGCM.rc.
+        ocean['internal_restart'] = '#'
+        ocean['mit_remap_name']   = mit_remap_name(os.environ)
 
     # A YAML null (a bare `coupled:` / `CICE6:` / `MOM6:` key) reaches us as
     # None.  The old csh tooling treated an empty shell variable as "line

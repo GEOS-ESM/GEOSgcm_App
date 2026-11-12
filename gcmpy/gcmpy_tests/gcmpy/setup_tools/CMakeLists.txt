@@ -4,6 +4,7 @@ set (programs
 	test_atmosphere_config.py
 	test_bcs_staging.py
 	test_catalog_tokens.py
+	test_mit_config.py
 	test_config_heartbeat.py
 	test_config_key_coverage.py
 	test_csh_template_aliases.py

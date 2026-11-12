@@ -15,6 +15,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from gcmpy.setup_tools.ocean import get_ocean_config
 from gcmpy.setup_tools.atmosphere import get_atmos_config
+from gcmpy.setup_tools import mit
 from gcmpy.setup_tools.land import get_land_config
 from gcmpy.setup_tools.gocart import get_gocart_config, adjust_tuning_coefficients
 from gcmpy.setup_tools.geos_ops import copy_src_tarfile
@@ -113,6 +114,19 @@ class SetupGCM:
         self.land   = get_land_config(self.expConfig)
         self.gocart = get_gocart_config(self.expConfig)
         self.templates.append(self.ocean['history_template'])
+        if self.ocean['model'] == 'MIT' and self.ocean['running_ocean']:
+            self.check_mit()
+
+    # Checks the MIT choice against the atmosphere and the compiled layout
+    # (the csh gcm_setup checks these at the questions and before writing files).
+    def check_mit(self):
+        try:
+            mit.validate_setup(f"c{self.atmos['im']}", self.ocean['llc'], self.ocean['seaice_model'],
+                               self.atmos['nx'], self.atmos['ny'],
+                               self.ocean['nprocs'], envdict['site'], os.environ)
+        except mit.MITSetupError as err:
+            print(Color.RED + f"ERROR: {err}" + Color.RESET)
+            sys.exit(2)
 
     '''
     def check_flags(self):
@@ -381,8 +395,10 @@ class SetupGCM:
 
         if envdict['site'] == 'GMAO.desktop':
             # By default on desktop, just ignore IOSERVER for now
-            self.atmos['nx'] = 1
-            self.atmos['ny'] = 6
+            # (MIT keeps its compiled rank layout; csh PR #931).
+            if self.ocean['model'] != 'MIT':
+                self.atmos['nx'] = 1
+                self.atmos['ny'] = 6
             self.expConfig["io_server"] = False
             self.n_oserver_nodes = 0
             self.n_backend_pes = 0
@@ -705,14 +721,14 @@ class SetupGCM:
 
         if self.ocean['running_ocean']:
             ocean_model = self.ocean['model'].lower()
-            if ocean_model == 'mit':
-                raise NotImplementedError(
-                    "linkbcs staging does not yet support the MIT ocean model "
-                    "(bcs_catalog.yaml has no 'MIT' section) -- deferred."
-                )
             linkbcs_config['ocean_model'] = ocean_model
-            # Needed for stagebcs.py to navigate into ocean_model.mom6.<oXXX>
-            linkbcs_config['ocean_resolution'] = f"o{self.ocean['IM']}"
+            if ocean_model == 'mit':
+                # Needed for stagebcs.py to navigate into ocean_model.mit.<llcXX>
+                linkbcs_config['ocean_resolution'] = self.ocean['llc']
+                linkbcs_config['mit'] = self.resolve_mit_bcs()
+            else:
+                # Needed for stagebcs.py to navigate into ocean_model.mom6.<oXXX>
+                linkbcs_config['ocean_resolution'] = f"o{self.ocean['IM']}"
             # stagebcs.py unconditionally reads config['ogcm_grid'] (only
             # meaningfully compared against 'cubed_sphere_ostia' for the
             # uncoupled/data-ocean case) -- must be present but is a no-op
@@ -733,11 +749,37 @@ class SetupGCM:
         config_path = Path(exp_dir) / "linkbcs_config.yaml"
         write_dict_into_yaml(config_path, linkbcs_config)
 
+        if self.ocean['running_ocean'] and self.ocean['model'] == 'MIT':
+            self.write_mit_setup(linkbcs_config['mit'])
+
         subprocess.run(
             [str(Path(pathdict['bin']) / "stagebcs.py"), "--config", str(config_path)],
             cwd=exp_dir,
             check=True,
         )
+
+    def resolve_mit_bcs(self) -> dict:
+        """MIT boundary-condition paths (csh PR #931); None keeps the stagebcs default."""
+        bcs = mit.resolve_bcs(envdict['site'], f"c{self.atmos['im']}", self.ocean,
+                              self.coupled_dir, os.environ)
+        # Checked against the tile header by stagebcs.py before any link is made.
+        bcs['expect'] = {
+            'agcm_gridname': self.atmos['gridname'],
+            'agcm_im': self.atmos['im'],
+            'agcm_jm': self.atmos['jm'],
+            'ogcm_im': self.ocean['IM'],
+            'ogcm_jm': self.ocean['JM'],
+        }
+        return bcs
+
+    def write_mit_setup(self, bcs: dict):
+        print(f"MIT boundary-condition profile: {bcs['profile']}")
+        for line in mit.required_build_lines(self.ocean):
+            print(line)
+        exp_dir = Path(self.expConfig['exp_dir'])
+        (exp_dir / 'mit_input').mkdir(exist_ok=True)
+        (exp_dir / 'MIT_SETUP.txt').write_text(
+            mit.setup_summary(f"c{self.atmos['im']}", self.ocean['llc'], self.ocean, self.atmos, bcs))
 
 
     # ------------------------------------------------------------------

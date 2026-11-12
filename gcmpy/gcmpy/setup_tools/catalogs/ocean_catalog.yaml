@@ -76,14 +76,28 @@ coupled:
     grid_type: llc
     MOM6: '#DELETE'
     MIT:
-    IM: 5400
-    JM: 15
-    NX: 360
-    NY: 1
-    res: MITLLC5400x0015
-    kpar_file: SEAWIFS_KPAR_mon_clim.5400x15
-    gridname: MITLLC5400x15-MITLLC
-    nprocs: 360
+    LM: 50
+    resolution:
+      llc90:
+        IM: 5400
+        JM: 15
+        NX: 360
+        NY: 1
+        res: MITLLC5400x0015
+        kpar_file: SEAWIFS_KPAR_mon_clim.5400x15
+        gridname: LL5400x15-LL
+        nprocs: 360
+        mit_config_id: c90_llc90_02
+      llc270:
+        IM: 23040
+        JM: 30
+        NX: 768
+        NY: 1
+        res: MITLLC23040x0030
+        kpar_file: SEAWIFS_KPAR_mon_clim.23040x30
+        gridname: LL23040x30-LL
+        nprocs: 768
+        mit_config_id: c180_llc270_01
 
 seaice:
   CICE4:

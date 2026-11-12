@@ -121,7 +121,7 @@ still fails the job.
 | `singularity_build` | Container build (Singularity runs are not yet implemented). |
 | `expConfig.experiment_id`, `expConfig.io_server` | Experiment ID; whether IOSERVER is on (adds `IOSERVER_NODES` to the node count). |
 | `atmos.*` | `res`, `nx`, `ny`, `mp_turn_off_wsub_extdata`, `RRTMGP_RADIATION`. |
-| `ocean.*` | `coupled`, `out`, `MOM6`, `CICE6`, `DATAATM`, `res`, `data`, `model`, `preload`. |
+| `ocean.*` | `coupled`, `out`, `MOM6`, `CICE6`, `DATAATM`, `res`, `data`, `model`, `preload`, `mit_remap_name`. `mit_remap_name` is the data-atmosphere remap file name for MIT (empty for other oceans); it is checked before each MIT segment starts. |
 | `land.*` | `bcs`, `GCMRUN_catchment`. |
 | `gocart.emissions` | `AMIP_EMISSIONS` or `OPS_EMISSIONS`. |
 

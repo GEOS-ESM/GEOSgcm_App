@@ -558,6 +558,19 @@ def run_one_segment(job_context: dict, run_config: dict, counter: int) -> None:
 
     apply_linkbcs(scratch_dir, job_context["geosbin"], scratch_dir / "cap_restart")
 
+    # csh PR #931 check_mit_inputs: stop before GEOSgcm.x if an MIT/CICE4 input is missing.
+    if run_config["ocean"].get("model") == "MIT" and is_enabled(run_config["ocean"]["coupled"]):
+        from gcmpy.run_tools.mit_preflight import check_mit_inputs
+
+        check_mit_inputs(
+            scratch_dir,
+            exp_dir,
+            job_context["geosbin"],
+            run_config["ocean"]["mit_remap_name"],
+            is_enabled(run_config["ocean"].get("DATAATM", "#DELETE")),
+            job_context["resources"],
+        )
+
     # gcm_run.j:870-950 -- GWD ridge restart, tile.bin, CICE6 pond state,
     # openwater tile-count validation, MERRA2OX date guard.
     configure_gwd_restarts(scratch_dir, job_context["rst_by_face"])

@@ -2,6 +2,7 @@ import yaml, re, os, subprocess, sys
 
 from gcmpy.setup_tools.generate_question import Question
 from gcmpy.setup_tools.atmosphere import get_heartbeat_default, get_io_server_default
+from gcmpy.setup_tools.mit import MIT_LLC_CHOICES, default_llc
 from gcmpy.utils.color_ops import Color
 from gcmpy.setup_tools.setup_envs import envdict
 from gcmpy.setup_tools.questions.load_questions import load_yamls
@@ -116,8 +117,41 @@ class Handle:
                         # See https://github.com/GEOS-ESM/GEOSgcm/wiki/Coupled-model-configurations-(GEOS-MOM6)
 
                         Please select a valid Atmospheric resolution!""")
-        elif question_dict['OCEAN_type'].answer == 'MIT' and question_dict['AGCM_grid'].answer != "c90":
-            sys.exit("You MUST select c90 atmospheric resolution for MIT ocean!")
+        elif question_dict['OCEAN_type'].answer == 'MIT' and question_dict['AGCM_grid'].answer not in ("c90", "c180"):
+            sys.exit("You MUST select c90 or c180 atmospheric resolution for MIT ocean!")
+
+    @staticmethod
+    def MIT_resolution_choices(question_dict, i):
+        if i != 'MIT_resolution' or question_dict['OCEAN_type'].answer != 'MIT':
+            return
+        # The csh script offers both LLC codes but re-asks until the code matches
+        # the atmosphere; list the matching code first so it is the default.
+        required = default_llc(question_dict['AGCM_grid'].answer)
+        other = 'llc270' if required == 'llc90' else 'llc90'
+        question_dict[i].choices = [MIT_LLC_CHOICES[required], MIT_LLC_CHOICES[other]]
+
+    @staticmethod
+    def MIT_resolution_valid(question_dict, i):
+        if i != 'MIT_resolution' or question_dict['OCEAN_type'].answer != 'MIT':
+            return
+        agcm_grid = question_dict['AGCM_grid'].answer
+        required = default_llc(agcm_grid)
+        while (question_dict[i].answer or '').split()[:1] != [required]:
+            print(f"{Color.RED}MIT {agcm_grid} requires {required} with its matching compiled configuration.{Color.RESET}")
+            question_dict[i].load_question(question_dict)
+
+    @staticmethod
+    def seaice_MIT_choices(question_dict, i):
+        if i == 'SEAICE_model' and question_dict['OCEAN_type'].answer == 'MIT':
+            question_dict[i].choices = ['CICE4']
+
+    @staticmethod
+    def MIT_LM_valid(question_dict, i):
+        if i != 'OGCM_LM' or question_dict['OCEAN_type'].answer != 'MIT':
+            return
+        while (question_dict[i].answer or '50').strip() != '50':
+            print(f"{Color.RED}These MIT profiles are compiled with Nr=50; choose 50 levels.{Color.RESET}")
+            question_dict[i].load_question(question_dict)
 
     @staticmethod
     def MOM6_resolution_choices(question_dict, i):
@@ -258,7 +292,9 @@ def ask_questions():
             Handle.processor_choices(question_dict, i)
         Handle.DATAOCEAN_resolution_default(question_dict, i)
         Handle.MOM6_resolution_choices(question_dict, i)
+        Handle.MIT_resolution_choices(question_dict, i)
         Handle.seaice_choices(question_dict, i)
+        Handle.seaice_MIT_choices(question_dict, i)
         Handle.LAND_bcs_default(question_dict, i)
         Handle.heartbeat_default(question_dict, i)
         Handle.history_template_default(question_dict, i)
@@ -273,6 +309,8 @@ def ask_questions():
         # AFTER load_question() call
         # Handle.experiment_desc(question_dict, i)
         Handle.OCEAN_type_valid(question_dict, i)
+        Handle.MIT_resolution_valid(question_dict, i)
+        Handle.MIT_LM_valid(question_dict, i)
         Handle.heartbeat_valid(question_dict, i)
         Handle.exp_dir_valid(question_dict, i)
 

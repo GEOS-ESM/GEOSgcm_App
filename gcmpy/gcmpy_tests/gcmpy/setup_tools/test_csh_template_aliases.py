@@ -203,6 +203,7 @@ def test_focused_run_yaml_keeps_runtime_settings_and_full_template_context(
     }
     assert set(config['ocean']) == {
         'coupled', 'out', 'MOM6', 'CICE6', 'DATAATM', 'res', 'data', 'model', 'preload',
+        'mit_remap_name',
     }
     assert set(config['land']) == {'bcs', 'GCMRUN_catchment'}
     assert set(config['gocart']) == {'emissions'}

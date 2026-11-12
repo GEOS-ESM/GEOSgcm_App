@@ -54,7 +54,8 @@ class CatalogManager:
         if target in catalog_section:
             return catalog_section[target]
 
-        config_values = set(self.config.values())
+        # Nested config blocks (e.g. 'mit') are not catalog keys and are not hashable.
+        config_values = set(v for v in self.config.values() if not isinstance(v, (dict, list)))
 
         # Search each subdictionary that matches a config value
         for section_name, section_data in catalog_section.items():
@@ -91,6 +92,7 @@ class SymlinkCreator:
         self.boundary_dir = Path(self.config['boundary_dir'])
         self.atmos_bcs = catalog.get_value('atmos_bcs', 'platform')
         self.gwdrs_dir = self.boundary_dir / catalog.get_value('gwdrs_dir', 'platform')
+        self.mit = self.config.get('mit') if self.config.get('ocean_model') == 'mit' else None
 
         # experiment type
         self.extdata_files = catalog.get_value('extdata_files', 'experiment_type')
@@ -104,6 +106,8 @@ class SymlinkCreator:
         self.stream = catalog.get_value('stream', 'land_version')
         self.lsm_bcs = catalog.get_value('lsm_bcs', 'land_version')
         self.bcs_dir = self.boundary_dir / "bcs_shared/fvInput/ExtData/esm/tiles" / self.lsm_bcs
+        if self.mit and self.mit.get('bcs_dir'):
+            self.bcs_dir = Path(self.mit['bcs_dir'])
 
         # atmos
         self.atmos_tag = catalog.get_value('tag', 'agcm_grid')
@@ -149,6 +153,8 @@ class SymlinkCreator:
             self.bcrslv = f"{self.atmos_tag}_CF{str(self.ogcm_IM).zfill(4)}x6C"
         elif self.config['ocean_model'] == "data":
             self.bcrslv = f"{self.atmos_tag}_DE{str(self.ogcm_IM).zfill(4)}xPE{str(self.ogcm_JM).zfill(4)}"
+        if self.mit and self.mit.get('land_bcrslv'):
+            self.bcrslv = self.mit['land_bcrslv']
         self.topo_src_dir = self.boundary_dir / self.atmos_bcs / "TOPO" / self.stream / self.atmos_tag / "smoothed"
 
         # sst_dir
@@ -255,15 +261,42 @@ class SymlinkCreator:
         return paths
 
     def MIT_paths(self) -> dict:
-        if self.config["ocean_model"] != "MIT":
+        # Explicit MIT inputs from gcm_setup (csh PR #931). Anything not given
+        # keeps the default from the tile/runoff/gridspec lookups.
+        if not self.mit:
             return {}
 
         paths = {
-            "mit.ascii": self.bcs_dir / f"geometry/{self.bcrslv}/mit.ascii",
-            "DC0360xPC0181_LL5400x15-LL.bin": self.coupled_dir / "DC0360xPC0181_LL5400x15-LL.bin"
+            "mit.ascii": Path(self.mit['gridspec']) if self.mit.get('gridspec')
+                         else self.bcs_dir / f"geometry/{self.bcrslv}/mit.ascii",
+            self.mit['remap_name']: Path(self.mit['remap']),
+            "SEAWIFS_KPAR_mon_clim.data": Path(self.mit['kpar']),
+            "grid_cice.bin": Path(self.mit['cice_grid']),
+            "kmt_cice.bin": Path(self.mit['cice_kmt']),
         }
+        if self.mit.get('tile'):
+            paths["tile.data"] = Path(self.mit['tile'])
+        if self.mit.get('runoff'):
+            paths["runoff.bin"] = Path(self.mit['runoff'])
 
         return paths
+
+    def check_mit_tile(self):
+        # Same rule as the csh script: the tile must name the grids selected for
+        # AGCM and MIT. Only checked when the tile file is present.
+        if not self.mit:
+            return
+        tile = Path(self.mit['tile']) if self.mit.get('tile') else \
+            self.bcs_dir / "geometry" / self.bcrslv / f"{self.bcrslv}-Pfafstetter.til"
+        if not tile.exists():
+            return
+        with open(tile) as f:
+            header = [line.split()[0] for line in f.readlines()[2:8] if line.strip()]
+        exp = self.mit['expect']
+        want = [exp['agcm_gridname'], str(exp['agcm_im']), str(exp['agcm_jm']),
+                None, str(exp['ogcm_im']), str(exp['ogcm_jm'])]
+        if len(header) != 6 or any(w is not None and h != w for h, w in zip(header, want)):
+            sys.exit(f"ERROR: MIT tile grids in {tile} do not match the selected atmosphere/ocean profile.")
 
     def precip_path(self) -> dict:
         if not self.config["precip_correction"]:
@@ -313,13 +346,16 @@ class SymlinkCreator:
         if not self.coupled:
             return {}
 
+        if self.mit:
+            return {"INPUT": Path(self.mit['input_dir'])}
         src_dir = self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}/INPUT"
         return {"INPUT": src_dir}
 
     def seaice_paths(self) -> dict:
         if not self.coupled:
             return {}
-        if self.config["seaice_model"] == "cice4":
+        paths = {}
+        if self.config["seaice_model"] == "cice":
             paths = {
                 "kmt_cice.bin": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}" / self.kmt_cice,
                 "grid_cice.bin": self.coupled_dir / f"{self.ogcm_IM}x{self.ogcm_JM}" / self.grid_cice
@@ -369,12 +405,13 @@ class SymlinkCreator:
         links.update(self.runoff_path())
         links.update(self.mapl_tripolar_path())
         links.update(self.vgrid_path())
-        links.update(self.MIT_paths())
         links.update(self.precip_path())
         links.update(self.species_path())
         links.update(self.catchcn_paths())
         links.update(self.table_paths())
         links.update(self.seaice_paths())
+        # After seaice_paths: the MIT CICE4 inputs replace the generic ones.
+        links.update(self.MIT_paths())
         links.update(self.dataocean_paths())
         links.update(self.dualocean_paths())
         links.update(self.extdata_dir_paths())
@@ -391,6 +428,7 @@ class SymlinkCreator:
         return dirs
 
     def create_bcs_yaml(self):
+        self.check_mit_tile()
         links = self.compile_links()
         files = self.compile_files()
         dirs = self.compile_dirs()

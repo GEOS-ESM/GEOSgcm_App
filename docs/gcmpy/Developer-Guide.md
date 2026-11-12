@@ -18,6 +18,7 @@ gcmpy/
     ├── setup_tools/
     │   ├── setup_main.py   # SetupGCM: the setup pipeline
     │   ├── atmosphere.py, ocean.py, land.py, gocart.py
+    │   ├── mit.py          # MIT LLC profiles, layout checks, BCS overrides (PR #931)
     │   ├── catalogs/       # *_catalog.yaml: model defaults per resolution, etc.
     │   ├── config/         # mpi_config.yaml, run_yaml_fields.yaml
     │   ├── questions/      # question definitions (questionary)
@@ -63,8 +64,9 @@ Key points:
   upper-case aliases) from the full context. The csh `mpi_config` string for
   the legacy scripts is generated here from `self.mpi_environment`.
 - **`stage_bcs`** writes `linkbcs_config.yaml` and runs
-  `$INSTALL/bin/stagebcs.py` to produce `linkbcs.yaml`. The MIT ocean is not
-  implemented yet (it raises `NotImplementedError`).
+  `$INSTALL/bin/stagebcs.py` to produce `linkbcs.yaml`. For MIT it also
+  passes the explicit MIT paths (resolved in `setup_tools/mit.py`) and writes
+  `MIT_SETUP.txt`.
 - **`stage_run_code`** copies `gcm_run.py` and the run-related subpackages
   into the experiment directory.
 
@@ -93,6 +95,13 @@ override them (for example `BACM_1M: heartbeat: 450`). `heartbeat` and
 `io_server` are only *prompt defaults*; the user's answers become
 `expConfig['heartbeat']` / `expConfig['io_server']`. `test_atmosphere_config.py`
 and `test_catalog_tokens.py` cover these.
+
+MIT LLC profiles are in `catalogs/ocean_catalog.yaml` under `coupled.MIT.resolution`
+(`llc90`, `llc270`). Each profile carries its `mit_config_id`. The matching
+numbers are also checked by `setup_tools/mit.py` and the layout rule in
+`setup_main.py` (`check_mit`). `bcs_catalog.yaml` has a matching `ocean_model.mit`
+section for `stagebcs.py`. `test_mit_config.py` and the MIT tests in
+`test_bcs_staging.py` cover these.
 
 ### Adding a field to the run YAML
 
@@ -144,6 +153,7 @@ quickest way to compare behaviour with the csh script.
 | `stage_restarts.py` | Parse restart names, detect face layout, copy or link, initial archive |
 | `segment_time.py` | Segment end time and `END_DATE` clamping |
 | `emissions.py`, `extdata.py`, `linkbcs_ops.py`, `ww3_ops.py`, `heartbeat_sync.py` | Per-segment input staging |
+| `mit_preflight.py` | MIT only: checks the staged MIT/CICE4 inputs and tile grids after `linkbcs` |
 | `pre_run.py` | GWD, `tile.bin`, CICE6 ponds, openwater check, MERRA2OX, REPLAY |
 | `mpi_env.py` | `apply_mpi_environment()` (legacy blocks, then mapping) |
 | `env_builder.py` | OpenMP setup and teardown |
@@ -178,6 +188,8 @@ Test layout mirrors the package:
 | MPI environment | `run_tools/test_mpi_env.py`, `run_tools/test_mpi_runner.py` |
 | Restart staging | `run_tools/test_stage_restarts.py`, `run_tools/test_archiver.py` |
 | Setup and templates | `setup_tools/test_template_vars.py`, `test_csh_template_aliases.py`, `test_atmosphere_config.py`, `test_setup_completion.py` |
+| MIT ocean setup and checks | `setup_tools/test_mit_config.py`, `setup_tools/test_bcs_staging.py` (MIT cases) |
+| MIT run-time input checks | `run_tools/test_mit_preflight.py` |
 | YAML I/O | `utils/test_yaml_ops.py` |
 
 CI (`.github/workflows/python-tests.yml`) runs the same command on Linux and

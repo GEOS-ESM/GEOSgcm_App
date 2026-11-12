@@ -88,7 +88,8 @@ job that is already running, and it does not apply when you call
    `skip_initial_restart_archive` is set).
 2. **For each segment, up to `NUM_SGMT`**: copy `CAP.rc`, compute the segment
    end time, stage emissions, WaveWatch dates, heartbeat sync, ExtData and
-   linkbcs, run the pre-run checks, **apply `mpi_environment`**, run
+   linkbcs, then (MIT only) check the MIT/CICE4 inputs, run the pre-run checks,
+   **apply `mpi_environment`**, run
    `bundleParser.py`, set up REPLAY and OpenMP, **launch `GEOSgcm.x`**
    (logging the environment first if `print_run_environment` is set), then
    archive checkpoints, move HISTORY output to holding, and run
