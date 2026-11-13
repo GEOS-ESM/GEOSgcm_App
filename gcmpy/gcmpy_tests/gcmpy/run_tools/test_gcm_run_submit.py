@@ -19,10 +19,17 @@ from pathlib import Path
 import pytest
 
 import gcm_run
+from gcmpy.batch_tools import computing_sites
 from gcmpy.batch_tools.computing_sites import site_nodes_dict
 from gcmpy.run_tools.run_resources import _resolve_ncpus_per_node
 
 BIN_PATH = "/fake/install/bin"
+
+
+@pytest.fixture(autouse=True)
+def nas_rhel8(monkeypatch):
+    monkeypatch.setattr(computing_sites.platform, 'freedesktop_os_release',
+                        lambda: {'ID': 'rhel', 'VERSION_ID': '8.10'})
 
 
 def _run_config(**overrides):
@@ -269,7 +276,10 @@ def test_pbs_preserves_processor_and_other_select_qualifiers(captured_sbatch):
 
 @pytest.mark.parametrize('model', site_nodes_dict['NAS'])
 @pytest.mark.parametrize('io_nodes', [0, 2])
-def test_nas_node_types_size_600_rank_layout(captured_sbatch, model, io_nodes):
+def test_nas_node_types_size_600_rank_layout(captured_sbatch, monkeypatch, model, io_nodes):
+    if model == 'tur':
+        monkeypatch.setattr(computing_sites.platform, 'freedesktop_os_release',
+                            lambda: {'ID': 'rhel', 'VERSION_ID': '9.8'})
     # Explicit expectations catch capacity changes and newly added, untested types.
     expected = {
         'bro': (24, 25), 'sky': (40, 15), 'cas': (40, 15),
@@ -406,3 +416,13 @@ def test_runtime_uses_actual_allocation_not_submission_override(monkeypatch, tmp
         nodefile.write_text('node1\n' * 120 + 'node2\n' * 120)
         monkeypatch.setenv('PBS_NODEFILE', str(nodefile))
     assert _resolve_ncpus_per_node(_run_config(cpus_per_node=60)) == 120
+
+
+def test_qsub_refuses_turin_from_toss4(captured_sbatch):
+    Path('AGCM.rc').write_text('NX: 4\nNY: 24\nIOSERVER_NODES: 0\nNUM_BACKEND_PES: 1\n')
+    cfg = _pbs_config()
+    cfg['atmos'] = {'nx': 4, 'ny': 24}
+    cfg['run_p'] = 'PBS -l select=1:ncpus=240:mpiprocs=240:model=tur_ath'
+    with pytest.raises(SystemExit, match="model 'tur'"):
+        gcm_run.submit_job(Path('run_exp.yaml'), cfg)
+    assert captured_sbatch == {}

@@ -4,13 +4,13 @@ from gcmpy.setup_tools.generate_question import Question
 from gcmpy.setup_tools.atmosphere import get_heartbeat_default, get_io_server_default
 from gcmpy.setup_tools.mit import MIT_LLC_CHOICES, default_llc
 from gcmpy.utils.color_ops import Color
-from gcmpy.setup_tools.setup_envs import envdict
+from gcmpy.setup_tools.setup_envs import envdict, pathdict
 from gcmpy.setup_tools.questions.load_questions import load_yamls
 from gcmpy.geos_settings.horizontal_resolution import (
         mit_horizontal_res,
         ocean_res_default_dict
         )
-from gcmpy.batch_tools.computing_sites import site_nodes_dict
+from gcmpy.batch_tools.computing_sites import site_nodes_dict, nas_processor_nodes
 
 class Handle:
     '''
@@ -54,16 +54,9 @@ class Handle:
 
         my_site = envdict['site']
         if my_site in site_nodes_dict:
-            # questionary.select starts on the first choice (load_question
-            # passes no 'default'), so put the upstream gcm_setup default
-            # there: NCCS 'mil' (gcm_setup:447), NAS 'rom' (gcm_setup:473).
-            defaults = {'NCCS': 'mil', 'NAS': 'rom'}
-            keys = list(site_nodes_dict[my_site].keys())
-            default = defaults.get(my_site)
-            if default in keys:
-                keys.remove(default)
-                keys.insert(0, default)
-            question_dict[i].choices = keys
+            # questionary.select starts on the first choice.
+            nodes = nas_processor_nodes(pathdict.get('etc')) if my_site == 'NAS' else site_nodes_dict[my_site]
+            question_dict[i].choices = list(nodes)
         else:
             exit(1)
 
