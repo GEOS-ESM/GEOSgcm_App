@@ -1224,6 +1224,23 @@ endif
 # ----------------------
 source $BINDIR/set_resolution_params.csh $AGCM_IM $CLDMICRO $OGCM $OCNMODEL
 
+# Customize timestep for G2G, HEMCO and ACHEM:
+set CHEM_DT = $DT
+     
+# Customize timestep for several GCs:
+set SOLAR_DT = `expr $DT \* 2`
+set IRRAD_DT = `expr $DT \* 2`
+set OCEAN_DT = `expr $DT \* 2`
+set SATSIM_DT = `expr $DT \* 2`
+set GMICHEM_DT = `expr $DT \* 2`
+
+# Customize:
+#set  NX = 10  resolution dependent
+#set  NY = 60  resolution dependent
+set JOB_SGMT = 00000100
+set NUM_SGMT = 1
+set POST_NDS = 1
+
 # The helper's generic coupled layout transposes the ocean decomposition.
 # MIT needs a cubed-sphere atmosphere layout with the SAME rank count as MIT.
 # In particular, C180 must not inherit NX=1, NY=768 (128 strips per face).
