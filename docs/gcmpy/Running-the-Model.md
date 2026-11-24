@@ -20,6 +20,14 @@ comes from `batch_cmd` in the run YAML: `sbatch` at NCCS, `qsub` at NAS.
 The job script is always the static wrapper `$GEOSBIN/gcm_run.sh`; there is
 no longer a templated `gcm_run.j` to edit.
 
+At NAS, every `qsub` (the first submission and each resubmission from inside
+a job) first checks that the current OS matches the build OS in
+`<install>/etc/OS.rc` (a TOSS5 build must be submitted from TOSS5, and TOSS4
+from TOSS4) and that the `model=` in `run_p` is valid for that OS (`tur` on
+TOSS5; `rom`, `mil`, `cas`, `bro`, `sky` on TOSS4). Without `OS.rc` only the
+`model=` check runs, against the current OS. Jobs submitted by hand with
+`qsub` are not checked.
+
 Slurm job output goes to `gcm_run.o<jobid>` in the directory you submitted
 from.
 

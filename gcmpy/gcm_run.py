@@ -40,6 +40,7 @@ from pathlib import Path
 import yaml
 
 from gcmpy.batch_tools.batch_environ import load_env_vars, get_batch_resources
+from gcmpy.batch_tools.computing_sites import check_nas_submit
 from gcmpy.run_tools.agcm_file_ops import (
     get_nx_ny, get_ogcm_coupled_overrides, get_ioserver_params,
 )
@@ -242,11 +243,13 @@ def submit_job(config_path: Path, run_config: dict) -> subprocess.CompletedProce
     batch_cmd = run_config.get('batch_cmd', 'sbatch')
     if batch_cmd == 'qsub':
         # qsub does not accept script arguments; pass the config via the environment.
+        qsub_args = build_qsub_args(run_config)
+        check_nas_submit(run_config.get('etc_path'), run_config['run_p'])
         config_path = Path(config_path).resolve()
         if ',' in str(config_path) or ',' in str(bin_path):
             raise ValueError('PBS environment paths must not contain commas')
         cmd = [
-            'qsub', *build_qsub_args(run_config), '-V', '-S', '/bin/bash',
+            'qsub', *qsub_args, '-V', '-S', '/bin/bash',
             '-v', f'GEOSBIN={bin_path},GEOS_RUN_CONFIG={config_path}',
             str(gcm_run_sh),
         ]
