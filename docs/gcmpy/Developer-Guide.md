@@ -13,11 +13,14 @@ gcmpy/
 ├── gcmpy_tests/gcmpy/      # pytest suite, mirrors the package layout
 └── gcmpy/
     ├── batch_tools/        # site/processor tables, Slurm/PBS env, IOSERVER math
+    ├── components/         # component (gridcomp) plug-in framework -- see below
+    │   ├── base.py          # GridCompBase, ComponentManifest, discover_components()
+    │   └── GOCART/           # pilot: aerosol/emissions, two RC-file edits
     ├── geos_settings/      # resolution lists (now catalog-derived)
     ├── run_tools/          # gcm_run.j ported to Python, one module per concern
     ├── setup_tools/
     │   ├── setup_main.py   # SetupGCM: the setup pipeline
-    │   ├── atmosphere.py, ocean.py, land.py, gocart.py
+    │   ├── atmosphere.py, ocean.py, land.py
     │   ├── mit.py          # MIT LLC profiles, layout checks, BCS overrides (PR #931)
     │   ├── catalogs/       # *_catalog.yaml: model defaults per resolution, etc.
     │   ├── config/         # mpi_config.yaml, run_yaml_fields.yaml
@@ -119,6 +122,53 @@ Edit `config/mpi_config.yaml`. Values **must be strings or `null`**. Site
 and ocean-specific additions (`intelmpi_NASA`, `MPI_SHEPHERD`) are in
 `SetupGCM.mpistacksettings()`. `test_mpi_env.py` and
 `test_csh_template_aliases.py` cover the Python and csh paths.
+
+## Component plug-ins
+
+A gridded component's own questions, defaults and setup-time RC edits can
+live in `gcmpy/components/<Name>/` instead of being hardcoded into gcmpy.
+**GOCART is the pilot** for this; every other component's configuration is
+still built centrally, the way GOCART's used to be. See
+[Component Plug-ins](Component-Plugins.md) for the design, the rationale,
+and the plan for later components and for components contributed from
+their own repositories.
+
+`gcmpy.components.base` is the framework: `GridCompBase` (the methods a
+component may override; every one defaults to a no-op),
+`ComponentManifest` (reads one `component.yaml`), and
+`discover_components()` (scans `gcmpy/components/*/component.yaml`,
+sorted by name; raises on a duplicate name). `SetupGCM.__init__` loads
+every component once into `self.components` (name -> instance).
+
+`gcmpy/components/GOCART/` is the reference layout:
+
+| File | Replaces |
+| --- | --- |
+| `component.yaml` | the manifest: name, `requires: [OCEAN_data_atmosphere]`, and the paths below |
+| `questions.yaml` | `setup_tools/questions/gocart.yaml` |
+| `catalog.yaml` | `setup_tools/catalogs/gocart_catalog.yaml` |
+| `component.py` (`GOCARTComponent.defaults()`) | `setup_tools/gocart.py`'s `get_gocart_config()` |
+| `component.py` (`GOCARTComponent.post_rc_copy()`) | `setup_tools/gocart.py`'s `adjust_tuning_coefficients()`, called from `RC_setup()` |
+| `component.py` (`GOCARTComponent.configure()`) | `SetupGCM.config_gocartGridComp()` |
+
+`SetupGCM.config_gocartGridComp()` is kept as a one-line wrapper that calls
+`self.components['GOCART'].configure(...)`, so `gcm_setup.py`'s call
+sequence did not need to change.
+
+Not every GOCART-adjacent edit moved: `SetupGCM.config_chemGridComp()`
+still edits `GEOS_ChemGridComp.rc` using `self.gocart['rats_provider']`,
+because that file also carries `ENABLE_PCHEM`/`ENABLE_TR`, which are not
+GOCART's alone. A file with more than one real owner stays in the central,
+shared code rather than being assigned to whichever component asked
+first -- see the "shared" owner in
+[Component Plug-ins](Component-Plugins.md#ownership-of-shared-files).
+
+`gcmpy_tests/gcmpy/components/` has the framework tests
+(`test_base.py`: discovery, duplicate names, `api_version` mismatches,
+question ordering) and the GOCART regression tests (`test_gocart_component.py`:
+every `defaults()`/`post_rc_copy()`/`configure()` case the old functions
+handled, including one pre-existing bug in the `ACTIVE_INSTANCES_CA`
+replacement, kept exactly as it was -- see the comment at its call site).
 
 ## Run pipeline
 

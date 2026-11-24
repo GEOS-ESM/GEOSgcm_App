@@ -2,7 +2,6 @@ set (programs
 	atmosphere_catalog.yaml
 	ocean_catalog.yaml
 	land_catalog.yaml
-	gocart_catalog.yaml
 	)
 
 # Values for the configure_file() tokens in the catalogs.  This mirrors

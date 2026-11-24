@@ -17,7 +17,7 @@ from gcmpy.setup_tools.ocean import get_ocean_config
 from gcmpy.setup_tools.atmosphere import get_atmos_config
 from gcmpy.setup_tools import mit
 from gcmpy.setup_tools.land import get_land_config
-from gcmpy.setup_tools.gocart import get_gocart_config, adjust_tuning_coefficients
+from gcmpy.components.base import discover_components
 from gcmpy.setup_tools.geos_ops import copy_src_tarfile
 from gcmpy.setup_tools.setup_envs import envdict, pathdict
 from gcmpy.setup_tools.process_questions import ask_questions
@@ -56,6 +56,14 @@ class SetupGCM:
         self.mpi_environment    = {}
         self.gcm_version        = Path(f"{pathdict['etc']}/.AGCM_VERSION").read_text()
         self.linkx              = False
+
+        # Component plug-ins (gcmpy.components.base): currently only GOCART
+        # (the pilot -- see docs/gcmpy/Component-Plugins.md). Every other
+        # gridcomp's configuration is still built centrally below.
+        self.components = {
+            manifest.name: manifest.load_instance()
+            for manifest in discover_components()
+        }
 
         # literal/default values used directly in templates (formerly hardcoded
         # inline in jinja_dict inside template()). Kept here so they participate
@@ -112,7 +120,8 @@ class SetupGCM:
         self.ocean  = get_ocean_config(self.expConfig)
         self.atmos  = get_atmos_config(self.expConfig, self.ocean['NX'], self.ocean['NY'])
         self.land   = get_land_config(self.expConfig)
-        self.gocart = get_gocart_config(self.expConfig)
+        gocart = self.components['GOCART']
+        self.gocart = gocart.defaults(self.expConfig, gocart.manifest.load_catalog())
         self.templates.append(self.ocean['history_template'])
         if self.ocean['model'] == 'MIT' and self.ocean['running_ocean']:
             self.check_mit()
@@ -440,7 +449,7 @@ class SetupGCM:
         else:
             shutil.copy(geosgcmx_path, self.exp_dir)
 
-        adjust_tuning_coefficients(self.expConfig)
+        self.components['GOCART'].post_rc_copy(Path(self.exp_dir), self.expConfig, self.gocart)
 
 
     #######################################################################
@@ -627,21 +636,7 @@ class SetupGCM:
 
     # enable DATA_DRIVEN gocart2G
     def config_gocartGridComp(self):
-        gocartgridcomp = f"{self.expConfig['exp_dir']}/RC/GOCART2G_GridComp.rc"
-        with open(gocartgridcomp, 'r') as file:
-            file_content = file.read()
-
-        if self.gocart['data_driven'] == True:
-            file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_DU:\s*)DU', r'\1DU.data', file_content)
-            file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_SS:\s*)SS', r'\1SS.data', file_content)
-            file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_SU:\s*)SU', r'\1SU.data', file_content)
-            file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_NI:\s*)NI', r'\1NI.data', file_content)
-            file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_CA:\s*)CA.oc', r'\1CA.oc.data', file_content)
-            file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_CA:\s*)CA.bc', r'\1CA.bc.data', file_content)
-            file_content = search_replace_in_string(r'(ACTIVE_INSTANCES_CA:\s*)CA.br', r'\1CA.br.data', file_content)
-
-        with open(gocartgridcomp, 'w') as file:
-            file.write(file_content)
+        self.components['GOCART'].configure(Path(self.exp_dir), self.expConfig, self.gocart)
 
 
     # Modify MOM input files to match HEARTBEAT

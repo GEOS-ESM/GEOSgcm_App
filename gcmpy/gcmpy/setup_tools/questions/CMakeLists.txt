@@ -5,7 +5,6 @@ set (programs
 	exp_setup.yaml
 	ocean_model.yaml
         directory_setup.yaml    
-	gocart.yaml     
 	land_model.yaml
 	)
 

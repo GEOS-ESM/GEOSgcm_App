@@ -24,6 +24,9 @@ here. Update these pages in the same pull request as the code change (see
 
 - [Developer Guide](Developer-Guide.md): code layout, setup and run
   pipelines, catalogs, configuration files, and tests.
+- [Component Plug-ins](Component-Plugins.md): moving per-gridcomp questions
+  and setup logic out of gcmpy and into the component's own repository
+  (the GOCART pilot, and the plan beyond it).
 - [New Features (PR #935)](New-Features-PR-935.md): what changed in PR #935
   and how to migrate existing experiments.
 

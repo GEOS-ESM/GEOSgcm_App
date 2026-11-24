@@ -13,13 +13,22 @@ job-script templates from which an experiment directory is made
 (`CMakeLists.txt`). It holds no model physics. The repository is flat: no
 source subdirectories.
 
+**Two setup/run systems currently coexist in this repository.** The legacy
+csh `gcm_setup` / `gcm_run.j` (this section, `docs/ARCHITECTURE.md`,
+`docs/decisions.md`) and **gcmpy**, the Python replacement (`## gcmpy` below,
+`docs/gcmpy/`). `gcmpy/gcm_run.py` is the primary way experiments run
+segments; `gcm_run.j`'s post/archive/plot/regress scripts are still staged
+and used by gcmpy (`docs/gcmpy/Running-the-Model.md`, "Legacy csh helper
+scripts"). Check which system a change affects before editing, and update the
+matching documentation set, not the other one.
+
 ## Documents
 
-- `docs/ARCHITECTURE.md`: directory map, how `gcm_setup` builds an experiment,
-  who reads each template, resource keys, the `gcm_run.j` job flow, variants,
-  traps, observations. Read first.
-- `docs/decisions.md`: why setup, templates and the run script are arranged
-  this way.
+- `docs/ARCHITECTURE.md`: directory map, how the legacy `gcm_setup` builds an
+  experiment, who reads each template, resource keys, the `gcm_run.j` job
+  flow, variants, traps, observations. Read first for the legacy csh system.
+- `docs/decisions.md`: why the legacy setup, templates and run script are
+  arranged this way.
 - Fixture: AGENTS.md (`../../../AGENTS.md` in the fixture) and
   docs/ARCHITECTURE.md (`../../../docs/ARCHITECTURE.md` in the fixture) (section 5 summarises
   this repository).
@@ -79,12 +88,19 @@ documentation update, say so.
 | `setup_tools/catalogs/*.yaml` defaults (heartbeat, IOSERVER, timesteps) | `docs/gcmpy/Creating-an-Experiment.md`, `docs/gcmpy/Developer-Guide.md` |
 | `batch_tools/computing_sites.py` (sites, processors) | `docs/gcmpy/Creating-an-Experiment.md` |
 | Package layout, a new or renamed `run_tools` module, test layout, CI | `docs/gcmpy/Developer-Guide.md` |
+| `gcmpy/components/**` (the plug-in framework, or a component such as GOCART) | `docs/gcmpy/Component-Plugins.md`, and the table in `docs/gcmpy/Developer-Guide.md`'s "Component plug-ins" section |
 | New error messages or failure modes | `docs/gcmpy/Troubleshooting.md` |
 | Short run-time settings reference | `gcmpy/README.md` |
 
 When you add a new page, link it from `docs/gcmpy/README.md`. If the page
 should be reachable from the wiki, say so in your summary; adding the wiki
 link is done by hand.
+
+New per-gridcomp setup logic (a question, a default, a setup-time RC edit
+specific to one component) belongs in `gcmpy/components/<Name>/`, not as
+another hardcoded case in `setup_tools/`. See
+`docs/gcmpy/Component-Plugins.md`; GOCART (`gcmpy/components/GOCART/`) is
+the reference example.
 
 `docs/gcmpy/New-Features-PR-935.md` is a historical record of PR #935. Don't
 rewrite it for later changes.

@@ -1,0 +1,10 @@
+name: GOCART
+api_version: 1
+# GOCART's own questions are skipped (follows_up in questions.yaml) when a
+# data atmosphere is selected; defaults() also reads OCEAN_data_atmosphere
+# directly, so the question that sets it must be asked first.
+requires:
+  - OCEAN_data_atmosphere
+questions: questions.yaml
+catalog: catalog.yaml
+class: gcmpy.components.GOCART.component.GOCARTComponent

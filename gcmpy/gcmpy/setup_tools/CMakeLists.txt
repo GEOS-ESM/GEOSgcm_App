@@ -7,7 +7,6 @@ set (programs
 	atmosphere.py  
 	clone.py  
 	generate_question.py  
-	gocart.py  
 	land.py  
 	mit.py  
 	ocean.py  
