@@ -101,7 +101,7 @@ if ( $?TSE_TMPDIR ) then
    # purposes. So we can set a flag USE_TSE_TMPDIR to TRUE if we want
    # and we default to TRUE
 
-   set USE_TSE_TMPDIR = TRUE
+   set USE_TSE_TMPDIR = FALSE
 
    # If we want to use TSE_TMPDIR as the scratch, we create a scratch
    # directory under TSE_TMPDIR and link it to SCRDIR
@@ -328,13 +328,25 @@ EXPID:  ${EXPID}_FCST
 EXPDSC: Forecasts_spawned_from_${EXPID}
 
 COLLECTIONS: 'geosgcm_fcst'
+             'geosgcm_budi'
+             'inst6_2d_asm_Nx'
+             'tavg3_2d_aer_x'
+             'aer_comp_trigger'
               ::
-             'prog.eta'
 
 GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
- ::
+             PC${CLIM_IM}x${CLIM_JM}-DC
+             ::
 
+  # Coarse Resolution GLobal Fields for Climatology
+  PC${CLIM_IM}x${CLIM_JM}-DC.GRID_TYPE: LatLon
+  PC${CLIM_IM}x${CLIM_JM}-DC.IM_WORLD: ${CLIM_IM}
+  PC${CLIM_IM}x${CLIM_JM}-DC.JM_WORLD: ${CLIM_JM}
+  PC${CLIM_IM}x${CLIM_JM}-DC.POLE: PC
+  PC${CLIM_IM}x${CLIM_JM}-DC.DATELINE: DC
+  PC${CLIM_IM}x${CLIM_JM}-DC.LM: ${AGCM_LM}
 
+  # High Resolution Global Fields for Synoptic Meteorology
   PC${HIST_IM}x${HIST_JM}-DC.GRID_TYPE: LatLon
   PC${HIST_IM}x${HIST_JM}-DC.IM_WORLD: ${HIST_IM}
   PC${HIST_IM}x${HIST_JM}-DC.JM_WORLD: ${HIST_JM}
@@ -342,69 +354,104 @@ GRID_LABELS: PC${HIST_IM}x${HIST_JM}-DC
   PC${HIST_IM}x${HIST_JM}-DC.DATELINE: DC
   PC${HIST_IM}x${HIST_JM}-DC.LM: ${AGCM_LM}
 
-  geosgcm_fcst.template:      '%y4%m2%d2_%h2%n2z.nc4' ,
-  geosgcm_fcst.archive:       '%c/Y%y4' ,
-  geosgcm_fcst.format:        'CFIO' ,
-  geosgcm_fcst.deflate:        1 ,
-  geosgcm_fcst.grid_label:     PC${HIST_IM}x${HIST_JM}-DC ,
-  geosgcm_fcst.regrid_method: 'BILINEAR' ,
-  geosgcm_fcst.frequency:      060000 ,
-  geosgcm_fcst.duration:       000000 ,
-  geosgcm_fcst.vscale:         100.0 ,
-  geosgcm_fcst.vunit:         'hPa' ,
-  geosgcm_fcst.vvars:         'log(PLE)' , 'DYN'          ,
-  geosgcm_fcst.levels:         1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1,
-  geosgcm_fcst.fields:        'PHIS'   , 'AGCM'       ,
-                              'SLP'    , 'DYN'        ,
-                              'W'      , 'DYN'        ,
-                              'U;V'    , 'DYN'        ,
-                              'T'      , 'DYN'        ,
-                              'PS'     , 'DYN'        ,
-                              'ZLE'    , 'DYN'        , 'H'   ,
-                              'OMEGA'  , 'DYN'        ,
-                              'Q'      , 'MOIST'      , 'QV'  ,
-                              'QITOT'  , 'AGCM'       , 'QI'  ,
-                              'QLTOT'  , 'AGCM'       , 'QL'  ,
-                              'QRTOT'  , 'AGCM'       , 'QR'  ,
-                              'QSTOT'  , 'AGCM'       , 'QS'  ,
-                              'QGTOT'  , 'AGCM'       , 'QG'  ,
-                              'RH2'    , 'MOIST'      , 'RH'  ,
-                              'O3'     , 'CHEMISTRY'  ,
-                               ::
+  geosgcm_fcst.format:           'CFIO' ,
+  geosgcm_fcst.grid_label:        PC${CLIM_IM}x${CLIM_JM}-DC ,
+  geosgcm_fcst.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  geosgcm_fcst.archive:          '%c/Y%y4' ,
+  geosgcm_fcst.mode:             'instantaneous' ,
+  geosgcm_fcst.frequency:         060000 ,
+  geosgcm_fcst.duration:          000000 ,
+  geosgcm_fcst.ref_time:          000000 ,
+  geosgcm_fcst.deflate:           1 ,
+  geosgcm_fcst.regrid_method:    'BILINEAR' ,
+  geosgcm_fcst.vscale:            100.0 ,
+  geosgcm_fcst.vunit:            'hPa' ,
+  geosgcm_fcst.vvars:            'log(PLE)' , 'DYN'          ,
+  geosgcm_fcst.levels:            1000 975 950 925 900 850 800 750 700 600 500 400 300 250 200 150 100 70 50 30 10 7 5 3 1,
+  geosgcm_fcst.fields:           'SLP'    , 'DYN'   ,
+                                 'U;V'    , 'DYN'   ,
+                                 'T'      , 'DYN'   ,
+                                 'PS'     , 'DYN'   ,
+                                 'ZLE'    , 'DYN'   , 'H'   ,
+                                 'Q'      , 'MOIST' , 'QV'  ,
+                                  ::
 
-  prog.eta.template:      '%y4%m2%d2_%h2%n2z.nc4' ,
-  prog.eta.archive:       '%c/Y%y4' ,
-  prog.eta.format:        'CFIO' ,
-  prog.eta.deflate:        1 ,
-  prog.eta.grid_label:     PC${HIST_IM}x${HIST_JM}-DC ,
-  prog.eta.regrid_method: 'BILINEAR' ,
-  prog.eta.mode:          'instantaneous' ,
-  prog.eta.frequency:      060000 ,
-  prog.eta.duration:       060000 ,
-  prog.eta.ref_time:       000000 ,
-  prog.eta.fields:        'PHIS'       , 'AGCM'       , 'phis'       ,
-                          'SGH'        , 'AGCM'       , 'hs_stdv'    ,
-                          'TS'         , 'SURFACE'    , 'ts'         ,
-                          'FRLAND'     , 'SURFACE'    , 'frland'     ,
-                          'FRLANDICE'  , 'SURFACE'    , 'frlandice'  ,
-                          'FRLAKE'     , 'SURFACE'    , 'frlake'     ,
-                          'FROCEAN'    , 'SURFACE'    , 'frocean'    ,
-                          'FRACI'      , 'SURFACE'    , 'frseaice'   ,
-                          'PS'         , 'DYN'        , 'ps'         ,
-                          'DELP'       , 'DYN'        , 'delp'       ,
-                          'DELZ'       , 'DYN'        , 'delz'       ,
-                          'W'          , 'DYN'        , 'w'          ,
-                          'U;V'        , 'DYN'        , 'u;v'        ,
-                          'TV'         , 'DYN'        , 'tv'         ,
-                          'T'          , 'DYN'        , 't'          ,
-                          'Q'          , 'MOIST'      , 'sphu'       ,
-                          'O3PPMV'     , 'CHEMISTRY'  , 'ozone'      ,
-                          'QITOT'      , 'AGCM'       , 'qitot'      ,
-                          'QLTOT'      , 'AGCM'       , 'qltot'      ,
-                          'QRTOT'      , 'MOIST'      , 'qrtot'      ,
-                          'QSTOT'      , 'MOIST'      , 'qstot'      ,
-                          'QGTOT'      , 'MOIST'      , 'qgtot'      ,
-                           ::
+  geosgcm_budi.format:           'CFIO' ,
+  geosgcm_budi.grid_label:        PC${CLIM_IM}x${CLIM_JM}-DC ,
+  geosgcm_budi.template:         '%y4%m2%d2_%h2%n2z.nc4' ,
+  geosgcm_budi.archive:          '%c/Y%y4' ,
+  geosgcm_budi.mode:             'instantaneous' ,
+  geosgcm_budi.frequency:         060000 ,
+  geosgcm_budi.duration:          000000 ,
+  geosgcm_budi.ref_time:          000000 ,
+  geosgcm_budi.deflate:           1 ,
+  geosgcm_budi.regrid_method:    'CONSERVE',
+  geosgcm_budi.fields:           'TQV' , 'AGCM' ,
+                                 'TQI' , 'AGCM' ,
+                                 'TQL' , 'AGCM' ,
+                                  ::
+
+  inst6_2d_asm_Nx.format:        'CFIO' ,
+  inst6_2d_asm_Nx.grid_label:     PC${CLIM_IM}x${CLIM_JM}-DC ,
+  inst6_2d_asm_Nx.template:      '%y4%m2%d2_%h2%n2z.nc4' ,
+  inst6_2d_asm_Nx.archive:       '%c/Y%y4' ,
+  inst6_2d_asm_Nx.mode:          'instantaneous' ,
+  inst6_2d_asm_Nx.frequency:      060000 ,
+  inst6_2d_asm_Nx.duration:       000000 ,
+  inst6_2d_asm_Nx.ref_time:       000000 ,
+  inst6_2d_asm_Nx.deflate:        1 ,
+  inst6_2d_asm_Nx.regrid_method: 'BILINEAR' ,
+  inst6_2d_asm_Nx.fields:        'SLP'        , 'DYN'     ,
+                                 'U10M;V10M'  , 'SURFACE' ,
+                                 'T2M'        , 'SURFACE' ,
+                                 'T2MDEW'     , 'SURFACE' ,
+                                 'CLDTT'      , 'SOLAR'   , 'TCC',
+                                 'MUCAPE'     , 'MOIST'   ,
+                                 'MUCIN'      , 'MOIST'   ,
+                                 'CLDBASEHGT' , 'MOIST'   ,
+                                  ::
+
+  tavg3_2d_aer_x.format:         'CFIO' ,
+  tavg3_2d_aer_x.grid_label:      PC${HIST_IM}x${HIST_JM}-DC ,
+  tavg3_2d_aer_x.template:       '%y4%m2%d2_%h2%n2z.nc4' ,
+  tavg3_2d_aer_x.archive:        '%c/Y%y4' ,
+  tavg3_2d_aer_x.mode:           'time-averaged' ,
+  tavg3_2d_aer_x.frequency:       030000 ,
+  tavg3_2d_aer_x.duration:        000000 ,
+  tavg3_2d_aer_x.ref_time:        210000 ,
+  tavg3_2d_aer_x.deflate:         1 ,
+  tavg3_2d_aer_x.regrid_method:  'CONSERVE' ,
+  tavg3_2d_aer_x.fields:         'PM25'        , 'GOCART2G' ,
+                                 'TOTEXTTAU'   , 'GOCART2G' ,
+                                  ::
+
+  # Throwaway collection: exists only so the component exports are
+  # allocated (to sum into PM25 / TOTEXTTAU). Deleted after run.
+  aer_comp_trigger.format:        'CFIO' ,
+  aer_comp_trigger.grid_label:     PC${CLIM_IM}x${CLIM_JM}-DC ,
+  aer_comp_trigger.template:      '%y4%m2%d2_%h2%n2z.nc4' ,
+  aer_comp_trigger.mode:          'instantaneous' ,
+  aer_comp_trigger.frequency:      240000 ,
+  aer_comp_trigger.duration:       000000 ,
+  aer_comp_trigger.ref_time:       000000 ,
+  aer_comp_trigger.deflate:        1 ,
+  aer_comp_trigger.regrid_method: 'BILINEAR' ,
+  aer_comp_trigger.fields:        'DUSMASS25'   , 'DU'    ,
+                                  'SSSMASS25'   , 'SS'    ,
+                                  'CA.bcSMASS'  , 'CA.bc' ,
+                                  'CA.ocSMASS'  , 'CA.oc' ,
+                                  'CA.brSMASS'  , 'CA.br' ,
+                                  'SO4SMASS'    , 'SU'    ,
+                                  'NISMASS25'   , 'NI'    ,
+                                  'NH4SMASS'    , 'NI'    ,
+                                  'DUEXTTAU'    , 'DU'    ,
+                                  'SSEXTTAU'    , 'SS'    ,
+                                  'CA.brEXTTAU' , 'CA.br' ,
+                                  'CA.bcEXTTAU' , 'CA.bc' ,
+                                  'CA.ocEXTTAU' , 'CA.oc' ,
+                                  'SUEXTTAU'    , 'SU'    ,
+                                  'NIEXTTAU'    , 'NI'    ,
+                                   ::
 
 _EOF_
 
@@ -778,6 +825,12 @@ echo GEOSgcm Run Status: $rc
 foreach collection ( $collections )
   /bin/mv `/bin/ls -1 *.${collection}.*` $FCSTDIR
 end
+
+# Remove the throwaway collection used only to allocate the
+# GOCART2G component exports needed for PM25 / TOTEXTTAU
+/bin/rm -f $FCSTDIR/*.aer_comp_trigger.*
+
+exit 0  # exit here to run stats by hand
 
 #######################################################################
 #                               Create STATS

@@ -512,17 +512,58 @@ cat $expdir/WSUB_ExtData.tmp | sed '/collection:/ s#WSUB_SWclim.*#/dev/null#' > 
 # MAT These sed commands have to be done in the experiment directory.
 #     This should probably be fixed at some point
 
+# Like gcm_setup, choose radiation and microphysics based on the number
+# of levels: L72 uses RRTMG + BACM_1M, otherwise RRTMGP + GFDL_1M.
+# These are written to a sedfile applied *before* the generic
+# sedfile.SCM.L72Diff (first substitution wins, so the generic file's
+# commented-out lines for these tokens are left alone).
+if [ $nlev -eq 72 ]
+then
+   RRTMG_RADIATION=""
+   RRTMGP_RADIATION="#DELETE"
+   BACM_1M_=""
+   GFDL_1M_="#"
+   SHALLOW_UW=""
+   SHALLOW_SHOC="#"
+else
+   RRTMG_RADIATION="#DELETE"
+   RRTMGP_RADIATION=""
+   BACM_1M_="#"
+   GFDL_1M_=""
+   SHALLOW_UW="#"
+   SHALLOW_SHOC=""
+fi
+
 builtin cd $expdir
-$SED -f sedfile.SCM AGCM.rc.tmpl > AGCM.rc.sed.general
+cat > sedfile.L72Dyn << EOF
+s?@RRTMG_RADIATION?$RRTMG_RADIATION?g
+s?@RRTMGP_RADIATION?$RRTMGP_RADIATION?g
+s?@BACM_1M_?$BACM_1M_?g
+s?@GFDL_1M_?$GFDL_1M_?g
+s?@SHALLOW_UW?$SHALLOW_UW?g
+s?@SHALLOW_SHOC?$SHALLOW_SHOC?g
+EOF
+
+$SED -f sedfile.L72Dyn AGCM.rc.tmpl > AGCM.rc.dyn
+$SED -f sedfile.SCM.L72Diff AGCM.rc.dyn > AGCM.rc.sed.general
 $SED -f sedfile.CASE AGCM.rc.sed.general > AGCM.rc.CASE
 awk '{ if ( $1  !~ "#DELETE") { print } }' AGCM.rc.CASE > AGCM.rc
-/bin/rm AGCM.rc.sed.general AGCM.rc.CASE
+/bin/rm AGCM.rc.dyn AGCM.rc.sed.general AGCM.rc.CASE sedfile.L72Dyn
 builtin cd $CURRDIR
 
 if [ $nlev -ne 72 ]
 then
-  $ISED -e "s/L72/L${nlev}/g" -e "s/z72/z${nlev}/g" $expdir/*.rc
-  $ISED -e "s/L72/L${nlev}/g" -e "s/z72/z${nlev}/g" $expdir/*.yaml
+  $ISED -e "s|/L72/|/L${nlev}/|g" -e "s/L72/L${nlev}/g" -e "s/z72/z${nlev}/g" -e "s|_72_|_${nlev}_|g" $expdir/*.rc
+  $ISED -e "s|/L72/|/L${nlev}/|g" -e "s/L72/L${nlev}/g" -e "s/z72/z${nlev}/g" -e "s|_72_|_${nlev}_|g" $expdir/*.yaml
+else
+  # Like gcm_setup, switch GOCART2G tuning coefficients to L072 values
+  for file in $expdir/DU2G_instance_DU.rc $expdir/SS2G_instance_SS.rc
+  do
+     if [ -f $file ]
+     then
+        $ISED -e 's/^\(.*# L181\)/#\1/' -e 's/^#\(.*# L072\)/\1/' $file
+     fi
+  done
 fi
 
 $ISED "/AGCM_LM:/c\AGCM_LM: ${nlev}" $expdir/AGCM.rc
