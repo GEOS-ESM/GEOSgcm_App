@@ -86,12 +86,24 @@ setenv  GCMEMIP @GCMEMIP
 #                          DSL configuration
 #######################################################################
 
+# ensure Python path is correct even when DSL is off because of a dependency in MAPLPy
+if ( $?PYTHONPATH ) then
+   setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
+else
+   setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
+endif
 if ( $?USE_DSL ) then
-   if ( $?PYTHONPATH ) then
-      setenv PYTHONPATH       ${PYTHONPATH}:${GEOSDIR}/lib/Python/
-   else
-      setenv PYTHONPATH       ${GEOSDIR}/lib/Python/
-   endif
+   setenv FV3_DACEMODE BuildAndRun
+   setenv GEOS_DSL_BACKEND UNSET
+   # PYFV3 cannot currently support KJI backends, so force IJK
+   setenv GEOS_DSL_PYFV3_BACKEND $GEOS_DSL_BACKEND:s/KJI/IJK/
+   setenv GT_CACHE_ROOT ${EXPDIR}/.DSL_CACHE
+   setenv GT4PY_COMPILE_OPT_LEVEL 3
+   setenv NDSL_CONSTANTS GEOS
+   setenv NDSL_LITERAL_PRECISION 32
+   setenv NDSL_LOGLEVEL INFO
+   setenv NDSL_UNSAFE_MODE True
+   setenv PYTHONWARNINGS "ignore"
 endif
 
 #######################################################################
